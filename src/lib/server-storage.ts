@@ -9,12 +9,15 @@ async function ensureStorageDir() {
 
 export async function appendRecord<T extends object>(fileName: string, nextRecord: T) {
   await ensureStorageDir()
-  const filePath = path.join(storageDir, fileName)
-
   const current = await readRecords<T>(fileName)
   current.push(nextRecord)
+  await writeRecords(fileName, current)
+}
 
-  await fs.writeFile(filePath, JSON.stringify(current, null, 2), "utf-8")
+export async function writeRecords<T>(fileName: string, records: T[]) {
+  await ensureStorageDir()
+  const filePath = path.join(storageDir, fileName)
+  await fs.writeFile(filePath, JSON.stringify(records, null, 2), "utf-8")
 }
 
 export async function readRecords<T>(fileName: string): Promise<T[]> {

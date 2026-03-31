@@ -10,7 +10,15 @@ type LeadSubmitState =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "error"; message: string }
-  | { status: "success"; leadId: string; confirmation: string }
+  | {
+      status: "success"
+      leadId: string
+      confirmation: string
+      merchantId: string
+      dashboardUrl: string
+      scanUrl: string
+      qrCodeUrl: string
+    }
 
 export function InstallLeadForm() {
   const callbackOptions = useMemo(() => createCallbackOptions(), [])
@@ -44,6 +52,10 @@ export function InstallLeadForm() {
         status: "success",
         leadId: payload.leadId,
         confirmation: payload.confirmation,
+        merchantId: payload.merchantId,
+        dashboardUrl: payload.dashboardUrl,
+        scanUrl: payload.scanUrl,
+        qrCodeUrl: payload.qrCodeUrl,
       })
 
       trackEvent("submit_lead", {
@@ -66,13 +78,36 @@ export function InstallLeadForm() {
           <div>
             <p className="text-xs uppercase tracking-[0.14em] text-[#637067]">Installation</p>
             <h2 className="mt-2 font-serif text-4xl text-[#173A2E]">Installation complète en 24h</h2>
-            <p className="mt-3 text-sm text-[#536057]">Nous configurons votre carte, vos relances et votre QR. Vous choisissez juste votre créneau de rappel.</p>
+            <p className="mt-3 text-sm text-[#536057]">
+              Nous configurons votre carte, vos relances et votre QR. Vous choisissez juste votre créneau de rappel.
+            </p>
 
             <div className="mt-6 rounded-2xl border border-[#D2D9CF] bg-[#FEFDF9] p-4">
               <p className="text-sm text-[#173A2E]">119€ — installation complète</p>
               <p className="mt-1 text-sm text-[#173A2E]">39€/mois</p>
               <p className="mt-2 text-xs text-[#5A645D]">Rentabilisé avec 1 client en plus par jour.</p>
             </div>
+
+            {state.status === "success" ? (
+              <div className="mt-6 rounded-2xl border border-[#B5C7B5] bg-[#EDF5EA] p-4 text-sm text-[#173A2E]">
+                <p className="font-medium">Merchant ID: {state.merchantId}</p>
+                <p className="mt-1">{state.confirmation}</p>
+
+                <img alt="QR marchant" className="mt-4 w-full max-w-[220px] rounded-xl border border-[#C4D2C4] bg-white p-2" src={state.qrCodeUrl} />
+
+                <div className="mt-4 space-y-2 text-xs">
+                  <a className="block underline" href={state.dashboardUrl} target="_blank">
+                    Ouvrir le tableau marchand
+                  </a>
+                  <a className="block underline" href={state.scanUrl} target="_blank">
+                    Ouvrir le lien scan client
+                  </a>
+                  <a className="block underline" download={`qr-${state.merchantId}.png`} href={state.qrCodeUrl}>
+                    Télécharger le QR PNG
+                  </a>
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <form className="space-y-3" onSubmit={onSubmit}>
@@ -125,13 +160,6 @@ export function InstallLeadForm() {
             </Button>
 
             {state.status === "error" ? <p className="text-sm text-[#A64040]">{state.message}</p> : null}
-
-            {state.status === "success" ? (
-              <div className="rounded-2xl border border-[#B5C7B5] bg-[#EDF5EA] p-4 text-sm text-[#173A2E]">
-                <p className="font-medium">Demande confirmée · {state.leadId}</p>
-                <p className="mt-1">{state.confirmation}</p>
-              </div>
-            ) : null}
           </form>
         </div>
       </Card>

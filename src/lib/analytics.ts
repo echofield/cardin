@@ -7,6 +7,9 @@ type FunnelEventName =
   | "engine_step_completed"
   | "submit_lead"
   | "download_setup_brief"
+  | "scan_card_created"
+  | "wallet_button_clicked"
+  | "merchant_stamp"
 
 export function trackEvent(eventName: FunnelEventName, properties: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return
