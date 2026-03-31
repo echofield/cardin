@@ -3,7 +3,8 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
-import { calculateRecovery, formatEuro, percentToRate } from "@/lib/calculator"
+import { trackEvent } from "@/lib/analytics"
+import { calculateRecovery, DEFAULT_DAYS_OPEN, formatEuro, percentToRate } from "@/lib/calculator"
 import { Button, Card, Slider } from "@/ui"
 
 type LandingCalculatorModuleProps = {
@@ -14,6 +15,8 @@ export function LandingCalculatorModule({ ctaHref }: LandingCalculatorModuleProp
   const [clientsPerDay, setClientsPerDay] = useState(100)
   const [avgTicket, setAvgTicket] = useState(10)
   const [returnLossPercent, setReturnLossPercent] = useState(30)
+  const [recoveryPercent, setRecoveryPercent] = useState(20)
+  const [showAssumptionsEditor, setShowAssumptionsEditor] = useState(false)
   const [animateResult, setAnimateResult] = useState(false)
 
   const result = useMemo(
@@ -22,9 +25,9 @@ export function LandingCalculatorModule({ ctaHref }: LandingCalculatorModuleProp
         clientsPerDay,
         avgTicket,
         returnLossRate: percentToRate(returnLossPercent),
-        recoveryRate: 0.2,
+        recoveryRate: percentToRate(recoveryPercent),
       }),
-    [avgTicket, clientsPerDay, returnLossPercent]
+    [avgTicket, clientsPerDay, recoveryPercent, returnLossPercent]
   )
 
   useEffect(() => {
@@ -33,6 +36,10 @@ export function LandingCalculatorModule({ ctaHref }: LandingCalculatorModuleProp
 
     return () => window.clearTimeout(timer)
   }, [result.extraRevenue])
+
+  const handleCalculatorChange = (label: string, value: number) => {
+    trackEvent("calculator_change", { field: label, value })
+  }
 
   return (
     <Card className="relative overflow-hidden border-[#C6CEC2] bg-gradient-to-b from-[#FFFEFB] to-[#F6F6F0] p-5 shadow-[0_30px_70px_-55px_rgba(23,58,46,0.75)] sm:p-8">
@@ -49,7 +56,15 @@ export function LandingCalculatorModule({ ctaHref }: LandingCalculatorModuleProp
               <p className="text-sm text-[#2A3F35]">Clients / jour</p>
               <p className="text-lg font-medium text-[#16372C]">{clientsPerDay}</p>
             </div>
-            <Slider max={260} min={10} onChange={setClientsPerDay} value={clientsPerDay} />
+            <Slider
+              max={260}
+              min={10}
+              onChange={(value) => {
+                setClientsPerDay(value)
+                handleCalculatorChange("clients_per_day", value)
+              }}
+              value={clientsPerDay}
+            />
           </div>
 
           <div>
@@ -57,7 +72,15 @@ export function LandingCalculatorModule({ ctaHref }: LandingCalculatorModuleProp
               <p className="text-sm text-[#2A3F35]">Panier moyen</p>
               <p className="text-lg font-medium text-[#16372C]">{avgTicket} €</p>
             </div>
-            <Slider max={70} min={5} onChange={setAvgTicket} value={avgTicket} />
+            <Slider
+              max={70}
+              min={5}
+              onChange={(value) => {
+                setAvgTicket(value)
+                handleCalculatorChange("avg_ticket", value)
+              }}
+              value={avgTicket}
+            />
           </div>
 
           <div>
@@ -65,7 +88,15 @@ export function LandingCalculatorModule({ ctaHref }: LandingCalculatorModuleProp
               <p className="text-sm text-[#2A3F35]">% de clients qui ne reviennent pas</p>
               <p className="text-lg font-medium text-[#16372C]">{returnLossPercent}%</p>
             </div>
-            <Slider max={80} min={10} onChange={setReturnLossPercent} value={returnLossPercent} />
+            <Slider
+              max={80}
+              min={10}
+              onChange={(value) => {
+                setReturnLossPercent(value)
+                handleCalculatorChange("return_loss_percent", value)
+              }}
+              value={returnLossPercent}
+            />
           </div>
         </div>
 
@@ -81,10 +112,43 @@ export function LandingCalculatorModule({ ctaHref }: LandingCalculatorModuleProp
           </p>
           <p className="mt-2 text-sm text-[#5C655E]">Sans publicité. Sans effort.</p>
           <p className="mt-2 text-sm text-[#2A3F35]">Rentabilisé avec 1 client en plus par jour.</p>
+
+          <div className="mt-4 border-t border-[#D9DDD6] pt-3">
+            <p className="text-xs text-[#5A645D]">Hypothèses: {DEFAULT_DAYS_OPEN} jours ouverts / mois · taux de récupération {recoveryPercent}%</p>
+            <button
+              className="mt-2 text-xs font-medium text-[#173A2E] underline-offset-2 hover:underline"
+              onClick={() => setShowAssumptionsEditor((prev) => !prev)}
+              type="button"
+            >
+              {showAssumptionsEditor ? "Masquer" : "Personnaliser"}
+            </button>
+
+            {showAssumptionsEditor ? (
+              <div className="mt-3">
+                <div className="mb-2 flex items-end justify-between gap-3">
+                  <p className="text-sm text-[#2A3F35]">Taux de récupération</p>
+                  <p className="text-sm font-medium text-[#16372C]">{recoveryPercent}%</p>
+                </div>
+                <Slider
+                  max={40}
+                  min={8}
+                  onChange={(value) => {
+                    setRecoveryPercent(value)
+                    handleCalculatorChange("recovery_percent", value)
+                  }}
+                  value={recoveryPercent}
+                />
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <div className="sticky bottom-3 mt-6 flex flex-col gap-3 sm:static sm:flex-row sm:items-center">
-          <Link className="sm:flex-1" href={ctaHref}>
+          <Link
+            className="sm:flex-1"
+            href={ctaHref}
+            onClick={() => trackEvent("calculator_cta", { extraRevenue: Math.round(result.extraRevenue) })}
+          >
             <Button className="w-full" size="lg">
               Installer maintenant — 119€
             </Button>

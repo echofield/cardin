@@ -1,12 +1,15 @@
 ﻿"use client"
 
+import Link from "next/link"
 import { useMemo, useState } from "react"
 
+import { trackEvent } from "@/lib/analytics"
 import { calculateRecovery, formatEuro, percentToRate } from "@/lib/calculator"
 import { merchantTemplates, type MerchantTemplate, type RewardType } from "@/lib/merchant-templates"
 import { Button, Card, Input, Slider } from "@/ui"
 
 import { MerchantTemplateSelector } from "./MerchantTemplateSelector"
+import { WalletPassPreview } from "./WalletPassPreview"
 
 type EngineStep = 1 | 2 | 3 | 4
 
@@ -74,6 +77,12 @@ export function EngineFlow() {
   }
 
   const goToNextStep = () => {
+    trackEvent("engine_step_completed", {
+      completedStep: step,
+      templateId: selectedTemplate.id,
+      rewardType,
+    })
+
     setStep((prev) => {
       if (prev === 1) return 2
       if (prev === 2) return 3
@@ -82,8 +91,51 @@ export function EngineFlow() {
     })
   }
 
+  const downloadSetupBrief = async () => {
+    const { jsPDF } = await import("jspdf")
+    const doc = new jsPDF()
+
+    doc.setFontSize(18)
+    doc.text("Cardin - Brief d'installation", 14, 20)
+    doc.setFontSize(11)
+    doc.text(`Date: ${new Date().toLocaleDateString("fr-FR")}`, 14, 28)
+
+    const lines = [
+      `Activité: ${selectedTemplate.label}`,
+      `Type de fidélité: ${rewardType}`,
+      `Objectif: ${targetVisits} passages`,
+      `Récompense: ${rewardLabel}`,
+      `Expiration douce: ${expirationDays} jours`,
+      `Relance automatique: ${reminderDelayDays} jours`,
+      `Projection: +${formatEuro(result.extraRevenue)} / mois`,
+      `Clients récupérés: ${Math.round(result.recoveredClients)} / mois`,
+      "", 
+      "Sécurisé automatiquement",
+      "Validation marchand: __________________________",
+    ]
+
+    let y = 40
+    lines.forEach((line) => {
+      doc.text(line, 14, y)
+      y += 8
+    })
+
+    doc.save(`cardin-brief-${selectedTemplate.id}.pdf`)
+
+    trackEvent("download_setup_brief", {
+      templateId: selectedTemplate.id,
+      projectedRevenue: Math.round(result.extraRevenue),
+    })
+  }
+
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+    <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+      <div className="mb-4 flex items-center justify-between">
+        <Link className="text-sm text-[#173A2E] underline-offset-4 hover:underline" href="/landing">
+          ← Retour à la landing
+        </Link>
+      </div>
+
       <div className="rounded-3xl border border-[#D7DDD2] bg-[#FFFEFB] p-4 shadow-[0_20px_60px_-45px_rgba(23,58,46,0.7)] sm:p-6 lg:p-10">
         <header className="border-b border-[#E0E4DB] pb-6">
           <p className="text-xs uppercase tracking-[0.16em] text-[#6B746D]">Moteur de fidélité</p>
@@ -204,29 +256,7 @@ export function EngineFlow() {
                 <h2 className="font-serif text-3xl text-[#173A2E]">Aperçu de la carte</h2>
                 <p className="mt-2 text-sm text-[#58625C]">Le client scanne, ajoute la carte, puis revient automatiquement.</p>
 
-                <Card className="mt-6 overflow-hidden bg-gradient-to-br from-[#183E30] to-[#244E3D] p-6 text-[#F9FAF5]">
-                  <p className="text-xs uppercase tracking-[0.14em] text-[#D7E5DA]">Carte Wallet</p>
-                  <h3 className="mt-3 font-serif text-3xl">{selectedTemplate.label}</h3>
-                  <p className="mt-1 text-sm text-[#D7E5DA]">{rewardLabel}</p>
-
-                  <div className="mt-6 flex flex-wrap gap-2">
-                    {Array.from({ length: progressDots }).map((_, index) => (
-                      <span
-                        className={[
-                          "inline-flex h-8 w-8 items-center justify-center rounded-full border text-xs",
-                          index < Math.max(1, Math.floor(progressDots * 0.4))
-                            ? "border-[#D1E5D8] bg-[#E7F2EB] text-[#1F4A38]"
-                            : "border-[#A6BCAF] text-[#D9E7DE]",
-                        ].join(" ")}
-                        key={index}
-                      >
-                        {index + 1}
-                      </span>
-                    ))}
-                  </div>
-
-                  <p className="mt-6 text-sm text-[#D7E5DA]">Sécurisé automatiquement</p>
-                </Card>
+                <WalletPassPreview businessLabel={selectedTemplate.label} progressDots={progressDots} rewardLabel={rewardLabel} />
               </div>
 
               <Card className="p-6">
@@ -279,6 +309,12 @@ export function EngineFlow() {
                 <p className="mt-2 font-serif text-5xl text-[#173A2E]">+{formatEuro(result.extraRevenue)} / mois</p>
                 <p className="mt-3 text-base text-[#2E4339]">{Math.round(result.recoveredClients)} clients récupérés / mois</p>
                 <p className="mt-3 text-sm text-[#4F5E55]">Rentabilisé avec 1 client en plus par jour.</p>
+
+                <div className="mt-5">
+                  <Button onClick={downloadSetupBrief} variant="secondary">
+                    Télécharger le brief PDF
+                  </Button>
+                </div>
               </Card>
             </div>
           ) : null}
@@ -305,3 +341,5 @@ export function EngineFlow() {
     </section>
   )
 }
+
+

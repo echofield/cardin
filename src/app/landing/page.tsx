@@ -1,31 +1,35 @@
 ﻿import Link from "next/link"
 
+import { InstallLeadForm } from "@/components/landing/InstallLeadForm"
 import { LandingCalculatorModule } from "@/components/landing/LandingCalculatorModule"
+import { MerchantProofStrip } from "@/components/landing/MerchantProofStrip"
+import { MobileStickyInstallBar } from "@/components/landing/MobileStickyInstallBar"
+import { TrackedInstallCta } from "@/components/landing/TrackedInstallCta"
 import { Card } from "@/ui"
 
 export default function LandingPage() {
   return (
-    <main className="bg-[#F8F7F2] text-[#152F25]">
+    <main className="bg-[#F8F7F2] pb-16 text-[#152F25] sm:pb-0">
       <section className="relative overflow-hidden border-b border-[#DEE3D9]">
-        <div className="absolute left-1/2 top-[-220px] h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-[#E9EFE5] blur-3xl" />
-        <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-14 sm:px-6 lg:px-8 lg:pb-20 lg:pt-20">
+        <div className="absolute left-1/2 top-[-180px] h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-[#E9EFE5] blur-3xl" />
+        <div className="relative mx-auto max-w-6xl px-4 pb-10 pt-12 sm:px-6 lg:px-8 lg:pb-16 lg:pt-18">
           <p className="text-xs uppercase tracking-[0.16em] text-[#5A645D]">Système de fidélité wallet pour commerces physiques</p>
           <h1 className="mt-4 max-w-4xl font-serif text-5xl leading-[1.05] text-[#15372B] sm:text-6xl lg:text-7xl">
             Faites revenir vos clients. Sans publicité.
           </h1>
-          <p className="mt-6 max-w-2xl text-lg text-[#4F5A53]">
+          <p className="mt-5 max-w-2xl text-base text-[#4F5A53] sm:text-lg">
             Carte de fidélité directement dans leur téléphone.
             <br />
             Installée en 24h. Sans application.
           </p>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <TrackedInstallCta
               className="inline-flex h-12 items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-8 text-sm font-medium text-[#FBFAF6] transition hover:bg-[#214F3E]"
-              href="/engine"
-            >
-              Installer maintenant
-            </Link>
+              href="#installation"
+              label="Installer maintenant"
+              source="hero"
+            />
             <Link className="text-sm font-medium text-[#173A2E] underline-offset-4 hover:underline" href="#calculateur">
               Voir combien vous pouvez récupérer →
             </Link>
@@ -33,12 +37,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8" id="calculateur">
-        <LandingCalculatorModule ctaHref="/engine" />
+      <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8" id="calculateur">
+        <LandingCalculatorModule ctaHref="#installation" />
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8 lg:py-16">
-        <div className="mb-8 max-w-3xl">
+      <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+        <div className="mb-6 max-w-3xl">
           <h2 className="font-serif text-4xl text-[#173A2E]">Comment ça marche</h2>
         </div>
 
@@ -63,7 +67,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8 lg:py-16" id="install">
+      <MerchantProofStrip />
+
+      <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12" id="pricing">
         <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
           <Card className="p-8">
             <p className="text-xs uppercase tracking-[0.16em] text-[#627067]">Tarification</p>
@@ -84,20 +90,24 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <InstallLeadForm />
+
       <section className="border-t border-[#DEE3D9] bg-[#F2F5EE]">
-        <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
           <h2 className="max-w-3xl font-serif text-4xl text-[#173A2E]">On vous installe cette semaine</h2>
           <p className="mt-3 max-w-2xl text-[#556159]">Plus de clients qui reviennent = plus d'argent.</p>
-          <div className="mt-7">
-            <Link
+          <div className="mt-6">
+            <TrackedInstallCta
               className="inline-flex h-12 items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-8 text-sm font-medium text-[#FBFAF6] transition hover:bg-[#214F3E]"
-              href="/engine"
-            >
-              On vous installe cette semaine
-            </Link>
+              href="#installation"
+              label="On vous installe cette semaine"
+              source="final_cta"
+            />
           </div>
         </div>
       </section>
+
+      <MobileStickyInstallBar />
     </main>
   )
 }
