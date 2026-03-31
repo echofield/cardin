@@ -1,12 +1,27 @@
 ﻿import QRCode from "qrcode"
+import { NextResponse } from "next/server"
 
-import { getMerchantById } from "@/lib/loyalty-storage"
+import { createClientSupabaseServer } from "@/lib/supabase/server"
 
 export async function GET(request: Request, { params }: { params: { merchantId: string } }) {
-  const merchant = await getMerchantById(params.merchantId)
+  const supabase = createClientSupabaseServer()
 
-  if (!merchant) {
-    return new Response("Not found", { status: 404 })
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 })
+  }
+
+  if (params.merchantId !== user.id) {
+    return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 })
+  }
+
+  const { data: merchant, error } = await supabase.from("merchants").select("id").eq("id", params.merchantId).single()
+
+  if (error || !merchant) {
+    return NextResponse.json({ ok: false, error: "merchant_not_found" }, { status: 404 })
   }
 
   const origin = new URL(request.url).origin
@@ -28,4 +43,3 @@ export async function GET(request: Request, { params }: { params: { merchantId: 
     },
   })
 }
-

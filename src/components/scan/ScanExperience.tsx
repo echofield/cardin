@@ -59,7 +59,7 @@ export function ScanExperience({ merchantId }: { merchantId: string }) {
       setMerchantError(null)
 
       try {
-        const response = await fetch(`/api/merchant/${merchantId}`)
+        const response = await fetch(`/api/public/merchant/${merchantId}`)
         const payload = (await response.json()) as MerchantResponse
 
         if (!response.ok || !payload.ok || !payload.merchant) {
@@ -97,7 +97,7 @@ export function ScanExperience({ merchantId }: { merchantId: string }) {
     setSubmitting(true)
 
     try {
-      const response = await fetch("/api/card/create", {
+      const response = await fetch("/api/public/card/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -175,7 +175,9 @@ export function ScanExperience({ merchantId }: { merchantId: string }) {
 
         {!cardData ? (
           <Card className="mt-6 p-6">
-            <p className="text-sm text-[#556159]">Programme: {merchant.loyaltyConfig.targetVisits} passages → {merchant.loyaltyConfig.rewardLabel}</p>
+            <p className="text-sm text-[#556159]">
+              Programme: {merchant.loyaltyConfig.targetVisits} passages → {merchant.loyaltyConfig.rewardLabel}
+            </p>
 
             <form className="mt-5 space-y-3" onSubmit={onCreateCard}>
               <Input onChange={(event) => setCustomerName(event.target.value)} placeholder="Votre prénom" required value={customerName} />
@@ -188,15 +190,13 @@ export function ScanExperience({ merchantId }: { merchantId: string }) {
           </Card>
         ) : (
           <div className="mt-6 space-y-4">
-            <WalletPassPreview
-              businessLabel={merchant.businessName}
-              progressDots={progressDots}
-              rewardLabel={cardData.card.rewardLabel}
-            />
+            <WalletPassPreview businessLabel={merchant.businessName} progressDots={progressDots} rewardLabel={cardData.card.rewardLabel} />
 
             <Card className="p-5">
               <p className="text-sm text-[#556159]">Bienvenue {cardData.card.customerName}. Votre carte est active.</p>
-              <p className="mt-1 text-sm text-[#173A2E]">Progression: {cardData.card.stamps} / {cardData.card.targetVisits}</p>
+              <p className="mt-1 text-sm text-[#173A2E]">
+                Progression: {cardData.card.stamps} / {cardData.card.targetVisits}
+              </p>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <Button onClick={() => openWalletFlow(cardData.appleWalletUrl, "apple")} variant="secondary">

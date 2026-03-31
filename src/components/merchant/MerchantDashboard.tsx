@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 
 import { trackEvent } from "@/lib/analytics"
+import { createClientSupabaseBrowser } from "@/lib/supabase/client"
 import { Button, Card } from "@/ui"
 
 type MerchantApiResponse = {
@@ -69,6 +70,12 @@ export function MerchantDashboard({ merchantId }: { merchantId: string }) {
     await loadMerchant()
   }
 
+  const onSignOut = async () => {
+    const supabase = createClientSupabaseBrowser()
+    await supabase.auth.signOut()
+    window.location.href = "/login"
+  }
+
   if (loading) {
     return <p className="p-6 text-sm">Chargement...</p>
   }
@@ -80,10 +87,18 @@ export function MerchantDashboard({ merchantId }: { merchantId: string }) {
   return (
     <main className="min-h-screen bg-[#F8F7F2] px-4 py-8 text-[#173A2E] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl space-y-6">
-        <header>
-          <p className="text-xs uppercase tracking-[0.14em] text-[#5E6961]">Tableau marchand</p>
-          <h1 className="mt-2 font-serif text-5xl">{data.merchant.businessName}</h1>
-          <p className="mt-2 text-sm text-[#546057]">{data.merchant.businessType} · {data.merchant.city}</p>
+        <header className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.14em] text-[#5E6961]">Tableau marchand</p>
+            <h1 className="mt-2 font-serif text-5xl">{data.merchant.businessName}</h1>
+            <p className="mt-2 text-sm text-[#546057]">
+              {data.merchant.businessType} · {data.merchant.city}
+            </p>
+          </div>
+
+          <Button onClick={onSignOut} variant="subtle">
+            Se déconnecter
+          </Button>
         </header>
 
         <section className="grid gap-4 md:grid-cols-4">
@@ -96,7 +111,11 @@ export function MerchantDashboard({ merchantId }: { merchantId: string }) {
         <section className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
           <Card className="p-6">
             <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">QR à afficher</p>
-            <img alt="QR fidélité" className="mt-3 w-full rounded-2xl border border-[#D4DBD1] bg-[#FCFCF8] p-3" src={`/api/merchant/${merchantId}/qr`} />
+            <img
+              alt="QR fidélité"
+              className="mt-3 w-full rounded-2xl border border-[#D4DBD1] bg-[#FCFCF8] p-3"
+              src={`/api/merchant/${merchantId}/qr`}
+            />
             <p className="mt-3 break-all text-xs text-[#5E6961]">{scanUrl}</p>
             <div className="mt-4 flex gap-3">
               <Button

@@ -1,32 +1,33 @@
 ﻿import { NextResponse } from "next/server"
 
-import { getMerchantById, listCardsByMerchantId, listVisitsByMerchantId } from "@/lib/loyalty-storage"
+import { createClientSupabaseServer } from "@/lib/supabase/server"
 
-export async function GET(_: Request, { params }: { params: { merchantId: string } }) {
-  const merchant = await getMerchantById(params.merchantId)
+export async function GET(request: Request, { params }: { params: { merchantId: string } }) {
+  const supabase = createClientSupabaseServer()
 
-  if (!merchant) {
-    return NextResponse.json({ ok: false, error: "merchant_not_found" }, { status: 404 })
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 })
   }
 
-  const cards = await listCardsByMerchantId(merchant.id)
-  const visits = await listVisitsByMerchantId(merchant.id)
+  if (params.merchantId !== user.id) {
+    return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 })
+  }
 
-  const rewardReadyCards = cards.filter((card) => card.status === "reward_ready").length
-  const repeatClients = cards.filter((card) => card.stamps > 1).length
+  const forwardUrl = new URL(request.url)
+  forwardUrl.pathname = "/api/merchant"
+  forwardUrl.searchParams.set("merchantId", params.merchantId)
 
-  return NextResponse.json({
-    ok: true,
-    merchant,
-    metrics: {
-      totalCards: cards.length,
-      rewardReadyCards,
-      totalVisits: visits.length,
-      repeatClients,
+  const res = await fetch(forwardUrl.toString(), {
+    headers: {
+      cookie: request.headers.get("cookie") ?? "",
     },
-    cards: cards
-      .slice()
-      .sort((a, b) => (a.lastVisitAt < b.lastVisitAt ? 1 : -1))
-      .slice(0, 20),
+    cache: "no-store",
   })
+
+  const payload = await res.json()
+  return NextResponse.json(payload, { status: res.status })
 }

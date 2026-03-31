@@ -1,9 +1,10 @@
 ﻿import { NextResponse } from "next/server"
 
-import { getCardById } from "@/lib/loyalty-storage"
+import { createSupabaseServiceClient } from "@/lib/supabase/service"
 
 export async function GET(request: Request, { params }: { params: { cardId: string } }) {
-  const card = await getCardById(params.cardId)
+  const supabase = createSupabaseServiceClient()
+  const { data: card } = await supabase.from("cards").select("id").eq("id", params.cardId).single()
 
   if (!card) {
     return NextResponse.json({ ok: false, error: "card_not_found" }, { status: 404 })

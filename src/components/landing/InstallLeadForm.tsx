@@ -1,9 +1,10 @@
 ﻿"use client"
 
-import { FormEvent, useMemo, useState } from "react"
+import { FormEvent, useEffect, useMemo, useState } from "react"
 
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton"
 import { trackEvent } from "@/lib/analytics"
-import { merchantTemplates } from "@/lib/merchant-templates"
+import { createClientSupabaseBrowser } from "@/lib/supabase/client"
 import { Button, Card, Input } from "@/ui"
 
 type LeadSubmitState =
@@ -22,14 +23,41 @@ type LeadSubmitState =
 
 export function InstallLeadForm() {
   const callbackOptions = useMemo(() => createCallbackOptions(), [])
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [checkingSession, setCheckingSession] = useState(true)
   const [state, setState] = useState<LeadSubmitState>({ status: "idle" })
   const [formData, setFormData] = useState({
     name: "",
-    phone: "",
-    businessType: merchantTemplates[0].label,
-    city: "",
     callbackSlot: callbackOptions[0],
   })
+
+  useEffect(() => {
+    const supabase = createClientSupabaseBrowser()
+
+    const loadSession = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      setUserEmail(user?.email ?? null)
+      setCheckingSession(false)
+    }
+
+    loadSession()
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      setUserEmail(user?.email ?? null)
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -43,6 +71,14 @@ export function InstallLeadForm() {
       })
 
       const payload = await response.json()
+
+      if (response.status === 401) {
+        setState({
+          status: "error",
+          message: "Connectez-vous avec Google pour créer votre compte marchand.",
+        })
+        return
+      }
 
       if (!response.ok || !payload.ok) {
         throw new Error(payload.error ?? "submission_failed")
@@ -59,9 +95,7 @@ export function InstallLeadForm() {
       })
 
       trackEvent("submit_lead", {
-        businessType: formData.businessType,
         callbackSlot: formData.callbackSlot,
-        city: formData.city,
       })
     } catch {
       setState({
@@ -79,7 +113,7 @@ export function InstallLeadForm() {
             <p className="text-xs uppercase tracking-[0.14em] text-[#637067]">Installation</p>
             <h2 className="mt-2 font-serif text-4xl text-[#173A2E]">Installation complète en 24h</h2>
             <p className="mt-3 text-sm text-[#536057]">
-              Nous configurons votre carte, vos relances et votre QR. Vous choisissez juste votre créneau de rappel.
+              Connectez votre compte marchand puis activez votre QR en une seule étape.
             </p>
 
             <div className="mt-6 rounded-2xl border border-[#D2D9CF] bg-[#FEFDF9] p-4">
@@ -110,57 +144,45 @@ export function InstallLeadForm() {
             ) : null}
           </div>
 
-          <form className="space-y-3" onSubmit={onSubmit}>
-            <Input
-              onChange={(event) => setFormData((prev) => ({ ...prev, name: event.target.value }))}
-              placeholder="Nom du commerce"
-              required
-              value={formData.name}
-            />
-            <Input
-              onChange={(event) => setFormData((prev) => ({ ...prev, phone: event.target.value }))}
-              placeholder="Téléphone"
-              required
-              value={formData.phone}
-            />
+          {checkingSession ? (
+            <div className="rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] p-6 text-sm text-[#5A645D]">Vérification de la session...</div>
+          ) : userEmail ? (
+            <form className="space-y-3" onSubmit={onSubmit}>
+              <Input
+                onChange={(event) => setFormData((prev) => ({ ...prev, name: event.target.value }))}
+                placeholder="Nom du commerce"
+                required
+                value={formData.name}
+              />
 
-            <select
-              className="h-11 w-full rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] px-3 text-sm text-[#132B22]"
-              onChange={(event) => setFormData((prev) => ({ ...prev, businessType: event.target.value }))}
-              value={formData.businessType}
-            >
-              {merchantTemplates.map((template) => (
-                <option key={template.id} value={template.label}>
-                  {template.label}
-                </option>
-              ))}
-            </select>
+              <Input disabled value={userEmail} />
 
-            <Input
-              onChange={(event) => setFormData((prev) => ({ ...prev, city: event.target.value }))}
-              placeholder="Ville"
-              required
-              value={formData.city}
-            />
+              <select
+                className="h-11 w-full rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] px-3 text-sm text-[#132B22]"
+                onChange={(event) => setFormData((prev) => ({ ...prev, callbackSlot: event.target.value }))}
+                value={formData.callbackSlot}
+              >
+                {callbackOptions.map((slot) => (
+                  <option key={slot} value={slot}>
+                    {slot}
+                  </option>
+                ))}
+              </select>
 
-            <select
-              className="h-11 w-full rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] px-3 text-sm text-[#132B22]"
-              onChange={(event) => setFormData((prev) => ({ ...prev, callbackSlot: event.target.value }))}
-              value={formData.callbackSlot}
-            >
-              {callbackOptions.map((slot) => (
-                <option key={slot} value={slot}>
-                  {slot}
-                </option>
-              ))}
-            </select>
+              <Button className="w-full" size="lg" type="submit">
+                {state.status === "loading" ? "Activation en cours..." : "Créer mon espace marchand"}
+              </Button>
 
-            <Button className="w-full" size="lg" type="submit">
-              {state.status === "loading" ? "Envoi en cours..." : "Installer maintenant"}
-            </Button>
-
-            {state.status === "error" ? <p className="text-sm text-[#A64040]">{state.message}</p> : null}
-          </form>
+              {state.status === "error" ? <p className="text-sm text-[#A64040]">{state.message}</p> : null}
+            </form>
+          ) : (
+            <div className="rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] p-6">
+              <p className="text-sm text-[#556159]">Connectez-vous avec Google pour lier votre compte marchand à vos données.</p>
+              <div className="mt-4">
+                <GoogleSignInButton nextPath="/landing#installation" />
+              </div>
+            </div>
+          )}
         </div>
       </Card>
     </section>

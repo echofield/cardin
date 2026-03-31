@@ -35,7 +35,7 @@ export function CardPhoneView({ cardId }: { cardId: string }) {
       setLoading(true)
 
       try {
-        const response = await fetch(`/api/card/${cardId}`)
+        const response = await fetch(`/api/public/card/${cardId}`)
         const payload = (await response.json()) as CardApiResponse
 
         if (mounted) {
@@ -77,18 +77,18 @@ export function CardPhoneView({ cardId }: { cardId: string }) {
       <div className="mx-auto max-w-xl">
         <p className="text-xs uppercase tracking-[0.14em] text-[#5D675F]">Votre carte fidélité</p>
         <h1 className="mt-2 font-serif text-5xl">{data.merchant.businessName}</h1>
-        <p className="mt-2 text-sm text-[#556159]">{data.card.customerName} · {statusLabel}</p>
+        <p className="mt-2 text-sm text-[#556159]">
+          {data.card.customerName} · {statusLabel}
+        </p>
 
         <div className="mt-6 rounded-[2rem] border border-[#CCD4CA] bg-[#FBFAF6] p-4 shadow-[0_30px_70px_-60px_rgba(20,48,38,0.8)]">
-          <WalletPassPreview
-            businessLabel={data.merchant.businessName}
-            progressDots={progressDots}
-            rewardLabel={data.card.rewardLabel}
-          />
+          <WalletPassPreview businessLabel={data.merchant.businessName} progressDots={progressDots} rewardLabel={data.card.rewardLabel} />
 
           <Card className="mt-4 p-4">
             <p className="text-sm text-[#556159]">Progression actuelle</p>
-            <p className="mt-1 text-xl">{data.card.stamps} / {data.card.targetVisits}</p>
+            <p className="mt-1 text-xl">
+              {data.card.stamps} / {data.card.targetVisits}
+            </p>
             <p className="mt-2 text-xs text-[#5D675F]">Présentez cette carte en caisse pour valider un passage.</p>
           </Card>
         </div>
