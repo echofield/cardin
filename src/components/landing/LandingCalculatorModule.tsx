@@ -16,7 +16,6 @@ type LandingCalculatorModuleProps = {
 }
 
 const MONTHLY_PLAN_PRICE = 39
-const FIRST_MONTH_PRICE = 158
 
 export function LandingCalculatorModule({ ctaHref, defaultAudience = "clients", entryModeLabel }: LandingCalculatorModuleProps) {
   const [audience, setAudience] = useState<AudienceMode>(defaultAudience)
@@ -47,10 +46,6 @@ export function LandingCalculatorModule({ ctaHref, defaultAudience = "clients", 
     () => (avgValue > 0 ? MONTHLY_PLAN_PRICE / (DEFAULT_DAYS_OPEN * avgValue) : 0),
     [avgValue]
   )
-  const returnsPerDayToCoverFirstMonth = useMemo(
-    () => (avgValue > 0 ? FIRST_MONTH_PRICE / (DEFAULT_DAYS_OPEN * avgValue) : 0),
-    [avgValue]
-  )
 
   useEffect(() => {
     setAnimateResult(true)
@@ -65,16 +60,24 @@ export function LandingCalculatorModule({ ctaHref, defaultAudience = "clients", 
 
   const baseLabel = audience === "clients" ? "Clients actifs / mois" : "Membres actifs / mois"
   const valueLabel = audience === "clients" ? "Panier moyen" : "Valeur moyenne / membre"
-  const inactivityLabel = audience === "clients" ? "% de clients dormants" : "% de membres inactifs"
+  const inactivityLabel = audience === "clients" ? "% de clients inactifs" : "% de membres inactifs"
 
   return (
     <Card className="relative overflow-hidden border-[#C6CEC2] bg-gradient-to-b from-[#FFFEFB] to-[#F6F6F0] p-5 shadow-[0_30px_70px_-55px_rgba(23,58,46,0.75)] sm:p-8">
       <div className="absolute right-[-80px] top-[-120px] h-[220px] w-[220px] rounded-full bg-[#EAF0E6] blur-2xl" />
 
       <div className="relative">
-        <p className="text-xs uppercase tracking-[0.16em] text-[#5C655E]">Calculateur de retour {entryModeLabel ? `· ${entryModeLabel}` : ""}</p>
-        <h2 className="mt-3 font-serif text-3xl leading-tight text-[#16372C] sm:text-4xl">Les points achètent une transaction. Ici, on mesure les retours.</h2>
-        <p className="mt-2 text-sm text-[#5C655E]">Base clients ou base membres. Même logique: inactifs x valeur moyenne x retour visé.</p>
+        <p className="text-xs uppercase tracking-[0.16em] text-[#5C655E]">Calculateur de retour · {entryModeLabel ?? "Commerce"}</p>
+        <h2 className="mt-3 font-serif text-3xl leading-tight text-[#16372C] sm:text-4xl">
+          Les points déclenchent une transaction.
+          <br />
+          Ici, on mesure les retours.
+        </h2>
+        <p className="mt-2 text-sm text-[#5C655E]">
+          Base clients ou base membres. Même logique:
+          <br />
+          inactifs × valeur moyenne × retour visé.
+        </p>
 
         <div className="mt-6 inline-flex rounded-full border border-[#CDD5CB] bg-[#F8FAF5] p-1">
           <button
@@ -165,11 +168,11 @@ export function LandingCalculatorModule({ ctaHref, defaultAudience = "clients", 
           >
             +{formatEuro(result.extraRevenue)} / mois
           </p>
-          <p className="mt-2 text-sm text-[#5C655E]">1 retour par jour vaut environ {formatEuro(monthlyValueFromOneReturnDaily)} / mois.</p>
-          <p className="mt-2 text-sm text-[#2A3F35]">Point mort Cardin: {returnsPerDayToCoverMonthly.toFixed(2)} retour/jour.</p>
+          <p className="mt-2 text-sm text-[#5C655E]">1 retour par jour représente environ {formatEuro(monthlyValueFromOneReturnDaily)} / mois.</p>
+          <p className="mt-2 text-sm text-[#2A3F35]">Seuil de rentabilité Cardin : atteint en quelques retours.</p>
 
           <div className="mt-4 border-t border-[#D9DDD6] pt-3">
-            <p className="text-xs text-[#5A645D]">Hypothèses: {DEFAULT_DAYS_OPEN} jours ouverts / mois · retour visé {recoveryPercent}%</p>
+            <p className="text-xs text-[#5A645D]">Hypothèses : {DEFAULT_DAYS_OPEN} jours ouverts / mois · retour visé {recoveryPercent}%</p>
             <button
               className="mt-2 text-xs font-medium text-[#173A2E] underline-offset-2 hover:underline"
               onClick={() => setShowAssumptionsEditor((prev) => !prev)}
@@ -179,23 +182,21 @@ export function LandingCalculatorModule({ ctaHref, defaultAudience = "clients", 
             </button>
 
             {showAssumptionsEditor ? (
-              <div className="mt-3 space-y-3">
-                <div>
-                  <div className="mb-2 flex items-end justify-between gap-3">
-                    <p className="text-sm text-[#2A3F35]">Taux de retour visé</p>
-                    <p className="text-sm font-medium text-[#16372C]">{recoveryPercent}%</p>
-                  </div>
-                  <Slider
-                    max={45}
-                    min={8}
-                    onChange={(value) => {
-                      setRecoveryPercent(value)
-                      handleCalculatorChange("recovery_percent", value)
-                    }}
-                    value={recoveryPercent}
-                  />
+              <div className="mt-3">
+                <div className="mb-2 flex items-end justify-between gap-3">
+                  <p className="text-sm text-[#2A3F35]">Taux de retour visé</p>
+                  <p className="text-sm font-medium text-[#16372C]">{recoveryPercent}%</p>
                 </div>
-                <p className="text-xs text-[#5A645D]">Premier mois (119€ + 39€): {returnsPerDayToCoverFirstMonth.toFixed(2)} retour/jour.</p>
+                <Slider
+                  max={45}
+                  min={8}
+                  onChange={(value) => {
+                    setRecoveryPercent(value)
+                    handleCalculatorChange("recovery_percent", value)
+                  }}
+                  value={recoveryPercent}
+                />
+                <p className="mt-2 text-xs text-[#5A645D]">Seuil calculé actuel : {returnsPerDayToCoverMonthly.toFixed(2)} retour/jour.</p>
               </div>
             ) : null}
           </div>
@@ -212,14 +213,10 @@ export function LandingCalculatorModule({ ctaHref, defaultAudience = "clients", 
             </Button>
           </Link>
           <Link className="text-sm font-medium text-[#16372C] underline-offset-4 hover:underline" href="#experience-templates">
-            Voir les 3 mécaniques
+            Voir les mécaniques &rarr;
           </Link>
         </div>
       </div>
     </Card>
   )
 }
-
-
-
-

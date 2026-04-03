@@ -86,7 +86,7 @@ export function InstallLeadForm({ entryMode = "commerce" }: InstallLeadFormProps
       if (response.status === 401) {
         setState({
           status: "error",
-          message: "Connectez-vous avec Google pour activer votre espace Cardin.",
+          message: "Entrée instantanée avec Google requise pour activer Cardin.",
         })
         return
       }
@@ -123,13 +123,13 @@ export function InstallLeadForm({ entryMode = "commerce" }: InstallLeadFormProps
         <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
           <div>
             <p className="text-xs uppercase tracking-[0.14em] text-[#637067]">Activation</p>
-            <h2 className="mt-2 font-serif text-4xl text-[#173A2E]">Votre Return Engine en 24h</h2>
-            <p className="mt-3 text-sm text-[#536057]">Nous activons votre boucle Cardin et votre QR en une seule mise en place.</p>
+            <h2 className="mt-2 font-serif text-4xl text-[#173A2E]">Activer Cardin</h2>
+            <p className="mt-3 text-sm text-[#536057]">Votre système de retour, en place en 24h.</p>
 
             <div className="mt-6 rounded-2xl border border-[#D2D9CF] bg-[#FEFDF9] p-4">
               <p className="text-sm text-[#173A2E]">119€ — installation complète</p>
               <p className="mt-1 text-sm text-[#173A2E]">39€/mois — moteur actif</p>
-              <p className="mt-2 text-xs text-[#5A645D]">1 client en plus par jour peut couvrir Cardin.</p>
+              <p className="mt-2 text-xs text-[#5A645D]">Un retour par jour couvre largement Cardin.</p>
             </div>
 
             {state.status === "success" ? (
@@ -190,14 +190,14 @@ export function InstallLeadForm({ entryMode = "commerce" }: InstallLeadFormProps
               </select>
 
               <Button className="w-full" size="lg" type="submit">
-                {state.status === "loading" ? "Activation en cours..." : "Activer mon Return Engine"}
+                {state.status === "loading" ? "Activation en cours..." : "Activer Cardin"}
               </Button>
 
               {state.status === "error" ? <p className="text-sm text-[#A64040]">{state.message}</p> : null}
             </form>
           ) : (
             <div className="rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] p-6">
-              <p className="text-sm text-[#556159]">Connectez-vous avec Google pour lier votre espace Cardin et activer votre boucle.</p>
+              <p className="text-sm text-[#556159]">Entrée instantanée avec Google. Activation simple. Aucun outil à apprendre.</p>
               <div className="mt-4">
                 <GoogleSignInButton nextPath="/landing#installation" />
               </div>
@@ -221,4 +221,3 @@ function createCallbackOptions() {
     return slots.map((slot) => `${formatter.format(date)} · ${slot}`)
   })
 }
-

@@ -1,7 +1,6 @@
 ﻿"use client"
 
 import Link from "next/link"
-import { useState } from "react"
 
 import { InstallLeadForm } from "@/components/landing/InstallLeadForm"
 import { LandingCalculatorModule } from "@/components/landing/LandingCalculatorModule"
@@ -10,121 +9,73 @@ import { MobileStickyInstallBar } from "@/components/landing/MobileStickyInstall
 import { TrackedInstallCta } from "@/components/landing/TrackedInstallCta"
 import { Card } from "@/ui"
 
-type EntryMode = "commerce" | "creator" | "experience"
-
-type ModeContent = {
-  label: string
-  shortDescription: string
-  heroContext: string
-  heroSubline: string
-  calculatorAudience: "clients" | "members"
-  ritualExample: string
-  missionExample: string
-  dominoExample: string
-}
-
-const ENTRY_MODES: Record<EntryMode, ModeContent> = {
-  commerce: {
-    label: "Commerce",
-    shortDescription: "Vos clients existent déjà. Le sujet: les faire revenir, encore.",
-    heroContext: "Le trafic est là. Le trou est entre deux visites.",
-    heroSubline: "Un cap clair. Un retour mesurable.",
-    calculatorAudience: "clients",
-    ritualExample: "12 passages valides sur l'année, 1 prestation signature offerte.",
-    missionExample: "Mission 10 jours: 4 passages, puis dessert ou avantage immédiat.",
-    dominoExample: "Objectif collectif mensuel du quartier atteint, bonus débloqué pour les actifs.",
-  },
-  creator: {
-    label: "Creator / Community",
-    shortDescription: "Moins de vues passives. Plus de membres qui reviennent et participent.",
-    heroContext: "L'enjeu n'est pas la portée. C'est la régularité.",
-    heroSubline: "Progression suivie. Presence stable.",
-    calculatorAudience: "members",
-    ritualExample: "12 présences validées, acces prive trimestriel débloqué.",
-    missionExample: "Mission 21 jours: 6 actions validées, bonus communauté immédiat.",
-    dominoExample: "Palier collectif atteint, récompense de groupe pour tous les membres engages.",
-  },
-  experience: {
-    label: "Experience / Brand",
-    shortDescription: "Pas une animation de plus. Un rituel de marque qui donne envie de revenir.",
-    heroContext: "Le luxe ne force pas. Il attire le retour.",
-    heroSubline: "Retour emotionnel. Relation durable.",
-    calculatorAudience: "members",
-    ritualExample: "12 visites qualifiées, privilège annuel de maison débloqué.",
-    missionExample: "Mission saisonniere: 3 activations premium, invitation exclusive.",
-    dominoExample: "Objectif communauté atteint pendant l'evenement, privilège collectif active.",
-  },
-}
-
-const LOOP_TEMPLATES = [
+const EXPERIENCE_TEMPLATES = [
   {
     id: "ritual",
     title: "Ritual",
-    punchline: "Devenir une habitude annuelle.",
-    narrative:
-      "Vous ne cherchez pas a fidéliser. Vous cherchez a devenir une habitude annuelle. Ritual transforme l'année en progression.",
-    emotionalFraming: "Le client se sent reconnu plutôt que sollicité.",
-    modeExampleKey: "ritualExample",
+    punchline: "Devenir un rendez-vous.",
+    body: "Vous ne cherchez pas à solliciter. Vous cherchez à être intégré dans l'année du client.",
+    example: "12 passages validés sur l'année, 1 prestation signature offerte.",
+    emotion: "Le client se sent reconnu. Vous devenez un repère.",
   },
   {
     id: "mission",
     title: "Mission",
-    punchline: "Cette semaine, une raison concrete de revenir.",
-    narrative:
-      "Pas une promo. Une mission avec une fin, une récompense, et l'envie de l'accomplir. Le sentiment du jeu, sans l'image du discount.",
-    emotionalFraming: "Le client revient pour terminer, pas pour chasser une remise.",
-    modeExampleKey: "missionExample",
+    punchline: "Une raison claire de revenir maintenant.",
+    body: "Un objectif court, lisible, atteignable. Pas une remise - une progression.",
+    example: "4 passages en 10 jours, puis un avantage immédiat.",
+    emotion: "Le client revient pour terminer.",
   },
   {
     id: "domino",
     title: "Domino",
     punchline: "Quand le groupe avance, chacun revient.",
-    narrative:
-      "Le retour individuel devient un acte collectif. Pour les studios, clubs et communautés, là où l'appartenance pese plus que l'offre.",
-    emotionalFraming: "On revient pour soi. On reste pour le collectif.",
-    modeExampleKey: "dominoExample",
+    body: "Le retour individuel prend une dimension collective.",
+    example: "Objectif mensuel atteint, bonus débloqué pour les clients actifs.",
+    emotion: "On vient pour soi. On reste pour l'ensemble.",
   },
 ] as const
 
 const LOOP_STEPS = [
   {
     title: "Entrer dans le système",
-    detail: "Le client ajoute la carte dans son Wallet en un geste.",
+    detail: "Le client scanne. Il accède instantanément à son espace.",
   },
   {
     title: "Voir sa progression",
-    detail: "Chaque passage valide une étape visible, claire, immédiate.",
+    detail: "Chaque passage valide une étape, visible et claire.",
   },
   {
     title: "Revenir naturellement",
-    detail: "La récompense se rapproche. Le retour devient un reflexe.",
+    detail: "La prochaine étape est proche. Le retour s'installe.",
   },
 ]
 
 export default function LandingPage() {
-  const [entryMode, setEntryMode] = useState<EntryMode>("commerce")
-
-  const mode = ENTRY_MODES[entryMode]
-
   return (
     <main className="bg-[#F8F7F2] pb-16 text-[#152F25] sm:pb-0">
       <section className="relative overflow-hidden border-b border-[#DEE3D9]">
         <div className="absolute left-1/2 top-[-180px] h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-[#E9EFE5] blur-3xl" />
         <div className="relative mx-auto max-w-6xl px-4 pb-10 pt-12 sm:px-6 lg:px-8 lg:pb-16 lg:pt-18">
-          <p className="text-xs uppercase tracking-[0.16em] text-[#5A645D]">Cardin - Return Engine</p>
+          <p className="text-xs uppercase tracking-[0.16em] text-[#5A645D]">Cardin — Return Engine</p>
           <h1 className="mt-4 max-w-4xl font-serif text-5xl leading-[1.05] text-[#15372B] sm:text-6xl lg:text-7xl">
             Les points récompensent un achat.
             <br />
-            Cardin crée une raison de revenir.
-            <br />
-            Ce n'est pas la même chose.
+            Cardin crée un retour.
           </h1>
+
           <p className="mt-5 max-w-3xl text-base text-[#4F5A53] sm:text-lg">
             Chaque passage devient une étape visible dans le téléphone de votre client.
             <br />
-            Il sait ou il en est. Il revient pour avancer. Vous n'avez rien à gérer.
+            Il sait où il en est. Il revient pour avancer.
+          </p>
+          <p className="mt-3 text-base text-[#2A3F35] sm:text-lg">Vous n'avez rien à gérer.</p>
+          <p className="mt-3 max-w-3xl text-sm text-[#556159] sm:text-base">
+            Un cap clair.
             <br />
-            {mode.heroSubline} {mode.heroContext}
+            Un retour mesurable.
+            <br />
+            Le trafic est déjà là. Le manque est entre deux visites.
           </p>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -140,7 +91,9 @@ export default function LandingPage() {
           </div>
 
           <p className="mt-5 text-xs uppercase tracking-[0.14em] text-[#5A645D]">
-            Installation en 24h. Sans application. Les points achètent une transaction. Les boucles créent une habitude.
+            Installation en 24h. Sans application.
+            <br />
+            Pas de programme à gérer. Un comportement qui s'installe.
           </p>
         </div>
       </section>
@@ -148,57 +101,56 @@ export default function LandingPage() {
       <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10" id="entry-mode">
         <div className="mb-5 max-w-3xl">
           <p className="text-xs uppercase tracking-[0.14em] text-[#647068]">Mode</p>
-          <h2 className="mt-2 font-serif text-4xl text-[#173A2E]">Vous êtes...</h2>
+          <h2 className="mt-2 font-serif text-4xl text-[#173A2E]">Vous êtes…</h2>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          {(Object.entries(ENTRY_MODES) as [EntryMode, ModeContent][]).map(([key, item]) => {
-            const active = key === entryMode
-            return (
-              <button
-                className={[
-                  "rounded-3xl border p-6 text-left transition",
-                  active ? "border-[#173A2E] bg-[#EDF3EC]" : "border-[#D6DDD2] bg-[#FBFCF8] hover:border-[#BFCABD]",
-                ].join(" ")}
-                key={key}
-                onClick={() => setEntryMode(key)}
-                type="button"
-              >
-                <p className="text-xs uppercase tracking-[0.14em] text-[#5D685F]">{active ? "Sélectionné" : "Mode Cardin"}</p>
-                <p className="mt-2 font-serif text-3xl text-[#173A2E]">{item.label}</p>
-                <p className="mt-3 text-sm text-[#4E5B52]">{item.shortDescription}</p>
-              </button>
-            )
-          })}
+          <div className="rounded-3xl border border-[#173A2E] bg-[#EDF3EC] p-6 text-left">
+            <p className="text-xs uppercase tracking-[0.14em] text-[#5D685F]">Sélectionné</p>
+            <p className="mt-2 font-serif text-3xl text-[#173A2E]">Commerce</p>
+            <p className="mt-3 text-sm text-[#4E5B52]">
+              Vos clients existent déjà. Le sujet n'est pas d'en trouver plus, mais de les revoir.
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-[#D6DDD2] bg-[#FBFCF8] p-6 text-left">
+            <p className="text-xs uppercase tracking-[0.14em] text-[#5D685F]">Mode Cardin</p>
+            <p className="mt-2 font-serif text-3xl text-[#173A2E]">Creator / Communauté</p>
+            <p className="mt-3 text-sm text-[#4E5B52]">Moins de passage passif. Plus de membres présents, réguliers.</p>
+          </div>
+
+          <div className="rounded-3xl border border-[#D6DDD2] bg-[#FBFCF8] p-6 text-left">
+            <p className="text-xs uppercase tracking-[0.14em] text-[#5D685F]">Mode Cardin</p>
+            <p className="mt-2 font-serif text-3xl text-[#173A2E]">Marque / Expérience</p>
+            <p className="mt-3 text-sm text-[#4E5B52]">Pas une animation de plus. Un rythme qui donne envie de revenir.</p>
+          </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8" id="calculateur">
-        <LandingCalculatorModule ctaHref="#installation" defaultAudience={mode.calculatorAudience} entryModeLabel={mode.label} />
+        <LandingCalculatorModule ctaHref="#installation" defaultAudience="clients" entryModeLabel="Commerce" />
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12" id="experience-templates">
         <div className="mb-6 max-w-3xl">
-          <p className="text-xs uppercase tracking-[0.14em] text-[#647068]">Experience</p>
+          <p className="text-xs uppercase tracking-[0.14em] text-[#647068]">Expérience</p>
           <h2 className="mt-2 font-serif text-4xl text-[#173A2E]">Trois mécaniques de retour</h2>
           <p className="mt-3 text-sm text-[#556159]">
-            Vous ne lancez pas une promo. Vous installez un comportement.
+            Vous ne lancez pas une promotion.
             <br />
-            Le client ne revient pas pour des points. Il revient parce qu'il a quelque chose à finir.
+            Vous installez une dynamique simple: revenir pour continuer.
           </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          {LOOP_TEMPLATES.map((template) => (
+          {EXPERIENCE_TEMPLATES.map((template) => (
             <Card className="p-6" key={template.id}>
               <p className="text-xs uppercase tracking-[0.12em] text-[#657068]">Template</p>
               <p className="mt-3 text-2xl font-serif text-[#173A2E]">{template.title}</p>
               <p className="mt-2 text-sm text-[#2A3F35]">{template.punchline}</p>
-              <p className="mt-3 text-sm text-[#5A665D]">{template.narrative}</p>
-              <p className="mt-4 rounded-2xl border border-[#D7DED4] bg-[#F9FAF6] p-3 text-sm text-[#49574E]">
-                Exemple: {mode[template.modeExampleKey]}
-              </p>
-              <p className="mt-4 text-sm text-[#2A3F35]">{template.emotionalFraming}</p>
+              <p className="mt-3 text-sm text-[#5A665D]">{template.body}</p>
+              <p className="mt-4 rounded-2xl border border-[#D7DED4] bg-[#F9FAF6] p-3 text-sm text-[#49574E]">Exemple: {template.example}</p>
+              <p className="mt-4 text-sm text-[#2A3F35]">{template.emotion}</p>
             </Card>
           ))}
         </div>
@@ -206,7 +158,7 @@ export default function LandingPage() {
 
       <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
         <div className="mb-6 max-w-3xl">
-          <p className="text-xs uppercase tracking-[0.14em] text-[#647068]">Boucle comportementale</p>
+          <p className="text-xs uppercase tracking-[0.14em] text-[#647068]">Boucle</p>
           <h2 className="mt-2 font-serif text-4xl text-[#173A2E]">Entrer. Progresser. Revenir.</h2>
         </div>
 
@@ -225,53 +177,62 @@ export default function LandingPage() {
 
       <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
         <div className="mb-6 max-w-3xl">
-          <p className="text-xs uppercase tracking-[0.14em] text-[#647068]">Experience client</p>
-          <h2 className="mt-2 font-serif text-4xl text-[#173A2E]">Ce que le client voit</h2>
+          <p className="text-xs uppercase tracking-[0.14em] text-[#647068]">Expérience client</p>
+          <h2 className="mt-2 font-serif text-4xl text-[#173A2E]">Ce que voit votre client</h2>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
           <Card className="p-6">
-            <p className="text-xs uppercase tracking-[0.12em] text-[#657068]">Wallet</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-[#657068]">Espace client</p>
             <p className="mt-3 text-xl font-serif text-[#173A2E]">Toujours dans le téléphone</p>
-            <p className="mt-2 text-sm text-[#5B655E]">Une carte claire. Sans application. Prete en un geste.</p>
+            <p className="mt-2 text-sm text-[#5B655E]">Un espace simple, accessible en un scan. Sans application.</p>
           </Card>
 
           <Card className="p-6">
-            <p className="text-xs uppercase tracking-[0.12em] text-[#657068]">Progression</p>
-            <p className="mt-3 text-xl font-serif text-[#173A2E]">Un cap visible</p>
-            <p className="mt-2 text-sm text-[#5B655E]">Chaque passage valide une étape. Le client sait ou il en est.</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-[#657068]">Un cap visible</p>
+            <p className="mt-3 text-xl font-serif text-[#173A2E]">Progression claire</p>
+            <p className="mt-2 text-sm text-[#5B655E]">Chaque passage valide une étape. Le client sait où il en est.</p>
           </Card>
 
           <Card className="p-6">
-            <p className="text-xs uppercase tracking-[0.12em] text-[#657068]">Récompense</p>
-            <p className="mt-3 text-xl font-serif text-[#173A2E]">Une raison de revenir</p>
-            <p className="mt-2 text-sm text-[#5B655E]">La prochaine récompense est proche. Le retour devient naturel.</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-[#657068]">Une raison de revenir</p>
+            <p className="mt-3 text-xl font-serif text-[#173A2E]">Retour naturel</p>
+            <p className="mt-2 text-sm text-[#5B655E]">La prochaine étape est proche. Le retour devient naturel.</p>
           </Card>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8 lg:py-8">
+        <Card className="p-8">
+          <p className="text-xs uppercase tracking-[0.14em] text-[#647068]">Pourquoi ça fonctionne</p>
+          <h2 className="mt-3 max-w-3xl font-serif text-4xl text-[#173A2E]">Le client ne revient pas pour une remise.</h2>
+          <p className="mt-3 max-w-3xl text-[#556159]">Il revient parce qu'il a commencé quelque chose.</p>
+          <p className="mt-2 max-w-3xl text-[#2A3F35]">Et qu'il souhaite aller au bout.</p>
+        </Card>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12" id="pricing">
         <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
           <Card className="p-8">
-            <p className="text-xs uppercase tracking-[0.16em] text-[#627067]">Tarification</p>
+            <p className="text-xs uppercase tracking-[0.16em] text-[#627067]">Pricing</p>
             <p className="mt-3 text-lg text-[#2A3F35]">119€ pour installer le système.</p>
-            <p className="mt-1 text-lg text-[#2A3F35]">39€/mois pour le garder en marche.</p>
-            <p className="mt-4 font-serif text-3xl text-[#173A2E]">Un client qui revient une fois par jour couvre Cardin en moins d'une semaine.</p>
-            <p className="mt-3 text-sm text-[#4E5A52]">Le reste, c'est du chiffre récupéré.</p>
+            <p className="mt-1 text-lg text-[#2A3F35]">39€/mois pour le maintenir actif.</p>
+            <p className="mt-4 font-serif text-3xl text-[#173A2E]">Un retour par jour couvre largement Cardin.</p>
+            <p className="mt-2 text-sm text-[#4E5A52]">Au-delà, chaque retour devient du chiffre récupéré.</p>
           </Card>
 
           <Card className="p-8">
-            <p className="text-xs uppercase tracking-[0.16em] text-[#627067]">Ce que vous achetez</p>
+            <p className="text-xs uppercase tracking-[0.16em] text-[#627067]">Ce que vous mettez en place</p>
             <div className="mt-4 space-y-3 text-sm text-[#203B31]">
-              <p>Un comportement de retour, pas un programme de points</p>
-              <p>Une progression visible que le client veut terminer</p>
-              <p>Un chiffre qui se voit sur 30 jours</p>
+              <p>Un rythme de retour, sans gestion quotidienne</p>
+              <p>Une progression visible côté client</p>
+              <p>Un impact mesurable sur 30 jours</p>
             </div>
             <div className="mt-6">
               <TrackedInstallCta
                 className="inline-flex h-11 items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-5 text-sm font-medium text-[#FBFAF6] transition hover:bg-[#214F3E]"
                 href="#installation"
-                label="Lancer Cardin"
+                label="Activer Cardin"
                 source="pricing"
               />
             </div>
@@ -279,20 +240,23 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <InstallLeadForm entryMode={entryMode} />
+      <InstallLeadForm entryMode="commerce" />
 
       <section className="border-t border-[#DEE3D9] bg-[#F2F5EE]">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-          <h2 className="max-w-3xl font-serif text-4xl text-[#173A2E]">Vos clients savent déjà revenir. Donnez-leur une raison.</h2>
-          <p className="mt-3 max-w-2xl text-[#556159]">Moins de friction. Un comportement de retour. Un chiffre qui le prouve.</p>
+          <h2 className="max-w-3xl font-serif text-4xl text-[#173A2E]">Activer Cardin</h2>
+          <p className="mt-3 max-w-2xl text-[#556159]">Votre système de retour, en place en 24h.</p>
+          <p className="mt-2 max-w-2xl text-sm text-[#556159]">Entrée instantanée avec Google. Activation simple. Aucun outil à apprendre.</p>
           <div className="mt-6">
             <TrackedInstallCta
               className="inline-flex h-12 items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-8 text-sm font-medium text-[#FBFAF6] transition hover:bg-[#214F3E]"
               href="#installation"
-              label="Parler a un spécialiste retour"
+              label="Se connecter avec Google"
               source="final_cta"
             />
           </div>
+          <p className="mt-6 max-w-3xl font-serif text-3xl text-[#173A2E]">Vos clients savent déjà venir.</p>
+          <p className="mt-1 max-w-3xl font-serif text-3xl text-[#173A2E]">Cardin donne une raison de revenir.</p>
         </div>
       </section>
 
@@ -300,5 +264,3 @@ export default function LandingPage() {
     </main>
   )
 }
-
-
