@@ -13,6 +13,9 @@ export type MerchantTemplate = {
   id: string
   label: string
   description: string
+  needs: [string, string]
+  pointOfDeparture: string
+  evolvesTo: [string, string, string]
   rewardExample: string
   rhythmLabel: string
   defaults: MerchantTemplateDefaults
@@ -22,7 +25,10 @@ export const merchantTemplates: MerchantTemplate[] = [
   {
     id: "cafe",
     label: "Café",
-    description: "Pour les lieux de passage et les habitudes du quotidien.",
+    description: "Passage rapide et habitudes du quotidien.",
+    needs: ["Faire revenir dans la semaine", "Ancrer un rendez-vous du matin"],
+    pointOfDeparture: "10 passages → 1 café offert",
+    evolvesTo: ["Rendez-vous matin", "Défi express", "Gain mensuel"],
     rewardExample: "10 passages → 1 café offert",
     rhythmLabel: "Rappel court · clientèle régulière",
     defaults: {
@@ -37,7 +43,10 @@ export const merchantTemplates: MerchantTemplate[] = [
   {
     id: "restaurant",
     label: "Restaurant",
-    description: "Pour faire revenir vos clients entre deux repas ou occasions.",
+    description: "Entre deux repas et occasions.",
+    needs: ["Ramener entre deux repas", "Mieux remplir les moments creux"],
+    pointOfDeparture: "5 visites → 1 dessert offert",
+    evolvesTo: ["Défi court", "Rendez-vous hebdo", "Gain mensuel"],
     rewardExample: "5 visites → 1 dessert offert",
     rhythmLabel: "Rappel moyen · panier plus élevé",
     defaults: {
@@ -52,7 +61,10 @@ export const merchantTemplates: MerchantTemplate[] = [
   {
     id: "boulangerie",
     label: "Boulangerie",
-    description: "Pour les achats fréquents et les habitudes de quartier.",
+    description: "Achat fréquent et routine de quartier.",
+    needs: ["Créer plus de retours dans la semaine", "Relancer les jours plus plats"],
+    pointOfDeparture: "8 passages → 1 produit offert",
+    evolvesTo: ["Mardi actif", "Défi court", "Gain mensuel"],
     rewardExample: "8 passages → 1 produit offert",
     rhythmLabel: "Rappel court · fréquence élevée",
     defaults: {
@@ -67,13 +79,16 @@ export const merchantTemplates: MerchantTemplate[] = [
   {
     id: "coiffeur",
     label: "Coiffeur",
-    description: "Pour entretenir la fréquence de retour sur des cycles plus longs.",
-    rewardExample: "5 visites → réduction ou soin offert",
+    description: "Retour espacé et panier plus fort.",
+    needs: ["Raccourcir le temps entre deux visites", "Rendre le cycle plus visible"],
+    pointOfDeparture: "5 visites → 1 soin offert",
+    evolvesTo: ["Rendez-vous mensuel", "Défi retour", "Gain mensuel"],
+    rewardExample: "5 visites → 1 soin offert",
     rhythmLabel: "Rappel long · retour espacé",
     defaults: {
       reward_type: "stamp",
       target_visits: 5,
-      reward_label: "réduction ou soin offert",
+      reward_label: "1 soin offert",
       reminder_delay_days: 35,
       average_frequency: "low",
       calculator_recovery_rate: 0.14,
@@ -82,13 +97,16 @@ export const merchantTemplates: MerchantTemplate[] = [
   {
     id: "institut-beaute",
     label: "Institut / Beauté",
-    description: "Pour encourager la fidélité sur des rendez-vous réguliers.",
-    rewardExample: "4 visites → prestation ou avantage offert",
+    description: "Rendez-vous réguliers et suivi.",
+    needs: ["Stabiliser la fréquence", "Donner un cap visible entre deux séances"],
+    pointOfDeparture: "4 visites → 1 avantage beauté",
+    evolvesTo: ["Rituel périodique", "Défi retour", "Gain mensuel"],
+    rewardExample: "4 visites → 1 avantage beauté",
     rhythmLabel: "Rappel long · clientèle suivie",
     defaults: {
       reward_type: "stamp",
       target_visits: 4,
-      reward_label: "avantage ou prestation offerte",
+      reward_label: "1 avantage beauté",
       reminder_delay_days: 30,
       average_frequency: "low",
       calculator_recovery_rate: 0.15,
@@ -97,7 +115,10 @@ export const merchantTemplates: MerchantTemplate[] = [
   {
     id: "boutique",
     label: "Boutique",
-    description: "Pour créer un réflexe de retour et récompenser les clientes fidèles.",
+    description: "Passages irréguliers et achats d'envie.",
+    needs: ["Créer une raison de revenir", "Réveiller la clientèle dormante"],
+    pointOfDeparture: "6 achats → accès exclusif",
+    evolvesTo: ["Rendez-vous collection", "Défi court", "Gain mensuel"],
     rewardExample: "6 achats → avantage exclusif",
     rhythmLabel: "Rappel moyen · fidélité progressive",
     defaults: {

@@ -37,7 +37,7 @@ export function MerchantTemplateSelector({
   }, [initialTemplate.id, selectedTemplateId])
 
   return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {templates.map((template) => {
         const isSelected = template.id === activeId
 
@@ -58,24 +58,46 @@ export function MerchantTemplateSelector({
               className={[
                 "h-full p-5 transition-all duration-200",
                 isSelected
-                  ? "border-[#173A2E] bg-[#F1F4EE] shadow-[0_10px_30px_-20px_rgba(23,58,46,0.8)]"
-                  : "border-[#D8DBD2] bg-[#FFFDF8] hover:border-[#AEB8AB]",
+                  ? "border-[#173A2E] bg-[linear-gradient(180deg,#F4F7F0_0%,#EDF3EC_100%)] shadow-[0_24px_50px_-28px_rgba(23,58,46,0.7)] ring-1 ring-[#173A2E]"
+                  : "border-[#D8DBD2] bg-[#FFFDF8] hover:border-[#AEB8AB] hover:shadow-[0_18px_40px_-34px_rgba(23,58,46,0.55)]",
               ].join(" ")}
             >
               <div className="flex items-start justify-between gap-3">
-                <p className="font-serif text-2xl text-[#173A2E]">{template.label}</p>
+                <div>
+                  <p className="font-serif text-2xl text-[#173A2E]">{template.label}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-[#4F5A53]">{template.description}</p>
+                </div>
+
                 {isSelected ? (
-                  <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-2 text-xs text-[#FBFAF6]">
-                    OK
+                  <span className="rounded-full border border-[#173A2E] bg-[#173A2E] px-3 py-1 text-[11px] uppercase tracking-[0.12em] text-[#FBFAF6]">
+                    Sélection en cours
                   </span>
                 ) : null}
               </div>
 
-              <p className="mt-3 text-sm leading-relaxed text-[#4F5A53]">{template.description}</p>
+              <div className="mt-5 rounded-2xl border border-[#D8DBD2] bg-[#FBFCF8] p-4">
+                <p className="text-xs uppercase tracking-[0.12em] text-[#637067]">Ce que Cardin déclenche</p>
+                <div className="mt-3 space-y-2 text-sm text-[#203B31]">
+                  {template.needs.map((need) => (
+                    <p key={need}>{need}</p>
+                  ))}
+                </div>
+              </div>
 
-              <div className="mt-5 space-y-2 border-t border-[#D8DBD2] pt-4 text-sm">
-                <p className="text-[#173A2E]">{template.rewardExample}</p>
-                <p className="text-[#6A726B]">{template.rhythmLabel}</p>
+              <div className="mt-4 rounded-2xl border border-[#D8DBD2] bg-[#FBFCF8] p-4">
+                <p className="text-xs uppercase tracking-[0.12em] text-[#637067]">Point de départ</p>
+                <p className="mt-3 text-sm font-medium text-[#173A2E]">{template.pointOfDeparture}</p>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-[#D8DBD2] bg-[#FBFCF8] p-4">
+                <p className="text-xs uppercase tracking-[0.12em] text-[#637067]">Peut évoluer vers</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {template.evolvesTo.map((option) => (
+                    <span className="rounded-full border border-[#CDD6CB] bg-[#F4F7F0] px-3 py-1 text-xs text-[#173A2E]" key={option}>
+                      {option}
+                    </span>
+                  ))}
+                </div>
               </div>
             </Card>
           </button>
