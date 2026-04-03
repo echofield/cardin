@@ -119,7 +119,7 @@ export function LandingCalculatorModule({ ctaHref, entryModeLabel }: LandingCalc
           >
             +{formatEuro(result.extraRevenue)} / mois
           </p>
-          <p className="mt-2 text-sm text-[#5C655E]">1 retour par jour ˜ {formatEuro(monthlyValueFromOneReturnDaily)} / mois.</p>
+          <p className="mt-2 text-sm text-[#5C655E]">1 retour par jour représente environ {formatEuro(monthlyValueFromOneReturnDaily)} / mois.</p>
           <p className="mt-2 text-sm text-[#2A3F35]">Seuil de rentabilité Cardin : atteint en quelques retours.</p>
 
           <div className="mt-4 border-t border-[#D9DDD6] pt-3">
@@ -167,4 +167,5 @@ export function LandingCalculatorModule({ ctaHref, entryModeLabel }: LandingCalc
     </Card>
   )
 }
+
 
