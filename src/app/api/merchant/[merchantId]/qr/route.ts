@@ -1,7 +1,9 @@
-﻿import QRCode from "qrcode"
+import QRCode from "qrcode"
 import { NextResponse } from "next/server"
 
 import { createClientSupabaseServer } from "@/lib/supabase/server"
+
+export const dynamic = "force-dynamic"
 
 export async function GET(request: Request, { params }: { params: { merchantId: string } }) {
   const supabase = createClientSupabaseServer()

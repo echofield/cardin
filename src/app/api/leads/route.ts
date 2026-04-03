@@ -1,6 +1,8 @@
-﻿import { NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 
 import { createClientSupabaseServer } from "@/lib/supabase/server"
+
+export const dynamic = "force-dynamic"
 
 type EntryMode = "commerce" | "creator" | "experience"
 
@@ -65,4 +67,3 @@ function normalizeEntryMode(value?: string): EntryMode {
 
   return "commerce"
 }
-

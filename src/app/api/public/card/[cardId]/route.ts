@@ -1,6 +1,8 @@
-﻿import { NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 
 import { createSupabaseServiceClient } from "@/lib/supabase/service"
+
+export const dynamic = "force-dynamic"
 
 export async function GET(_: Request, { params }: { params: { cardId: string } }) {
   try {

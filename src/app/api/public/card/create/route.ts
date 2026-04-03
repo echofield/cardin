@@ -1,6 +1,8 @@
-﻿import { NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 
 import { createSupabaseServiceClient } from "@/lib/supabase/service"
+
+export const dynamic = "force-dynamic"
 
 type CreateCardPayload = {
   merchantId?: string
