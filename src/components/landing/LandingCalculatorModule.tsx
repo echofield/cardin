@@ -73,8 +73,8 @@ export function LandingCalculatorModule({ ctaHref, defaultAudience = "clients", 
 
       <div className="relative">
         <p className="text-xs uppercase tracking-[0.16em] text-[#5C655E]">Calculateur de retour {entryModeLabel ? `· ${entryModeLabel}` : ""}</p>
-        <h2 className="mt-3 font-serif text-3xl leading-tight text-[#16372C] sm:text-4xl">Ce que vous perdez sans boucle de retour</h2>
-        <p className="mt-2 text-sm text-[#5C655E]">Base clients ou base membres. Même logique: inactifs × valeur moyenne × retour visé.</p>
+        <h2 className="mt-3 font-serif text-3xl leading-tight text-[#16372C] sm:text-4xl">Les points achètent une transaction. Ici, on mesure les retours.</h2>
+        <p className="mt-2 text-sm text-[#5C655E]">Base clients ou base membres. Même logique: inactifs x valeur moyenne x retour visé.</p>
 
         <div className="mt-6 inline-flex rounded-full border border-[#CDD5CB] bg-[#F8FAF5] p-1">
           <button
@@ -219,4 +219,7 @@ export function LandingCalculatorModule({ ctaHref, defaultAudience = "clients", 
     </Card>
   )
 }
+
+
+
 
