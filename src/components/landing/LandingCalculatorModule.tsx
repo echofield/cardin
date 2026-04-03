@@ -3,10 +3,15 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
+import { AnnualProjectionPanel } from "@/components/engine/AnnualProjectionPanel"
+import { ScenarioSwitcher } from "@/components/engine/ScenarioSwitcher"
 import { trackEvent } from "@/lib/analytics"
-import { buildBehaviorPlan, type BehaviorPlan } from "@/lib/behavior-engine"
-import { calculateRecovery, DEFAULT_DAYS_OPEN, formatEuro, percentToRate } from "@/lib/calculator"
+import { projectAnnualCardinPlan } from "@/lib/annual-projection-engine"
+import { buildCalendarPlan } from "@/lib/calendar-engine"
+import { findScenario, type BehaviorPlan, type BehaviorScenarioId } from "@/lib/behavior-engine"
+import { DEFAULT_DAYS_OPEN, formatEuro, percentToRate } from "@/lib/calculator"
 import { type MerchantTemplate } from "@/lib/merchant-templates"
+import { projectScenarioImpact } from "@/lib/projection-engine"
 import { Button, Card, Slider } from "@/ui"
 
 type LandingCalculatorModuleProps = {
@@ -14,11 +19,20 @@ type LandingCalculatorModuleProps = {
   entryModeLabel?: string
   selectedTemplate: MerchantTemplate
   behaviorPlan: BehaviorPlan
+  selectedScenarioId: BehaviorScenarioId
+  onScenarioChange: (scenarioId: BehaviorScenarioId) => void
 }
 
 const MONTHLY_PLAN_PRICE = 39
 
-export function LandingCalculatorModule({ ctaHref, entryModeLabel, selectedTemplate }: LandingCalculatorModuleProps) {
+export function LandingCalculatorModule({
+  ctaHref,
+  entryModeLabel,
+  selectedTemplate,
+  behaviorPlan,
+  selectedScenarioId,
+  onScenarioChange,
+}: LandingCalculatorModuleProps) {
   const [basePerMonth, setBasePerMonth] = useState(1200)
   const [avgValue, setAvgValue] = useState(12)
   const [inactivePercent, setInactivePercent] = useState(32)
@@ -30,26 +44,37 @@ export function LandingCalculatorModule({ ctaHref, entryModeLabel, selectedTempl
     setRecoveryPercent(Math.round(selectedTemplate.defaults.calculator_recovery_rate * 100))
   }, [selectedTemplate.defaults.calculator_recovery_rate])
 
-  const adaptivePlan = useMemo(
+  const selectedScenario = useMemo(() => findScenario(behaviorPlan, selectedScenarioId), [behaviorPlan, selectedScenarioId])
+
+  const monthlyProjection = useMemo(
     () =>
-      buildBehaviorPlan({
+      projectScenarioImpact({
         merchantType: selectedTemplate.id,
-        avgFrequency: selectedTemplate.defaults.average_frequency,
-        basketValue: avgValue,
-        inactivityRate: percentToRate(inactivePercent),
+        scenarioId: selectedScenarioId,
+        monthlyClients: basePerMonth,
+        avgTicket: avgValue,
+        inactivePercent,
+        baseRecoveryPercent: recoveryPercent,
       }),
-    [avgValue, inactivePercent, selectedTemplate.defaults.average_frequency, selectedTemplate.id]
+    [avgValue, basePerMonth, inactivePercent, recoveryPercent, selectedScenarioId, selectedTemplate.id]
   )
 
-  const result = useMemo(
+  const calendarPlan = useMemo(
+    () => buildCalendarPlan(selectedTemplate.id, selectedScenarioId),
+    [selectedScenarioId, selectedTemplate.id]
+  )
+
+  const annualProjection = useMemo(
     () =>
-      calculateRecovery({
-        clientsPerDay: basePerMonth / DEFAULT_DAYS_OPEN,
+      projectAnnualCardinPlan({
+        merchantType: selectedTemplate.id,
+        scenarioId: selectedScenarioId,
+        monthlyClients: basePerMonth,
         avgTicket: avgValue,
-        returnLossRate: percentToRate(inactivePercent),
-        recoveryRate: percentToRate(recoveryPercent),
+        inactivePercent,
+        baseRecoveryPercent: recoveryPercent,
       }),
-    [avgValue, basePerMonth, inactivePercent, recoveryPercent]
+    [avgValue, basePerMonth, inactivePercent, recoveryPercent, selectedScenarioId, selectedTemplate.id]
   )
 
   const monthlyValueFromOneReturnDaily = useMemo(() => avgValue * DEFAULT_DAYS_OPEN, [avgValue])
@@ -63,10 +88,10 @@ export function LandingCalculatorModule({ ctaHref, entryModeLabel, selectedTempl
     const timer = window.setTimeout(() => setAnimateResult(false), 220)
 
     return () => window.clearTimeout(timer)
-  }, [result.extraRevenue])
+  }, [monthlyProjection.monthlyRevenue])
 
   const handleCalculatorChange = (label: string, value: number | string) => {
-    trackEvent("calculator_change", { field: label, value, audience: "clients", templateId: selectedTemplate.id })
+    trackEvent("calculator_change", { field: label, value, audience: "clients", templateId: selectedTemplate.id, scenarioId: selectedScenarioId })
   }
 
   return (
@@ -74,13 +99,17 @@ export function LandingCalculatorModule({ ctaHref, entryModeLabel, selectedTempl
       <div className="absolute right-[-80px] top-[-120px] h-[220px] w-[220px] rounded-full bg-[#EAF0E6] blur-2xl" />
 
       <div className="relative">
-        <p className="text-xs uppercase tracking-[0.16em] text-[#5C655E]">Calculateur de retour · {entryModeLabel ?? "Commerce"}</p>
-        <h2 className="mt-3 font-serif text-3xl leading-tight text-[#16372C] sm:text-4xl">Ce que vous pouvez récupérer chaque mois</h2>
+        <p className="text-xs uppercase tracking-[0.16em] text-[#5C655E]">Projection Cardin · {entryModeLabel ?? "Commerce"}</p>
+        <h2 className="mt-3 font-serif text-3xl leading-tight text-[#16372C] sm:text-4xl">Choisissez le mouvement qui doit entrer en boutique</h2>
         <p className="mt-2 max-w-3xl text-sm text-[#5C655E]">
-          Le trafic existe déjà. Cardin estime ce qui se perd entre deux visites et propose la bonne dynamique pour relancer le retour.
+          L'activité choisie fixe le rythme. Le scénario choisi montre ce que Cardin peut lancer, ce que cela peut rapporter, et quand l'activer dans l'année.
         </p>
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="mt-8">
+          <ScenarioSwitcher onChange={onScenarioChange} scenarios={behaviorPlan.scenarios} selectedScenarioId={selectedScenarioId} />
+        </div>
+
+        <div className="mt-8 grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">
           <div className="space-y-6">
             <div>
               <div className="mb-2 flex items-end justify-between gap-3">
@@ -129,6 +158,14 @@ export function LandingCalculatorModule({ ctaHref, entryModeLabel, selectedTempl
                 value={inactivePercent}
               />
             </div>
+
+            <div className="rounded-2xl border border-[#CCD3C9] bg-[#FEFEFA] p-5">
+              <p className="text-xs uppercase tracking-[0.12em] text-[#667068]">Scénario choisi</p>
+              <p className="mt-2 text-lg font-medium text-[#173A2E]">{selectedScenario.label}</p>
+              <p className="mt-1 text-sm text-[#2A3F35]">{selectedScenario.headline}</p>
+              <p className="mt-2 text-sm text-[#556159]">{selectedScenario.detail}</p>
+              <p className="mt-2 text-xs text-[#556159]">{selectedScenario.bestFor}</p>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -140,10 +177,12 @@ export function LandingCalculatorModule({ ctaHref, entryModeLabel, selectedTempl
                   animateResult ? "scale-[1.015]" : "scale-100",
                 ].join(" ")}
               >
-                +{formatEuro(result.extraRevenue)} / mois
+                +{formatEuro(monthlyProjection.monthlyRevenue)} / mois
               </p>
-              <p className="mt-2 text-sm text-[#5C655E]">1 retour par jour représente environ {formatEuro(monthlyValueFromOneReturnDaily)} / mois.</p>
-              <p className="mt-2 text-sm text-[#2A3F35]">Seuil de rentabilité Cardin : atteint en quelques retours.</p>
+              <p className="mt-2 text-sm text-[#5C655E]">{monthlyProjection.monthlyReturns} retours estimés / mois.</p>
+              <p className="mt-2 text-sm text-[#2A3F35]">{monthlyProjection.primaryEffect}</p>
+              <p className="mt-1 text-sm text-[#556159]">{monthlyProjection.secondaryEffect}</p>
+              <p className="mt-3 text-xs text-[#556159]">{monthlyProjection.confidenceLabel}</p>
 
               <div className="mt-4 border-t border-[#D9DDD6] pt-3">
                 <p className="text-xs text-[#5A645D]">Hypothèses : {DEFAULT_DAYS_OPEN} jours ouverts / mois · retour visé {recoveryPercent}%</p>
@@ -171,35 +210,42 @@ export function LandingCalculatorModule({ ctaHref, entryModeLabel, selectedTempl
                       value={recoveryPercent}
                     />
                     <p className="mt-2 text-xs text-[#5A645D]">Seuil calculé actuel : {returnsPerDayToCoverMonthly.toFixed(2)} retour/jour.</p>
+                    <p className="mt-2 text-xs text-[#5A645D]">1 retour par jour représente environ {formatEuro(monthlyValueFromOneReturnDaily)} / mois.</p>
                   </div>
                 ) : null}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[#CCD3C9] bg-[#F4F7F0] p-5">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#667068]">Pour cette activité, Cardin recommande</p>
-              <div className="mt-4 space-y-3">
-                {adaptivePlan.calculatorRecommendations.map((recommendation) => (
-                  <div className="rounded-2xl border border-[#D7DED4] bg-[#FEFEFA] p-4" key={recommendation.title}>
-                    <p className="text-sm font-medium text-[#173A2E]">{recommendation.title}</p>
-                    <p className="mt-1 text-sm text-[#556159]">{recommendation.detail}</p>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-4 text-sm text-[#2A3F35]">Point de départ : {selectedTemplate.pointOfDeparture}</p>
-              <p className="mt-2 text-xs text-[#556159]">{adaptivePlan.movementPromise}</p>
+            <div className="rounded-2xl border border-[#CCD3C9] bg-[#FEFEFA] p-5">
+              <p className="text-xs uppercase tracking-[0.12em] text-[#667068]">Prochain moment à activer</p>
+              <p className="mt-2 text-lg font-medium text-[#173A2E]">{calendarPlan.nextMoment.label}</p>
+              <p className="mt-1 text-sm text-[#556159]">{calendarPlan.nextMoment.reason}</p>
+              <p className="mt-3 text-sm text-[#2A3F35]">{calendarPlan.quietPeriodLabel}</p>
+            </div>
+
+            <AnnualProjectionPanel annualProjection={annualProjection} />
+
+            <div className="rounded-2xl border border-[#CCD3C9] bg-[#FEFEFA] p-5">
+              <p className="text-xs uppercase tracking-[0.12em] text-[#667068]">Mise en place</p>
+              <p className="mt-2 text-sm text-[#2A3F35]">119€ - mise en place complète</p>
+              <p className="mt-1 text-sm text-[#2A3F35]">39€/mois - moteur actif</p>
+              <p className="mt-3 text-sm text-[#556159]">Chaque mois, Cardin prépare une nouvelle proposition prête à lancer, 100% pour votre commerce.</p>
             </div>
           </div>
         </div>
 
         <div className="sticky bottom-3 mt-6 flex flex-col gap-3 sm:static sm:flex-row sm:items-center">
-          <Link className="sm:flex-1" href={ctaHref} onClick={() => trackEvent("calculator_cta", { extraRevenue: Math.round(result.extraRevenue), templateId: selectedTemplate.id })}>
+          <Link
+            className="sm:flex-1"
+            href={ctaHref}
+            onClick={() => trackEvent("calculator_cta", { revenue: monthlyProjection.monthlyRevenue, templateId: selectedTemplate.id, scenarioId: selectedScenarioId })}
+          >
             <Button className="w-full" size="lg">
               Lancer ma carte
             </Button>
           </Link>
-          <Link className="text-sm font-medium text-[#16372C] underline-offset-4 hover:underline" href="#activity-selection">
-            Voir les recommandations &rarr;
+          <Link className="text-sm font-medium text-[#16372C] underline-offset-4 hover:underline" href="#pricing">
+            Voir l'offre &rarr;
           </Link>
         </div>
       </div>

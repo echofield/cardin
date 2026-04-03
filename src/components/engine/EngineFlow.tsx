@@ -1,16 +1,21 @@
 ﻿"use client"
 
 import Link from "next/link"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { trackEvent } from "@/lib/analytics"
-import { buildBehaviorPlan } from "@/lib/behavior-engine"
-import { calculateRecovery, formatEuro, percentToRate } from "@/lib/calculator"
+import { projectAnnualCardinPlan } from "@/lib/annual-projection-engine"
+import { buildCalendarPlan } from "@/lib/calendar-engine"
+import { findScenario, buildBehaviorPlan, type BehaviorScenarioId } from "@/lib/behavior-engine"
+import { formatEuro, percentToRate } from "@/lib/calculator"
 import { merchantTemplates, type MerchantTemplate } from "@/lib/merchant-templates"
+import { projectScenarioImpact } from "@/lib/projection-engine"
 import { Button, Card, Input, Slider } from "@/ui"
 
 import { ActivityRecommendationBlock } from "./ActivityRecommendationBlock"
+import { AnnualProjectionPanel } from "./AnnualProjectionPanel"
 import { MerchantTemplateSelector } from "./MerchantTemplateSelector"
+import { ScenarioSwitcher } from "./ScenarioSwitcher"
 import { WalletPassPreview } from "./WalletPassPreview"
 
 type EngineStep = 1 | 2 | 3 | 4
@@ -26,6 +31,7 @@ export function EngineFlow() {
 
   const [step, setStep] = useState<EngineStep>(1)
   const [selectedTemplate, setSelectedTemplate] = useState<MerchantTemplate>(initialTemplate)
+  const [selectedScenarioId, setSelectedScenarioId] = useState<BehaviorScenarioId>("starting_loop")
   const [targetVisits, setTargetVisits] = useState(initialTemplate.defaults.target_visits)
   const [rewardLabel, setRewardLabel] = useState(initialTemplate.defaults.reward_label)
   const [expirationDays, setExpirationDays] = useState(21)
@@ -46,22 +52,42 @@ export function EngineFlow() {
     [avgTicket, lossRatePercent, selectedTemplate.defaults.average_frequency, selectedTemplate.id]
   )
 
-  const result = useMemo(
+  useEffect(() => {
+    setSelectedScenarioId(behaviorPlan.recommendedScenarioId)
+  }, [behaviorPlan.recommendedScenarioId, selectedTemplate.id])
+
+  const selectedScenario = useMemo(() => findScenario(behaviorPlan, selectedScenarioId), [behaviorPlan, selectedScenarioId])
+  const monthlyClients = clientsPerDay * 26
+
+  const monthlyProjection = useMemo(
     () =>
-      calculateRecovery({
-        clientsPerDay,
+      projectScenarioImpact({
+        merchantType: selectedTemplate.id,
+        scenarioId: selectedScenarioId,
+        monthlyClients,
         avgTicket,
-        returnLossRate: percentToRate(lossRatePercent),
-        recoveryRate: selectedTemplate.defaults.calculator_recovery_rate,
+        inactivePercent: lossRatePercent,
+        baseRecoveryPercent: selectedTemplate.defaults.calculator_recovery_rate * 100,
       }),
-    [avgTicket, clientsPerDay, lossRatePercent, selectedTemplate.defaults.calculator_recovery_rate]
+    [avgTicket, lossRatePercent, monthlyClients, selectedScenarioId, selectedTemplate.defaults.calculator_recovery_rate, selectedTemplate.id]
+  )
+
+  const calendarPlan = useMemo(() => buildCalendarPlan(selectedTemplate.id, selectedScenarioId), [selectedScenarioId, selectedTemplate.id])
+  const annualProjection = useMemo(
+    () =>
+      projectAnnualCardinPlan({
+        merchantType: selectedTemplate.id,
+        scenarioId: selectedScenarioId,
+        monthlyClients,
+        avgTicket,
+        inactivePercent: lossRatePercent,
+        baseRecoveryPercent: selectedTemplate.defaults.calculator_recovery_rate * 100,
+      }),
+    [avgTicket, lossRatePercent, monthlyClients, selectedScenarioId, selectedTemplate.defaults.calculator_recovery_rate, selectedTemplate.id]
   )
 
   const progressDots = Math.max(4, Math.min(targetVisits, 10))
-  const notificationText =
-    reminderDelayDays <= 14
-      ? "Votre prochaine étape vous attend"
-      : `Retour conseillé sous ${Math.round(reminderDelayDays / 7)} semaines`
+  const notificationText = reminderDelayDays <= 14 ? "Votre prochaine étape vous attend" : `Retour conseillé sous ${Math.round(reminderDelayDays / 7)} semaines`
 
   const canGoBack = step > 1
   const canGoNext = step < 4
@@ -91,6 +117,7 @@ export function EngineFlow() {
     trackEvent("engine_step_completed", {
       completedStep: step,
       templateId: selectedTemplate.id,
+      scenarioId: selectedScenarioId,
     })
 
     setStep((prev) => {
@@ -112,14 +139,11 @@ export function EngineFlow() {
 
     const lines = [
       `Activité: ${selectedTemplate.label}`,
+      `Scénario: ${selectedScenario.label}`,
       `Point de départ: ${targetVisits} passages -> ${rewardLabel}`,
-      `Relance automatique: ${reminderDelayDays} jours`,
-      `Fenêtre avant relance: ${expirationDays} jours`,
-      `Projection: +${formatEuro(result.extraRevenue)} / mois`,
-      `Clients récupérés: ${Math.round(result.recoveredClients)} / mois`,
-      `Recommandation 1: ${behaviorPlan.recommendations[0].title}`,
-      `Recommandation 2: ${behaviorPlan.recommendations[1].title}`,
-      `Recommandation 3: ${behaviorPlan.recommendations[2].title}`,
+      `Projection: +${formatEuro(monthlyProjection.monthlyRevenue)} / mois`,
+      `Moment à activer: ${calendarPlan.nextMoment.label}`,
+      `Annuel: ${formatEuro(annualProjection.annualRevenueMin)} à ${formatEuro(annualProjection.annualRevenueMax)}`,
     ]
 
     let y = 40
@@ -129,11 +153,6 @@ export function EngineFlow() {
     })
 
     doc.save(`cardin-brief-${selectedTemplate.id}.pdf`)
-
-    trackEvent("download_setup_brief", {
-      templateId: selectedTemplate.id,
-      projectedRevenue: Math.round(result.extraRevenue),
-    })
   }
 
   return (
@@ -148,10 +167,10 @@ export function EngineFlow() {
         <header className="border-b border-[#E0E4DB] pb-6">
           <p className="text-xs uppercase tracking-[0.16em] text-[#6B746D]">Carte physique + moteur de retour</p>
           <h1 className="mt-2 font-serif text-4xl text-[#173A2E]">Mettez votre carte en place en 4 étapes</h1>
-          <p className="mt-3 max-w-3xl text-sm text-[#556159]">Choisissez l'activité. Cardin propose le bon point de départ, puis montre comment faire évoluer le retour.</p>
+          <p className="mt-3 max-w-3xl text-sm text-[#556159]">Choisissez l'activité. Cardin propose le bon point de départ, puis montre comment le retour peut évoluer dans l'année.</p>
 
           <div className="mt-6 grid gap-2 sm:grid-cols-4">
-            {["Activité", "Point de départ", "Dans le téléphone", "Projection"].map((label, index) => {
+            {["Activité", "Scénario", "Dans le téléphone", "Projection"].map((label, index) => {
               const current = index + 1
               const isActive = current === step
               const isCompleted = current < step
@@ -190,8 +209,12 @@ export function EngineFlow() {
 
           {step === 2 ? (
             <div>
-              <h2 className="font-serif text-3xl text-[#173A2E]">Point de départ de votre carte</h2>
-              <p className="mt-2 text-sm text-[#58625C]">Vous posez une première mécanique claire. Cardin prépare déjà la suite derrière la carte.</p>
+              <h2 className="font-serif text-3xl text-[#173A2E]">Choisissez le scénario à lancer</h2>
+              <p className="mt-2 text-sm text-[#58625C]">Vous gardez une carte simple en boutique. Cardin travaille ensuite le bon scénario selon le rythme choisi.</p>
+
+              <div className="mt-8">
+                <ScenarioSwitcher onChange={setSelectedScenarioId} scenarios={behaviorPlan.scenarios} selectedScenarioId={selectedScenarioId} />
+              </div>
 
               <div className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
                 <Card className="p-5">
@@ -214,27 +237,35 @@ export function EngineFlow() {
                   </div>
                   <Slider className="mt-3" max={45} min={5} onChange={setReminderDelayDays} value={reminderDelayDays} />
 
-                  <div className="mt-6 flex justify-between text-sm text-[#173A2E]">
-                    <span>Fenêtre avant relance</span>
-                    <strong>{expirationDays} jours</strong>
+                  <div className="mt-6 rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4">
+                    <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Scénario choisi</p>
+                    <p className="mt-2 text-sm font-medium text-[#173A2E]">{selectedScenario.label}</p>
+                    <p className="mt-1 text-sm text-[#556159]">{selectedScenario.detail}</p>
                   </div>
-                  <Slider className="mt-3" max={60} min={7} onChange={setExpirationDays} value={expirationDays} />
                 </Card>
 
-                <Card className="p-5">
-                  <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Ce que Cardin ajoute derrière</p>
-                  <div className="mt-4 space-y-3">
-                    {behaviorPlan.recommendations.map((recommendation) => (
-                      <div className="rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4" key={recommendation.title}>
-                        <p className="text-sm font-medium text-[#173A2E]">{recommendation.title}</p>
-                        <p className="mt-1 text-sm text-[#5C655E]">{recommendation.detail}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="mt-4 text-sm text-[#203B31]">Point de départ : {selectedTemplate.pointOfDeparture}</p>
-                  <p className="mt-2 text-sm text-[#203B31]">{behaviorPlan.movementPromise}</p>
-                  <p className="mt-3 text-xs text-[#556159]">{behaviorPlan.invitationLayer}</p>
-                </Card>
+                <div className="space-y-4">
+                  <Card className="p-5">
+                    <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Ce que Cardin ajoute derrière</p>
+                    <div className="mt-4 space-y-3">
+                      {behaviorPlan.recommendations.map((recommendation) => (
+                        <div className="rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4" key={recommendation.title}>
+                          <p className="text-sm font-medium text-[#173A2E]">{recommendation.title}</p>
+                          <p className="mt-1 text-sm text-[#5C655E]">{recommendation.detail}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="mt-4 text-sm text-[#203B31]">Point de départ : {selectedTemplate.pointOfDeparture}</p>
+                    <p className="mt-2 text-sm text-[#203B31]">{behaviorPlan.movementPromise}</p>
+                    <p className="mt-3 text-xs text-[#556159]">{behaviorPlan.invitationLayer}</p>
+                  </Card>
+
+                  <Card className="p-5">
+                    <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Prochain moment recommandé</p>
+                    <p className="mt-2 text-lg font-medium text-[#173A2E]">{calendarPlan.nextMoment.label}</p>
+                    <p className="mt-1 text-sm text-[#556159]">{calendarPlan.nextMoment.reason}</p>
+                  </Card>
+                </div>
               </div>
             </div>
           ) : null}
@@ -260,9 +291,9 @@ export function EngineFlow() {
                 </div>
 
                 <div className="mt-8 rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4">
-                  <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Gain du mois</p>
-                  <p className="mt-2 text-sm text-[#173A2E]">{behaviorPlan.monthlyEvent}</p>
-                  <p className="mt-2 text-xs text-[#5C655E]">Activable ensuite pour créer un désir plus fort autour de la carte.</p>
+                  <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Scénario visible pour le client</p>
+                  <p className="mt-2 text-sm text-[#173A2E]">{selectedScenario.headline}</p>
+                  <p className="mt-2 text-xs text-[#5C655E]">{selectedScenario.detail}</p>
                 </div>
               </Card>
             </div>
@@ -271,7 +302,7 @@ export function EngineFlow() {
           {step === 4 ? (
             <div>
               <h2 className="font-serif text-3xl text-[#173A2E]">Projection de retour</h2>
-              <p className="mt-2 text-sm text-[#58625C]">Cardin chiffre le revenu récupérable et indique le bon ordre de lancement pour votre activité.</p>
+              <p className="mt-2 text-sm text-[#58625C]">Cardin chiffre ce que le scénario choisi peut rapporter ce mois-ci et sur une année complète.</p>
 
               <div className="mt-6 grid gap-5 lg:grid-cols-3">
                 <Card className="p-5">
@@ -302,9 +333,9 @@ export function EngineFlow() {
               <div className="mt-6 grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
                 <Card className="border-[#BBC8BC] bg-[#F2F7EF] p-6">
                   <p className="text-xs uppercase tracking-[0.14em] text-[#607067]">Ce que vous pouvez récupérer dès ce mois</p>
-                  <p className="mt-2 font-serif text-5xl text-[#173A2E]">+{formatEuro(result.extraRevenue)} / mois</p>
-                  <p className="mt-3 text-base text-[#2E4339]">{Math.round(result.recoveredClients)} clients récupérés / mois</p>
-                  <p className="mt-3 text-sm text-[#4F5E55]">Rentabilisé avec 1 client en plus par jour.</p>
+                  <p className="mt-2 font-serif text-5xl text-[#173A2E]">+{formatEuro(monthlyProjection.monthlyRevenue)} / mois</p>
+                  <p className="mt-3 text-base text-[#2E4339]">{monthlyProjection.monthlyReturns} retours récupérés / mois</p>
+                  <p className="mt-3 text-sm text-[#4F5E55]">{monthlyProjection.primaryEffect}</p>
 
                   <div className="mt-5">
                     <Button onClick={downloadSetupBrief} variant="secondary">
@@ -313,19 +344,23 @@ export function EngineFlow() {
                   </div>
                 </Card>
 
-                <Card className="p-6">
-                  <p className="text-xs uppercase tracking-[0.14em] text-[#607067]">Ordre de lancement recommandé</p>
-                  <div className="mt-4 space-y-3">
-                    {behaviorPlan.calculatorRecommendations.map((recommendation) => (
-                      <div className="rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4" key={recommendation.title}>
-                        <p className="text-sm font-medium text-[#173A2E]">{recommendation.title}</p>
-                        <p className="mt-1 text-sm text-[#556159]">{recommendation.detail}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="mt-4 text-sm text-[#203B31]">Point de départ : {selectedTemplate.pointOfDeparture}</p>
-                  <p className="mt-2 text-xs text-[#556159]">{behaviorPlan.invitationLayer}</p>
-                </Card>
+                <div className="space-y-5">
+                  <Card className="p-6">
+                    <p className="text-xs uppercase tracking-[0.14em] text-[#607067]">Ordre de lancement recommandé</p>
+                    <div className="mt-4 space-y-3">
+                      {behaviorPlan.calculatorRecommendations.map((recommendation) => (
+                        <div className="rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4" key={recommendation.title}>
+                          <p className="text-sm font-medium text-[#173A2E]">{recommendation.title}</p>
+                          <p className="mt-1 text-sm text-[#556159]">{recommendation.detail}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="mt-4 text-sm text-[#203B31]">Point de départ : {selectedTemplate.pointOfDeparture}</p>
+                    <p className="mt-2 text-xs text-[#556159]">{calendarPlan.quietPeriodLabel}</p>
+                  </Card>
+
+                  <AnnualProjectionPanel annualProjection={annualProjection} />
+                </div>
               </div>
             </div>
           ) : null}
@@ -341,11 +376,7 @@ export function EngineFlow() {
           </div>
 
           <div className="flex items-center gap-3">
-            {canGoNext ? (
-              <Button onClick={goToNextStep}>Continuer</Button>
-            ) : (
-              <Button onClick={() => setStep(1)}>Revoir la carte</Button>
-            )}
+            {canGoNext ? <Button onClick={goToNextStep}>Continuer</Button> : <Button onClick={() => setStep(1)}>Revoir la carte</Button>}
           </div>
         </footer>
       </div>

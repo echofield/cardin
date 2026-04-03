@@ -1,6 +1,6 @@
 ﻿"use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { ActivityRecommendationBlock } from "@/components/engine/ActivityRecommendationBlock"
 import { MerchantTemplateSelector } from "@/components/engine/MerchantTemplateSelector"
@@ -8,52 +8,28 @@ import { InstallLeadForm } from "@/components/landing/InstallLeadForm"
 import { LandingCalculatorModule } from "@/components/landing/LandingCalculatorModule"
 import { MobileStickyInstallBar } from "@/components/landing/MobileStickyInstallBar"
 import { TrackedInstallCta } from "@/components/landing/TrackedInstallCta"
-import { buildBehaviorPlan } from "@/lib/behavior-engine"
+import { buildBehaviorPlan, type BehaviorScenarioId } from "@/lib/behavior-engine"
 import { merchantTemplates } from "@/lib/merchant-templates"
 import { Card } from "@/ui"
 
 const RETURN_MECHANICS = [
-  {
-    title: "Retour régulier",
-    detail: "Un cap simple pour faire revenir plus souvent sans charger la boutique.",
-  },
-  {
-    title: "Jour creux",
-    detail: "Un rendez-vous clair pour remettre du passage là où le rythme baisse.",
-  },
-  {
-    title: "Défi court",
-    detail: "Une fenêtre courte pour créer du mouvement rapidement.",
-  },
-  {
-    title: "Gain mensuel",
-    detail: "Une récompense plus désirable pour créer attention et conversation.",
-  },
+  { title: "Retour régulier", detail: "Un cap simple pour faire revenir plus souvent sans charger la boutique." },
+  { title: "Jour creux", detail: "Un rendez-vous clair pour remettre du passage là où le rythme baisse." },
+  { title: "Défi court", detail: "Une fenêtre courte pour créer du mouvement rapidement." },
+  { title: "Gain mensuel", detail: "Une récompense plus désirable pour créer attention et conversation." },
 ] as const
 
 const STORE_FLOW_STEPS = [
-  {
-    title: "Vous donnez la carte",
-    detail: "Visible en boutique. Immédiat à expliquer.",
-  },
-  {
-    title: "Le client scanne",
-    detail: "Son espace s'ouvre dans le téléphone en quelques secondes.",
-  },
-  {
-    title: "Cardin installe le retour",
-    detail: "Progression visible, prochaine étape claire, retour mesurable.",
-  },
+  { title: "Vous donnez la carte", detail: "Visible en boutique. Immédiat à expliquer." },
+  { title: "Le client scanne", detail: "Son espace s'ouvre dans le téléphone en quelques secondes." },
+  { title: "Cardin installe le retour", detail: "Progression visible, prochaine étape claire, retour mesurable." },
 ] as const
 
-const PHONE_EXPERIENCE_POINTS = [
-  "prochaine étape visible",
-  "progression qui reste en tête",
-  "gain du mois si vous l'activez",
-] as const
+const PHONE_EXPERIENCE_POINTS = ["prochaine étape visible", "progression qui reste en tête", "gain du mois si vous l'activez"] as const
 
 export default function LandingPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState("boulangerie")
+  const [selectedScenarioId, setSelectedScenarioId] = useState<BehaviorScenarioId>("starting_loop")
 
   const selectedTemplate = useMemo(
     () => merchantTemplates.find((template) => template.id === selectedTemplateId) ?? merchantTemplates[0],
@@ -68,6 +44,10 @@ export default function LandingPage() {
       }),
     [selectedTemplate.defaults.average_frequency, selectedTemplate.id]
   )
+
+  useEffect(() => {
+    setSelectedScenarioId(behaviorPlan.recommendedScenarioId)
+  }, [behaviorPlan.recommendedScenarioId, selectedTemplate.id])
 
   return (
     <main className="bg-[#F8F7F2] pb-16 text-[#152F25] sm:pb-0">
@@ -122,7 +102,14 @@ export default function LandingPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8" id="calculateur">
-        <LandingCalculatorModule behaviorPlan={behaviorPlan} ctaHref="#installation" entryModeLabel="Commerce" selectedTemplate={selectedTemplate} />
+        <LandingCalculatorModule
+          behaviorPlan={behaviorPlan}
+          ctaHref="#installation"
+          entryModeLabel="Commerce"
+          onScenarioChange={setSelectedScenarioId}
+          selectedScenarioId={selectedScenarioId}
+          selectedTemplate={selectedTemplate}
+        />
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12" id="experience-templates">
