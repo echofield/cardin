@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server"
+﻿import { NextResponse } from "next/server"
 
+import { buildBehaviorPlan, normalizeEngineActivityId } from "@/lib/behavior-engine"
 import { createClientSupabaseServer } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
@@ -22,9 +23,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 })
   }
 
-  const payload = (await request.json()) as { name?: string; entryMode?: string }
+  const payload = (await request.json()) as { name?: string; entryMode?: string; activityTemplateId?: string }
   const entryMode = normalizeEntryMode(payload.entryMode)
-  const name = (payload.name ?? user.user_metadata?.full_name ?? user.email ?? "Activité").trim()
+  const activityTemplateId = normalizeEngineActivityId(payload.activityTemplateId)
+  const name = (payload.name ?? user.user_metadata?.full_name ?? user.email ?? "Activite").trim()
   const email = user.email ?? ""
 
   if (!email) {
@@ -45,6 +47,7 @@ export async function POST(request: Request) {
   }
 
   const origin = new URL(request.url).origin
+  const enginePlan = buildBehaviorPlan({ merchantType: activityTemplateId })
 
   return NextResponse.json({
     ok: true,
@@ -57,6 +60,7 @@ export async function POST(request: Request) {
     dashboardUrl: `${origin}/merchant/${user.id}`,
     scanUrl: `${origin}/scan/${user.id}`,
     qrCodeUrl: `${origin}/api/merchant/${user.id}/qr`,
+    enginePlan,
   })
 }
 

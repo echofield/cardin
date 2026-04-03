@@ -11,6 +11,7 @@ type EntryMode = "commerce" | "creator" | "experience"
 
 type InstallLeadFormProps = {
   entryMode?: EntryMode
+  activityTemplateId?: string
 }
 
 type LeadSubmitState =
@@ -25,9 +26,10 @@ type LeadSubmitState =
       dashboardUrl: string
       scanUrl: string
       qrCodeUrl: string
+      launchProjection?: string[]
     }
 
-export function InstallLeadForm({ entryMode = "commerce" }: InstallLeadFormProps) {
+export function InstallLeadForm({ entryMode = "commerce", activityTemplateId = "boulangerie" }: InstallLeadFormProps) {
   const callbackOptions = useMemo(() => createCallbackOptions(), [])
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [checkingSession, setCheckingSession] = useState(true)
@@ -36,11 +38,16 @@ export function InstallLeadForm({ entryMode = "commerce" }: InstallLeadFormProps
     name: "",
     callbackSlot: callbackOptions[0],
     entryMode,
+    activityTemplateId,
   })
 
   useEffect(() => {
     setFormData((prev) => ({ ...prev, entryMode }))
   }, [entryMode])
+
+  useEffect(() => {
+    setFormData((prev) => ({ ...prev, activityTemplateId }))
+  }, [activityTemplateId])
 
   useEffect(() => {
     const supabase = createClientSupabaseBrowser()
@@ -86,7 +93,7 @@ export function InstallLeadForm({ entryMode = "commerce" }: InstallLeadFormProps
       if (response.status === 401) {
         setState({
           status: "error",
-          message: "Entrée instantanée avec Google requise pour activer Cardin.",
+          message: "Entrée instantanée avec Google requise pour lancer Cardin.",
         })
         return
       }
@@ -103,16 +110,18 @@ export function InstallLeadForm({ entryMode = "commerce" }: InstallLeadFormProps
         dashboardUrl: payload.dashboardUrl,
         scanUrl: payload.scanUrl,
         qrCodeUrl: payload.qrCodeUrl,
+        launchProjection: payload.enginePlan?.launchProjection,
       })
 
       trackEvent("submit_lead", {
         callbackSlot: formData.callbackSlot,
         entryMode: formData.entryMode,
+        activityTemplateId: formData.activityTemplateId,
       })
     } catch {
       setState({
         status: "error",
-        message: "Impossible d'activer votre espace pour le moment. Réessayez dans quelques minutes.",
+        message: "Impossible de lancer votre espace pour le moment. Réessayez dans quelques minutes.",
       })
     }
   }
@@ -123,12 +132,12 @@ export function InstallLeadForm({ entryMode = "commerce" }: InstallLeadFormProps
         <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
           <div>
             <p className="text-xs uppercase tracking-[0.14em] text-[#637067]">Activation</p>
-            <h2 className="mt-2 font-serif text-4xl text-[#173A2E]">Activer Cardin</h2>
-            <p className="mt-3 text-sm text-[#536057]">Votre système de retour, en place en 24h.</p>
+            <h2 className="mt-2 font-serif text-4xl text-[#173A2E]">Lancer votre carte en boutique</h2>
+            <p className="mt-3 text-sm text-[#536057]">En place en 24h. Utilisable immédiatement. Aucune formation nécessaire.</p>
 
             <div className="mt-6 rounded-2xl border border-[#D2D9CF] bg-[#FEFDF9] p-4">
-              <p className="text-sm text-[#173A2E]">119€ — installation complète</p>
-              <p className="mt-1 text-sm text-[#173A2E]">39€/mois — moteur actif</p>
+              <p className="text-sm text-[#173A2E]">119€ - mise en place complète</p>
+              <p className="mt-1 text-sm text-[#173A2E]">39€/mois - moteur actif</p>
               <p className="mt-2 text-xs text-[#5A645D]">Un retour par jour couvre largement Cardin.</p>
             </div>
 
@@ -136,6 +145,14 @@ export function InstallLeadForm({ entryMode = "commerce" }: InstallLeadFormProps
               <div className="mt-6 rounded-2xl border border-[#B5C7B5] bg-[#EDF5EA] p-4 text-sm text-[#173A2E]">
                 <p className="font-medium">Cardin ID: {state.merchantId}</p>
                 <p className="mt-1">{state.confirmation}</p>
+
+                {state.launchProjection?.length ? (
+                  <div className="mt-3 space-y-1 text-xs text-[#2A3F35]">
+                    {state.launchProjection.slice(0, 3).map((line) => (
+                      <p key={line}>{line}</p>
+                    ))}
+                  </div>
+                ) : null}
 
                 <img alt="QR Cardin" className="mt-4 w-full max-w-[220px] rounded-xl border border-[#C4D2C4] bg-white p-2" src={state.qrCodeUrl} />
 
@@ -190,7 +207,7 @@ export function InstallLeadForm({ entryMode = "commerce" }: InstallLeadFormProps
               </select>
 
               <Button className="w-full" size="lg" type="submit">
-                {state.status === "loading" ? "Activation en cours..." : "Activer Cardin"}
+                {state.status === "loading" ? "Activation en cours..." : "Lancer ma carte"}
               </Button>
 
               {state.status === "error" ? <p className="text-sm text-[#A64040]">{state.message}</p> : null}

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server"
+﻿import { NextResponse } from "next/server"
 
 import { createClientSupabaseServer } from "@/lib/supabase/server"
 
@@ -59,7 +59,7 @@ export async function GET(request: Request) {
       city: "France",
       loyaltyConfig: {
         targetVisits: 10,
-        rewardLabel: "1 récompense offerte",
+        rewardLabel: "1 recompense offerte",
       },
     },
     metrics: {
