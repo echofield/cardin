@@ -2,6 +2,14 @@
 
 import { createClientSupabaseServer } from "@/lib/supabase/server"
 
+type EntryMode = "commerce" | "creator" | "experience"
+
+const ENTRY_MODE_LABELS: Record<EntryMode, string> = {
+  commerce: "Espace Commerce",
+  creator: "Espace Creator / Community",
+  experience: "Espace Experience / Brand",
+}
+
 export async function POST(request: Request) {
   const supabase = createClientSupabaseServer()
   const {
@@ -12,8 +20,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 })
   }
 
-  const payload = (await request.json()) as { name?: string }
-  const name = (payload.name ?? user.user_metadata?.full_name ?? user.email ?? "Marchand").trim()
+  const payload = (await request.json()) as { name?: string; entryMode?: string }
+  const entryMode = normalizeEntryMode(payload.entryMode)
+  const name = (payload.name ?? user.user_metadata?.full_name ?? user.email ?? "Activité").trim()
   const email = user.email ?? ""
 
   if (!email) {
@@ -39,7 +48,8 @@ export async function POST(request: Request) {
     ok: true,
     leadId: `LD-${user.id.slice(0, 8)}`,
     merchantId: user.id,
-    confirmation: "Compte marchand prêt.",
+    entryMode,
+    confirmation: `${ENTRY_MODE_LABELS[entryMode]} prêt.`,
     dashboardPath: `/merchant/${user.id}`,
     scanPath: `/scan/${user.id}`,
     dashboardUrl: `${origin}/merchant/${user.id}`,
@@ -47,3 +57,12 @@ export async function POST(request: Request) {
     qrCodeUrl: `${origin}/api/merchant/${user.id}/qr`,
   })
 }
+
+function normalizeEntryMode(value?: string): EntryMode {
+  if (value === "creator" || value === "experience") {
+    return value
+  }
+
+  return "commerce"
+}
+

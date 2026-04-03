@@ -18,8 +18,8 @@ const body = Manrope({
 })
 
 export const metadata: Metadata = {
-  title: "Cardin - Fidelite wallet pour commerces",
-  description: "Plus de clients qui reviennent = plus de chiffre. Carte de fidelite wallet en 24h.",
+  title: "Cardin - Return Engine pour commerces et communautés",
+  description: "Cardin crée des boucles de retour mesurables via Apple Wallet et Google Wallet. Installation en 24h.",
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -29,3 +29,4 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </html>
   )
 }
+
