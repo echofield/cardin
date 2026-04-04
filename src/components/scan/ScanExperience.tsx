@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import Link from "next/link"
 import { FormEvent, useEffect, useMemo, useState } from "react"
@@ -7,6 +7,24 @@ import { trackEvent } from "@/lib/analytics"
 import { Button, Card, Input } from "@/ui"
 
 import { WalletPassPreview } from "@/components/engine/WalletPassPreview"
+
+type SharedUnlockView = {
+  enabled: boolean
+  objective: number
+  progress: number
+  windowDays: number
+  offer: string
+  status: "disabled" | "tracking" | "active"
+  activeUntil: string | null
+}
+
+type MidpointView = {
+  mode: "recognition_only" | "recognition_plus_boost"
+  threshold: number
+  reached: boolean
+  reachedAt: string | null
+  copy: string
+}
 
 type MerchantResponse = {
   ok: boolean
@@ -17,7 +35,10 @@ type MerchantResponse = {
     loyaltyConfig: {
       targetVisits: number
       rewardLabel: string
+      midpointMode: "recognition_only" | "recognition_plus_boost"
+      midpointThreshold: number
     }
+    sharedUnlock: SharedUnlockView
   }
 }
 
@@ -29,12 +50,20 @@ type CardCreateSuccess = {
     stamps: number
     targetVisits: number
     rewardLabel: string
+    midpoint: MidpointView
     status: string
   }
   merchant: {
     id: string
     businessName: string
     businessType: string
+    loyaltyConfig: {
+      targetVisits: number
+      rewardLabel: string
+      midpointMode: "recognition_only" | "recognition_plus_boost"
+      midpointThreshold: number
+    }
+    sharedUnlock: SharedUnlockView
   }
   cardUrl: string
   appleWalletUrl: string
@@ -71,7 +100,7 @@ export function ScanExperience({ merchantId }: { merchantId: string }) {
         }
       } catch {
         if (isMounted) {
-          setMerchantError("Commerce introuvable. Vérifiez le QR code utilisé.")
+          setMerchantError("Commerce introuvable. Verifiez le QR code utilise.")
         }
       } finally {
         if (isMounted) {
@@ -91,6 +120,8 @@ export function ScanExperience({ merchantId }: { merchantId: string }) {
     if (!cardData) return 6
     return Math.max(4, Math.min(cardData.card.targetVisits, 10))
   }, [cardData])
+
+  const sharedUnlock = cardData?.merchant.sharedUnlock ?? merchant?.sharedUnlock
 
   const onCreateCard = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -120,7 +151,7 @@ export function ScanExperience({ merchantId }: { merchantId: string }) {
         cardId: payload.card.id,
       })
     } catch {
-      alert("Impossible de créer votre carte pour le moment.")
+      alert("Impossible de creer votre carte pour le moment.")
     } finally {
       setSubmitting(false)
     }
@@ -159,7 +190,7 @@ export function ScanExperience({ merchantId }: { merchantId: string }) {
         <Card className="mx-auto max-w-xl p-6">
           <p className="text-sm text-[#A64040]">{merchantError ?? "Commerce introuvable"}</p>
           <Link className="mt-4 inline-block text-sm underline" href="/landing">
-            Retour à l'accueil
+            Retour a l'accueil
           </Link>
         </Card>
       </main>
@@ -171,20 +202,21 @@ export function ScanExperience({ merchantId }: { merchantId: string }) {
       <div className="mx-auto max-w-2xl">
         <p className="text-xs uppercase tracking-[0.14em] text-[#5D675F]">{merchant.businessType}</p>
         <h1 className="mt-2 font-serif text-5xl">{merchant.businessName}</h1>
-        <p className="mt-2 text-sm text-[#556159]">Ajoutez votre carte de fidélité en 10 secondes.</p>
+        <p className="mt-2 text-sm text-[#556159]">Ajoutez votre carte de fidelite en 10 secondes.</p>
 
         {!cardData ? (
           <Card className="mt-6 p-6">
             <p className="text-sm text-[#556159]">
-              Programme: {merchant.loyaltyConfig.targetVisits} passages → {merchant.loyaltyConfig.rewardLabel}
+              Programme: {merchant.loyaltyConfig.targetVisits} passages {"->"} {merchant.loyaltyConfig.rewardLabel}
             </p>
+            <p className="mt-1 text-sm text-[#2A3F35]">Cap de reconnaissance: {merchant.loyaltyConfig.midpointThreshold} passages.</p>
 
             <form className="mt-5 space-y-3" onSubmit={onCreateCard}>
-              <Input onChange={(event) => setCustomerName(event.target.value)} placeholder="Votre prénom" required value={customerName} />
-              <Input onChange={(event) => setCustomerPhone(event.target.value)} placeholder="Téléphone (optionnel)" value={customerPhone} />
+              <Input onChange={(event) => setCustomerName(event.target.value)} placeholder="Votre prenom" required value={customerName} />
+              <Input onChange={(event) => setCustomerPhone(event.target.value)} placeholder="Telephone (optionnel)" value={customerPhone} />
 
               <Button className="w-full" size="lg" type="submit">
-                {submitting ? "Création..." : "Ajouter ma carte"}
+                {submitting ? "Creation..." : "Ajouter ma carte"}
               </Button>
             </form>
           </Card>
@@ -197,23 +229,39 @@ export function ScanExperience({ merchantId }: { merchantId: string }) {
               <p className="mt-1 text-sm text-[#173A2E]">
                 Progression: {cardData.card.stamps} / {cardData.card.targetVisits}
               </p>
+              <p className="mt-1 text-sm text-[#2A3F35]">{cardData.card.midpoint.copy}</p>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <Button onClick={() => openWalletFlow(cardData.appleWalletUrl, "apple")} variant="secondary">
-                  Ajouter à Apple Wallet
+                  Ajouter a Apple Wallet
                 </Button>
                 <Button onClick={() => openWalletFlow(cardData.googleWalletUrl, "google")} variant="secondary">
-                  Ajouter à Google Wallet
+                  Ajouter a Google Wallet
                 </Button>
               </div>
 
               <Link className="mt-4 inline-block text-sm underline" href={`/card/${cardData.card.id}`}>
-                Ouvrir ma carte sur le téléphone
+                Ouvrir ma carte sur le telephone
               </Link>
             </Card>
           </div>
         )}
+
+        {sharedUnlock?.enabled ? (
+          <Card className="mt-4 p-5">
+            <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">Deblocage collectif</p>
+            <p className="mt-2 text-sm text-[#173A2E]">
+              {sharedUnlock.progress} / {sharedUnlock.objective} passages ce mois
+            </p>
+            <p className="mt-1 text-sm text-[#556159]">Offre debloquee: {sharedUnlock.offer}</p>
+            <p className="mt-1 text-xs text-[#556159]">Fenetre active: {sharedUnlock.windowDays} jours</p>
+            {sharedUnlock.status === "active" ? (
+              <p className="mt-2 text-sm text-[#173A2E]">Deblocage collectif actif.</p>
+            ) : null}
+          </Card>
+        ) : null}
       </div>
     </main>
   )
 }
+

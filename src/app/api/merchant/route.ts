@@ -1,5 +1,6 @@
 ﻿import { NextResponse } from "next/server"
 
+import { buildMidpointView, buildSharedUnlockView, getMidpointMode, getRewardLabel, getTargetVisits } from "@/lib/program-layer"
 import { createClientSupabaseServer } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
@@ -24,7 +25,9 @@ export async function GET(request: Request) {
 
   const { data: merchant, error: merchantError } = await supabase
     .from("merchants")
-    .select("id, name, email, created_at")
+    .select(
+      "id, name, email, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period, created_at"
+    )
     .eq("id", merchantId)
     .single()
 
@@ -32,9 +35,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, error: "merchant_not_found" }, { status: 404 })
   }
 
+  const targetVisits = getTargetVisits(merchant.target_visits)
+  const rewardLabel = getRewardLabel(merchant.reward_label)
+  const midpointMode = getMidpointMode(merchant.midpoint_mode)
+
   const { data: cards, error: cardsError } = await supabase
     .from("cards")
-    .select("id, customer_name, stamps, created_at")
+    .select("id, customer_name, stamps, target_visits, reward_label, midpoint_reached_at, created_at")
     .eq("merchant_id", merchantId)
     .order("created_at", { ascending: false })
 
@@ -47,8 +54,31 @@ export async function GET(request: Request) {
     ? await supabase.from("transactions").select("id, card_id, type, created_at").in("card_id", cardIds)
     : { data: [] as Array<{ id: string; card_id: string; type: string; created_at: string }> }
 
-  const rewardReadyCards = (cards ?? []).filter((card) => card.stamps >= 10).length
+  const midpointReachedCards = (cards ?? []).filter((card) => {
+    const cardTargetVisits = getTargetVisits(card.target_visits ?? targetVisits)
+    return buildMidpointView({
+      stamps: card.stamps,
+      targetVisits: cardTargetVisits,
+      midpointReachedAt: card.midpoint_reached_at,
+      midpointMode,
+    }).reached
+  }).length
+
+  const rewardReadyCards = (cards ?? []).filter((card) => card.stamps >= getTargetVisits(card.target_visits ?? targetVisits)).length
   const repeatClients = (cards ?? []).filter((card) => card.stamps > 1).length
+
+  const sharedUnlock = await buildSharedUnlockView(supabase, {
+    id: merchant.id,
+    midpoint_mode: merchant.midpoint_mode,
+    target_visits: merchant.target_visits,
+    reward_label: merchant.reward_label,
+    shared_unlock_enabled: merchant.shared_unlock_enabled,
+    shared_unlock_objective: merchant.shared_unlock_objective,
+    shared_unlock_window_days: merchant.shared_unlock_window_days,
+    shared_unlock_offer: merchant.shared_unlock_offer,
+    shared_unlock_active_until: merchant.shared_unlock_active_until,
+    shared_unlock_last_triggered_period: merchant.shared_unlock_last_triggered_period,
+  })
 
   return NextResponse.json({
     ok: true,
@@ -58,23 +88,39 @@ export async function GET(request: Request) {
       businessType: "Commerce",
       city: "France",
       loyaltyConfig: {
-        targetVisits: 10,
-        rewardLabel: "1 recompense offerte",
+        targetVisits,
+        rewardLabel,
+        midpointMode,
       },
+      sharedUnlock,
     },
     metrics: {
       totalCards: cards?.length ?? 0,
       rewardReadyCards,
       totalVisits: transactions?.length ?? 0,
       repeatClients,
+      midpointReachedCards,
     },
-    cards: (cards ?? []).map((card) => ({
-      id: card.id,
-      customerName: card.customer_name,
-      stamps: card.stamps,
-      targetVisits: 10,
-      status: card.stamps >= 10 ? "reward_ready" : "active",
-      lastVisitAt: card.created_at,
-    })),
+    cards: (cards ?? []).map((card) => {
+      const cardTargetVisits = getTargetVisits(card.target_visits ?? targetVisits)
+      const cardRewardLabel = getRewardLabel(card.reward_label ?? rewardLabel)
+      const midpoint = buildMidpointView({
+        stamps: card.stamps,
+        targetVisits: cardTargetVisits,
+        midpointReachedAt: card.midpoint_reached_at,
+        midpointMode,
+      })
+
+      return {
+        id: card.id,
+        customerName: card.customer_name,
+        stamps: card.stamps,
+        targetVisits: cardTargetVisits,
+        rewardLabel: cardRewardLabel,
+        status: card.stamps >= cardTargetVisits ? "reward_ready" : "active",
+        lastVisitAt: card.created_at,
+        midpoint,
+      }
+    }),
   })
 }

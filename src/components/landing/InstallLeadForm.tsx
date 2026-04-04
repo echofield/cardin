@@ -27,6 +27,12 @@ type LeadSubmitState =
       scanUrl: string
       qrCodeUrl: string
       launchProjection?: string[]
+      setup?: {
+        objective: number
+        activeWindowDays: number
+        unlockedOffer: string
+        midpointMode: string
+      }
     }
 
 export function InstallLeadForm({ entryMode = "commerce", activityTemplateId = "boulangerie" }: InstallLeadFormProps) {
@@ -34,11 +40,15 @@ export function InstallLeadForm({ entryMode = "commerce", activityTemplateId = "
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [checkingSession, setCheckingSession] = useState(true)
   const [state, setState] = useState<LeadSubmitState>({ status: "idle" })
+
   const [formData, setFormData] = useState({
     name: "",
     callbackSlot: callbackOptions[0],
     entryMode,
     activityTemplateId,
+    sharedUnlockObjective: 120,
+    sharedUnlockWindowDays: 7,
+    sharedUnlockOffer: "Offre collective de la semaine",
   })
 
   useEffect(() => {
@@ -93,7 +103,7 @@ export function InstallLeadForm({ entryMode = "commerce", activityTemplateId = "
       if (response.status === 401) {
         setState({
           status: "error",
-          message: "Entrée instantanée avec Google requise pour lancer Cardin.",
+          message: "Connexion Google requise pour lancer Cardin.",
         })
         return
       }
@@ -111,17 +121,20 @@ export function InstallLeadForm({ entryMode = "commerce", activityTemplateId = "
         scanUrl: payload.scanUrl,
         qrCodeUrl: payload.qrCodeUrl,
         launchProjection: payload.enginePlan?.launchProjection,
+        setup: payload.setup,
       })
 
       trackEvent("submit_lead", {
         callbackSlot: formData.callbackSlot,
         entryMode: formData.entryMode,
         activityTemplateId: formData.activityTemplateId,
+        sharedUnlockObjective: formData.sharedUnlockObjective,
+        sharedUnlockWindowDays: formData.sharedUnlockWindowDays,
       })
     } catch {
       setState({
         status: "error",
-        message: "Impossible de lancer votre espace pour le moment. Réessayez dans quelques minutes.",
+        message: "Impossible de lancer votre espace pour le moment. Reessayez dans quelques minutes.",
       })
     }
   }
@@ -133,11 +146,11 @@ export function InstallLeadForm({ entryMode = "commerce", activityTemplateId = "
           <div>
             <p className="text-xs uppercase tracking-[0.14em] text-[#637067]">Activation</p>
             <h2 className="mt-2 font-serif text-4xl text-[#173A2E]">Lancer votre carte en boutique</h2>
-            <p className="mt-3 text-sm text-[#536057]">En place en 24h. Utilisable immédiatement. Aucune formation nécessaire.</p>
+            <p className="mt-3 text-sm text-[#536057]">En place en 24h. Utilisable immediatement. Aucune formation necessaire.</p>
 
             <div className="mt-6 rounded-2xl border border-[#D2D9CF] bg-[#FEFDF9] p-4">
-              <p className="text-sm text-[#173A2E]">119€ - mise en place complète</p>
-              <p className="mt-1 text-sm text-[#173A2E]">39€/mois - moteur actif</p>
+              <p className="text-sm text-[#173A2E]">119EUR - mise en place complete</p>
+              <p className="mt-1 text-sm text-[#173A2E]">39EUR/mois - moteur actif</p>
               <p className="mt-2 text-xs text-[#5A645D]">Un retour par jour couvre largement Cardin.</p>
             </div>
 
@@ -146,11 +159,12 @@ export function InstallLeadForm({ entryMode = "commerce", activityTemplateId = "
                 <p className="font-medium">Cardin ID: {state.merchantId}</p>
                 <p className="mt-1">{state.confirmation}</p>
 
-                {state.launchProjection?.length ? (
+                {state.setup ? (
                   <div className="mt-3 space-y-1 text-xs text-[#2A3F35]">
-                    {state.launchProjection.slice(0, 3).map((line) => (
-                      <p key={line}>{line}</p>
-                    ))}
+                    <p>Objectif collectif: {state.setup.objective} passages/mois</p>
+                    <p>Fenetre active: {state.setup.activeWindowDays} jours</p>
+                    <p>Offre debloquee: {state.setup.unlockedOffer}</p>
+                    <p>Midpoint: reconnaissance uniquement</p>
                   </div>
                 ) : null}
 
@@ -164,7 +178,7 @@ export function InstallLeadForm({ entryMode = "commerce", activityTemplateId = "
                     Ouvrir le parcours client
                   </a>
                   <a className="block underline" download={`qr-${state.merchantId}.png`} href={state.qrCodeUrl}>
-                    Télécharger le QR PNG
+                    Telecharger le QR PNG
                   </a>
                 </div>
               </div>
@@ -172,27 +186,39 @@ export function InstallLeadForm({ entryMode = "commerce", activityTemplateId = "
           </div>
 
           {checkingSession ? (
-            <div className="rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] p-6 text-sm text-[#5A645D]">Vérification de la session...</div>
+            <div className="rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] p-6 text-sm text-[#5A645D]">Verification de la session...</div>
           ) : userEmail ? (
             <form className="space-y-3" onSubmit={onSubmit}>
               <Input
                 onChange={(event) => setFormData((prev) => ({ ...prev, name: event.target.value }))}
-                placeholder="Nom de votre activité"
+                placeholder="Nom de votre activite"
                 required
                 value={formData.name}
               />
 
               <Input disabled value={userEmail} />
 
-              <select
-                className="h-11 w-full rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] px-3 text-sm text-[#132B22]"
-                onChange={(event) => setFormData((prev) => ({ ...prev, entryMode: event.target.value as EntryMode }))}
-                value={formData.entryMode}
-              >
-                <option value="commerce">Mode Commerce</option>
-                <option value="creator">Mode Creator / Community</option>
-                <option value="experience">Mode Experience / Brand</option>
-              </select>
+              <label className="block text-xs uppercase tracking-[0.12em] text-[#5A645D]">Objectif collectif (passages / mois)</label>
+              <Input
+                min={20}
+                onChange={(event) => setFormData((prev) => ({ ...prev, sharedUnlockObjective: Number(event.target.value) || 120 }))}
+                type="number"
+                value={formData.sharedUnlockObjective}
+              />
+
+              <label className="block text-xs uppercase tracking-[0.12em] text-[#5A645D]">Fenetre active (jours)</label>
+              <Input
+                min={3}
+                onChange={(event) => setFormData((prev) => ({ ...prev, sharedUnlockWindowDays: Number(event.target.value) || 7 }))}
+                type="number"
+                value={formData.sharedUnlockWindowDays}
+              />
+
+              <label className="block text-xs uppercase tracking-[0.12em] text-[#5A645D]">Offre debloquee</label>
+              <Input
+                onChange={(event) => setFormData((prev) => ({ ...prev, sharedUnlockOffer: event.target.value }))}
+                value={formData.sharedUnlockOffer}
+              />
 
               <select
                 className="h-11 w-full rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] px-3 text-sm text-[#132B22]"
@@ -214,7 +240,7 @@ export function InstallLeadForm({ entryMode = "commerce", activityTemplateId = "
             </form>
           ) : (
             <div className="rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] p-6">
-              <p className="text-sm text-[#556159]">Entrée instantanée avec Google. Activation simple. Aucun outil à apprendre.</p>
+              <p className="text-sm text-[#556159]">Connexion Google. Activation simple. Aucun outil a apprendre.</p>
               <div className="mt-4">
                 <GoogleSignInButton nextPath="/landing#installation" />
               </div>

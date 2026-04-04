@@ -7,6 +7,24 @@ import { Card } from "@/ui"
 
 import { WalletPassPreview } from "@/components/engine/WalletPassPreview"
 
+type MidpointView = {
+  mode: "recognition_only" | "recognition_plus_boost"
+  threshold: number
+  reached: boolean
+  reachedAt: string | null
+  copy: string
+}
+
+type SharedUnlockView = {
+  enabled: boolean
+  objective: number
+  progress: number
+  windowDays: number
+  offer: string
+  status: "disabled" | "tracking" | "active"
+  activeUntil: string | null
+}
+
 type CardApiResponse = {
   ok: boolean
   card?: {
@@ -15,12 +33,14 @@ type CardApiResponse = {
     stamps: number
     targetVisits: number
     rewardLabel: string
+    midpoint: MidpointView
     status: "active" | "reward_ready" | "redeemed"
   }
   merchant?: {
     id: string
     businessName: string
     businessType: string
+    sharedUnlock?: SharedUnlockView | null
   } | null
 }
 
@@ -57,8 +77,8 @@ export function CardPhoneView({ cardId }: { cardId: string }) {
 
   const statusLabel = useMemo(() => {
     if (!data?.card) return ""
-    if (data.card.status === "reward_ready") return "Récompense disponible"
-    if (data.card.status === "redeemed") return "Récompense utilisée"
+    if (data.card.status === "reward_ready") return "Recompense disponible"
+    if (data.card.status === "redeemed") return "Recompense utilisee"
     return "Carte active"
   }, [data])
 
@@ -71,11 +91,12 @@ export function CardPhoneView({ cardId }: { cardId: string }) {
   }
 
   const progressDots = Math.max(4, Math.min(data.card.targetVisits, 10))
+  const sharedUnlock = data.merchant.sharedUnlock
 
   return (
     <main className="min-h-screen bg-[#F8F7F2] px-4 py-8 text-[#173A2E] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-xl">
-        <p className="text-xs uppercase tracking-[0.14em] text-[#5D675F]">Votre carte fidélité</p>
+        <p className="text-xs uppercase tracking-[0.14em] text-[#5D675F]">Votre carte fidelite</p>
         <h1 className="mt-2 font-serif text-5xl">{data.merchant.businessName}</h1>
         <p className="mt-2 text-sm text-[#556159]">
           {data.card.customerName} · {statusLabel}
@@ -89,13 +110,24 @@ export function CardPhoneView({ cardId }: { cardId: string }) {
             <p className="mt-1 text-xl">
               {data.card.stamps} / {data.card.targetVisits}
             </p>
-            <p className="mt-2 text-xs text-[#5D675F]">Présentez cette carte en caisse pour valider un passage.</p>
+            <p className="mt-2 text-sm text-[#2A3F35]">{data.card.midpoint.copy}</p>
           </Card>
+
+          {sharedUnlock?.enabled ? (
+            <Card className="mt-4 p-4">
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Deblocage collectif</p>
+              <p className="mt-1 text-sm text-[#173A2E]">
+                {sharedUnlock.progress} / {sharedUnlock.objective} passages ce mois
+              </p>
+              <p className="mt-1 text-xs text-[#5D675F]">Offre debloquee: {sharedUnlock.offer}</p>
+              {sharedUnlock.status === "active" ? <p className="mt-2 text-sm text-[#173A2E]">Deblocage collectif actif.</p> : null}
+            </Card>
+          ) : null}
         </div>
 
         <div className="mt-6 flex items-center justify-between">
           <Link className="text-sm underline" href={`/scan/${data.merchant.id}`}>
-            Créer une autre carte
+            Creer une autre carte
           </Link>
           <Link className="text-sm underline" href="/landing">
             Site Cardin
