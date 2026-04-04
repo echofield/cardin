@@ -1,14 +1,22 @@
-﻿"use client"
+"use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import { ActivityRecommendationBlock } from "@/components/engine/ActivityRecommendationBlock"
 import { MerchantTemplateSelector } from "@/components/engine/MerchantTemplateSelector"
+import { LandingDynamicLibrary } from "@/components/landing/LandingDynamicLibrary"
+import { LandingIntentButtons } from "@/components/landing/LandingIntentButtons"
 import { InstallLeadForm } from "@/components/landing/InstallLeadForm"
 import { LandingCalculatorModule } from "@/components/landing/LandingCalculatorModule"
 import { MobileStickyInstallBar } from "@/components/landing/MobileStickyInstallBar"
 import { TrackedInstallCta } from "@/components/landing/TrackedInstallCta"
-import { buildBehaviorPlan, type BehaviorScenarioId } from "@/lib/behavior-engine"
+import { trackEvent } from "@/lib/analytics"
+import { buildBehaviorPlan } from "@/lib/behavior-engine"
+import {
+  getStrongestRecommendedDynamicId,
+  type DynamicId,
+  type MerchantIntent,
+} from "@/lib/dynamics-library"
 import { merchantTemplates } from "@/lib/merchant-templates"
 import { Card } from "@/ui"
 
@@ -28,8 +36,10 @@ const STORE_FLOW_STEPS = [
 const PHONE_EXPERIENCE_POINTS = ["prochaine étape visible", "progression qui reste en tête", "gain du mois si vous l'activez"] as const
 
 export default function LandingPage() {
+  const afterIntentRef = useRef<HTMLDivElement>(null)
+  const [selectedIntent, setSelectedIntent] = useState<MerchantIntent | null>(null)
   const [selectedTemplateId, setSelectedTemplateId] = useState("boulangerie")
-  const [selectedScenarioId, setSelectedScenarioId] = useState<BehaviorScenarioId>("starting_loop")
+  const [selectedDynamicId, setSelectedDynamicId] = useState<DynamicId>("point_depart")
 
   const selectedTemplate = useMemo(
     () => merchantTemplates.find((template) => template.id === selectedTemplateId) ?? merchantTemplates[0],
@@ -46,8 +56,17 @@ export default function LandingPage() {
   )
 
   useEffect(() => {
-    setSelectedScenarioId(behaviorPlan.recommendedScenarioId)
-  }, [behaviorPlan.recommendedScenarioId, selectedTemplate.id])
+    if (!selectedIntent) return
+    setSelectedDynamicId(getStrongestRecommendedDynamicId(selectedIntent, selectedTemplate.id))
+  }, [selectedIntent, selectedTemplate.id])
+
+  const handleIntent = (intent: MerchantIntent) => {
+    setSelectedIntent(intent)
+    trackEvent("landing_intent_select", { intent, templateId: selectedTemplate.id })
+    window.requestAnimationFrame(() => {
+      afterIntentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    })
+  }
 
   return (
     <main className="bg-[#F8F7F2] pb-16 text-[#152F25] sm:pb-0">
@@ -61,56 +80,68 @@ export default function LandingPage() {
             Cardin les fait revenir.
           </h1>
 
-          <p className="mt-5 max-w-3xl text-base text-[#4F5A53] sm:text-lg">
-            Vous mettez en place une carte simple en boutique. Le client la scanne. Cardin installe ensuite un rythme de retour adapté à votre activité.
-          </p>
-          <p className="mt-3 max-w-3xl text-sm text-[#556159] sm:text-base">Le trafic est déjà là. Ce qui se perd se joue entre deux visites.</p>
+          <p className="mt-5 max-w-3xl text-base text-[#4F5A53] sm:text-lg">Une carte simple en boutique. Un retour qui s&apos;installe derrière.</p>
+          <p className="mt-3 max-w-3xl text-sm text-[#556159]">Activation simple. Sans application.</p>
 
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <TrackedInstallCta
-              className="inline-flex h-12 items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-8 text-sm font-medium text-[#FBFAF6] transition hover:bg-[#214F3E]"
-              href="#activity-selection"
-              label="Voir ce que Cardin lancerait"
-              source="hero"
+          <p className="mt-8 font-serif text-2xl text-[#173A2E] sm:text-3xl">Que voulez-vous améliorer ?</p>
+          <LandingIntentButtons
+            onSelectIntent={handleIntent}
+            selectedIntent={selectedIntent}
+          />
+        </div>
+      </section>
+
+      {selectedIntent ? (
+        <div ref={afterIntentRef} className="scroll-mt-4">
+          <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10" id="activity-selection">
+            <div className="mb-5 max-w-3xl">
+              <p className="text-xs uppercase tracking-[0.14em] text-[#647068]">Votre activité</p>
+              <h2 className="mt-2 font-serif text-4xl text-[#173A2E]">Où voulez-vous l&apos;installer ?</h2>
+              <p className="mt-3 text-sm text-[#556159]">
+                Chaque activité a ses moments faibles, ses habitudes, son bon déclencheur.
+              </p>
+            </div>
+
+            <MerchantTemplateSelector
+              onSelect={(template) => {
+                setSelectedTemplateId(template.id)
+                trackEvent("calculator_change", {
+                  field: "template",
+                  value: template.id,
+                  templateId: template.id,
+                  intent: selectedIntent,
+                })
+              }}
+              selectedTemplateId={selectedTemplate.id}
+              templates={merchantTemplates}
             />
-            <TrackedInstallCta
-              className="inline-flex h-12 items-center justify-center rounded-full border border-[#C8D1C7] bg-[#FBFCF8] px-8 text-sm font-medium text-[#173A2E] transition hover:border-[#173A2E]"
-              href="#calculateur"
-              label="Calculer mon retour"
-              source="hero_secondary"
+
+            <LandingDynamicLibrary
+              intent={selectedIntent}
+              merchantType={selectedTemplate.id}
+              onSelectDynamic={(id) => {
+                setSelectedDynamicId(id)
+              }}
+              selectedDynamicId={selectedDynamicId}
             />
-          </div>
+
+            <div className="mt-6">
+              <ActivityRecommendationBlock plan={behaviorPlan} template={selectedTemplate} />
+            </div>
+          </section>
+
+          <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8" id="calculateur">
+            <LandingCalculatorModule
+              behaviorPlan={behaviorPlan}
+              ctaHref="#installation"
+              entryModeLabel="Commerce"
+              selectedDynamicId={selectedDynamicId}
+              selectedIntent={selectedIntent}
+              selectedTemplate={selectedTemplate}
+            />
+          </section>
         </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10" id="activity-selection">
-        <div className="mb-5 max-w-3xl">
-          <p className="text-xs uppercase tracking-[0.14em] text-[#647068]">Votre activité</p>
-          <h2 className="mt-2 font-serif text-4xl text-[#173A2E]">Cardin lit le rythme avant de proposer la carte.</h2>
-          <p className="mt-3 text-sm text-[#556159]">Avant la sélection, c'est simple. Après la sélection, Cardin vous montre comment créer du mouvement.</p>
-        </div>
-
-        <MerchantTemplateSelector
-          onSelect={(template) => setSelectedTemplateId(template.id)}
-          selectedTemplateId={selectedTemplate.id}
-          templates={merchantTemplates}
-        />
-
-        <div className="mt-6">
-          <ActivityRecommendationBlock plan={behaviorPlan} template={selectedTemplate} />
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8" id="calculateur">
-        <LandingCalculatorModule
-          behaviorPlan={behaviorPlan}
-          ctaHref="#installation"
-          entryModeLabel="Commerce"
-          onScenarioChange={setSelectedScenarioId}
-          selectedScenarioId={selectedScenarioId}
-          selectedTemplate={selectedTemplate}
-        />
-      </section>
+      ) : null}
 
       <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12" id="experience-templates">
         <div className="mb-6 max-w-3xl">

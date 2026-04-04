@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 type FunnelEventName =
   | "hero_cta"
@@ -10,6 +10,10 @@ type FunnelEventName =
   | "scan_card_created"
   | "wallet_button_clicked"
   | "merchant_stamp"
+  | "landing_intent_select"
+  | "landing_dynamic_select"
+  | "landing_dynamic_detail_open"
+  | "landing_dynamic_expand_toggle"
 
 export function trackEvent(eventName: FunnelEventName, properties: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return

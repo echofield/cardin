@@ -1,17 +1,18 @@
-﻿"use client"
+"use client"
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
+import { ProgressionStrip } from "@/components/landing/ProgressionStrip"
 import { AnnualProjectionPanel } from "@/components/engine/AnnualProjectionPanel"
-import { ScenarioSwitcher } from "@/components/engine/ScenarioSwitcher"
 import { trackEvent } from "@/lib/analytics"
 import { projectAnnualCardinPlan } from "@/lib/annual-projection-engine"
 import { buildCalendarPlan } from "@/lib/calendar-engine"
-import { findScenario, type BehaviorPlan, type BehaviorScenarioId } from "@/lib/behavior-engine"
+import { type BehaviorPlan } from "@/lib/behavior-engine"
 import { DEFAULT_DAYS_OPEN, formatEuro, percentToRate } from "@/lib/calculator"
+import { dynamicToLegacyScenarioId, getDynamicDefinition, type DynamicId, type MerchantIntent } from "@/lib/dynamics-library"
 import { type MerchantTemplate } from "@/lib/merchant-templates"
-import { projectScenarioImpact } from "@/lib/projection-engine"
+import { projectFamilyImpact } from "@/lib/projection-engine"
 import { Button, Card, Slider } from "@/ui"
 
 type LandingCalculatorModuleProps = {
@@ -19,8 +20,8 @@ type LandingCalculatorModuleProps = {
   entryModeLabel?: string
   selectedTemplate: MerchantTemplate
   behaviorPlan: BehaviorPlan
-  selectedScenarioId: BehaviorScenarioId
-  onScenarioChange: (scenarioId: BehaviorScenarioId) => void
+  selectedDynamicId: DynamicId
+  selectedIntent: MerchantIntent | null
 }
 
 const MONTHLY_PLAN_PRICE = 39
@@ -30,8 +31,8 @@ export function LandingCalculatorModule({
   entryModeLabel,
   selectedTemplate,
   behaviorPlan,
-  selectedScenarioId,
-  onScenarioChange,
+  selectedDynamicId,
+  selectedIntent,
 }: LandingCalculatorModuleProps) {
   const [basePerMonth, setBasePerMonth] = useState(1200)
   const [avgValue, setAvgValue] = useState(12)
@@ -40,41 +41,45 @@ export function LandingCalculatorModule({
   const [showAssumptionsEditor, setShowAssumptionsEditor] = useState(false)
   const [animateResult, setAnimateResult] = useState(false)
 
+  const dynamic = useMemo(() => getDynamicDefinition(selectedDynamicId), [selectedDynamicId])
+  const legacyScenarioId = useMemo(() => dynamicToLegacyScenarioId(selectedDynamicId), [selectedDynamicId])
+
   useEffect(() => {
     setRecoveryPercent(Math.round(selectedTemplate.defaults.calculator_recovery_rate * 100))
   }, [selectedTemplate.defaults.calculator_recovery_rate])
 
-  const selectedScenario = useMemo(() => findScenario(behaviorPlan, selectedScenarioId), [behaviorPlan, selectedScenarioId])
-
   const monthlyProjection = useMemo(
     () =>
-      projectScenarioImpact({
+      projectFamilyImpact({
         merchantType: selectedTemplate.id,
-        scenarioId: selectedScenarioId,
+        projectionFamily: dynamic.projectionFamily,
         monthlyClients: basePerMonth,
         avgTicket: avgValue,
         inactivePercent,
         baseRecoveryPercent: recoveryPercent,
+        primaryEffect: dynamic.calculatorPrimaryEffect,
+        secondaryEffect: dynamic.calculatorSecondaryEffect,
+        scenarioRole: dynamic.scenarioRole,
       }),
-    [avgValue, basePerMonth, inactivePercent, recoveryPercent, selectedScenarioId, selectedTemplate.id]
+    [avgValue, basePerMonth, dynamic, inactivePercent, recoveryPercent, selectedTemplate.id]
   )
 
   const calendarPlan = useMemo(
-    () => buildCalendarPlan(selectedTemplate.id, selectedScenarioId),
-    [selectedScenarioId, selectedTemplate.id]
+    () => buildCalendarPlan(selectedTemplate.id, legacyScenarioId),
+    [legacyScenarioId, selectedTemplate.id]
   )
 
   const annualProjection = useMemo(
     () =>
       projectAnnualCardinPlan({
         merchantType: selectedTemplate.id,
-        scenarioId: selectedScenarioId,
+        scenarioId: legacyScenarioId,
         monthlyClients: basePerMonth,
         avgTicket: avgValue,
         inactivePercent,
         baseRecoveryPercent: recoveryPercent,
       }),
-    [avgValue, basePerMonth, inactivePercent, recoveryPercent, selectedScenarioId, selectedTemplate.id]
+    [avgValue, basePerMonth, inactivePercent, legacyScenarioId, recoveryPercent, selectedTemplate.id]
   )
 
   const monthlyValueFromOneReturnDaily = useMemo(() => avgValue * DEFAULT_DAYS_OPEN, [avgValue])
@@ -82,6 +87,14 @@ export function LandingCalculatorModule({
     () => (avgValue > 0 ? MONTHLY_PLAN_PRICE / (DEFAULT_DAYS_OPEN * avgValue) : 0),
     [avgValue]
   )
+
+  const equivalentLine = useMemo(() => {
+    if (monthlyProjection.monthlyReturns <= 0) return null
+    const perDay = monthlyProjection.monthlyReturns / DEFAULT_DAYS_OPEN
+    if (perDay >= 0.9 && perDay <= 1.1) return "Équivalent : environ un passage en plus par jour ouvré."
+    if (perDay < 0.15) return `Équivalent : environ un passage en plus tous les ${Math.max(2, Math.round(1 / perDay))} jours.`
+    return `Équivalent : environ ${perDay.toFixed(1)} retours par jour ouvré.`
+  }, [monthlyProjection.monthlyReturns])
 
   useEffect(() => {
     setAnimateResult(true)
@@ -91,7 +104,15 @@ export function LandingCalculatorModule({
   }, [monthlyProjection.monthlyRevenue])
 
   const handleCalculatorChange = (label: string, value: number | string) => {
-    trackEvent("calculator_change", { field: label, value, audience: "clients", templateId: selectedTemplate.id, scenarioId: selectedScenarioId })
+    trackEvent("calculator_change", {
+      field: label,
+      value,
+      audience: "clients",
+      templateId: selectedTemplate.id,
+      dynamicId: selectedDynamicId,
+      projectionFamily: dynamic.projectionFamily,
+      intent: selectedIntent ?? undefined,
+    })
   }
 
   return (
@@ -100,14 +121,10 @@ export function LandingCalculatorModule({
 
       <div className="relative">
         <p className="text-xs uppercase tracking-[0.16em] text-[#5C655E]">Projection Cardin · {entryModeLabel ?? "Commerce"}</p>
-        <h2 className="mt-3 font-serif text-3xl leading-tight text-[#16372C] sm:text-4xl">Choisissez le mouvement qui doit entrer en boutique</h2>
+        <h2 className="mt-3 font-serif text-3xl leading-tight text-[#16372C] sm:text-4xl">Ce que cela peut réellement ramener</h2>
         <p className="mt-2 max-w-3xl text-sm text-[#5C655E]">
-          L'activité choisie fixe le rythme. Le scénario choisi montre ce que Cardin peut lancer, ce que cela peut rapporter, et quand l'activer dans l'année.
+          Les curseurs estiment votre base. La dynamique choisie oriente l&apos;effet principal — sans promesse irréaliste.
         </p>
-
-        <div className="mt-8">
-          <ScenarioSwitcher onChange={onScenarioChange} scenarios={behaviorPlan.scenarios} selectedScenarioId={selectedScenarioId} />
-        </div>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">
           <div className="space-y-6">
@@ -160,17 +177,17 @@ export function LandingCalculatorModule({
             </div>
 
             <div className="rounded-2xl border border-[#CCD3C9] bg-[#FEFEFA] p-5">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#667068]">Scénario choisi</p>
-              <p className="mt-2 text-lg font-medium text-[#173A2E]">{selectedScenario.label}</p>
-              <p className="mt-1 text-sm text-[#2A3F35]">{selectedScenario.headline}</p>
-              <p className="mt-2 text-sm text-[#556159]">{selectedScenario.detail}</p>
-              <p className="mt-2 text-xs text-[#556159]">{selectedScenario.bestFor}</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#667068]">Ce que vous mettez en place</p>
+              <p className="mt-2 text-lg font-medium text-[#173A2E]">{dynamic.cardTitle}</p>
+              <p className="mt-1 text-sm text-[#2A3F35]">{dynamic.cardHook}</p>
+              <p className="mt-2 text-xs text-[#556159]">{behaviorPlan.movementPromise}</p>
+              <ProgressionStrip dynamic={dynamic} />
             </div>
           </div>
 
           <div className="space-y-4">
             <div className="rounded-2xl border border-[#CCD3C9] bg-[#FEFEFA] p-5">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#667068]">Potentiel récupérable estimé</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#667068]">Estimation mensuelle</p>
               <p
                 className={[
                   "mt-2 font-serif text-4xl text-[#153428] transition-transform duration-200 sm:text-5xl",
@@ -180,9 +197,11 @@ export function LandingCalculatorModule({
                 +{formatEuro(monthlyProjection.monthlyRevenue)} / mois
               </p>
               <p className="mt-2 text-sm text-[#5C655E]">{monthlyProjection.monthlyReturns} retours estimés / mois.</p>
+              {equivalentLine ? <p className="mt-2 text-sm text-[#2A3F35]">{equivalentLine}</p> : null}
               <p className="mt-2 text-sm text-[#2A3F35]">{monthlyProjection.primaryEffect}</p>
               <p className="mt-1 text-sm text-[#556159]">{monthlyProjection.secondaryEffect}</p>
               <p className="mt-3 text-xs text-[#556159]">{monthlyProjection.confidenceLabel}</p>
+              <p className="mt-4 text-xs italic text-[#5C655E]">Vos clients voient où ils en sont. Et reviennent pour avancer.</p>
 
               <div className="mt-4 border-t border-[#D9DDD6] pt-3">
                 <p className="text-xs text-[#5A645D]">Hypothèses : {DEFAULT_DAYS_OPEN} jours ouverts / mois · retour visé {recoveryPercent}%</p>
@@ -238,15 +257,26 @@ export function LandingCalculatorModule({
           <Link
             className="sm:flex-1"
             href={ctaHref}
-            onClick={() => trackEvent("calculator_cta", { revenue: monthlyProjection.monthlyRevenue, templateId: selectedTemplate.id, scenarioId: selectedScenarioId })}
+            onClick={() =>
+              trackEvent("calculator_cta", {
+                revenue: monthlyProjection.monthlyRevenue,
+                templateId: selectedTemplate.id,
+                dynamicId: selectedDynamicId,
+                projectionFamily: dynamic.projectionFamily,
+                intent: selectedIntent ?? undefined,
+              })
+            }
           >
             <Button className="w-full" size="lg">
-              Lancer ma carte
+              Mettre en place dans ma boutique
             </Button>
           </Link>
-          <Link className="text-sm font-medium text-[#16372C] underline-offset-4 hover:underline" href="#pricing">
-            Voir l'offre &rarr;
-          </Link>
+          <div className="text-center sm:text-left">
+            <p className="text-xs text-[#5C655E]">Activation en 10 minutes</p>
+            <Link className="text-sm font-medium text-[#16372C] underline-offset-4 hover:underline" href="#pricing">
+              Voir l&apos;offre &rarr;
+            </Link>
+          </div>
         </div>
       </div>
     </Card>

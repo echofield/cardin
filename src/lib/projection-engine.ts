@@ -1,5 +1,6 @@
 ﻿import { type BehaviorScenarioId, normalizeEngineActivityId, type EngineActivityId } from "@/lib/behavior-engine"
 import { percentToRate } from "@/lib/calculator"
+import type { ProjectionFamily } from "@/lib/dynamics-library"
 
 export type ProjectionEngineInput = {
   merchantType: string
@@ -108,4 +109,78 @@ function buildConfidenceLabel(scenarioId: BehaviorScenarioId) {
   }
 
   return "Projection plus désirable que mécanique"
+}
+
+export type FamilyProjectionInput = {
+  merchantType: string
+  projectionFamily: ProjectionFamily
+  monthlyClients: number
+  avgTicket: number
+  inactivePercent: number
+  baseRecoveryPercent: number
+  primaryEffect: string
+  secondaryEffect: string
+  scenarioRole: string
+}
+
+function getFamilyWeights(activityId: EngineActivityId, family: ProjectionFamily): { revenueWeight: number; returnsWeight: number } {
+  const row = PROJECTION_PROFILES[activityId]
+  switch (family) {
+    case "base_return":
+      return { revenueWeight: row.starting_loop.revenueWeight, returnsWeight: row.starting_loop.returnsWeight }
+    case "frequency_push":
+      return { revenueWeight: row.short_challenge.revenueWeight, returnsWeight: row.short_challenge.returnsWeight }
+    case "gap_fill":
+      return { revenueWeight: row.weekly_rendezvous.revenueWeight, returnsWeight: row.weekly_rendezvous.returnsWeight }
+    case "referral": {
+      const s = row.short_challenge
+      return { revenueWeight: s.revenueWeight * 0.98, returnsWeight: s.returnsWeight * 0.99 }
+    }
+    case "collective":
+      return { revenueWeight: row.monthly_gain.revenueWeight, returnsWeight: row.monthly_gain.returnsWeight }
+    default:
+      return { revenueWeight: 1, returnsWeight: 1 }
+  }
+}
+
+export function projectFamilyImpact(input: FamilyProjectionInput): ProjectionResult {
+  const activityId = normalizeEngineActivityId(input.merchantType)
+  const weights = getFamilyWeights(activityId, input.projectionFamily)
+  const monthlyClients = Math.max(0, input.monthlyClients)
+  const avgTicket = Math.max(0, input.avgTicket)
+  const inactiveRate = percentToRate(input.inactivePercent)
+  const baseRecoveryRate = percentToRate(input.baseRecoveryPercent)
+  const recoveredClientsBase = monthlyClients * inactiveRate * baseRecoveryRate
+  const recoveredClients = recoveredClientsBase * weights.returnsWeight
+  const monthlyReturns = Math.round(recoveredClients)
+  const monthlyRevenue = Math.round(recoveredClients * avgTicket * weights.revenueWeight)
+  const dailyRevenue = monthlyRevenue / 26
+  const paybackDays = dailyRevenue > 0 ? Math.max(1, Math.ceil(39 / dailyRevenue)) : 999
+
+  return {
+    monthlyRevenue,
+    monthlyReturns,
+    recoveredClients,
+    paybackDays,
+    confidenceLabel: buildConfidenceLabelForFamily(input.projectionFamily),
+    primaryEffect: input.primaryEffect,
+    secondaryEffect: input.secondaryEffect,
+    scenarioRole: input.scenarioRole,
+  }
+}
+
+function buildConfidenceLabelForFamily(family: ProjectionFamily) {
+  if (family === "base_return") {
+    return "Projection la plus stable"
+  }
+  if (family === "frequency_push") {
+    return "Projection rapide à court terme"
+  }
+  if (family === "gap_fill") {
+    return "Projection ciblée sur le rythme"
+  }
+  if (family === "referral") {
+    return "Projection orientée recommandation"
+  }
+  return "Projection collective et désir"
 }
