@@ -89,13 +89,32 @@ const STRATEGY_BOOSTS: Record<MerchantStrategyMode, { component: keyof InternalW
 }
 
 /**
+ * Map ActivityType to weight profile key
+ * Groups similar business models together
+ */
+function mapActivityTypeToWeightKey(activityType: string): keyof SectorWeightProfiles {
+  const mapping: Record<string, keyof SectorWeightProfiles> = {
+    cafe: "cafe",
+    boulangerie: "cafe", // Similar daily frequency model
+    restaurant: "restaurant",
+    coiffeur: "beaute",
+    "institut-beaute": "beaute",
+    boutique: "balanced", // Generic retail
+    createur: "createur",
+  }
+
+  return mapping[activityType] || "balanced"
+}
+
+/**
  * Get weight profile for a merchant
  * Combines sector baseline + strategy boost
  */
 export function getWeightProfile(
-  sectorType: keyof SectorWeightProfiles,
+  activityType: string,
   strategyMode: MerchantStrategyMode
 ): InternalWeightProfile {
+  const sectorType = mapActivityTypeToWeightKey(activityType)
   // Get sector baseline
   const baseProfile = SECTOR_BASE_WEIGHTS[sectorType] || SECTOR_BASE_WEIGHTS.balanced
 

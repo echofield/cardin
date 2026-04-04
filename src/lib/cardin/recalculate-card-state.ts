@@ -22,7 +22,7 @@ import type {
   DominoState,
   MerchantStrategyMode,
 } from "@/types/cardin-core.types"
-import { getWeightProfile, type SectorWeightProfiles } from "./merchant-strategy-profiles"
+import { getWeightProfile } from "./merchant-strategy-profiles"
 import { getStatusLabel } from "./status-labels"
 import type { ActivityType } from "./status-labels"
 
@@ -249,8 +249,7 @@ export function recalculateCardState(
   merchantAvgSpend: number = 0
 ): DerivedCardState {
   // Get weight profile for this merchant
-  const sectorType = activityType as keyof SectorWeightProfiles
-  const weights = getWeightProfile(sectorType, strategyMode)
+  const weights = getWeightProfile(activityType, strategyMode)
 
   // Calculate score components (each 0-1)
   const components = {
