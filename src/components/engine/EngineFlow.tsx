@@ -11,11 +11,9 @@ import { Button, Card, Input, Slider } from "@/ui"
 
 import { MerchantTemplateSelector } from "./MerchantTemplateSelector"
 import { WalletPassPreview } from "./WalletPassPreview"
+import { applyObjectiveToAssumptions, buildObjectiveScenario, objectiveHints, normalizeObjectiveId, type MidpointMode } from "./objective-scenarios"
 
 type EngineStep = 1 | 2 | 3 | 4
-
-type MidpointMode = "recognition_only" | "recognition_plus_boost"
-type ObjectiveHintId = "return" | "domino" | "rare"
 
 type EngineFlowProps = {
   initialObjectiveId?: string
@@ -26,21 +24,6 @@ const assumptionsByFrequency = {
   high: { clients: 120, avgTicket: 9, lossRatePercent: 28 },
   medium: { clients: 85, avgTicket: 17, lossRatePercent: 32 },
   low: { clients: 35, avgTicket: 39, lossRatePercent: 36 },
-}
-
-const objectiveHints: Record<ObjectiveHintId, { label: string; description: string }> = {
-  return: {
-    label: "Faire revenir plus souvent",
-    description: "On part d'un programme simple qui raccourcit le temps entre deux visites.",
-  },
-  domino: {
-    label: "Faire venir plus de monde",
-    description: "On garde une base simple, puis le domino peut venir accelerer la circulation.",
-  },
-  rare: {
-    label: "Creer quelque chose de rare",
-    description: "On commence lisible, puis on pourra monter vers un privilège plus exceptionnel.",
-  },
 }
 
 const midpointOptions: Array<{
@@ -67,23 +50,30 @@ const setupLines = [
 ]
 
 export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlowProps) {
+  const selectedObjectiveId = normalizeObjectiveId(initialObjectiveId)
   const initialTemplate = getTemplateById(initialTemplateId ?? merchantTemplates[0].id)
-  const initialAssumptions = assumptionsByFrequency[initialTemplate.defaults.average_frequency]
+  const initialScenario = buildObjectiveScenario(initialTemplate, selectedObjectiveId)
+  const initialAssumptions = applyObjectiveToAssumptions(
+    assumptionsByFrequency[initialTemplate.defaults.average_frequency],
+    selectedObjectiveId
+  )
   const hasPreselectedTemplate = Boolean(initialTemplateId)
-  const initialObjectiveHint =
-    initialObjectiveId && initialObjectiveId in objectiveHints
-      ? objectiveHints[initialObjectiveId as ObjectiveHintId]
-      : undefined
+  const initialObjectiveHint = objectiveHints[selectedObjectiveId]
 
   const [step, setStep] = useState<EngineStep>(1)
   const [selectedTemplate, setSelectedTemplate] = useState<MerchantTemplate>(initialTemplate)
   const [showTemplateSelector, setShowTemplateSelector] = useState(!hasPreselectedTemplate)
-  const [targetVisits, setTargetVisits] = useState(initialTemplate.defaults.target_visits)
-  const [rewardLabel, setRewardLabel] = useState(initialTemplate.defaults.reward_label)
-  const [midpointMode, setMidpointMode] = useState<MidpointMode>("recognition_only")
+  const [targetVisits, setTargetVisits] = useState(initialScenario.targetVisits)
+  const [rewardLabel, setRewardLabel] = useState(initialScenario.rewardLabel)
+  const [midpointMode, setMidpointMode] = useState<MidpointMode>(initialScenario.midpointMode)
   const [clientsPerDay, setClientsPerDay] = useState(initialAssumptions.clients)
   const [avgTicket, setAvgTicket] = useState(initialAssumptions.avgTicket)
   const [lossRatePercent, setLossRatePercent] = useState(initialAssumptions.lossRatePercent)
+
+  const selectedScenario = useMemo(
+    () => buildObjectiveScenario(selectedTemplate, selectedObjectiveId),
+    [selectedObjectiveId, selectedTemplate]
+  )
 
   const monthlyProjection = useMemo(
     () =>
@@ -91,17 +81,13 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
         clientsPerDay,
         avgTicket,
         returnLossRate: percentToRate(lossRatePercent),
-        recoveryRate: selectedTemplate.defaults.calculator_recovery_rate,
+        recoveryRate: Math.min(0.45, selectedTemplate.defaults.calculator_recovery_rate * selectedScenario.recoveryMultiplier),
       }),
-    [avgTicket, clientsPerDay, lossRatePercent, selectedTemplate.defaults.calculator_recovery_rate]
+    [avgTicket, clientsPerDay, lossRatePercent, selectedScenario.recoveryMultiplier, selectedTemplate.defaults.calculator_recovery_rate]
   )
 
   const progressDots = Math.max(4, Math.min(targetVisits, 10))
-  const reminderDelayDays = selectedTemplate.defaults.reminder_delay_days
-  const notificationLabel =
-    reminderDelayDays <= 14
-      ? "Votre prochaine etape vous attend"
-      : `Retour conseille sous ${Math.max(2, Math.round(reminderDelayDays / 7))} semaines`
+  const notificationLabel = selectedScenario.reminderLabel
 
   const midpointSummary =
     midpointMode === "recognition_plus_boost"
@@ -112,11 +98,16 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
   const canGoNext = step < 4
 
   const applyTemplate = (template: MerchantTemplate) => {
-    setSelectedTemplate(template)
-    setTargetVisits(template.defaults.target_visits)
-    setRewardLabel(template.defaults.reward_label)
+    const scenario = buildObjectiveScenario(template, selectedObjectiveId)
+    const nextAssumptions = applyObjectiveToAssumptions(
+      assumptionsByFrequency[template.defaults.average_frequency],
+      selectedObjectiveId
+    )
 
-    const nextAssumptions = assumptionsByFrequency[template.defaults.average_frequency]
+    setSelectedTemplate(template)
+    setTargetVisits(scenario.targetVisits)
+    setRewardLabel(scenario.rewardLabel)
+    setMidpointMode(scenario.midpointMode)
     setClientsPerDay(nextAssumptions.clients)
     setAvgTicket(nextAssumptions.avgTicket)
     setLossRatePercent(nextAssumptions.lossRatePercent)
@@ -139,6 +130,8 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
     trackEvent("engine_step_completed", {
       completedStep: step,
       templateId: selectedTemplate.id,
+      objectiveId: selectedObjectiveId,
+      completedScenario: selectedScenario.label,
       midpointMode,
     })
 
@@ -165,6 +158,9 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
           <p className="mt-3 max-w-3xl text-sm text-[#556159]">
             La facade reste simple. Cardin prepare ensuite le QR, la carte Wallet et l'espace marchand avec la configuration choisie.
           </p>
+          <div className="mt-4 inline-flex rounded-full border border-[#C5D0C4] bg-[#F2F5EE] px-4 py-2 text-xs uppercase tracking-[0.14em] text-[#1B4332]">
+            Scenario actif : {selectedScenario.label}
+          </div>
 
           <div className="mt-6 grid gap-2 sm:grid-cols-4">
             {["Activite", "Configuration", "Apercu", "Activation"].map((label, index) => {
@@ -222,7 +218,7 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
                         <div className="mt-5 rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4">
                           <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Intention conservee</p>
                           <p className="mt-2 text-base font-medium text-[#173A2E]">{initialObjectiveHint.label}</p>
-                          <p className="mt-2 text-sm text-[#556159]">{initialObjectiveHint.description}</p>
+                          <p className="mt-2 text-sm text-[#556159]">{selectedScenario.description}</p>
                         </div>
                       ) : null}
 
@@ -238,7 +234,7 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
 
                         <div className="rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4">
                           <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Point de depart</p>
-                          <p className="mt-3 text-sm font-medium text-[#173A2E]">{selectedTemplate.pointOfDeparture}</p>
+                          <p className="mt-3 text-sm font-medium text-[#173A2E]">{selectedScenario.pointOfDeparture}</p>
                         </div>
                       </div>
                     </Card>
@@ -260,7 +256,7 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
 
               <Card className="p-6">
                 <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Point de depart recommande</p>
-                <p className="mt-3 font-serif text-3xl text-[#173A2E]">{selectedTemplate.pointOfDeparture}</p>
+                <p className="mt-3 font-serif text-3xl text-[#173A2E]">{selectedScenario.pointOfDeparture}</p>
                 <p className="mt-3 text-sm text-[#556159]">{selectedTemplate.description}</p>
 
                 <div className="mt-6 space-y-3 rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4">
@@ -273,8 +269,8 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
                 </div>
 
                 <div className="mt-4 rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4">
-                  <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Rythme de depart</p>
-                  <p className="mt-2 text-sm text-[#203B31]">{selectedTemplate.rhythmLabel}</p>
+                  <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Cadence scenario</p>
+                  <p className="mt-2 text-sm text-[#203B31]">{selectedScenario.cadenceLabel}</p>
                 </div>
               </Card>
             </div>
@@ -284,7 +280,7 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
             <div>
               <h2 className="font-serif text-3xl text-[#173A2E]">Configurez le programme visible</h2>
               <p className="mt-2 text-sm text-[#58625C]">
-                On ne vous fait regler que ce qui sera vraiment stocke pour la mise en place.
+                {selectedScenario.growthNote}
               </p>
 
               <div className="mt-6 grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
@@ -297,7 +293,7 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
                     <Slider className="mt-3" max={12} min={3} onChange={setTargetVisits} value={targetVisits} />
 
                     <label className="mt-6 block text-sm text-[#173A2E]" htmlFor="rewardLabel">
-                      Recompense affichee sur la carte
+                      {selectedScenario.rewardFieldLabel}
                     </label>
                     <Input id="rewardLabel" onChange={(event) => setRewardLabel(event.target.value)} value={rewardLabel} />
                   </Card>
@@ -327,6 +323,7 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
                   <Card className="p-6">
                     <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Resume de mise en place</p>
                     <div className="mt-4 space-y-3 text-sm text-[#203B31]">
+                      <p>Scenario : {selectedScenario.label}</p>
                       <p>Activite : {selectedTemplate.label}</p>
                       <p>Carte : {targetVisits} passages pour {rewardLabel}</p>
                       <p>Cap intermediaire : {midpointSummary}</p>
@@ -343,7 +340,7 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
                       ))}
                     </div>
                     <p className="mt-4 text-sm text-[#556159]">
-                      Le noyau reseau peut venir ensuite. La carte de depart reste volontairement simple.
+                      {selectedScenario.growthNote}
                     </p>
                   </Card>
                 </div>
@@ -359,10 +356,11 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
 
                 <WalletPassPreview
                   businessLabel={selectedTemplate.label}
-                  caption={midpointSummary}
+                  caption={selectedScenario.growthNote}
                   notificationLabel={notificationLabel}
                   progressDots={progressDots}
                   rewardLabel={rewardLabel}
+                  statusLabel={selectedObjectiveId === "rare" ? "Rare" : selectedObjectiveId === "domino" ? "Domino" : "Actif"}
                 />
               </div>
 
@@ -381,7 +379,7 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
                   <p className="mt-3 rounded-2xl border border-[#D6DCD3] bg-[#F8FAF6] px-4 py-3 text-base text-[#173A2E]">
                     {notificationLabel}
                   </p>
-                  <p className="mt-3 text-sm text-[#5C655E]">Point de depart : {selectedTemplate.pointOfDeparture}</p>
+                  <p className="mt-3 text-sm text-[#5C655E]">Point de depart : {selectedScenario.pointOfDeparture}</p>
                 </Card>
               </div>
             </div>
@@ -391,7 +389,7 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
             <div>
               <h2 className="font-serif text-3xl text-[#173A2E]">Projection et activation</h2>
               <p className="mt-2 text-sm text-[#58625C]">
-                Chiffrez l'ordre de grandeur, puis lancez directement l'espace marchand avec la configuration ci-dessus.
+                {selectedScenario.projectionCaption}
               </p>
 
               <div className="mt-6 grid gap-5 lg:grid-cols-3">
@@ -423,15 +421,16 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
               <div className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
                 <div className="space-y-5">
                   <Card className="border-[#BBC8BC] bg-[#F2F7EF] p-6">
-                    <p className="text-xs uppercase tracking-[0.14em] text-[#607067]">Ce que vous pouvez recuperer des ce mois</p>
+                    <p className="text-xs uppercase tracking-[0.14em] text-[#607067]">Projection pour cette version</p>
                     <p className="mt-2 font-serif text-5xl text-[#173A2E]">+{formatEuro(monthlyProjection.extraRevenue)} / mois</p>
                     <p className="mt-3 text-base text-[#2E4339]">{Math.round(monthlyProjection.recoveredClients)} clients recuperes / mois</p>
-                    <p className="mt-3 text-sm text-[#4F5E55]">Base calculee sur le rythme de {selectedTemplate.label.toLowerCase()} et le taux de recuperation de depart de Cardin.</p>
+                    <p className="mt-3 text-sm text-[#4F5E55]">{selectedScenario.projectionCaption}</p>
                   </Card>
 
                   <Card className="p-6">
                     <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Configuration envoyee</p>
                     <div className="mt-4 space-y-2 text-sm text-[#203B31]">
+                      <p>Scenario : {selectedScenario.label}</p>
                       <p>Activite : {selectedTemplate.label}</p>
                       <p>Programme : {targetVisits} passages pour {rewardLabel}</p>
                       <p>Cap intermediaire : {midpointSummary}</p>
@@ -441,12 +440,12 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
 
                 <InstallLeadForm
                   activityTemplateId={selectedTemplate.id}
-                  description="Cardin cree l'espace marchand, le QR et le parcours client avec la configuration choisie ci-dessus."
+                  description={selectedScenario.activationDescription}
                   embedded
                   midpointMode={midpointMode}
                   rewardLabel={rewardLabel}
                   targetVisits={targetVisits}
-                  title="Lancer votre carte en boutique"
+                  title={selectedScenario.activationTitle}
                 />
               </div>
             </div>
@@ -464,3 +463,4 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
     </section>
   )
 }
+
