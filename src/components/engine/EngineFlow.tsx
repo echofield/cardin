@@ -15,8 +15,10 @@ import { WalletPassPreview } from "./WalletPassPreview"
 type EngineStep = 1 | 2 | 3 | 4
 
 type MidpointMode = "recognition_only" | "recognition_plus_boost"
+type ObjectiveHintId = "return" | "domino" | "rare"
 
 type EngineFlowProps = {
+  initialObjectiveId?: string
   initialTemplateId?: string
 }
 
@@ -24,6 +26,21 @@ const assumptionsByFrequency = {
   high: { clients: 120, avgTicket: 9, lossRatePercent: 28 },
   medium: { clients: 85, avgTicket: 17, lossRatePercent: 32 },
   low: { clients: 35, avgTicket: 39, lossRatePercent: 36 },
+}
+
+const objectiveHints: Record<ObjectiveHintId, { label: string; description: string }> = {
+  return: {
+    label: "Faire revenir plus souvent",
+    description: "On part d'un programme simple qui raccourcit le temps entre deux visites.",
+  },
+  domino: {
+    label: "Faire venir plus de monde",
+    description: "On garde une base simple, puis le domino peut venir accelerer la circulation.",
+  },
+  rare: {
+    label: "Creer quelque chose de rare",
+    description: "On commence lisible, puis on pourra monter vers un privilège plus exceptionnel.",
+  },
 }
 
 const midpointOptions: Array<{
@@ -49,12 +66,18 @@ const setupLines = [
   "Tableau marchand avec suivi des passages",
 ]
 
-export function EngineFlow({ initialTemplateId }: EngineFlowProps) {
+export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlowProps) {
   const initialTemplate = getTemplateById(initialTemplateId ?? merchantTemplates[0].id)
   const initialAssumptions = assumptionsByFrequency[initialTemplate.defaults.average_frequency]
+  const hasPreselectedTemplate = Boolean(initialTemplateId)
+  const initialObjectiveHint =
+    initialObjectiveId && initialObjectiveId in objectiveHints
+      ? objectiveHints[initialObjectiveId as ObjectiveHintId]
+      : undefined
 
   const [step, setStep] = useState<EngineStep>(1)
   const [selectedTemplate, setSelectedTemplate] = useState<MerchantTemplate>(initialTemplate)
+  const [showTemplateSelector, setShowTemplateSelector] = useState(!hasPreselectedTemplate)
   const [targetVisits, setTargetVisits] = useState(initialTemplate.defaults.target_visits)
   const [rewardLabel, setRewardLabel] = useState(initialTemplate.defaults.reward_label)
   const [midpointMode, setMidpointMode] = useState<MidpointMode>("recognition_only")
@@ -97,6 +120,10 @@ export function EngineFlow({ initialTemplateId }: EngineFlowProps) {
     setClientsPerDay(nextAssumptions.clients)
     setAvgTicket(nextAssumptions.avgTicket)
     setLossRatePercent(nextAssumptions.lossRatePercent)
+
+    if (hasPreselectedTemplate) {
+      setShowTemplateSelector(false)
+    }
   }
 
   const goToPreviousStep = () => {
@@ -163,15 +190,71 @@ export function EngineFlow({ initialTemplateId }: EngineFlowProps) {
 
         <div className="mt-8 min-h-[560px]">
           {step === 1 ? (
-            <div className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr]">
+            <div className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
               <div>
-                <h2 className="font-serif text-3xl text-[#173A2E]">Choisissez votre activite</h2>
-                <p className="mt-2 text-sm text-[#58625C]">
-                  Cardin part d'un point de depart simple pour votre rythme de clientele, puis le backend prend le relais pour le QR et la carte wallet.
-                </p>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h2 className="font-serif text-3xl text-[#173A2E]">
+                      {hasPreselectedTemplate && !showTemplateSelector ? "Votre activite est deja choisie" : "Choisissez votre activite"}
+                    </h2>
+                    <p className="mt-2 max-w-2xl text-sm text-[#58625C]">
+                      {hasPreselectedTemplate && !showTemplateSelector
+                        ? "On reprend le lieu choisi sur la landing. Vous pouvez le changer si besoin, sans repasser par toute la grille."
+                        : "Cardin part d'un point de depart simple pour votre rythme de clientele, puis le backend prend le relais pour le QR et la carte wallet."}
+                    </p>
+                  </div>
+
+                  {hasPreselectedTemplate && !showTemplateSelector ? (
+                    <Button onClick={() => setShowTemplateSelector(true)} variant="subtle">
+                      Changer le lieu
+                    </Button>
+                  ) : null}
+                </div>
 
                 <div className="mt-6">
-                  <MerchantTemplateSelector onSelect={applyTemplate} selectedTemplateId={selectedTemplate.id} />
+                  {hasPreselectedTemplate && !showTemplateSelector ? (
+                    <Card className="p-6">
+                      <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Activite retenue</p>
+                      <p className="mt-3 font-serif text-4xl text-[#173A2E]">{selectedTemplate.label}</p>
+                      <p className="mt-3 max-w-2xl text-sm text-[#556159]">{selectedTemplate.description}</p>
+
+                      {initialObjectiveHint ? (
+                        <div className="mt-5 rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4">
+                          <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Intention conservee</p>
+                          <p className="mt-2 text-base font-medium text-[#173A2E]">{initialObjectiveHint.label}</p>
+                          <p className="mt-2 text-sm text-[#556159]">{initialObjectiveHint.description}</p>
+                        </div>
+                      ) : null}
+
+                      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                        <div className="rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4">
+                          <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Ce que Cardin travaille</p>
+                          <div className="mt-3 space-y-2 text-sm text-[#203B31]">
+                            {selectedTemplate.needs.map((need) => (
+                              <p key={need}>{need}</p>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4">
+                          <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Point de depart</p>
+                          <p className="mt-3 text-sm font-medium text-[#173A2E]">{selectedTemplate.pointOfDeparture}</p>
+                        </div>
+                      </div>
+                    </Card>
+                  ) : (
+                    <div>
+                      {hasPreselectedTemplate ? (
+                        <div className="mb-4 flex justify-end">
+                          <Button onClick={() => setShowTemplateSelector(false)} variant="subtle">
+                            Garder {selectedTemplate.label}
+                          </Button>
+                        </div>
+                      ) : null}
+
+                      <MerchantTemplateSelector onSelect={applyTemplate} selectedTemplateId={selectedTemplate.id} />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -381,4 +464,3 @@ export function EngineFlow({ initialTemplateId }: EngineFlowProps) {
     </section>
   )
 }
-
