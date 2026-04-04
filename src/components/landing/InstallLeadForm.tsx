@@ -8,10 +8,17 @@ import { createClientSupabaseBrowser } from "@/lib/supabase/client"
 import { Button, Card, Input } from "@/ui"
 
 type EntryMode = "commerce" | "creator" | "experience"
+type MidpointMode = "recognition_only" | "recognition_plus_boost"
 
 type InstallLeadFormProps = {
   entryMode?: EntryMode
   activityTemplateId?: string
+  targetVisits?: number
+  rewardLabel?: string
+  midpointMode?: MidpointMode
+  embedded?: boolean
+  title?: string
+  description?: string
 }
 
 type LeadSubmitState =
@@ -26,19 +33,30 @@ type LeadSubmitState =
       dashboardUrl: string
       scanUrl: string
       qrCodeUrl: string
-      launchProjection?: string[]
       setup?: {
+        targetVisits: number
+        rewardLabel: string
         objective: number
         activeWindowDays: number
         unlockedOffer: string
-        midpointMode: string
+        midpointMode: MidpointMode
       }
     }
 
-export function InstallLeadForm({ entryMode = "commerce", activityTemplateId = "boulangerie" }: InstallLeadFormProps) {
+export function InstallLeadForm({
+  entryMode = "commerce",
+  activityTemplateId = "boulangerie",
+  targetVisits = 10,
+  rewardLabel = "1 recompense offerte",
+  midpointMode = "recognition_only",
+  embedded = false,
+  title = "Lancer votre carte en boutique",
+  description = "Connexion simple, configuration claire, QR pret en quelques minutes.",
+}: InstallLeadFormProps) {
   const callbackOptions = useMemo(() => createCallbackOptions(), [])
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [checkingSession, setCheckingSession] = useState(true)
+  const [showNetworkOptions, setShowNetworkOptions] = useState(false)
   const [state, setState] = useState<LeadSubmitState>({ status: "idle" })
 
   const [formData, setFormData] = useState({
@@ -46,18 +64,24 @@ export function InstallLeadForm({ entryMode = "commerce", activityTemplateId = "
     callbackSlot: callbackOptions[0],
     entryMode,
     activityTemplateId,
+    targetVisits,
+    rewardLabel,
+    midpointMode,
     sharedUnlockObjective: 120,
     sharedUnlockWindowDays: 7,
     sharedUnlockOffer: "Offre collective de la semaine",
   })
 
   useEffect(() => {
-    setFormData((prev) => ({ ...prev, entryMode }))
-  }, [entryMode])
-
-  useEffect(() => {
-    setFormData((prev) => ({ ...prev, activityTemplateId }))
-  }, [activityTemplateId])
+    setFormData((prev) => ({
+      ...prev,
+      entryMode,
+      activityTemplateId,
+      targetVisits,
+      rewardLabel,
+      midpointMode,
+    }))
+  }, [activityTemplateId, entryMode, midpointMode, rewardLabel, targetVisits])
 
   useEffect(() => {
     const supabase = createClientSupabaseBrowser()
@@ -80,6 +104,7 @@ export function InstallLeadForm({ entryMode = "commerce", activityTemplateId = "
         data: { user },
       } = await supabase.auth.getUser()
       setUserEmail(user?.email ?? null)
+      setCheckingSession(false)
     })
 
     return () => {
@@ -120,7 +145,6 @@ export function InstallLeadForm({ entryMode = "commerce", activityTemplateId = "
         dashboardUrl: payload.dashboardUrl,
         scanUrl: payload.scanUrl,
         qrCodeUrl: payload.qrCodeUrl,
-        launchProjection: payload.enginePlan?.launchProjection,
         setup: payload.setup,
       })
 
@@ -128,6 +152,8 @@ export function InstallLeadForm({ entryMode = "commerce", activityTemplateId = "
         callbackSlot: formData.callbackSlot,
         entryMode: formData.entryMode,
         activityTemplateId: formData.activityTemplateId,
+        targetVisits: formData.targetVisits,
+        midpointMode: formData.midpointMode,
         sharedUnlockObjective: formData.sharedUnlockObjective,
         sharedUnlockWindowDays: formData.sharedUnlockWindowDays,
       })
@@ -139,113 +165,151 @@ export function InstallLeadForm({ entryMode = "commerce", activityTemplateId = "
     }
   }
 
+  const summary = (
+    <div className="rounded-2xl border border-[#D2D9CF] bg-[#FEFDF9] p-4">
+      <p className="text-xs uppercase tracking-[0.12em] text-[#5C655E]">Programme retenu</p>
+      <p className="mt-2 text-sm text-[#173A2E]">
+        {formData.targetVisits} passages {"->"} {formData.rewardLabel}
+      </p>
+      <p className="mt-1 text-sm text-[#556159]">
+        {formData.midpointMode === "recognition_plus_boost" ? "Cap intermediaire: reconnaissance + boost" : "Cap intermediaire: reconnaissance uniquement"}
+      </p>
+      <button
+        className="mt-3 text-xs font-medium text-[#173A2E] underline-offset-2 hover:underline"
+        onClick={() => setShowNetworkOptions((prev) => !prev)}
+        type="button"
+      >
+        {showNetworkOptions ? "Masquer les options reseau" : "Afficher les options reseau"}
+      </button>
+
+      {showNetworkOptions ? (
+        <div className="mt-4 space-y-3 border-t border-[#E0E4DB] pt-4">
+          <div>
+            <label className="block text-xs uppercase tracking-[0.12em] text-[#5A645D]">Objectif collectif (passages / mois)</label>
+            <Input
+              min={20}
+              onChange={(event) => setFormData((prev) => ({ ...prev, sharedUnlockObjective: Number(event.target.value) || 120 }))}
+              type="number"
+              value={formData.sharedUnlockObjective}
+            />
+          </div>
+          <div>
+            <label className="block text-xs uppercase tracking-[0.12em] text-[#5A645D]">Fenetre active (jours)</label>
+            <Input
+              min={3}
+              onChange={(event) => setFormData((prev) => ({ ...prev, sharedUnlockWindowDays: Number(event.target.value) || 7 }))}
+              type="number"
+              value={formData.sharedUnlockWindowDays}
+            />
+          </div>
+          <div>
+            <label className="block text-xs uppercase tracking-[0.12em] text-[#5A645D]">Offre debloquee</label>
+            <Input
+              onChange={(event) => setFormData((prev) => ({ ...prev, sharedUnlockOffer: event.target.value }))}
+              value={formData.sharedUnlockOffer}
+            />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+
+  const successBlock = state.status === "success" ? (
+    <div className="rounded-2xl border border-[#B5C7B5] bg-[#EDF5EA] p-4 text-sm text-[#173A2E]">
+      <p className="font-medium">{state.confirmation}</p>
+      <p className="mt-1">Cardin ID: {state.merchantId}</p>
+
+      {state.setup ? (
+        <div className="mt-3 space-y-1 text-xs text-[#2A3F35]">
+          <p>{state.setup.targetVisits} passages {"->"} {state.setup.rewardLabel}</p>
+          <p>{state.setup.midpointMode === "recognition_plus_boost" ? "Cap intermediaire : boost actif" : "Cap intermediaire : reconnaissance uniquement"}</p>
+          <p>Objectif collectif: {state.setup.objective} passages/mois</p>
+          <p>Fenetre active: {state.setup.activeWindowDays} jours</p>
+        </div>
+      ) : null}
+
+      <img alt="QR Cardin" className="mt-4 w-full max-w-[220px] rounded-xl border border-[#C4D2C4] bg-white p-2" src={state.qrCodeUrl} />
+
+      <div className="mt-4 space-y-2 text-xs">
+        <a className="block underline" href={state.dashboardUrl} rel="noreferrer" target="_blank">
+          Ouvrir le tableau Cardin
+        </a>
+        <a className="block underline" href={state.scanUrl} rel="noreferrer" target="_blank">
+          Ouvrir le parcours client
+        </a>
+        <a className="block underline" download={`qr-${state.merchantId}.png`} href={state.qrCodeUrl}>
+          Telecharger le QR PNG
+        </a>
+      </div>
+    </div>
+  ) : null
+
+  const formBlock = checkingSession ? (
+    <div className="rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] p-6 text-sm text-[#5A645D]">Verification de la session...</div>
+  ) : userEmail ? (
+    <form className="space-y-3" onSubmit={onSubmit}>
+      <Input
+        onChange={(event) => setFormData((prev) => ({ ...prev, name: event.target.value }))}
+        placeholder="Nom de votre activite"
+        required
+        value={formData.name}
+      />
+
+      <Input disabled value={userEmail} />
+
+      <select
+        className="h-11 w-full rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] px-3 text-sm text-[#132B22]"
+        onChange={(event) => setFormData((prev) => ({ ...prev, callbackSlot: event.target.value }))}
+        value={formData.callbackSlot}
+      >
+        {callbackOptions.map((slot) => (
+          <option key={slot} value={slot}>
+            {slot}
+          </option>
+        ))}
+      </select>
+
+      <Button className="w-full" size="lg" type="submit">
+        {state.status === "loading" ? "Activation en cours..." : "Lancer ma carte"}
+      </Button>
+
+      {state.status === "error" ? <p className="text-sm text-[#A64040]">{state.message}</p> : null}
+      {successBlock}
+    </form>
+  ) : (
+    <div className="rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] p-6">
+      <p className="text-sm text-[#556159]">Connexion Google. Activation simple. Aucun outil a apprendre.</p>
+      <div className="mt-4">
+        <GoogleSignInButton nextPath="/engine#installation" />
+      </div>
+    </div>
+  )
+
+  if (embedded) {
+    return (
+      <Card className="border-[#C7D0C4] bg-gradient-to-b from-[#FCFCF8] to-[#F3F5EE] p-6 sm:p-8" id="installation">
+        <p className="text-xs uppercase tracking-[0.14em] text-[#637067]">Activation</p>
+        <h3 className="mt-2 font-serif text-3xl text-[#173A2E]">{title}</h3>
+        <p className="mt-3 text-sm text-[#536057]">{description}</p>
+        <div className="mt-6 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+          <div>{summary}</div>
+          <div>{formBlock}</div>
+        </div>
+      </Card>
+    )
+  }
+
   return (
     <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-14" id="installation">
       <Card className="border-[#C7D0C4] bg-gradient-to-b from-[#FCFCF8] to-[#F3F5EE] p-6 sm:p-8">
-        <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
+        <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
           <div>
             <p className="text-xs uppercase tracking-[0.14em] text-[#637067]">Activation</p>
-            <h2 className="mt-2 font-serif text-4xl text-[#173A2E]">Lancer votre carte en boutique</h2>
-            <p className="mt-3 text-sm text-[#536057]">En place en 24h. Utilisable immediatement. Aucune formation necessaire.</p>
-
-            <div className="mt-6 rounded-2xl border border-[#D2D9CF] bg-[#FEFDF9] p-4">
-              <p className="text-sm text-[#173A2E]">119EUR - mise en place complete</p>
-              <p className="mt-1 text-sm text-[#173A2E]">39EUR/mois - moteur actif</p>
-              <p className="mt-2 text-xs text-[#5A645D]">Un retour par jour couvre largement Cardin.</p>
-            </div>
-
-            {state.status === "success" ? (
-              <div className="mt-6 rounded-2xl border border-[#B5C7B5] bg-[#EDF5EA] p-4 text-sm text-[#173A2E]">
-                <p className="font-medium">Cardin ID: {state.merchantId}</p>
-                <p className="mt-1">{state.confirmation}</p>
-
-                {state.setup ? (
-                  <div className="mt-3 space-y-1 text-xs text-[#2A3F35]">
-                    <p>Objectif collectif: {state.setup.objective} passages/mois</p>
-                    <p>Fenetre active: {state.setup.activeWindowDays} jours</p>
-                    <p>Offre debloquee: {state.setup.unlockedOffer}</p>
-                    <p>Midpoint: reconnaissance uniquement</p>
-                  </div>
-                ) : null}
-
-                <img alt="QR Cardin" className="mt-4 w-full max-w-[220px] rounded-xl border border-[#C4D2C4] bg-white p-2" src={state.qrCodeUrl} />
-
-                <div className="mt-4 space-y-2 text-xs">
-                  <a className="block underline" href={state.dashboardUrl} target="_blank">
-                    Ouvrir le tableau Cardin
-                  </a>
-                  <a className="block underline" href={state.scanUrl} target="_blank">
-                    Ouvrir le parcours client
-                  </a>
-                  <a className="block underline" download={`qr-${state.merchantId}.png`} href={state.qrCodeUrl}>
-                    Telecharger le QR PNG
-                  </a>
-                </div>
-              </div>
-            ) : null}
+            <h2 className="mt-2 font-serif text-4xl text-[#173A2E]">{title}</h2>
+            <p className="mt-3 text-sm text-[#536057]">{description}</p>
+            <div className="mt-6">{summary}</div>
           </div>
-
-          {checkingSession ? (
-            <div className="rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] p-6 text-sm text-[#5A645D]">Verification de la session...</div>
-          ) : userEmail ? (
-            <form className="space-y-3" onSubmit={onSubmit}>
-              <Input
-                onChange={(event) => setFormData((prev) => ({ ...prev, name: event.target.value }))}
-                placeholder="Nom de votre activite"
-                required
-                value={formData.name}
-              />
-
-              <Input disabled value={userEmail} />
-
-              <label className="block text-xs uppercase tracking-[0.12em] text-[#5A645D]">Objectif collectif (passages / mois)</label>
-              <Input
-                min={20}
-                onChange={(event) => setFormData((prev) => ({ ...prev, sharedUnlockObjective: Number(event.target.value) || 120 }))}
-                type="number"
-                value={formData.sharedUnlockObjective}
-              />
-
-              <label className="block text-xs uppercase tracking-[0.12em] text-[#5A645D]">Fenetre active (jours)</label>
-              <Input
-                min={3}
-                onChange={(event) => setFormData((prev) => ({ ...prev, sharedUnlockWindowDays: Number(event.target.value) || 7 }))}
-                type="number"
-                value={formData.sharedUnlockWindowDays}
-              />
-
-              <label className="block text-xs uppercase tracking-[0.12em] text-[#5A645D]">Offre debloquee</label>
-              <Input
-                onChange={(event) => setFormData((prev) => ({ ...prev, sharedUnlockOffer: event.target.value }))}
-                value={formData.sharedUnlockOffer}
-              />
-
-              <select
-                className="h-11 w-full rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] px-3 text-sm text-[#132B22]"
-                onChange={(event) => setFormData((prev) => ({ ...prev, callbackSlot: event.target.value }))}
-                value={formData.callbackSlot}
-              >
-                {callbackOptions.map((slot) => (
-                  <option key={slot} value={slot}>
-                    {slot}
-                  </option>
-                ))}
-              </select>
-
-              <Button className="w-full" size="lg" type="submit">
-                {state.status === "loading" ? "Activation en cours..." : "Lancer ma carte"}
-              </Button>
-
-              {state.status === "error" ? <p className="text-sm text-[#A64040]">{state.message}</p> : null}
-            </form>
-          ) : (
-            <div className="rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] p-6">
-              <p className="text-sm text-[#556159]">Connexion Google. Activation simple. Aucun outil a apprendre.</p>
-              <div className="mt-4">
-                <GoogleSignInButton nextPath="/landing#installation" />
-              </div>
-            </div>
-          )}
+          <div>{formBlock}</div>
         </div>
       </Card>
     </section>

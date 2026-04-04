@@ -1,211 +1,152 @@
-/**
+﻿/**
  * Sector Calculator Backend Logic
  *
- * Transforms natural language inputs into concrete business projections
- * NO percentages, NO abstract weights shown
- * Output is always: problem statement + 3 numbers + concrete metric
+ * Transforms natural language inputs into concrete business projections.
  */
 
 import type {
-  CafeCalculatorInput,
-  RestaurantCalculatorInput,
-  CreatorCalculatorInput,
   BoutiqueCalculatorInput,
+  CafeCalculatorInput,
   ConcreteProjection,
+  CreatorCalculatorInput,
+  LocalCommerceCalculatorInput,
+  RestaurantCalculatorInput,
 } from "@/types/cardin-core.types"
-
-// ==========================================
-// CAFÉ CALCULATOR
-// ==========================================
 
 export function calculateCafeProjection(input: CafeCalculatorInput): ConcreteProjection {
   const { emptyDays, peakTimes, regularCount } = input
 
-  // Build problem statement
   const emptyDaysFr = emptyDays.map(dayToFrench).join(", ")
   const peakTimesFr = peakTimes.map(timeToFrench).join(" et ")
-  const problemStatement = `Vos ${emptyDaysFr} sont vides et vos habitués viennent ${peakTimesFr}`
+  const problemStatement = `Vos ${emptyDaysFr} sont vides et vos habitues viennent ${peakTimesFr}`
 
-  // Calculate volume recovered
-  // Each empty day can recover 8-12 visits depending on regular base
   const emptyDayCount = emptyDays.length
-  const recoveryPerDay = Math.floor(8 + (regularCount / 50) * 4) // 8-12 range
+  const recoveryPerDay = Math.floor(8 + (regularCount / 50) * 4)
   const volumeRecovered = emptyDayCount * recoveryPerDay
-
-  // Calculate revenue impact
-  // Café average ticket: €8.50
-  const avgTicket = 8.5
-  const revenueImpact = Math.round(volumeRecovered * avgTicket)
-
-  // Domino intensity based on regular base
+  const revenueImpact = Math.round(volumeRecovered * 8.5)
   const dominoIntensity: "low" | "medium" | "high" =
     regularCount >= 50 ? "high" : regularCount >= 30 ? "medium" : "low"
 
-  // Timeframe: 6 weeks is standard for frequency-based strategies
-  const timeframe = "6 semaines"
-
-  // Concrete metric
-  const firstEmptyDay = emptyDays[0] ? dayToFrench(emptyDays[0]) : "jour ciblé"
-  const firstPeakTime = peakTimes[0] ? timeToFrench(peakTimes[0]) : "créneau fort"
-  const concreteMetric = `${volumeRecovered} passages supplémentaires ${firstEmptyDay} ${firstPeakTime}`
+  const firstEmptyDay = emptyDays[0] ? dayToFrench(emptyDays[0]) : "jour cible"
+  const firstPeakTime = peakTimes[0] ? timeToFrench(peakTimes[0]) : "creneau fort"
 
   return {
     problemStatement,
     volumeRecovered,
     revenueImpact,
     dominoIntensity,
-    timeframe,
-    concreteMetric,
+    timeframe: "6 semaines",
+    concreteMetric: `${volumeRecovered} passages supplementaires ${firstEmptyDay} ${firstPeakTime}`,
   }
 }
 
-// ==========================================
-// RESTAURANT CALCULATOR
-// ==========================================
-
-export function calculateRestaurantProjection(
-  input: RestaurantCalculatorInput
-): ConcreteProjection {
+export function calculateRestaurantProjection(input: RestaurantCalculatorInput): ConcreteProjection {
   const { emptyServices, weekendFlow, avgCoverPrice } = input
 
-  // Build problem statement
   const emptyServicesFr = emptyServices.map(serviceToFrench).join(", ")
   const weekendFlowFr =
     weekendFlow === "full"
       ? "vos weekends sont pleins"
       : weekendFlow === "moderate"
-      ? "vos weekends sont modérés"
-      : "vos weekends sont vides"
+        ? "vos weekends sont moderes"
+        : "vos weekends sont vides"
   const problemStatement = `Vos ${emptyServicesFr} sont faibles et ${weekendFlowFr}`
 
-  // Calculate volume recovered (covers)
-  // Each empty service can recover 6-10 covers
-  const emptyServiceCount = emptyServices.length
   const recoveryPerService = weekendFlow === "full" ? 10 : weekendFlow === "moderate" ? 8 : 6
-  const volumeRecovered = emptyServiceCount * recoveryPerService
-
-  // Calculate revenue impact
+  const volumeRecovered = emptyServices.length * recoveryPerService
   const revenueImpact = Math.round(volumeRecovered * avgCoverPrice)
-
-  // Domino intensity based on weekend flow strength
   const dominoIntensity: "low" | "medium" | "high" =
     weekendFlow === "full" ? "high" : weekendFlow === "moderate" ? "medium" : "low"
 
-  // Timeframe: 6 weeks for restaurant strategy
-  const timeframe = "6 semaines"
-
-  // Concrete metric
-  const firstService = emptyServices[0] ? serviceToFrench(emptyServices[0]) : "service ciblé"
-  const concreteMetric = `${volumeRecovered} couverts supplémentaires ${firstService}`
+  const firstService = emptyServices[0] ? serviceToFrench(emptyServices[0]) : "service cible"
 
   return {
     problemStatement,
     volumeRecovered,
     revenueImpact,
     dominoIntensity,
-    timeframe,
-    concreteMetric,
+    timeframe: "6 semaines",
+    concreteMetric: `${volumeRecovered} couverts supplementaires ${firstService}`,
   }
 }
-
-// ==========================================
-// CREATOR CALCULATOR
-// ==========================================
 
 export function calculateCreatorProjection(input: CreatorCalculatorInput): ConcreteProjection {
   const { communitySize, avgReturnRate, contentFrequency } = input
 
-  // Build problem statement
   const returnRatePercent = Math.round(avgReturnRate * 100)
   const frequencyFr =
-    contentFrequency === "daily"
-      ? "quotidien"
-      : contentFrequency === "weekly"
-      ? "hebdomadaire"
-      : "mensuel"
+    contentFrequency === "daily" ? "quotidien" : contentFrequency === "weekly" ? "hebdomadaire" : "mensuel"
   const problemStatement = `Vous avez ${communitySize} personnes mais seulement ${returnRatePercent}% reviennent avec un rythme ${frequencyFr}`
 
-  // Calculate volume recovered (engaged members)
-  // Cardin can typically lift return rate by 15-25%
-  const liftRate =
-    contentFrequency === "daily" ? 0.25 : contentFrequency === "weekly" ? 0.20 : 0.15
-  const newReturnRate = Math.min(1.0, avgReturnRate + liftRate)
+  const liftRate = contentFrequency === "daily" ? 0.25 : contentFrequency === "weekly" ? 0.2 : 0.15
+  const newReturnRate = Math.min(1, avgReturnRate + liftRate)
   const volumeRecovered = Math.round(communitySize * (newReturnRate - avgReturnRate))
-
-  // Calculate revenue impact (assuming €15 avg support)
-  const avgSupport = 15
-  const revenueImpact = Math.round(volumeRecovered * avgSupport)
-
-  // Domino intensity based on community size and frequency
+  const revenueImpact = Math.round(volumeRecovered * 15)
   const dominoIntensity: "low" | "medium" | "high" =
-    communitySize >= 500 && contentFrequency === "daily"
-      ? "high"
-      : communitySize >= 200
-      ? "medium"
-      : "low"
-
-  // Timeframe: 8 weeks for community building
-  const timeframe = "8 semaines"
-
-  // Concrete metric
-  const concreteMetric = `${volumeRecovered} membres engagés supplémentaires avec propagation sociale`
+    communitySize >= 500 && contentFrequency === "daily" ? "high" : communitySize >= 200 ? "medium" : "low"
 
   return {
     problemStatement,
     volumeRecovered,
     revenueImpact,
     dominoIntensity,
-    timeframe,
-    concreteMetric,
+    timeframe: "8 semaines",
+    concreteMetric: `${volumeRecovered} membres engages supplementaires avec propagation sociale`,
   }
 }
 
-// ==========================================
-// BOUTIQUE CALCULATOR
-// ==========================================
+export function calculateLocalCommerceProjection(input: LocalCommerceCalculatorInput): ConcreteProjection {
+  const { clientsPerDay, avgBasket, quietDays, repeatRhythm } = input
+
+  const repeatLabel =
+    repeatRhythm === "high"
+      ? "une clientele qui revient deja souvent"
+      : repeatRhythm === "mixed"
+        ? "un melange d'habitudes et de passages occasionnels"
+        : "une clientele encore trop occasionnelle"
+
+  const problemStatement = `Vous voyez environ ${clientsPerDay} clients par jour, avec ${quietDays} jour${quietDays > 1 ? "s" : ""} plus calme${quietDays > 1 ? "s" : ""} et ${repeatLabel}`
+
+  const rhythmFactor = repeatRhythm === "high" ? 0.18 : repeatRhythm === "mixed" ? 0.14 : 0.1
+  const volumeRecovered = Math.max(6, Math.round(clientsPerDay * quietDays * rhythmFactor * 1.4))
+  const revenueImpact = Math.round(volumeRecovered * avgBasket)
+  const dominoIntensity: "low" | "medium" | "high" =
+    repeatRhythm === "high" || clientsPerDay >= 55 ? "high" : repeatRhythm === "mixed" || clientsPerDay >= 30 ? "medium" : "low"
+
+  return {
+    problemStatement,
+    volumeRecovered,
+    revenueImpact,
+    dominoIntensity,
+    timeframe: "6 semaines",
+    concreteMetric: `${volumeRecovered} retours recuperables sur vos ${quietDays} jour${quietDays > 1 ? "s" : ""} les plus calmes`,
+  }
+}
 
 export function calculateBoutiqueProjection(input: BoutiqueCalculatorInput): ConcreteProjection {
   const { footfall, conversionRate, avgBasket, seasonalPeaks } = input
 
-  // Build problem statement
   const conversionPercent = Math.round(conversionRate * 100)
   const peakCount = seasonalPeaks.length
   const problemStatement = `Vous avez ${footfall} passages par jour avec ${conversionPercent}% de conversion et ${peakCount} pics saisonniers`
 
-  // Calculate volume recovered (additional conversions)
-  // Cardin can lift conversion by 8-12% through recognition
-  const liftRate = peakCount >= 3 ? 0.12 : peakCount >= 2 ? 0.10 : 0.08
-  const newConversionRate = Math.min(1.0, conversionRate + liftRate)
+  const liftRate = peakCount >= 3 ? 0.12 : peakCount >= 2 ? 0.1 : 0.08
+  const newConversionRate = Math.min(1, conversionRate + liftRate)
   const dailyLift = footfall * (newConversionRate - conversionRate)
-  const monthlyLift = Math.round(dailyLift * 26) // 26 open days
-  const volumeRecovered = monthlyLift
-
-  // Calculate revenue impact
+  const volumeRecovered = Math.round(dailyLift * 26)
   const revenueImpact = Math.round(volumeRecovered * avgBasket)
-
-  // Domino intensity based on footfall and peaks
   const dominoIntensity: "low" | "medium" | "high" =
     footfall >= 50 && peakCount >= 3 ? "high" : footfall >= 30 ? "medium" : "low"
-
-  // Timeframe: 6 weeks
-  const timeframe = "6 semaines"
-
-  // Concrete metric
-  const concreteMetric = `${volumeRecovered} conversions supplémentaires par mois`
 
   return {
     problemStatement,
     volumeRecovered,
     revenueImpact,
     dominoIntensity,
-    timeframe,
-    concreteMetric,
+    timeframe: "6 semaines",
+    concreteMetric: `${volumeRecovered} conversions supplementaires par mois`,
   }
 }
-
-// ==========================================
-// TRANSLATION HELPERS
-// ==========================================
 
 function dayToFrench(day: string): string {
   const map: Record<string, string> = {
@@ -223,8 +164,8 @@ function dayToFrench(day: string): string {
 function timeToFrench(time: string): string {
   const map: Record<string, string> = {
     morning: "le matin",
-    noon: "à midi",
-    afternoon: "l'après-midi",
+    noon: "a midi",
+    afternoon: "l'apres-midi",
     evening: "le soir",
   }
   return map[time] || time

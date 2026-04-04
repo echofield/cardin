@@ -1,24 +1,24 @@
 ﻿"use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 
+import { InstallLeadForm } from "@/components/landing/InstallLeadForm"
 import { trackEvent } from "@/lib/analytics"
-import { projectAnnualCardinPlan } from "@/lib/annual-projection-engine"
-import { buildCalendarPlan } from "@/lib/calendar-engine"
-import { findScenario, buildBehaviorPlan, type BehaviorScenarioId } from "@/lib/behavior-engine"
-import { formatEuro, percentToRate } from "@/lib/calculator"
-import { merchantTemplates, type MerchantTemplate } from "@/lib/merchant-templates"
-import { projectScenarioImpact } from "@/lib/projection-engine"
+import { calculateRecovery, formatEuro, percentToRate } from "@/lib/calculator"
+import { getTemplateById, merchantTemplates, type MerchantTemplate } from "@/lib/merchant-templates"
 import { Button, Card, Input, Slider } from "@/ui"
 
-import { ActivityRecommendationBlock } from "./ActivityRecommendationBlock"
-import { AnnualProjectionPanel } from "./AnnualProjectionPanel"
 import { MerchantTemplateSelector } from "./MerchantTemplateSelector"
-import { ScenarioSwitcher } from "./ScenarioSwitcher"
 import { WalletPassPreview } from "./WalletPassPreview"
 
 type EngineStep = 1 | 2 | 3 | 4
+
+type MidpointMode = "recognition_only" | "recognition_plus_boost"
+
+type EngineFlowProps = {
+  initialTemplateId?: string
+}
 
 const assumptionsByFrequency = {
   high: { clients: 120, avgTicket: 9, lossRatePercent: 28 },
@@ -26,68 +26,64 @@ const assumptionsByFrequency = {
   low: { clients: 35, avgTicket: 39, lossRatePercent: 36 },
 }
 
-export function EngineFlow() {
-  const initialTemplate = merchantTemplates[0]
+const midpointOptions: Array<{
+  id: MidpointMode
+  label: string
+  description: string
+}> = [
+  {
+    id: "recognition_only",
+    label: "Reconnaissance simple",
+    description: "Le client voit qu'il avance. La carte reste tres lisible en caisse.",
+  },
+  {
+    id: "recognition_plus_boost",
+    label: "Cap intermediaire + boost",
+    description: "Un jalon visible relance l'envie avant la recompense finale.",
+  },
+]
+
+const setupLines = [
+  "QR de scan pret pour la boutique",
+  "Carte Apple Wallet / Google Wallet cote client",
+  "Tableau marchand avec suivi des passages",
+]
+
+export function EngineFlow({ initialTemplateId }: EngineFlowProps) {
+  const initialTemplate = getTemplateById(initialTemplateId ?? merchantTemplates[0].id)
+  const initialAssumptions = assumptionsByFrequency[initialTemplate.defaults.average_frequency]
 
   const [step, setStep] = useState<EngineStep>(1)
   const [selectedTemplate, setSelectedTemplate] = useState<MerchantTemplate>(initialTemplate)
-  const [selectedScenarioId, setSelectedScenarioId] = useState<BehaviorScenarioId>("starting_loop")
   const [targetVisits, setTargetVisits] = useState(initialTemplate.defaults.target_visits)
   const [rewardLabel, setRewardLabel] = useState(initialTemplate.defaults.reward_label)
-  const [expirationDays, setExpirationDays] = useState(21)
-  const [reminderDelayDays, setReminderDelayDays] = useState(initialTemplate.defaults.reminder_delay_days)
-
-  const [clientsPerDay, setClientsPerDay] = useState(90)
-  const [avgTicket, setAvgTicket] = useState(14)
-  const [lossRatePercent, setLossRatePercent] = useState(30)
-
-  const behaviorPlan = useMemo(
-    () =>
-      buildBehaviorPlan({
-        merchantType: selectedTemplate.id,
-        avgFrequency: selectedTemplate.defaults.average_frequency,
-        basketValue: avgTicket,
-        inactivityRate: percentToRate(lossRatePercent),
-      }),
-    [avgTicket, lossRatePercent, selectedTemplate.defaults.average_frequency, selectedTemplate.id]
-  )
-
-  useEffect(() => {
-    setSelectedScenarioId(behaviorPlan.recommendedScenarioId)
-  }, [behaviorPlan.recommendedScenarioId, selectedTemplate.id])
-
-  const selectedScenario = useMemo(() => findScenario(behaviorPlan, selectedScenarioId), [behaviorPlan, selectedScenarioId])
-  const monthlyClients = clientsPerDay * 26
+  const [midpointMode, setMidpointMode] = useState<MidpointMode>("recognition_only")
+  const [clientsPerDay, setClientsPerDay] = useState(initialAssumptions.clients)
+  const [avgTicket, setAvgTicket] = useState(initialAssumptions.avgTicket)
+  const [lossRatePercent, setLossRatePercent] = useState(initialAssumptions.lossRatePercent)
 
   const monthlyProjection = useMemo(
     () =>
-      projectScenarioImpact({
-        merchantType: selectedTemplate.id,
-        scenarioId: selectedScenarioId,
-        monthlyClients,
+      calculateRecovery({
+        clientsPerDay,
         avgTicket,
-        inactivePercent: lossRatePercent,
-        baseRecoveryPercent: selectedTemplate.defaults.calculator_recovery_rate * 100,
+        returnLossRate: percentToRate(lossRatePercent),
+        recoveryRate: selectedTemplate.defaults.calculator_recovery_rate,
       }),
-    [avgTicket, lossRatePercent, monthlyClients, selectedScenarioId, selectedTemplate.defaults.calculator_recovery_rate, selectedTemplate.id]
-  )
-
-  const calendarPlan = useMemo(() => buildCalendarPlan(selectedTemplate.id, selectedScenarioId), [selectedScenarioId, selectedTemplate.id])
-  const annualProjection = useMemo(
-    () =>
-      projectAnnualCardinPlan({
-        merchantType: selectedTemplate.id,
-        scenarioId: selectedScenarioId,
-        monthlyClients,
-        avgTicket,
-        inactivePercent: lossRatePercent,
-        baseRecoveryPercent: selectedTemplate.defaults.calculator_recovery_rate * 100,
-      }),
-    [avgTicket, lossRatePercent, monthlyClients, selectedScenarioId, selectedTemplate.defaults.calculator_recovery_rate, selectedTemplate.id]
+    [avgTicket, clientsPerDay, lossRatePercent, selectedTemplate.defaults.calculator_recovery_rate]
   )
 
   const progressDots = Math.max(4, Math.min(targetVisits, 10))
-  const notificationText = reminderDelayDays <= 14 ? "Votre prochaine étape vous attend" : `Retour conseillé sous ${Math.round(reminderDelayDays / 7)} semaines`
+  const reminderDelayDays = selectedTemplate.defaults.reminder_delay_days
+  const notificationLabel =
+    reminderDelayDays <= 14
+      ? "Votre prochaine etape vous attend"
+      : `Retour conseille sous ${Math.max(2, Math.round(reminderDelayDays / 7))} semaines`
+
+  const midpointSummary =
+    midpointMode === "recognition_plus_boost"
+      ? "Cap intermediaire visible avant la recompense finale."
+      : "Progression simple, sans etape supplementaire cote client."
 
   const canGoBack = step > 1
   const canGoNext = step < 4
@@ -96,7 +92,6 @@ export function EngineFlow() {
     setSelectedTemplate(template)
     setTargetVisits(template.defaults.target_visits)
     setRewardLabel(template.defaults.reward_label)
-    setReminderDelayDays(template.defaults.reminder_delay_days)
 
     const nextAssumptions = assumptionsByFrequency[template.defaults.average_frequency]
     setClientsPerDay(nextAssumptions.clients)
@@ -117,7 +112,7 @@ export function EngineFlow() {
     trackEvent("engine_step_completed", {
       completedStep: step,
       templateId: selectedTemplate.id,
-      scenarioId: selectedScenarioId,
+      midpointMode,
     })
 
     setStep((prev) => {
@@ -128,49 +123,24 @@ export function EngineFlow() {
     })
   }
 
-  const downloadSetupBrief = async () => {
-    const { jsPDF } = await import("jspdf")
-    const doc = new jsPDF()
-
-    doc.setFontSize(18)
-    doc.text("Cardin - Brief de mise en place", 14, 20)
-    doc.setFontSize(11)
-    doc.text(`Date: ${new Date().toLocaleDateString("fr-FR")}`, 14, 28)
-
-    const lines = [
-      `Activité: ${selectedTemplate.label}`,
-      `Scénario: ${selectedScenario.label}`,
-      `Point de départ: ${targetVisits} passages -> ${rewardLabel}`,
-      `Projection: +${formatEuro(monthlyProjection.monthlyRevenue)} / mois`,
-      `Moment à activer: ${calendarPlan.nextMoment.label}`,
-      `Annuel: ${formatEuro(annualProjection.annualRevenueMin)} à ${formatEuro(annualProjection.annualRevenueMax)}`,
-    ]
-
-    let y = 40
-    lines.forEach((line) => {
-      doc.text(line, 14, y)
-      y += 8
-    })
-
-    doc.save(`cardin-brief-${selectedTemplate.id}.pdf`)
-  }
-
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+    <section className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
       <div className="mb-4 flex items-center justify-between">
         <Link className="text-sm text-[#173A2E] underline-offset-4 hover:underline" href="/landing">
-          ← Retour à la landing
+          Retour a la landing
         </Link>
       </div>
 
       <div className="rounded-3xl border border-[#D7DDD2] bg-[#FFFEFB] p-4 shadow-[0_20px_60px_-45px_rgba(23,58,46,0.7)] sm:p-6 lg:p-10">
         <header className="border-b border-[#E0E4DB] pb-6">
-          <p className="text-xs uppercase tracking-[0.16em] text-[#6B746D]">Carte physique + moteur de retour</p>
-          <h1 className="mt-2 font-serif text-4xl text-[#173A2E]">Mettez votre carte en place en 4 étapes</h1>
-          <p className="mt-3 max-w-3xl text-sm text-[#556159]">Choisissez l'activité. Cardin propose le bon point de départ, puis montre comment le retour peut évoluer dans l'année.</p>
+          <p className="text-xs uppercase tracking-[0.16em] text-[#6B746D]">QR + carte wallet + tableau marchand</p>
+          <h1 className="mt-2 font-serif text-4xl text-[#173A2E]">Construisez votre carte en 4 etapes</h1>
+          <p className="mt-3 max-w-3xl text-sm text-[#556159]">
+            La facade reste simple. Cardin prepare ensuite le QR, la carte Wallet et l'espace marchand avec la configuration choisie.
+          </p>
 
           <div className="mt-6 grid gap-2 sm:grid-cols-4">
-            {["Activité", "Scénario", "Dans le téléphone", "Projection"].map((label, index) => {
+            {["Activite", "Configuration", "Apercu", "Activation"].map((label, index) => {
               const current = index + 1
               const isActive = current === step
               const isCompleted = current < step
@@ -191,79 +161,107 @@ export function EngineFlow() {
           </div>
         </header>
 
-        <div className="mt-8 min-h-[540px]">
+        <div className="mt-8 min-h-[560px]">
           {step === 1 ? (
-            <div>
-              <h2 className="font-serif text-3xl text-[#173A2E]">Choisissez votre activité</h2>
-              <p className="mt-2 text-sm text-[#58625C]">La carte reste simple. Cardin lit surtout le rythme de retour dont votre activité a besoin.</p>
+            <div className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr]">
+              <div>
+                <h2 className="font-serif text-3xl text-[#173A2E]">Choisissez votre activite</h2>
+                <p className="mt-2 text-sm text-[#58625C]">
+                  Cardin part d'un point de depart simple pour votre rythme de clientele, puis le backend prend le relais pour le QR et la carte wallet.
+                </p>
 
-              <div className="mt-6">
-                <MerchantTemplateSelector onSelect={applyTemplate} selectedTemplateId={selectedTemplate.id} />
+                <div className="mt-6">
+                  <MerchantTemplateSelector onSelect={applyTemplate} selectedTemplateId={selectedTemplate.id} />
+                </div>
               </div>
 
-              <div className="mt-6">
-                <ActivityRecommendationBlock plan={behaviorPlan} template={selectedTemplate} title="Cardin a compris votre activité. Voici le premier lancement recommandé." />
-              </div>
+              <Card className="p-6">
+                <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Point de depart recommande</p>
+                <p className="mt-3 font-serif text-3xl text-[#173A2E]">{selectedTemplate.pointOfDeparture}</p>
+                <p className="mt-3 text-sm text-[#556159]">{selectedTemplate.description}</p>
+
+                <div className="mt-6 space-y-3 rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4">
+                  <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Ce que Cardin travaille d'abord</p>
+                  {selectedTemplate.needs.map((need) => (
+                    <p className="text-sm text-[#203B31]" key={need}>
+                      {need}
+                    </p>
+                  ))}
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4">
+                  <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Rythme de depart</p>
+                  <p className="mt-2 text-sm text-[#203B31]">{selectedTemplate.rhythmLabel}</p>
+                </div>
+              </Card>
             </div>
           ) : null}
 
           {step === 2 ? (
             <div>
-              <h2 className="font-serif text-3xl text-[#173A2E]">Choisissez le scénario à lancer</h2>
-              <p className="mt-2 text-sm text-[#58625C]">Vous gardez une carte simple en boutique. Cardin travaille ensuite le bon scénario selon le rythme choisi.</p>
+              <h2 className="font-serif text-3xl text-[#173A2E]">Configurez le programme visible</h2>
+              <p className="mt-2 text-sm text-[#58625C]">
+                On ne vous fait regler que ce qui sera vraiment stocke pour la mise en place.
+              </p>
 
-              <div className="mt-8">
-                <ScenarioSwitcher onChange={setSelectedScenarioId} scenarios={behaviorPlan.scenarios} selectedScenarioId={selectedScenarioId} />
-              </div>
-
-              <div className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-                <Card className="p-5">
-                  <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Visible en boutique</p>
-
-                  <div className="mt-4 flex justify-between text-sm text-[#173A2E]">
-                    <span>Nombre de passages</span>
-                    <strong>{targetVisits}</strong>
-                  </div>
-                  <Slider className="mt-3" max={12} min={3} onChange={setTargetVisits} value={targetVisits} />
-
-                  <label className="mt-6 block text-sm text-[#173A2E]" htmlFor="rewardLabel">
-                    Récompense affichée sur la carte
-                  </label>
-                  <Input id="rewardLabel" onChange={(event) => setRewardLabel(event.target.value)} value={rewardLabel} />
-
-                  <div className="mt-6 flex justify-between text-sm text-[#173A2E]">
-                    <span>Relance automatique</span>
-                    <strong>{reminderDelayDays} jours</strong>
-                  </div>
-                  <Slider className="mt-3" max={45} min={5} onChange={setReminderDelayDays} value={reminderDelayDays} />
-
-                  <div className="mt-6 rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4">
-                    <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Scénario choisi</p>
-                    <p className="mt-2 text-sm font-medium text-[#173A2E]">{selectedScenario.label}</p>
-                    <p className="mt-1 text-sm text-[#556159]">{selectedScenario.detail}</p>
-                  </div>
-                </Card>
-
+              <div className="mt-6 grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
                 <div className="space-y-4">
-                  <Card className="p-5">
-                    <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Ce que Cardin ajoute derrière</p>
-                    <div className="mt-4 space-y-3">
-                      {behaviorPlan.recommendations.map((recommendation) => (
-                        <div className="rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4" key={recommendation.title}>
-                          <p className="text-sm font-medium text-[#173A2E]">{recommendation.title}</p>
-                          <p className="mt-1 text-sm text-[#5C655E]">{recommendation.detail}</p>
-                        </div>
-                      ))}
+                  <Card className="p-6">
+                    <div className="flex justify-between text-sm text-[#173A2E]">
+                      <span>Nombre de passages</span>
+                      <strong>{targetVisits}</strong>
                     </div>
-                    <p className="mt-4 text-sm text-[#203B31]">Point de départ : {selectedTemplate.pointOfDeparture}</p>
-                    <p className="mt-2 text-sm text-[#203B31]">{behaviorPlan.movementPromise}</p>
-                    <p className="mt-3 text-xs text-[#556159]">{behaviorPlan.invitationLayer}</p>
+                    <Slider className="mt-3" max={12} min={3} onChange={setTargetVisits} value={targetVisits} />
+
+                    <label className="mt-6 block text-sm text-[#173A2E]" htmlFor="rewardLabel">
+                      Recompense affichee sur la carte
+                    </label>
+                    <Input id="rewardLabel" onChange={(event) => setRewardLabel(event.target.value)} value={rewardLabel} />
                   </Card>
 
-                  <Card className="p-5">
-                    <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Prochain moment recommandé</p>
-                    <p className="mt-2 text-lg font-medium text-[#173A2E]">{calendarPlan.nextMoment.label}</p>
-                    <p className="mt-1 text-sm text-[#556159]">{calendarPlan.nextMoment.reason}</p>
+                  <div className="grid gap-3">
+                    {midpointOptions.map((option) => {
+                      const isActive = midpointMode === option.id
+
+                      return (
+                        <button className="text-left" key={option.id} onClick={() => setMidpointMode(option.id)} type="button">
+                          <Card
+                            className={[
+                              "p-5 transition",
+                              isActive ? "border-[#173A2E] bg-[#F1F5EF]" : "border-[#D6DCD3] hover:border-[#AEB8AB]",
+                            ].join(" ")}
+                          >
+                            <p className="text-base font-medium text-[#173A2E]">{option.label}</p>
+                            <p className="mt-1 text-sm text-[#5C655E]">{option.description}</p>
+                          </Card>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Card className="p-6">
+                    <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Resume de mise en place</p>
+                    <div className="mt-4 space-y-3 text-sm text-[#203B31]">
+                      <p>Activite : {selectedTemplate.label}</p>
+                      <p>Carte : {targetVisits} passages pour {rewardLabel}</p>
+                      <p>Cap intermediaire : {midpointSummary}</p>
+                    </div>
+                  </Card>
+
+                  <Card className="p-6">
+                    <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Extensions possibles plus tard</p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {selectedTemplate.evolvesTo.map((option) => (
+                        <span className="rounded-full border border-[#CDD6CB] bg-[#F4F7F0] px-3 py-1 text-xs text-[#173A2E]" key={option}>
+                          {option}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="mt-4 text-sm text-[#556159]">
+                      Le noyau reseau peut venir ensuite. La carte de depart reste volontairement simple.
+                    </p>
                   </Card>
                 </div>
               </div>
@@ -271,38 +269,47 @@ export function EngineFlow() {
           ) : null}
 
           {step === 3 ? (
-            <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
               <div>
-                <h2 className="font-serif text-3xl text-[#173A2E]">Dans le téléphone du client</h2>
-                <p className="mt-2 text-sm text-[#58625C]">Le client reçoit votre carte, la scanne, puis retrouve sa progression dans son téléphone.</p>
+                <h2 className="font-serif text-3xl text-[#173A2E]">Ce que le client voit</h2>
+                <p className="mt-2 text-sm text-[#58625C]">Carte claire, progression visible, aucun compte a creer.</p>
 
-                <WalletPassPreview businessLabel={selectedTemplate.label} progressDots={progressDots} rewardLabel={rewardLabel} />
+                <WalletPassPreview
+                  businessLabel={selectedTemplate.label}
+                  caption={midpointSummary}
+                  notificationLabel={notificationLabel}
+                  progressDots={progressDots}
+                  rewardLabel={rewardLabel}
+                />
               </div>
 
-              <Card className="p-6">
-                <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Ce qui restera visible</p>
-                <p className="mt-3 rounded-2xl border border-[#D6DCD3] bg-[#F8FAF6] px-4 py-3 text-base text-[#173A2E]">{notificationText}</p>
-                <p className="mt-3 text-sm text-[#5C655E]">La prochaine étape reste claire, même après la visite.</p>
+              <div className="space-y-4">
+                <Card className="p-6">
+                  <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Ce que vous obtenez deja</p>
+                  <div className="mt-4 space-y-3 text-sm text-[#203B31]">
+                    {setupLines.map((line) => (
+                      <p key={line}>{line}</p>
+                    ))}
+                  </div>
+                </Card>
 
-                <div className="mt-8 space-y-3 text-sm text-[#3B4D43]">
-                  <p>1. Carte remise en boutique</p>
-                  <p>2. Scan immédiat</p>
-                  <p>3. Retour guidé par la progression</p>
-                </div>
-
-                <div className="mt-8 rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4">
-                  <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Scénario visible pour le client</p>
-                  <p className="mt-2 text-sm text-[#173A2E]">{selectedScenario.headline}</p>
-                  <p className="mt-2 text-xs text-[#5C655E]">{selectedScenario.detail}</p>
-                </div>
-              </Card>
+                <Card className="p-6">
+                  <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Cadence visible cote client</p>
+                  <p className="mt-3 rounded-2xl border border-[#D6DCD3] bg-[#F8FAF6] px-4 py-3 text-base text-[#173A2E]">
+                    {notificationLabel}
+                  </p>
+                  <p className="mt-3 text-sm text-[#5C655E]">Point de depart : {selectedTemplate.pointOfDeparture}</p>
+                </Card>
+              </div>
             </div>
           ) : null}
 
           {step === 4 ? (
             <div>
-              <h2 className="font-serif text-3xl text-[#173A2E]">Projection de retour</h2>
-              <p className="mt-2 text-sm text-[#58625C]">Cardin chiffre ce que le scénario choisi peut rapporter ce mois-ci et sur une année complète.</p>
+              <h2 className="font-serif text-3xl text-[#173A2E]">Projection et activation</h2>
+              <p className="mt-2 text-sm text-[#58625C]">
+                Chiffrez l'ordre de grandeur, puis lancez directement l'espace marchand avec la configuration ci-dessus.
+              </p>
 
               <div className="mt-6 grid gap-5 lg:grid-cols-3">
                 <Card className="p-5">
@@ -316,7 +323,7 @@ export function EngineFlow() {
                 <Card className="p-5">
                   <div className="flex justify-between text-sm text-[#173A2E]">
                     <span>Panier moyen</span>
-                    <strong>{avgTicket} €</strong>
+                    <strong>{avgTicket} EUR</strong>
                   </div>
                   <Slider className="mt-3" max={80} min={5} onChange={setAvgTicket} value={avgTicket} />
                 </Card>
@@ -330,56 +337,48 @@ export function EngineFlow() {
                 </Card>
               </div>
 
-              <div className="mt-6 grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
-                <Card className="border-[#BBC8BC] bg-[#F2F7EF] p-6">
-                  <p className="text-xs uppercase tracking-[0.14em] text-[#607067]">Ce que vous pouvez récupérer dès ce mois</p>
-                  <p className="mt-2 font-serif text-5xl text-[#173A2E]">+{formatEuro(monthlyProjection.monthlyRevenue)} / mois</p>
-                  <p className="mt-3 text-base text-[#2E4339]">{monthlyProjection.monthlyReturns} retours récupérés / mois</p>
-                  <p className="mt-3 text-sm text-[#4F5E55]">{monthlyProjection.primaryEffect}</p>
-
-                  <div className="mt-5">
-                    <Button onClick={downloadSetupBrief} variant="secondary">
-                      Télécharger le brief PDF
-                    </Button>
-                  </div>
-                </Card>
-
+              <div className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
                 <div className="space-y-5">
-                  <Card className="p-6">
-                    <p className="text-xs uppercase tracking-[0.14em] text-[#607067]">Ordre de lancement recommandé</p>
-                    <div className="mt-4 space-y-3">
-                      {behaviorPlan.calculatorRecommendations.map((recommendation) => (
-                        <div className="rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4" key={recommendation.title}>
-                          <p className="text-sm font-medium text-[#173A2E]">{recommendation.title}</p>
-                          <p className="mt-1 text-sm text-[#556159]">{recommendation.detail}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="mt-4 text-sm text-[#203B31]">Point de départ : {selectedTemplate.pointOfDeparture}</p>
-                    <p className="mt-2 text-xs text-[#556159]">{calendarPlan.quietPeriodLabel}</p>
+                  <Card className="border-[#BBC8BC] bg-[#F2F7EF] p-6">
+                    <p className="text-xs uppercase tracking-[0.14em] text-[#607067]">Ce que vous pouvez recuperer des ce mois</p>
+                    <p className="mt-2 font-serif text-5xl text-[#173A2E]">+{formatEuro(monthlyProjection.extraRevenue)} / mois</p>
+                    <p className="mt-3 text-base text-[#2E4339]">{Math.round(monthlyProjection.recoveredClients)} clients recuperes / mois</p>
+                    <p className="mt-3 text-sm text-[#4F5E55]">Base calculee sur le rythme de {selectedTemplate.label.toLowerCase()} et le taux de recuperation de depart de Cardin.</p>
                   </Card>
 
-                  <AnnualProjectionPanel annualProjection={annualProjection} />
+                  <Card className="p-6">
+                    <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Configuration envoyee</p>
+                    <div className="mt-4 space-y-2 text-sm text-[#203B31]">
+                      <p>Activite : {selectedTemplate.label}</p>
+                      <p>Programme : {targetVisits} passages pour {rewardLabel}</p>
+                      <p>Cap intermediaire : {midpointSummary}</p>
+                    </div>
+                  </Card>
                 </div>
+
+                <InstallLeadForm
+                  activityTemplateId={selectedTemplate.id}
+                  description="Cardin cree l'espace marchand, le QR et le parcours client avec la configuration choisie ci-dessus."
+                  embedded
+                  midpointMode={midpointMode}
+                  rewardLabel={rewardLabel}
+                  targetVisits={targetVisits}
+                  title="Lancer votre carte en boutique"
+                />
               </div>
             </div>
           ) : null}
         </div>
 
         <footer className="mt-8 flex flex-col gap-3 border-t border-[#E0E4DB] pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            {canGoBack ? (
-              <Button onClick={goToPreviousStep} variant="subtle">
-                Retour
-              </Button>
-            ) : null}
-          </div>
+          <div>{canGoBack ? <Button onClick={goToPreviousStep} variant="subtle">Retour</Button> : null}</div>
 
           <div className="flex items-center gap-3">
-            {canGoNext ? <Button onClick={goToNextStep}>Continuer</Button> : <Button onClick={() => setStep(1)}>Revoir la carte</Button>}
+            {canGoNext ? <Button onClick={goToNextStep}>Continuer</Button> : <Button onClick={() => setStep(1)}>Revoir depuis le debut</Button>}
           </div>
         </footer>
       </div>
     </section>
   )
 }
+

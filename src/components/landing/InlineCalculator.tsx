@@ -1,59 +1,59 @@
-"use client"
+﻿"use client"
 
-/**
- * Inline Calculator - Landing Page Transformation
- *
- * Replaces multi-step flow with immediate inline calculation:
- * 1. Select sector → Calculator unfolds
- * 2. Natural inputs → Concrete projection
- * 3. CTA appears below result
- *
- * Timeline: 10 seconds from selection to "of course" moment
- */
-
-import { useState } from "react"
 import Link from "next/link"
-import { CafeCalculator } from "@/components/calculator/CafeCalculator"
-import { RestaurantCalculator } from "@/components/calculator/RestaurantCalculator"
-import { CreatorCalculator } from "@/components/calculator/CreatorCalculator"
-import { BoutiqueCalculator } from "@/components/calculator/BoutiqueCalculator"
-import { ConcreteProjectionResult } from "@/components/calculator/ConcreteProjectionResult"
-import type { ConcreteProjection } from "@/types/cardin-core.types"
-import { trackEvent } from "@/lib/analytics"
+import { useState } from "react"
 
-type SectorType = "cafe" | "restaurant" | "creator" | "boutique"
+import { BoutiqueCalculator } from "@/components/calculator/BoutiqueCalculator"
+import { CafeCalculator } from "@/components/calculator/CafeCalculator"
+import { ConcreteProjectionResult } from "@/components/calculator/ConcreteProjectionResult"
+import { LocalCommerceCalculator } from "@/components/calculator/LocalCommerceCalculator"
+import { RestaurantCalculator } from "@/components/calculator/RestaurantCalculator"
+import { trackEvent } from "@/lib/analytics"
+import type { ConcreteProjection } from "@/types/cardin-core.types"
+
+type SectorType = "cafe" | "restaurant" | "local" | "boutique"
 
 type SectorOption = {
   id: SectorType
   label: string
-  icon: string
+  eyebrow: string
   description: string
+  setupHref: string
+  setupNote: string
 }
 
-const SECTORS: SectorOption[] = [
+const sectors: SectorOption[] = [
   {
     id: "cafe",
-    label: "Café",
-    icon: "☕",
-    description: "Transformez vos matins vides en flux régulier",
+    label: "Cafe",
+    eyebrow: "Rythme quotidien",
+    description: "Transformez des habitudes deja presentes en retours reguliers.",
+    setupHref: "/engine?template=cafe",
+    setupNote: "Le setup ouvre directement un template cafe.",
   },
   {
     id: "restaurant",
     label: "Restaurant",
-    icon: "🍽️",
-    description: "Remplissez vos services faibles sans effort",
+    eyebrow: "Services a remplir",
+    description: "Redonnez une raison de revenir entre deux repas ou deux occasions.",
+    setupHref: "/engine?template=restaurant",
+    setupNote: "Le setup ouvre directement un template restaurant.",
   },
   {
-    id: "creator",
-    label: "Créateur",
-    icon: "✨",
-    description: "Engagez votre communauté qui dort",
+    id: "local",
+    label: "Commerce de quartier",
+    eyebrow: "Projection large",
+    description: "Pour une boutique, une boulangerie, un salon ou un commerce de proximite qui veut se projeter vite.",
+    setupHref: "/engine",
+    setupNote: "Le setup s'ouvre ensuite sur le choix exact de votre activite.",
   },
   {
     id: "boutique",
     label: "Boutique",
-    icon: "🏪",
-    description: "Convertissez plus de passages en achats",
+    eyebrow: "Passages a convertir",
+    description: "Faites remonter les visites et les achats avec une progression claire.",
+    setupHref: "/engine?template=boutique",
+    setupNote: "Le setup ouvre directement un template boutique.",
   },
 ]
 
@@ -61,9 +61,11 @@ export function InlineCalculator() {
   const [selectedSector, setSelectedSector] = useState<SectorType | null>(null)
   const [projection, setProjection] = useState<ConcreteProjection | null>(null)
 
+  const selectedOption = sectors.find((sector) => sector.id === selectedSector) ?? null
+
   const handleSectorSelect = (sector: SectorType) => {
     setSelectedSector(sector)
-    setProjection(null) // Reset projection when changing sector
+    setProjection(null)
     trackEvent("calculator_sector_selected", { sector })
   }
 
@@ -75,8 +77,7 @@ export function InlineCalculator() {
       revenueImpact: result.revenueImpact,
     })
 
-    // Smooth scroll to result
-    setTimeout(() => {
+    window.setTimeout(() => {
       document.getElementById("projection-result")?.scrollIntoView({
         behavior: "smooth",
         block: "nearest",
@@ -86,108 +87,85 @@ export function InlineCalculator() {
 
   return (
     <div className="w-full">
-      {/* Sector Selector */}
-      <div className="rounded-2xl border-2 border-[#D4D9D0] bg-white p-6 shadow-lg sm:p-8">
-        <p className="text-xs uppercase tracking-[0.16em] text-[#5C655E]">
-          Votre situation
-        </p>
-        <h2 className="mt-2 font-serif text-3xl leading-tight text-[#16372C] sm:text-4xl">
-          Quel est votre commerce ?
-        </h2>
-        <p className="mt-2 text-sm text-[#556159]">
-          Choisissez votre secteur pour voir ce que Cardin peut ramener
+      <div className="rounded-[2rem] border border-[#C6CEC2] bg-[linear-gradient(180deg,#FFFEFB_0%,#F6F6F0_100%)] p-5 shadow-[0_30px_70px_-55px_rgba(23,58,46,0.75)] sm:p-8">
+        <p className="text-xs uppercase tracking-[0.16em] text-[#5C655E]">Projection Cardin</p>
+        <h2 className="mt-3 font-serif text-3xl leading-tight text-[#16372C] sm:text-4xl">Dans quel terrain travaillez-vous ?</h2>
+        <p className="mt-2 max-w-2xl text-sm text-[#556159]">
+          Choisissez le cas le plus proche de votre realite. Cardin garde ensuite le calcul simple et concret.
         </p>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {SECTORS.map((sector) => (
-            <button
-              key={sector.id}
-              onClick={() => handleSectorSelect(sector.id)}
-              className={`
-                group rounded-xl border-2 p-4 text-left transition-all duration-200
-                ${
-                  selectedSector === sector.id
-                    ? "border-[#173A2E] bg-[#E8F4EF] shadow-sm scale-[1.02]"
-                    : "border-[#E0E4DE] bg-white hover:border-[#A0ADA5] hover:-translate-y-0.5"
-                }
-              `}
-              type="button"
-            >
-              <span className="text-3xl">{sector.icon}</span>
-              <p
-                className={`mt-2 font-serif text-xl ${
-                  selectedSector === sector.id ? "text-[#173A2E]" : "text-[#2A3F35]"
-                }`}
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {sectors.map((sector) => {
+            const isActive = selectedSector === sector.id
+
+            return (
+              <button
+                className={[
+                  "rounded-2xl border p-4 text-left transition-all duration-200",
+                  isActive
+                    ? "border-[#173A2E] bg-[#F1F5EF] shadow-[0_18px_40px_-34px_rgba(23,58,46,0.55)]"
+                    : "border-[#D8DBD2] bg-[#FFFDF8] hover:border-[#AEB8AB] hover:shadow-[0_18px_40px_-34px_rgba(23,58,46,0.35)]",
+                ].join(" ")}
+                key={sector.id}
+                onClick={() => handleSectorSelect(sector.id)}
+                type="button"
               >
-                {sector.label}
-              </p>
-              <p className="mt-1 text-xs leading-relaxed text-[#556159]">
-                {sector.description}
-              </p>
-            </button>
-          ))}
+                <p className="text-[11px] uppercase tracking-[0.14em] text-[#637067]">{sector.eyebrow}</p>
+                <p className="mt-3 font-serif text-2xl text-[#173A2E]">{sector.label}</p>
+                <p className="mt-2 text-sm leading-relaxed text-[#4F5A53]">{sector.description}</p>
+              </button>
+            )
+          })}
         </div>
       </div>
 
-      {/* Calculator Accordion - Unfolds when sector selected */}
       <div
-        className={`
-          overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.19,1,0.22,1)]
-          ${selectedSector ? "mt-6 max-h-[2000px] opacity-100" : "max-h-0 opacity-0"}
-        `}
+        className={[
+          "overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.19,1,0.22,1)]",
+          selectedSector ? "mt-6 max-h-[2200px] opacity-100" : "max-h-0 opacity-0",
+        ].join(" ")}
       >
-        {selectedSector === "cafe" && <CafeCalculator onCalculate={handleCalculate} />}
-        {selectedSector === "restaurant" && <RestaurantCalculator onCalculate={handleCalculate} />}
-        {selectedSector === "creator" && <CreatorCalculator onCalculate={handleCalculate} />}
-        {selectedSector === "boutique" && <BoutiqueCalculator onCalculate={handleCalculate} />}
+        {selectedSector === "cafe" ? <CafeCalculator onCalculate={handleCalculate} /> : null}
+        {selectedSector === "restaurant" ? <RestaurantCalculator onCalculate={handleCalculate} /> : null}
+        {selectedSector === "local" ? <LocalCommerceCalculator onCalculate={handleCalculate} /> : null}
+        {selectedSector === "boutique" ? <BoutiqueCalculator onCalculate={handleCalculate} /> : null}
       </div>
 
-      {/* Projection Result - Shows after calculation */}
-      {projection && selectedSector && (
-        <div
-          id="projection-result"
-          className="mt-6 animate-fadeIn"
-          style={{
-            animation: "fadeIn 0.3s ease-out",
-          }}
-        >
+      {projection && selectedSector ? (
+        <div id="projection-result" className="mt-6" style={{ animation: "fadeIn 0.3s ease-out" }}>
           <ConcreteProjectionResult projection={projection} sectorType={selectedSector} />
 
-          {/* CTA appears below result */}
-          <div className="mt-6 rounded-2xl border-2 border-[#173A2E] bg-gradient-to-br from-[#173A2E] to-[#0F2820] p-6 shadow-lg">
+          <div className="mt-6 rounded-[1.75rem] border border-[#173A2E] bg-[#173A2E] p-6 text-[#FBFAF6] shadow-[0_24px_55px_-35px_rgba(23,58,46,0.7)]">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="font-serif text-2xl text-white">
-                  Prêt à mettre en place ?
-                </p>
-                <p className="mt-1 text-sm text-[#B8D4C8]">
-                  119€ mise en place · 39€/mois moteur actif
+              <div className="max-w-2xl">
+                <p className="text-xs uppercase tracking-[0.14em] text-[#D5E4DA]">Si ce chiffre vous interesse</p>
+                <p className="mt-2 font-serif text-3xl">on ouvre la mise en place avec le bon point de depart</p>
+                <p className="mt-2 text-sm text-[#D5E4DA]">
+                  119EUR de mise en place, puis 39EUR / mois. Cardin preconfigure ensuite la carte, le QR et le parcours client.
                 </p>
               </div>
-              <Link href="/auth/signup">
-                <button
-                  onClick={() =>
-                    trackEvent("calculator_cta_clicked", {
-                      sector: selectedSector,
-                      volumeRecovered: projection.volumeRecovered,
-                      revenueImpact: projection.revenueImpact,
-                    })
-                  }
-                  className="whitespace-nowrap rounded-xl bg-white px-6 py-3 font-medium text-[#173A2E] transition-all hover:scale-105 hover:shadow-lg active:scale-100"
-                  type="button"
-                >
-                  Activer Cardin →
-                </button>
+              <Link
+                className="inline-flex h-11 items-center justify-center rounded-full border border-white bg-white px-6 text-sm font-medium text-[#173A2E] transition hover:bg-[#F2F5EE]"
+                href={selectedOption?.setupHref ?? "/engine"}
+                onClick={() =>
+                  trackEvent("calculator_cta_clicked", {
+                    sector: selectedSector,
+                    volumeRecovered: projection.volumeRecovered,
+                    revenueImpact: projection.revenueImpact,
+                    setupHref: selectedOption?.setupHref ?? "/engine",
+                  })
+                }
+              >
+                Configurer cette version
               </Link>
             </div>
-            <p className="mt-4 text-xs text-[#B8D4C8]">
-              Activation en 10 minutes · Sans engagement · Support inclus
+            <p className="mt-4 text-xs text-[#D5E4DA]">
+              {selectedOption?.setupNote ?? "Configuration guidee. QR, carte wallet et espace marchand prets rapidement."}
             </p>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Optional: Add fade-in keyframe if not in global CSS */}
       <style jsx>{`
         @keyframes fadeIn {
           from {

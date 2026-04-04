@@ -1,30 +1,31 @@
-/**
+﻿/**
  * Calculator Projection API
  *
  * POST /api/calculator/project
- *
- * Transforms natural sector inputs into concrete projections
- * NO authentication required - public calculator
  */
 
 import { NextRequest, NextResponse } from "next/server"
+
 import {
-  calculateCafeProjection,
-  calculateRestaurantProjection,
-  calculateCreatorProjection,
   calculateBoutiqueProjection,
+  calculateCafeProjection,
+  calculateCreatorProjection,
+  calculateLocalCommerceProjection,
+  calculateRestaurantProjection,
 } from "@/lib/cardin/sector-calculator"
 import type {
-  CafeCalculatorInput,
-  RestaurantCalculatorInput,
-  CreatorCalculatorInput,
   BoutiqueCalculatorInput,
+  CafeCalculatorInput,
   ConcreteProjection,
+  CreatorCalculatorInput,
+  LocalCommerceCalculatorInput,
+  RestaurantCalculatorInput,
 } from "@/types/cardin-core.types"
 
 type CalculatorRequest =
   | { sector: "cafe"; input: CafeCalculatorInput }
   | { sector: "restaurant"; input: RestaurantCalculatorInput }
+  | { sector: "local"; input: LocalCommerceCalculatorInput }
   | { sector: "creator"; input: CreatorCalculatorInput }
   | { sector: "boutique"; input: BoutiqueCalculatorInput }
 
@@ -47,6 +48,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<ConcreteP
         projection = calculateRestaurantProjection(body.input as RestaurantCalculatorInput)
         break
 
+      case "local":
+        projection = calculateLocalCommerceProjection(body.input as LocalCommerceCalculatorInput)
+        break
+
       case "creator":
         projection = calculateCreatorProjection(body.input as CreatorCalculatorInput)
         break
@@ -56,7 +61,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ConcreteP
         break
 
       default:
-        return NextResponse.json({ error: `Unknown sector: ${(body as any).sector}` }, { status: 400 })
+        return NextResponse.json({ error: `Unknown sector: ${(body as { sector?: string }).sector}` }, { status: 400 })
     }
 
     return NextResponse.json(projection, {
