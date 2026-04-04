@@ -7,7 +7,7 @@ export function MobileStickyInstallBar() {
         className="inline-flex h-11 w-full items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-5 text-sm font-medium text-[#FBFAF6]"
         href="#installation"
       >
-        Lancer ma carte - 119€
+        Activer Cardin - 180EUR / mois
       </Link>
     </div>
   )

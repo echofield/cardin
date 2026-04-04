@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
@@ -24,7 +24,7 @@ type LandingCalculatorModuleProps = {
   selectedIntent: MerchantIntent | null
 }
 
-const MONTHLY_PLAN_PRICE = 39
+const MONTHLY_PLAN_PRICE = 180
 
 export function LandingCalculatorModule({
   ctaHref,
@@ -91,9 +91,9 @@ export function LandingCalculatorModule({
   const equivalentLine = useMemo(() => {
     if (monthlyProjection.monthlyReturns <= 0) return null
     const perDay = monthlyProjection.monthlyReturns / DEFAULT_DAYS_OPEN
-    if (perDay >= 0.9 && perDay <= 1.1) return "Équivalent : environ un passage en plus par jour ouvré."
-    if (perDay < 0.15) return `Équivalent : environ un passage en plus tous les ${Math.max(2, Math.round(1 / perDay))} jours.`
-    return `Équivalent : environ ${perDay.toFixed(1)} retours par jour ouvré.`
+    if (perDay >= 0.9 && perDay <= 1.1) return "Ã‰quivalent : environ un passage en plus par jour ouvrÃ©."
+    if (perDay < 0.15) return `Ã‰quivalent : environ un passage en plus tous les ${Math.max(2, Math.round(1 / perDay))} jours.`
+    return `Ã‰quivalent : environ ${perDay.toFixed(1)} retours par jour ouvrÃ©.`
   }, [monthlyProjection.monthlyReturns])
 
   useEffect(() => {
@@ -120,10 +120,10 @@ export function LandingCalculatorModule({
       <div className="absolute right-[-80px] top-[-120px] h-[220px] w-[220px] rounded-full bg-[#EAF0E6] blur-2xl" />
 
       <div className="relative">
-        <p className="text-xs uppercase tracking-[0.16em] text-[#5C655E]">Projection Cardin · {entryModeLabel ?? "Commerce"}</p>
-        <h2 className="mt-3 font-serif text-3xl leading-tight text-[#16372C] sm:text-4xl">Ce que cela peut réellement ramener</h2>
+        <p className="text-xs uppercase tracking-[0.16em] text-[#5C655E]">Projection Cardin Â· {entryModeLabel ?? "Commerce"}</p>
+        <h2 className="mt-3 font-serif text-3xl leading-tight text-[#16372C] sm:text-4xl">Ce que cela peut rÃ©ellement ramener</h2>
         <p className="mt-2 max-w-3xl text-sm text-[#5C655E]">
-          Les curseurs estiment votre base. La dynamique choisie oriente l&apos;effet principal — sans promesse irréaliste.
+          Les curseurs estiment votre base. La dynamique choisie oriente l&apos;effet principal â€” sans promesse irrÃ©aliste.
         </p>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">
@@ -147,7 +147,7 @@ export function LandingCalculatorModule({
             <div>
               <div className="mb-2 flex items-end justify-between gap-3">
                 <p className="text-sm text-[#2A3F35]">Panier moyen</p>
-                <p className="text-lg font-medium text-[#16372C]">{avgValue} €</p>
+                <p className="text-lg font-medium text-[#16372C]">{avgValue} â‚¬</p>
               </div>
               <Slider
                 max={250}
@@ -196,27 +196,27 @@ export function LandingCalculatorModule({
               >
                 +{formatEuro(monthlyProjection.monthlyRevenue)} / mois
               </p>
-              <p className="mt-2 text-sm text-[#5C655E]">{monthlyProjection.monthlyReturns} retours estimés / mois.</p>
+              <p className="mt-2 text-sm text-[#5C655E]">{monthlyProjection.monthlyReturns} retours estimÃ©s / mois.</p>
               {equivalentLine ? <p className="mt-2 text-sm text-[#2A3F35]">{equivalentLine}</p> : null}
               <p className="mt-2 text-sm text-[#2A3F35]">{monthlyProjection.primaryEffect}</p>
               <p className="mt-1 text-sm text-[#556159]">{monthlyProjection.secondaryEffect}</p>
               <p className="mt-3 text-xs text-[#556159]">{monthlyProjection.confidenceLabel}</p>
-              <p className="mt-4 text-xs italic text-[#5C655E]">Vos clients voient où ils en sont. Et reviennent pour avancer.</p>
+              <p className="mt-4 text-xs italic text-[#5C655E]">Vos clients voient oÃ¹ ils en sont. Et reviennent pour avancer.</p>
 
               <div className="mt-4 border-t border-[#D9DDD6] pt-3">
-                <p className="text-xs text-[#5A645D]">Hypothèses : {DEFAULT_DAYS_OPEN} jours ouverts / mois · retour visé {recoveryPercent}%</p>
+                <p className="text-xs text-[#5A645D]">HypothÃ¨ses : {DEFAULT_DAYS_OPEN} jours ouverts / mois Â· retour visÃ© {recoveryPercent}%</p>
                 <button
                   className="mt-2 text-xs font-medium text-[#173A2E] underline-offset-2 hover:underline"
                   onClick={() => setShowAssumptionsEditor((prev) => !prev)}
                   type="button"
                 >
-                  {showAssumptionsEditor ? "Masquer" : "Ajuster les hypothèses"}
+                  {showAssumptionsEditor ? "Masquer" : "Ajuster les hypothÃ¨ses"}
                 </button>
 
                 {showAssumptionsEditor ? (
                   <div className="mt-3">
                     <div className="mb-2 flex items-end justify-between gap-3">
-                      <p className="text-sm text-[#2A3F35]">Taux de retour visé</p>
+                      <p className="text-sm text-[#2A3F35]">Taux de retour visÃ©</p>
                       <p className="text-sm font-medium text-[#16372C]">{recoveryPercent}%</p>
                     </div>
                     <Slider
@@ -228,15 +228,15 @@ export function LandingCalculatorModule({
                       }}
                       value={recoveryPercent}
                     />
-                    <p className="mt-2 text-xs text-[#5A645D]">Seuil calculé actuel : {returnsPerDayToCoverMonthly.toFixed(2)} retour/jour.</p>
-                    <p className="mt-2 text-xs text-[#5A645D]">1 retour par jour représente environ {formatEuro(monthlyValueFromOneReturnDaily)} / mois.</p>
+                    <p className="mt-2 text-xs text-[#5A645D]">Seuil calculÃ© actuel : {returnsPerDayToCoverMonthly.toFixed(2)} retour/jour.</p>
+                    <p className="mt-2 text-xs text-[#5A645D]">1 retour par jour reprÃ©sente environ {formatEuro(monthlyValueFromOneReturnDaily)} / mois.</p>
                   </div>
                 ) : null}
               </div>
             </div>
 
             <div className="rounded-2xl border border-[#CCD3C9] bg-[#FEFEFA] p-5">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#667068]">Prochain moment à activer</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#667068]">Prochain moment Ã  activer</p>
               <p className="mt-2 text-lg font-medium text-[#173A2E]">{calendarPlan.nextMoment.label}</p>
               <p className="mt-1 text-sm text-[#556159]">{calendarPlan.nextMoment.reason}</p>
               <p className="mt-3 text-sm text-[#2A3F35]">{calendarPlan.quietPeriodLabel}</p>
@@ -246,9 +246,9 @@ export function LandingCalculatorModule({
 
             <div className="rounded-2xl border border-[#CCD3C9] bg-[#FEFEFA] p-5">
               <p className="text-xs uppercase tracking-[0.12em] text-[#667068]">Mise en place</p>
-              <p className="mt-2 text-sm text-[#2A3F35]">119€ - mise en place complète</p>
-              <p className="mt-1 text-sm text-[#2A3F35]">39€/mois - moteur actif</p>
-              <p className="mt-3 text-sm text-[#556159]">Chaque mois, Cardin prépare une nouvelle proposition prête à lancer, 100% pour votre commerce.</p>
+              <p className="mt-2 text-sm text-[#2A3F35]">180EUR / mois</p>
+              <p className="mt-1 text-sm text-[#2A3F35]">moteur Cardin actif</p>
+              <p className="mt-3 text-sm text-[#556159]">Chaque mois, Cardin prÃ©pare une nouvelle proposition prÃªte Ã  lancer, 100% pour votre commerce.</p>
             </div>
           </div>
         </div>
@@ -282,3 +282,5 @@ export function LandingCalculatorModule({
     </Card>
   )
 }
+
+
