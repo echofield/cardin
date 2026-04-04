@@ -398,14 +398,14 @@ export function InlineCalculator() {
   }
 
   return (
-    <div className="w-full rounded-[2rem] border border-[#C6CEC2] bg-[linear-gradient(180deg,#FFFEFB_0%,#F6F6F0_100%)] p-5 shadow-[0_30px_70px_-55px_rgba(23,58,46,0.75)] sm:p-8">
+    <div className="w-full rounded-[2rem] border border-[#D9D4C9] bg-[linear-gradient(180deg,#FFFDF8_0%,#F3F0E8_100%)] p-5 shadow-[0_24px_48px_-42px_rgba(27,67,50,0.22)] sm:p-8">
       <div className="max-w-3xl">
         <p className="text-xs uppercase tracking-[0.16em] text-[#5C655E]">Cardin worlds</p>
         <h2 className="mt-3 font-serif text-3xl leading-tight text-[#16372C] sm:text-4xl">Choisissez votre lieu, puis la dynamique que vous voulez provoquer.</h2>
         <p className="mt-2 text-sm text-[#556159]">Chaque lieu garde ses saveurs Cardin: Diamond, Domino, acces rares et progression visible.</p>
       </div>
 
-      <div className="mt-6 rounded-[1.5rem] border border-[#D8DBD2] bg-white/75 p-4 sm:p-5">
+      <div className="mt-6 rounded-[1.5rem] border border-[#E3DED4] bg-[#FFFEFA]/90 p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.14em] text-[#637067]">Choix du lieu</p>
@@ -414,7 +414,7 @@ export function InlineCalculator() {
           <div className="flex items-center gap-2">
             <button
               aria-label="Lieu precedent"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#CDD4CA] bg-[#FBFCF8] text-lg text-[#173A2E] transition hover:border-[#173A2E]"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#D9D4C9] bg-[#FBF9F3] text-lg text-[#1B4332] transition hover:border-[#1B4332] hover:bg-[#F4F1E9]"
               onClick={previousWorld}
               type="button"
             >
@@ -422,7 +422,7 @@ export function InlineCalculator() {
             </button>
             <button
               aria-label="Lieu suivant"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#CDD4CA] bg-[#FBFCF8] text-lg text-[#173A2E] transition hover:border-[#173A2E]"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#D9D4C9] bg-[#FBF9F3] text-lg text-[#1B4332] transition hover:border-[#1B4332] hover:bg-[#F4F1E9]"
               onClick={nextWorld}
               type="button"
             >
@@ -439,8 +439,8 @@ export function InlineCalculator() {
                 className={[
                   "shrink-0 rounded-full border px-4 py-3 text-left transition-all duration-200",
                   isActive
-                    ? "border-[#173A2E] bg-[#173A2E] text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(23,58,46,0.7)]"
-                    : "border-[#D8DBD2] bg-[#FFFDF8] text-[#173A2E] hover:border-[#AEB8AB]",
+                    ? "border-[#1B4332] bg-[rgba(27,67,50,0.08)] text-[#1B4332] shadow-[0_12px_22px_-18px_rgba(27,67,50,0.26)]"
+                    : "border-[#DDD8CE] bg-[#FFFDF8] text-[#1B4332] hover:border-[#B7C3B7]",
                 ].join(" ")}
                 key={world.id}
                 onClick={() => selectWorld(world.id, "pill")}
@@ -452,14 +452,14 @@ export function InlineCalculator() {
           })}
         </div>
 
-        <div className="mt-4 rounded-2xl border border-[#E0E4DB] bg-[#FBFCF8] p-4 sm:p-5">
+        <div className="mt-4 rounded-2xl border border-[#E3DED4] bg-[#FBF9F3] p-4 sm:p-5">
           <p className="text-[11px] uppercase tracking-[0.14em] text-[#637067]">{selectedWorld.eyebrow}</p>
           <p className="mt-2 font-serif text-2xl text-[#173A2E]">{selectedWorld.hero}</p>
           <p className="mt-2 max-w-2xl text-sm text-[#4F5A53]">{selectedWorld.description}</p>
         </div>
       </div>
 
-      <div className="mt-8 rounded-[1.5rem] border border-[#D8DBD2] bg-white/75 p-5 sm:p-6">
+      <div className="mt-8 rounded-[1.5rem] border border-[#E3DED4] bg-[#FFFEFA]/90 p-5 sm:p-6">
         <p className="text-xs uppercase tracking-[0.14em] text-[#637067]">{selectedWorld.label}</p>
         <p className="mt-2 font-serif text-3xl text-[#173A2E]">Choisissez la dynamique que vous voulez provoquer.</p>
 
@@ -470,7 +470,7 @@ export function InlineCalculator() {
               <button
                 className={[
                   "rounded-2xl border p-4 text-left transition-all",
-                  isActive ? "border-[#173A2E] bg-[#173A2E] text-[#FBFAF6]" : "border-[#D6DCD3] bg-[#FBFCF8] text-[#173A2E] hover:border-[#AEB8AB]",
+                  isActive ? "border-[#1B4332] bg-[rgba(27,67,50,0.08)] text-[#1B4332]" : "border-[#DDD8CE] bg-[#FBF9F3] text-[#1B4332] hover:border-[#B7C3B7]",
                 ].join(" ")}
                 key={objective.id}
                 onClick={() => {
@@ -480,7 +480,7 @@ export function InlineCalculator() {
                 type="button"
               >
                 <p className="font-medium">{objective.label}</p>
-                <p className={["mt-2 text-xs leading-relaxed", isActive ? "text-[#D5E4DA]" : "text-[#556159]"].join(" ")}>{objective.description}</p>
+                <p className={["mt-2 text-xs leading-relaxed", isActive ? "text-[#516157]" : "text-[#5B655E]"].join(" ")}>{objective.description}</p>
               </button>
             )
           })}
@@ -489,44 +489,44 @@ export function InlineCalculator() {
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
         <div className="space-y-5">
-          <div className="rounded-[1.75rem] border border-[#173A2E] bg-[#173A2E] p-6 text-[#FBFAF6] shadow-[0_24px_55px_-35px_rgba(23,58,46,0.7)]">
-            <p className="text-xs uppercase tracking-[0.14em] text-[#D5E4DA]">{selectedObjectiveMeta.label}</p>
+          <div className="relative rounded-[1.75rem] border border-[#BFCABD] bg-[linear-gradient(180deg,#F6F5EE_0%,#EEF2EA_100%)] p-6 text-[#173A2E] shadow-[0_18px_38px_-34px_rgba(27,67,50,0.16)]">
+            <p className="text-xs uppercase tracking-[0.16em] text-[#5F7066]">{selectedObjectiveMeta.label}</p>
             <p className="mt-2 font-serif text-3xl">{selectedObjective.title}</p>
-            <p className="mt-3 text-sm text-[#D5E4DA]">{selectedObjective.hook}</p>
+            <p className="mt-3 text-sm text-[#556159]">{selectedObjective.hook}</p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-[#CCD3C9] bg-white/75 p-4">
+            <div className="rounded-2xl border border-[#DED9CF] bg-[#FFFEFA] p-4">
               <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Potentiel</p>
               <p className="mt-2 font-serif text-3xl text-[#173A2E]">+{selectedObjective.projectionRevenue}EUR</p>
               <p className="mt-1 text-xs text-[#556159]">ordre de grandeur / mois</p>
             </div>
-            <div className="rounded-2xl border border-[#CCD3C9] bg-white/75 p-4">
+            <div className="rounded-2xl border border-[#DED9CF] bg-[#FFFEFA] p-4">
               <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Projection</p>
               <p className="mt-2 font-serif text-3xl text-[#173A2E]">{selectedObjective.projectionVolume}</p>
               <p className="mt-1 text-xs text-[#556159]">{selectedObjective.projectionUnit} recuperables</p>
             </div>
-            <div className="rounded-2xl border border-[#CCD3C9] bg-white/75 p-4">
+            <div className="rounded-2xl border border-[#DED9CF] bg-[#FFFEFA] p-4">
               <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Domino</p>
               <p className="mt-2 font-serif text-3xl text-[#173A2E]">{selectedObjective.dominoLabel}</p>
               <p className="mt-1 text-xs text-[#556159]">propagation visible</p>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[#CCD3C9] bg-white/75 p-5">
+          <div className="rounded-2xl border border-[#DED9CF] bg-[#FFFEFA] p-5">
             <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Condition Cardin</p>
             <p className="mt-2 text-sm text-[#203B31]">{selectedObjective.condition}</p>
             <p className="mt-3 text-xs uppercase tracking-[0.12em] text-[#5E6961]">Effet</p>
             <p className="mt-2 text-sm text-[#203B31]">{selectedObjective.effect}</p>
           </div>
 
-          <div className="rounded-2xl border border-[#CCD3C9] bg-white/75 p-5">
+          <div className="rounded-2xl border border-[#DED9CF] bg-[#FFFEFA] p-5">
             <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Activation</p>
             <p className="mt-2 font-serif text-3xl text-[#173A2E]">180EUR / mois</p>
             <p className="mt-2 text-sm text-[#556159]">Le moteur Cardin, le QR, la carte wallet et le suivi marchand pour cette version.</p>
             <div className="mt-5">
               <Link
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-6 text-sm font-medium text-[#FBFAF6] transition hover:bg-[#214F3E]"
+                className="inline-flex h-11 items-center justify-center rounded-full border border-[#1B4332] bg-[#1B4332] px-6 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]"
                 href={setupHref}
                 onClick={() =>
                   trackEvent("calculator_cta_clicked", {
@@ -543,7 +543,7 @@ export function InlineCalculator() {
           </div>
         </div>
 
-        <div className="rounded-[1.75rem] border border-[#CCD3C9] bg-white/70 p-5 sm:p-6">
+        <div className="rounded-[1.75rem] border border-[#DED9CF] bg-[#FFFEFA]/92 p-5 sm:p-6 shadow-[0_1px_0_rgba(27,67,50,0.03)]">
           <p className="text-xs uppercase tracking-[0.14em] text-[#637067]">Apercu client</p>
           <WalletPassPreview
             activeDots={selectedObjective.activeDots}
@@ -559,3 +559,4 @@ export function InlineCalculator() {
     </div>
   )
 }
+
