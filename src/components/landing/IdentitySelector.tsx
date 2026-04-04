@@ -14,16 +14,18 @@ export function IdentitySelector() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-lg space-y-3 sm:max-w-xl">
+    <div className="mx-auto w-full max-w-3xl grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {MERCHANT_IDENTITY_OPTIONS.map((item) => (
         <button
-          className="group w-full rounded-2xl border border-[#D4D9D0] bg-[#FDFCF8] px-6 py-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#173A2E] hover:shadow-md active:scale-[0.99]"
+          className="group w-full rounded-[28px] border border-[#D4D9D0] bg-[#FDFCF8] px-6 py-6 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#173A2E] hover:shadow-md active:scale-[0.99]"
           key={item.type}
           onClick={() => go(item.type)}
           type="button"
         >
-          <span className="font-serif text-xl text-[#15372B] sm:text-2xl">{item.label}</span>
-          <span className="mt-1 block text-sm font-normal text-[#5C655E]">/ {item.line}</span>
+          <span className="text-[10px] uppercase tracking-[0.18em] text-[#92A094]">Situation</span>
+          <span className="mt-3 block font-serif text-2xl text-[#15372B]">{item.label}</span>
+          <span className="mt-2 block text-sm font-medium text-[#2A3F35]">/ {item.line}</span>
+          <span className="mt-4 block text-sm leading-relaxed text-[#6B766D]">{item.detail}</span>
         </button>
       ))}
     </div>

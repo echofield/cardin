@@ -1,189 +1,653 @@
 export type MerchantProjectionType = "cafe" | "restaurant" | "coiffeur" | "beaute" | "boutique"
 
-export type Proposition = {
+export type TrafficLevel = "light" | "steady" | "dense"
+export type TicketLevel = "small" | "standard" | "premium"
+export type FrequencyLevel = "fragile" | "normal" | "strong"
+
+export type AuditSelection = {
+  traffic: TrafficLevel
+  ticket: TicketLevel
+  frequency: FrequencyLevel
+}
+
+export type ProjectionAuditOption<T extends string> = {
+  id: T
+  label: string
+  description: string
+}
+
+export type ProjectionAuditBlock =
+  | {
+      id: "traffic"
+      label: string
+      help: string
+      options: ProjectionAuditOption<TrafficLevel>[]
+    }
+  | {
+      id: "ticket"
+      label: string
+      help: string
+      options: ProjectionAuditOption<TicketLevel>[]
+    }
+  | {
+      id: "frequency"
+      label: string
+      help: string
+      options: ProjectionAuditOption<FrequencyLevel>[]
+    }
+
+export type ProjectionPassProfile = {
+  rewardLabel: string
+  notificationLabel: string
+  footerLabel: string
+  progressDots: number
+  activeDots: number
+}
+
+export type ProjectionImpactProfile = {
+  captureRate: number
+  revisitRate: number
+  basketLift: number
+  retentionLift: number
+  confidenceLow: number
+  confidenceHigh: number
+}
+
+export type ProjectionScenario = {
   id: string
   title: string
   description: string
-  revenueEstimate: string
-  frequencyEstimate: string
+  summaryLine: string
+  startingOffer: string
+  customerPromise: string
+  triggerHint: string
+  defaultAudit: AuditSelection
+  pass: ProjectionPassProfile
+  impact: ProjectionImpactProfile
 }
 
 export type ProjectionBundle = {
-  featured: Proposition
-  options: [Proposition, Proposition, Proposition]
+  merchantLabel: string
+  merchantLine: string
+  brandPunchline: string
+  auditBlocks: [ProjectionAuditBlock, ProjectionAuditBlock, ProjectionAuditBlock]
+  featured: ProjectionScenario
+  options: [ProjectionScenario, ProjectionScenario, ProjectionScenario]
 }
 
-export const MERCHANT_IDENTITY_OPTIONS: {
+export type MerchantIdentityOption = {
   type: MerchantProjectionType
   label: string
   line: string
-}[] = [
-  { type: "cafe", label: "Café", line: "passage rapide" },
-  { type: "restaurant", label: "Restaurant", line: "entre deux moments" },
-  { type: "coiffeur", label: "Coiffeur", line: "retour espacé" },
-  { type: "beaute", label: "Beauté", line: "fréquence fragile" },
-  { type: "boutique", label: "Boutique", line: "clients irréguliers" },
+  detail: string
+}
+
+export const MERCHANT_IDENTITY_OPTIONS: MerchantIdentityOption[] = [
+  { type: "cafe", label: "Café", line: "passage rapide", detail: "habitudes du quotidien" },
+  { type: "restaurant", label: "Restaurant", line: "entre deux moments", detail: "services inégaux dans la semaine" },
+  { type: "coiffeur", label: "Coiffeur", line: "retour espacé", detail: "cycle à raccourcir" },
+  { type: "beaute", label: "Beauté", line: "fréquence fragile", detail: "séances à stabiliser" },
+  { type: "boutique", label: "Boutique", line: "clients irréguliers", detail: "raison de repasser" },
 ]
+
+function createScenario(scenario: ProjectionScenario): ProjectionScenario {
+  return scenario
+}
 
 export const projectionByMerchant: Record<MerchantProjectionType, ProjectionBundle> = {
   cafe: {
-    featured: {
+    merchantLabel: "Café",
+    merchantLine: "Passage rapide et habitudes du quotidien.",
+    brandPunchline: "Faire revenir sans promo permanente, en donnant un repère simple.",
+    auditBlocks: [
+      {
+        id: "traffic",
+        label: "Passage",
+        help: "Le rythme de comptoir observé sur vos journées utiles.",
+        options: [
+          { id: "light", label: "Calme", description: "créneau encore fin" },
+          { id: "steady", label: "Régulier", description: "flux déjà installé" },
+          { id: "dense", label: "Dense", description: "beaucoup de passages à capter" },
+        ],
+      },
+      {
+        id: "ticket",
+        label: "Panier",
+        help: "Le panier le plus fréquent, pas le meilleur jour.",
+        options: [
+          { id: "small", label: "Essentiel", description: "café seul" },
+          { id: "standard", label: "Classique", description: "boisson + extra" },
+          { id: "premium", label: "Formule", description: "ticket plus complet" },
+        ],
+      },
+      {
+        id: "frequency",
+        label: "Retour",
+        help: "La facilité à refaire venir la même personne.",
+        options: [
+          { id: "fragile", label: "A réveiller", description: "habitude encore faible" },
+          { id: "normal", label: "A structurer", description: "retour présent mais irrégulier" },
+          { id: "strong", label: "Déjà visible", description: "routine existante" },
+        ],
+      },
+    ],
+    featured: createScenario({
       id: "rendez-vous-matin",
       title: "Rendez-vous matin",
-      description: "Un repère fixe sur votre créneau le plus naturel.",
-      revenueEstimate: "+180€ / mois",
-      frequencyEstimate: "≈ 1 client en plus par jour",
-    },
+      description: "Un repère simple qui ancre votre café dans la semaine.",
+      summaryLine: "Faire revenir dans la semaine et ancrer un horaire visible.",
+      startingOffer: "6 passages -> 1 café signature offert",
+      customerPromise: "Le client voit qu'il avance vite, sans attendre des semaines.",
+      triggerHint: "Relance douce 5 jours après la dernière visite.",
+      defaultAudit: { traffic: "steady", ticket: "standard", frequency: "normal" },
+      pass: {
+        rewardLabel: "6 passages -> café signature",
+        notificationLabel: "Votre prochain café se rapproche",
+        footerLabel: "CARDIN PASS",
+        progressDots: 6,
+        activeDots: 2,
+      },
+      impact: { captureRate: 0.085, revisitRate: 0.24, basketLift: 0.02, retentionLift: 0.03, confidenceLow: 0.84, confidenceHigh: 1.15 },
+    }),
     options: [
-      {
+      createScenario({
         id: "jour-faible",
-        title: "Jour mort → jour fort",
-        description: "Concentrer l’attention sur un jour plus calme.",
-        revenueEstimate: "+220€ / mois",
-        frequencyEstimate: "≈ 1 table en plus ce jour-là",
-      },
-      {
+        title: "Jour mort -> jour fort",
+        description: "Concentrer l'attention sur votre créneau le plus calme.",
+        summaryLine: "Déplacer du trafic existant vers un jour qui mérite d'être rempli.",
+        startingOffer: "Mardi actif -> 5 passages ce jour-la -> boisson offerte",
+        customerPromise: "Le client comprend qu'il y a un vrai rendez-vous, pas une promo floue.",
+        triggerHint: "Mise en avant discrète 24h avant le jour cible.",
+        defaultAudit: { traffic: "steady", ticket: "standard", frequency: "fragile" },
+        pass: {
+          rewardLabel: "5 mardis actifs -> boisson offerte",
+          notificationLabel: "Demain, votre passage compte double",
+          footerLabel: "CARDIN PASS",
+          progressDots: 5,
+          activeDots: 1,
+        },
+        impact: { captureRate: 0.09, revisitRate: 0.2, basketLift: 0.03, retentionLift: 0.028, confidenceLow: 0.83, confidenceHigh: 1.14 },
+      }),
+      createScenario({
         id: "defi-court",
-        title: "Défi court",
-        description: "Plusieurs passages sur une fenêtre courte.",
-        revenueEstimate: "+150€ / mois",
-        frequencyEstimate: "≈ 1 retour tous les 2 jours",
-      },
-      {
+        title: "Defi court",
+        description: "Plusieurs retours sur une courte fenetre pour accelerer l'habitude.",
+        summaryLine: "Resserrer l'intervalle entre deux passages avant que l'habitude ne casse.",
+        startingOffer: "3 visites en 7 jours -> patisserie maison",
+        customerPromise: "Le client sent un mouvement court, facile a comprendre et a finir.",
+        triggerHint: "Carte active des le premier scan pour viser la semaine.",
+        defaultAudit: { traffic: "dense", ticket: "small", frequency: "fragile" },
+        pass: {
+          rewardLabel: "3 visites en 7 jours",
+          notificationLabel: "Plus qu'un passage cette semaine",
+          footerLabel: "CARDIN PASS",
+          progressDots: 3,
+          activeDots: 1,
+        },
+        impact: { captureRate: 0.07, revisitRate: 0.22, basketLift: 0.01, retentionLift: 0.022, confidenceLow: 0.82, confidenceHigh: 1.12 },
+      }),
+      createScenario({
         id: "moment-mensuel",
         title: "Moment mensuel",
-        description: "Un pic attendu dans le mois, sans promo permanente.",
-        revenueEstimate: "+200€ / mois",
-        frequencyEstimate: "≈ 1 client fidèle en plus / semaine",
-      },
+        description: "Faire exister un temps fort attendu sans vivre en promotion.",
+        summaryLine: "Installer un mini-evenement regulier qui donne une raison claire de repasser.",
+        startingOffer: "4 passages dans le mois -> creation de saison",
+        customerPromise: "Le client attend un moment, pas seulement une remise.",
+        triggerHint: "Annonce du cap a atteindre au debut du mois.",
+        defaultAudit: { traffic: "light", ticket: "premium", frequency: "normal" },
+        pass: {
+          rewardLabel: "4 passages -> creation du mois",
+          notificationLabel: "Votre moment du mois avance",
+          footerLabel: "CARDIN PASS",
+          progressDots: 4,
+          activeDots: 1,
+        },
+        impact: { captureRate: 0.06, revisitRate: 0.18, basketLift: 0.05, retentionLift: 0.02, confidenceLow: 0.83, confidenceHigh: 1.16 },
+      }),
     ],
   },
   restaurant: {
-    featured: {
-      id: "jour-mort-fort",
-      title: "Jour mort → jour fort",
-      description: "Votre service le plus calme devient un rendez-vous.",
-      revenueEstimate: "+320€ / mois",
-      frequencyEstimate: "≈ 1 client tous les 2 jours",
-    },
-    options: [
+    merchantLabel: "Restaurant",
+    merchantLine: "Entre deux services, avec des jours tres inegaux.",
+    brandPunchline: "Transformer un service calme en rendez-vous concret et recurrent.",
+    auditBlocks: [
       {
-        id: "defi-court",
-        title: "Défi court",
-        description: "Relancer la fréquence avant que l’habitude ne se casse.",
-        revenueEstimate: "+280€ / mois",
-        frequencyEstimate: "≈ 2 couverts en plus / semaine",
+        id: "traffic",
+        label: "Flux de couverts",
+        help: "Le niveau habituel sur les jours que vous voulez renforcer.",
+        options: [
+          { id: "light", label: "Selectif", description: "service encore calme" },
+          { id: "steady", label: "Regulier", description: "bon niveau de base" },
+          { id: "dense", label: "Soutenu", description: "volume deja present" },
+        ],
       },
       {
+        id: "ticket",
+        label: "Panier moyen",
+        help: "Le ticket reel le plus frequent sur ce moment.",
+        options: [
+          { id: "small", label: "Accessible", description: "dej + boisson" },
+          { id: "standard", label: "Coeur de carte", description: "plat + boisson" },
+          { id: "premium", label: "Plus genereux", description: "entree/plat ou formule" },
+        ],
+      },
+      {
+        id: "frequency",
+        label: "Habitude client",
+        help: "La facilite a remettre votre restaurant dans la boucle.",
+        options: [
+          { id: "fragile", label: "Occasionnel", description: "pas encore d'habitude" },
+          { id: "normal", label: "Relancable", description: "retour envisageable" },
+          { id: "strong", label: "Deja visible", description: "clientele recurrente" },
+        ],
+      },
+    ],
+    featured: createScenario({
+      id: "jour-mort-fort",
+      title: "Jour mort -> jour fort",
+      description: "Votre service le plus calme devient un vrai point de rendez-vous.",
+      summaryLine: "Concentrer le trafic existant sur votre point faible pour stabiliser la semaine.",
+      startingOffer: "4 passages le mercredi -> dessert maison",
+      customerPromise: "Le client voit un cap simple et un jour clair a privilegier.",
+      triggerHint: "Relance douce la veille du service cible.",
+      defaultAudit: { traffic: "steady", ticket: "standard", frequency: "normal" },
+      pass: {
+        rewardLabel: "4 mercredis -> dessert maison",
+        notificationLabel: "Demain, votre passage du mercredi avance",
+        footerLabel: "CARDIN PASS",
+        progressDots: 4,
+        activeDots: 1,
+      },
+      impact: { captureRate: 0.09, revisitRate: 0.25, basketLift: 0.04, retentionLift: 0.032, confidenceLow: 0.85, confidenceHigh: 1.16 },
+    }),
+    options: [
+      createScenario({
+        id: "defi-court",
+        title: "Defi court",
+        description: "Relancer la frequence avant que l'habitude ne disparaisse.",
+        summaryLine: "Recruter plus vite un second passage dans le mois.",
+        startingOffer: "2 retours en 15 jours -> entree signee",
+        customerPromise: "Le client comprend un petit sprint, simple a finir.",
+        triggerHint: "Relance 7 jours apres la premiere visite.",
+        defaultAudit: { traffic: "dense", ticket: "small", frequency: "fragile" },
+        pass: {
+          rewardLabel: "2 retours en 15 jours",
+          notificationLabel: "Encore un passage et l'entree se debloque",
+          footerLabel: "CARDIN PASS",
+          progressDots: 2,
+          activeDots: 1,
+        },
+        impact: { captureRate: 0.07, revisitRate: 0.22, basketLift: 0.02, retentionLift: 0.026, confidenceLow: 0.83, confidenceHigh: 1.13 },
+      }),
+      createScenario({
         id: "rdv-hebdo",
         title: "Rendez-vous hebdo",
-        description: "Un repère clair au milieu de la semaine.",
-        revenueEstimate: "+240€ / mois",
-        frequencyEstimate: "≈ 1 table réservée en plus / semaine",
-      },
-      {
+        description: "Un repere au milieu de la semaine, facile a memoriser.",
+        summaryLine: "Installer un retour presque rituel sur un moment maitrise.",
+        startingOffer: "1 passage / semaine pendant 3 semaines -> table prioritaire",
+        customerPromise: "Le client sait exactement quand revenir et pourquoi.",
+        triggerHint: "Notification 48h avant le rendez-vous hebdo.",
+        defaultAudit: { traffic: "light", ticket: "standard", frequency: "strong" },
+        pass: {
+          rewardLabel: "3 semaines de suite",
+          notificationLabel: "Votre rendez-vous de la semaine vous attend",
+          footerLabel: "CARDIN PASS",
+          progressDots: 3,
+          activeDots: 1,
+        },
+        impact: { captureRate: 0.075, revisitRate: 0.2, basketLift: 0.03, retentionLift: 0.024, confidenceLow: 0.84, confidenceHigh: 1.14 },
+      }),
+      createScenario({
         id: "point-depart",
-        title: "Point de départ",
-        description: "Une boucle simple entre deux occasions.",
-        revenueEstimate: "+190€ / mois",
-        frequencyEstimate: "≈ 1 retour / semaine régain",
-      },
+        title: "Point de depart",
+        description: "Une boucle simple entre deux occasions de venue.",
+        summaryLine: "Donner une raison concrete de revenir sans alourdir le service.",
+        startingOffer: "3 passages -> boisson signature",
+        customerPromise: "Le client voit une progression visible, immediate et legere.",
+        triggerHint: "Rappel discret apres 10 jours d'absence.",
+        defaultAudit: { traffic: "steady", ticket: "small", frequency: "normal" },
+        pass: {
+          rewardLabel: "3 passages -> boisson signature",
+          notificationLabel: "Votre prochaine etape est proche",
+          footerLabel: "CARDIN PASS",
+          progressDots: 3,
+          activeDots: 1,
+        },
+        impact: { captureRate: 0.06, revisitRate: 0.18, basketLift: 0.02, retentionLift: 0.02, confidenceLow: 0.84, confidenceHigh: 1.12 },
+      }),
     ],
   },
   coiffeur: {
-    featured: {
+    merchantLabel: "Coiffeur",
+    merchantLine: "Retour espace, panier plus fort, cycle a raccourcir.",
+    brandPunchline: "Rendre la prochaine visite visible avant que le cycle ne se perde.",
+    auditBlocks: [
+      {
+        id: "traffic",
+        label: "Rendez-vous / jour",
+        help: "Le niveau de planning sur votre rythme habituel.",
+        options: [
+          { id: "light", label: "Selectif", description: "agenda encore leger" },
+          { id: "steady", label: "Pose", description: "agenda stable" },
+          { id: "dense", label: "Soutenu", description: "beaucoup de retours a structurer" },
+        ],
+      },
+      {
+        id: "ticket",
+        label: "Panier",
+        help: "Le ticket moyen le plus frequent en caisse.",
+        options: [
+          { id: "small", label: "Essentiel", description: "coupe seule" },
+          { id: "standard", label: "Classique", description: "coupe + soin" },
+          { id: "premium", label: "Signature", description: "service plus complet" },
+        ],
+      },
+      {
+        id: "frequency",
+        label: "Cycle de retour",
+        help: "A quel point le retour actuel est fragile.",
+        options: [
+          { id: "fragile", label: "Trop long", description: "beaucoup d'ecart" },
+          { id: "normal", label: "A cadrer", description: "cycle moyen" },
+          { id: "strong", label: "Deja suivi", description: "routine assez stable" },
+        ],
+      },
+    ],
+    featured: createScenario({
       id: "double-passage",
       title: "Double passage",
-      description: "Deux visites rapprochées pour raccourcir le cycle.",
-      revenueEstimate: "+410€ / mois",
-      frequencyEstimate: "≈ 1 rendez-vous en plus / semaine",
-    },
+      description: "Deux visites rapprochees pour raccourcir le cycle sans casser le positionnement.",
+      summaryLine: "Creer un second rendez-vous utile avant la perte d'habitude.",
+      startingOffer: "2 passages en 6 semaines -> soin signature",
+      customerPromise: "Le client se projette plus vite dans la prochaine etape.",
+      triggerHint: "Rappel a mi-cycle pour garder la dynamique.",
+      defaultAudit: { traffic: "steady", ticket: "standard", frequency: "fragile" },
+      pass: {
+        rewardLabel: "2 passages en 6 semaines",
+        notificationLabel: "Votre prochain rendez-vous compte deja",
+        footerLabel: "CARDIN PASS",
+        progressDots: 5,
+        activeDots: 2,
+      },
+      impact: { captureRate: 0.11, revisitRate: 0.22, basketLift: 0.03, retentionLift: 0.04, confidenceLow: 0.86, confidenceHigh: 1.17 },
+    }),
     options: [
-      {
+      createScenario({
         id: "chemin-rapide",
         title: "Chemin rapide",
-        description: "Une trajectoire plus courte pour vos meilleures clientes.",
-        revenueEstimate: "+380€ / mois",
-        frequencyEstimate: "≈ −5 jours entre deux visites",
-      },
-      {
+        description: "Une trajectoire plus courte pour vos meilleurs profils.",
+        summaryLine: "Raccourcir l'intervalle entre deux visites les plus rentables.",
+        startingOffer: "5 visites -> brushing privilège",
+        customerPromise: "Le client voit un parcours premium, pas une promo generique.",
+        triggerHint: "Message doux apres 4 semaines d'absence.",
+        defaultAudit: { traffic: "dense", ticket: "premium", frequency: "normal" },
+        pass: {
+          rewardLabel: "5 visites -> brushing privilege",
+          notificationLabel: "Votre progression premium continue",
+          footerLabel: "CARDIN PASS",
+          progressDots: 5,
+          activeDots: 2,
+        },
+        impact: { captureRate: 0.12, revisitRate: 0.19, basketLift: 0.02, retentionLift: 0.038, confidenceLow: 0.85, confidenceHigh: 1.15 },
+      }),
+      createScenario({
         id: "moment-mensuel",
         title: "Moment mensuel",
-        description: "Un soin ou une coupe signature dans le mois.",
-        revenueEstimate: "+350€ / mois",
-        frequencyEstimate: "≈ 1 prestation premium / mois",
-      },
-      {
+        description: "Un soin ou une coupe signature installe comme rendez-vous.",
+        summaryLine: "Donner une forme concrete a une visite premium recurrrente.",
+        startingOffer: "1 moment / mois pendant 3 mois -> avantage soin",
+        customerPromise: "Le client visualise un rituel et un statut.",
+        triggerHint: "Annonce en debut de mois pour garder le cap.",
+        defaultAudit: { traffic: "light", ticket: "premium", frequency: "strong" },
+        pass: {
+          rewardLabel: "3 moments mensuels",
+          notificationLabel: "Votre rituel du mois vous attend",
+          footerLabel: "CARDIN PASS",
+          progressDots: 3,
+          activeDots: 1,
+        },
+        impact: { captureRate: 0.08, revisitRate: 0.17, basketLift: 0.09, retentionLift: 0.028, confidenceLow: 0.84, confidenceHigh: 1.17 },
+      }),
+      createScenario({
         id: "defi-retour",
-        title: "Défi retour",
-        description: "Réactiver avant que le cycle ne se rompe.",
-        revenueEstimate: "+290€ / mois",
-        frequencyEstimate: "≈ 2 retours en plus / mois",
-      },
+        title: "Defi retour",
+        description: "Reprendre contact avant que le cycle ne se rompe vraiment.",
+        summaryLine: "Reactiver les clientes qui ont deja glisse hors du bon tempo.",
+        startingOffer: "Retour avant 30 jours -> mini-soin",
+        customerPromise: "Le client sent une relance utile, pas insistante.",
+        triggerHint: "Relance apres 30 jours sans rendez-vous.",
+        defaultAudit: { traffic: "steady", ticket: "small", frequency: "fragile" },
+        pass: {
+          rewardLabel: "Retour avant 30 jours",
+          notificationLabel: "Votre mini-soin est encore accessible",
+          footerLabel: "CARDIN PASS",
+          progressDots: 4,
+          activeDots: 1,
+        },
+        impact: { captureRate: 0.09, revisitRate: 0.2, basketLift: 0.02, retentionLift: 0.03, confidenceLow: 0.83, confidenceHigh: 1.13 },
+      }),
     ],
   },
   beaute: {
-    featured: {
-      id: "rituel-stable",
-      title: "Rituel périodique",
-      description: "Un retour attendu entre deux séances fragiles.",
-      revenueEstimate: "+360€ / mois",
-      frequencyEstimate: "≈ 1 séance maintenue / semaine",
-    },
-    options: [
+    merchantLabel: "Institut / Beaute",
+    merchantLine: "Frequence fragile et valeur elevee a proteger.",
+    brandPunchline: "Stabiliser un rituel visible plutot que subir des retours trop espaces.",
+    auditBlocks: [
       {
+        id: "traffic",
+        label: "Seances / jour",
+        help: "Le volume reel sur lequel vous voulez construire le retour.",
+        options: [
+          { id: "light", label: "Precieux", description: "quelques seances a fort enjeu" },
+          { id: "steady", label: "Stable", description: "bonne base de clientele" },
+          { id: "dense", label: "Actif", description: "plusieurs seances a orchestrer" },
+        ],
+      },
+      {
+        id: "ticket",
+        label: "Panier moyen",
+        help: "Le niveau le plus frequent sur vos soins coeur.",
+        options: [
+          { id: "small", label: "Entree", description: "prestation courte" },
+          { id: "standard", label: "Coeur de soin", description: "ticket principal" },
+          { id: "premium", label: "Rituel", description: "ticket plus fort" },
+        ],
+      },
+      {
+        id: "frequency",
+        label: "Regularite",
+        help: "A quel point la cliente revient deja naturellement.",
+        options: [
+          { id: "fragile", label: "Irréguliere", description: "gaps trop longs" },
+          { id: "normal", label: "Rattrapable", description: "cycle present mais instable" },
+          { id: "strong", label: "Assez fidele", description: "rituel deja engage" },
+        ],
+      },
+    ],
+    featured: createScenario({
+      id: "rituel-stable",
+      title: "Rituel periodique",
+      description: "Un retour attendu entre deux seances fragiles.",
+      summaryLine: "Installer un cap visible qui rend la prochaine seance plus naturelle.",
+      startingOffer: "4 seances -> avantage soin reserve",
+      customerPromise: "La cliente comprend qu'elle entre dans un rythme, pas dans une promo.",
+      triggerHint: "Notification douce selon l'intervalle ideal du soin.",
+      defaultAudit: { traffic: "steady", ticket: "standard", frequency: "fragile" },
+      pass: {
+        rewardLabel: "4 seances -> avantage reserve",
+        notificationLabel: "Votre prochaine etape beaute approche",
+        footerLabel: "CARDIN PASS",
+        progressDots: 4,
+        activeDots: 1,
+      },
+      impact: { captureRate: 0.1, revisitRate: 0.19, basketLift: 0.04, retentionLift: 0.035, confidenceLow: 0.85, confidenceHigh: 1.16 },
+    }),
+    options: [
+      createScenario({
         id: "moment-exceptionnel",
         title: "Moment exceptionnel",
-        description: "Un palier plus désirable sur une période donnée.",
-        revenueEstimate: "+420€ / mois",
-        frequencyEstimate: "≈ 1 client en plus / semaine",
-      },
-      {
+        description: "Un palier plus desirable pour creer un vrai rendez-vous.",
+        summaryLine: "Faire exister un moment aspire, rare mais compréhensible.",
+        startingOffer: "3 seances -> experience signature",
+        customerPromise: "La cliente se projette dans une recompense qui a de la tenue.",
+        triggerHint: "Annonce du moment exceptionnel des la premiere seance.",
+        defaultAudit: { traffic: "light", ticket: "premium", frequency: "normal" },
+        pass: {
+          rewardLabel: "3 seances -> experience signature",
+          notificationLabel: "Votre moment exceptionnel se rapproche",
+          footerLabel: "CARDIN PASS",
+          progressDots: 3,
+          activeDots: 1,
+        },
+        impact: { captureRate: 0.08, revisitRate: 0.16, basketLift: 0.1, retentionLift: 0.026, confidenceLow: 0.84, confidenceHigh: 1.17 },
+      }),
+      createScenario({
         id: "acces-reserve",
-        title: "Accès réservé",
-        description: "Une récompense après un vrai engagement.",
-        revenueEstimate: "+310€ / mois",
-        frequencyEstimate: "≈ moins d’annulations dernière minute",
-      },
-      {
+        title: "Acces reserve",
+        description: "Une recompense qui se merite apres un vrai engagement.",
+        summaryLine: "Donner un statut visible a celles qui reviennent vraiment.",
+        startingOffer: "5 passages -> acces reserve / créneau prioritaire",
+        customerPromise: "La cliente sent qu'elle gagne un privilege, pas juste une remise.",
+        triggerHint: "Rappel avant ouverture du prochain créneau reserve.",
+        defaultAudit: { traffic: "steady", ticket: "premium", frequency: "strong" },
+        pass: {
+          rewardLabel: "5 passages -> acces reserve",
+          notificationLabel: "Votre acces reserve se debloque bientot",
+          footerLabel: "CARDIN PASS",
+          progressDots: 5,
+          activeDots: 2,
+        },
+        impact: { captureRate: 0.07, revisitRate: 0.15, basketLift: 0.06, retentionLift: 0.024, confidenceLow: 0.84, confidenceHigh: 1.15 },
+      }),
+      createScenario({
         id: "defi-retour",
-        title: "Défi retour",
-        description: "Rattraper les clientes qui s’espacent.",
-        revenueEstimate: "+270€ / mois",
-        frequencyEstimate: "≈ 1 retour anticipé / mois",
-      },
+        title: "Defi retour",
+        description: "Rattraper les clientes qui commencent a s'espacer.",
+        summaryLine: "Remettre une date mentale avant que la cliente sorte du cycle.",
+        startingOffer: "Retour avant 21 jours -> bonus soin",
+        customerPromise: "Le retour semble opportun et simple a comprendre.",
+        triggerHint: "Relance au moment ou la cliente commence a decrocher.",
+        defaultAudit: { traffic: "dense", ticket: "small", frequency: "fragile" },
+        pass: {
+          rewardLabel: "Retour avant 21 jours",
+          notificationLabel: "Votre bonus soin est encore disponible",
+          footerLabel: "CARDIN PASS",
+          progressDots: 4,
+          activeDots: 1,
+        },
+        impact: { captureRate: 0.09, revisitRate: 0.18, basketLift: 0.02, retentionLift: 0.03, confidenceLow: 0.83, confidenceHigh: 1.13 },
+      }),
     ],
   },
   boutique: {
-    featured: {
-      id: "point-depart",
-      title: "Point de départ",
-      description: "Une raison simple de repasser entre deux achats.",
-      revenueEstimate: "+210€ / mois",
-      frequencyEstimate: "≈ 1 passage en plus / semaine",
-    },
-    options: [
+    merchantLabel: "Boutique",
+    merchantLine: "Passages irreguliers, envie de redonner une raison de revenir.",
+    brandPunchline: "Faire repasser entre deux achats sans banaliser l'image de la boutique.",
+    auditBlocks: [
       {
+        id: "traffic",
+        label: "Passage boutique",
+        help: "Le nombre de visiteurs reels sur lesquels capitaliser.",
+        options: [
+          { id: "light", label: "Selectif", description: "peu mais qualifie" },
+          { id: "steady", label: "Regulier", description: "bon passage habituel" },
+          { id: "dense", label: "Soutenu", description: "fort trafic a retravailler" },
+        ],
+      },
+      {
+        id: "ticket",
+        label: "Panier moyen",
+        help: "Le panier du quotidien, pas les meilleures ventes.",
+        options: [
+          { id: "small", label: "Essentiel", description: "achat simple" },
+          { id: "standard", label: "Coeur de gamme", description: "panier principal" },
+          { id: "premium", label: "Plus desiré", description: "ticket plus fort" },
+        ],
+      },
+      {
+        id: "frequency",
+        label: "Raison de revenir",
+        help: "La facilite a faire repasser la cliente entre deux achats.",
+        options: [
+          { id: "fragile", label: "A reveiller", description: "retour peu visible" },
+          { id: "normal", label: "A installer", description: "retour possible" },
+          { id: "strong", label: "Deja present", description: "certaines clientes reviennent deja" },
+        ],
+      },
+    ],
+    featured: createScenario({
+      id: "point-depart",
+      title: "Point de depart",
+      description: "Une raison simple de repasser entre deux achats.",
+      summaryLine: "Créer un premier niveau de progression qui legitime un nouveau passage.",
+      startingOffer: "4 achats -> acces nouveaute ou avantage discret",
+      customerPromise: "Le client voit qu'il y a un prochain cap a atteindre en boutique.",
+      triggerHint: "Relance douce quand la progression s'endort.",
+      defaultAudit: { traffic: "steady", ticket: "standard", frequency: "fragile" },
+      pass: {
+        rewardLabel: "4 achats -> acces nouveaute",
+        notificationLabel: "Votre prochain passage debloque un avantage",
+        footerLabel: "CARDIN PASS",
+        progressDots: 4,
+        activeDots: 1,
+      },
+      impact: { captureRate: 0.06, revisitRate: 0.18, basketLift: 0.03, retentionLift: 0.022, confidenceLow: 0.84, confidenceHigh: 1.13 },
+    }),
+    options: [
+      createScenario({
         id: "collection",
         title: "Rendez-vous collection",
-        description: "Un moment boutique autour des nouveautés.",
-        revenueEstimate: "+260€ / mois",
-        frequencyEstimate: "≈ 1 visite planifiée / quinzaine",
-      },
-      {
+        description: "Un moment boutique autour des nouveautes ou d'une capsule.",
+        summaryLine: "Donner une raison concrete de repasser sur un moment choisi.",
+        startingOffer: "2 venues collection -> acces anticipé",
+        customerPromise: "Le client ne revient pas pour une reduction, mais pour un moment.",
+        triggerHint: "Invitation quelques jours avant l'arrivee de la capsule.",
+        defaultAudit: { traffic: "light", ticket: "premium", frequency: "normal" },
+        pass: {
+          rewardLabel: "2 venues collection -> acces anticipe",
+          notificationLabel: "La prochaine capsule approche",
+          footerLabel: "CARDIN PASS",
+          progressDots: 2,
+          activeDots: 1,
+        },
+        impact: { captureRate: 0.07, revisitRate: 0.15, basketLift: 0.07, retentionLift: 0.02, confidenceLow: 0.84, confidenceHigh: 1.16 },
+      }),
+      createScenario({
         id: "defi-court",
-        title: "Défi court",
-        description: "Resserrer le délai entre deux passages.",
-        revenueEstimate: "+230€ / mois",
-        frequencyEstimate: "≈ 1 client réactivé / semaine",
-      },
-      {
+        title: "Defi court",
+        description: "Resserrer le delai entre deux passages sans alourdir la promesse.",
+        summaryLine: "Relancer vite avant que le client sorte de votre radar.",
+        startingOffer: "2 retours en 20 jours -> cadeau discret",
+        customerPromise: "Le client comprend tout de suite ce qu'il faut faire.",
+        triggerHint: "Message court apres le premier achat.",
+        defaultAudit: { traffic: "dense", ticket: "small", frequency: "fragile" },
+        pass: {
+          rewardLabel: "2 retours en 20 jours",
+          notificationLabel: "Plus qu'un passage pour debloquer l'avantage",
+          footerLabel: "CARDIN PASS",
+          progressDots: 2,
+          activeDots: 1,
+        },
+        impact: { captureRate: 0.07, revisitRate: 0.19, basketLift: 0.02, retentionLift: 0.024, confidenceLow: 0.83, confidenceHigh: 1.13 },
+      }),
+      createScenario({
         id: "moment-mensuel",
         title: "Moment mensuel",
-        description: "Un temps fort visible dans le mois.",
-        revenueEstimate: "+190€ / mois",
-        frequencyEstimate: "≈ 1 achat impulsif en plus / mois",
-      },
+        description: "Un temps fort visible dans le mois, sans banaliser l'image.",
+        summaryLine: "Installer un rendez-vous boutique attendu et identifiable.",
+        startingOffer: "1 passage / mois pendant 3 mois -> invitation reservee",
+        customerPromise: "Le client visualise une suite logique de visites, pas un one-shot.",
+        triggerHint: "Invitation en debut de mois avec le prochain cap.",
+        defaultAudit: { traffic: "light", ticket: "premium", frequency: "strong" },
+        pass: {
+          rewardLabel: "3 moments mensuels -> invitation reservee",
+          notificationLabel: "Votre rendez-vous boutique du mois approche",
+          footerLabel: "CARDIN PASS",
+          progressDots: 3,
+          activeDots: 1,
+        },
+        impact: { captureRate: 0.05, revisitRate: 0.16, basketLift: 0.08, retentionLift: 0.02, confidenceLow: 0.84, confidenceHigh: 1.17 },
+      }),
     ],
   },
 }

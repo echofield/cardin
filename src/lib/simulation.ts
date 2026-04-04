@@ -1,21 +1,25 @@
-import type { MerchantProjectionType } from "@/lib/projection-scenarios"
+import type {
+  AuditSelection,
+  FrequencyLevel,
+  MerchantProjectionType,
+  ProjectionScenario,
+  TicketLevel,
+  TrafficLevel,
+} from "@/lib/projection-scenarios"
 
-export type SimulationMode = "one_shot" | "recursive" | "amplified"
+const DAYS_OPEN_PER_MONTH = 26
 
-export type BaseMetrics = {
-  traffic_per_day: number
-  conversion_rate: number
-  avg_ticket: number
-  return_rate: number
+type MerchantBaseModel = {
+  traffic: Record<TrafficLevel, number>
+  ticket: Record<TicketLevel, number>
+  frequency: Record<FrequencyLevel, number>
 }
 
-export type SimulateScenarioInput = {
-  merchantType: string
-  scenarioType: string
-  mode: SimulationMode
-  baseMetrics: BaseMetrics
-  community_multiplier?: number
-  creator_multiplier?: number
+type SimulateScenarioInput = {
+  merchantType: MerchantProjectionType
+  merchantLabel: string
+  scenario: ProjectionScenario
+  audit: AuditSelection
 }
 
 export type SimulateScenarioResult = {
@@ -25,113 +29,123 @@ export type SimulateScenarioResult = {
   visits_added: number
   retention_gain: number
   monthly_projection: number
+  proofLines: [string, string, string]
+  rationale: string
 }
 
-/** Mock bases tuned per vertical (0–1 rates). */
-export const MOCK_BASE_METRICS: Record<MerchantProjectionType, BaseMetrics> = {
-  cafe: { traffic_per_day: 110, conversion_rate: 0.44, avg_ticket: 8.5, return_rate: 0.36 },
-  restaurant: { traffic_per_day: 48, conversion_rate: 0.52, avg_ticket: 26, return_rate: 0.3 },
-  coiffeur: { traffic_per_day: 22, conversion_rate: 0.72, avg_ticket: 45, return_rate: 0.26 },
-  beaute: { traffic_per_day: 18, conversion_rate: 0.68, avg_ticket: 62, return_rate: 0.22 },
-  boutique: { traffic_per_day: 35, conversion_rate: 0.38, avg_ticket: 38, return_rate: 0.28 },
+const MERCHANT_BASELINES: Record<MerchantProjectionType, MerchantBaseModel> = {
+  cafe: {
+    traffic: { light: 55, steady: 95, dense: 145 },
+    ticket: { small: 5.5, standard: 8.5, premium: 11.5 },
+    frequency: { fragile: 0.8, normal: 1, strong: 1.16 },
+  },
+  restaurant: {
+    traffic: { light: 22, steady: 40, dense: 65 },
+    ticket: { small: 18, standard: 28, premium: 40 },
+    frequency: { fragile: 0.78, normal: 1, strong: 1.14 },
+  },
+  coiffeur: {
+    traffic: { light: 8, steady: 15, dense: 24 },
+    ticket: { small: 30, standard: 48, premium: 72 },
+    frequency: { fragile: 0.82, normal: 1, strong: 1.15 },
+  },
+  beaute: {
+    traffic: { light: 6, steady: 11, dense: 18 },
+    ticket: { small: 40, standard: 65, premium: 95 },
+    frequency: { fragile: 0.82, normal: 1, strong: 1.14 },
+  },
+  boutique: {
+    traffic: { light: 12, steady: 22, dense: 38 },
+    ticket: { small: 22, standard: 39, premium: 60 },
+    frequency: { fragile: 0.8, normal: 1, strong: 1.12 },
+  },
 }
 
-const DAYS_OPEN_PER_MONTH = 26
-
-/** Deterministic weight from scenario id so different propositions diverge slightly. */
-function scenarioWeight(scenarioType: string): number {
-  let h = 0
-  for (let i = 0; i < scenarioType.length; i += 1) {
-    h = (h + scenarioType.charCodeAt(i) * (i + 17)) % 997
-  }
-  return 0.92 + (h % 17) / 100
+const TRAFFIC_LABELS: Record<TrafficLevel, string> = {
+  light: "flux sélectif",
+  steady: "flux régulier",
+  dense: "flux dense",
 }
 
-/**
- * Resolves effective simulation mode. When both community and creator boosts apply,
- * use amplified internally for a stronger combined effect (not exposed in UI).
- */
-export function resolveSimulationMode(
-  requested: SimulationMode,
-  communityMultiplier: number,
-  creatorMultiplier: number
-): SimulationMode {
-  if (requested !== "recursive") return requested
-  if (communityMultiplier > 1 && creatorMultiplier > 1) return "amplified"
-  return "recursive"
+const TICKET_LABELS: Record<TicketLevel, string> = {
+  small: "ticket essentiel",
+  standard: "ticket coeur de vente",
+  premium: "ticket premium",
+}
+
+const FREQUENCY_LABELS: Record<FrequencyLevel, string> = {
+  fragile: "retour fragile",
+  normal: "retour à structurer",
+  strong: "retour déjà visible",
+}
+
+const TRAFFIC_PRESSURE: Record<TrafficLevel, number> = {
+  light: 0.88,
+  steady: 1,
+  dense: 1.12,
+}
+
+const TICKET_PRESSURE: Record<TicketLevel, number> = {
+  small: 0.94,
+  standard: 1,
+  premium: 1.1,
+}
+
+const FREQUENCY_PRESSURE: Record<FrequencyLevel, number> = {
+  fragile: 1.12,
+  normal: 1,
+  strong: 0.92,
 }
 
 export function simulateScenario(input: SimulateScenarioInput): SimulateScenarioResult {
-  const m = input.baseMetrics
-  const comm = input.community_multiplier ?? 1
-  const cre = input.creator_multiplier ?? 1
-  const mult = comm * cre
-  const w = scenarioWeight(input.scenarioType)
+  const merchantBase = MERCHANT_BASELINES[input.merchantType]
+  const trafficPerDay = merchantBase.traffic[input.audit.traffic]
+  const avgTicket = merchantBase.ticket[input.audit.ticket]
+  const frequencyBase = merchantBase.frequency[input.audit.frequency]
 
-  const monthlyVisits = m.traffic_per_day * DAYS_OPEN_PER_MONTH
-  const baseRevenue = monthlyVisits * m.conversion_rate * m.avg_ticket
-
-  let revenueMult = w
-  let visitsAddedRatio = 0.065
-  let retentionGain = 0.028
-
-  switch (input.mode) {
-    case "one_shot": {
-      revenueMult *= 1.24 + 0.06 * m.conversion_rate
-      visitsAddedRatio = 0.1 + 0.05 * m.conversion_rate
-      retentionGain = 0.012 + 0.01 * m.return_rate
-      break
-    }
-    case "recursive": {
-      revenueMult *= 1 + 0.2 * m.return_rate + 0.05 * m.conversion_rate
-      visitsAddedRatio = 0.045 + 0.13 * m.return_rate
-      retentionGain = 0.026 + 0.038 * m.return_rate
-      revenueMult *= 1 + (mult - 1) * 0.48
-      visitsAddedRatio += 0.032 * (comm - 1) + 0.025 * (cre - 1)
-      retentionGain += 0.014 * (mult - 1)
-      break
-    }
-    case "amplified": {
-      revenueMult *= 1 + 0.16 * m.return_rate
-      revenueMult *= mult ** 0.72
-      visitsAddedRatio = 0.06 * mult + 0.08 * m.return_rate
-      retentionGain = Math.min(0.18, 0.04 + 0.05 * Math.sqrt(mult) * m.return_rate)
-      break
-    }
-  }
-
-  const revenue_estimate = Math.round(baseRevenue * revenueMult)
-  const revenue_low = Math.round(revenue_estimate * 0.62)
-  const revenue_high = Math.round(revenue_estimate * 1.35)
-  const visits_added = Math.round(monthlyVisits * Math.min(0.42, visitsAddedRatio))
-  const monthly_projection = revenue_estimate
+  const monthlyTraffic = trafficPerDay * DAYS_OPEN_PER_MONTH
+  const engagedCustomers = monthlyTraffic * input.scenario.impact.captureRate * TRAFFIC_PRESSURE[input.audit.traffic]
+  const visitsAdded = Math.round(engagedCustomers * input.scenario.impact.revisitRate * FREQUENCY_PRESSURE[input.audit.frequency])
+  const upliftedTicket = avgTicket * (1 + input.scenario.impact.basketLift) * TICKET_PRESSURE[input.audit.ticket]
+  const revenueEstimate = Math.round(visitsAdded * upliftedTicket)
+  const revenueLow = Math.round(revenueEstimate * input.scenario.impact.confidenceLow)
+  const revenueHigh = Math.round(revenueEstimate * input.scenario.impact.confidenceHigh)
+  const retentionGain = Number((input.scenario.impact.retentionLift * frequencyBase).toFixed(4))
 
   return {
-    revenue_estimate,
-    revenue_low,
-    revenue_high,
-    visits_added,
-    retention_gain: Number(Math.min(0.22, retentionGain).toFixed(4)),
-    monthly_projection,
+    revenue_estimate: revenueEstimate,
+    revenue_low: revenueLow,
+    revenue_high: revenueHigh,
+    visits_added: visitsAdded,
+    retention_gain: retentionGain,
+    monthly_projection: revenueEstimate,
+    proofLines: [
+      `${input.merchantLabel} avec ${TRAFFIC_LABELS[input.audit.traffic]}`,
+      `${TICKET_LABELS[input.audit.ticket]} autour de ${formatCompactEuro(avgTicket)}`,
+      `${FREQUENCY_LABELS[input.audit.frequency]} sur le scénario choisi`,
+    ],
+    rationale: `Ici, Cardin travaille surtout ${input.scenario.summaryLine.toLowerCase()}`,
   }
 }
 
-export function getMockBaseMetrics(merchantType: MerchantProjectionType): BaseMetrics {
-  return { ...MOCK_BASE_METRICS[merchantType] }
+function formatCompactEuro(value: number): string {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: value < 10 ? 1 : 0,
+  }).format(value)
 }
 
-export const SIM_COMMUNITY_MULTIPLIER = 1.15
-export const SIM_CREATOR_MULTIPLIER = 1.12
-
 export function formatSimulationRhythm(visitsAdded: number): string {
-  if (visitsAdded <= 0) return "Rythme à caler sur votre fichier client"
-  const perDay = visitsAdded / DAYS_OPEN_PER_MONTH
-  if (perDay >= 0.75) return "≈ 1 passage en plus par jour ouvré"
-  if (perDay >= 0.3) return `≈ ${perDay.toFixed(1)} retours en plus par jour`
-  return `≈ ${visitsAdded} visites en plus / mois`
+  if (visitsAdded <= 0) return "Projection à ajuster selon votre base clients"
+
+  const perWeek = visitsAdded / 4.33
+  if (perWeek >= 6) return `≈ ${Math.round(perWeek)} retours en plus / semaine`
+  if (perWeek >= 2) return `≈ ${perWeek.toFixed(1)} retours en plus / semaine`
+  return `≈ ${visitsAdded} retours en plus / mois`
 }
 
 export function formatRetentionLine(retentionGain: number): string {
   const pct = Math.round(retentionGain * 1000) / 10
-  return `+${pct} pts de rétention (estimé)`
+  return `+${pct} pts de rétention estimée`
 }
