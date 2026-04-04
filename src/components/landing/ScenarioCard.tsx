@@ -12,10 +12,10 @@ export function ScenarioCard({ proposition, selected, onSelect }: ScenarioCardPr
   return (
     <button
       className={[
-        "w-full rounded-2xl border px-5 py-4 text-left transition",
+        "w-full rounded-2xl border px-5 py-4 text-left transition-all duration-200",
         selected
-          ? "border-[#173A2E] bg-[#EFF4EC] ring-1 ring-[#173A2E]"
-          : "border-[#D4D9D0] bg-[#FDFCF8] hover:border-[#173A2E]/60",
+          ? "border-[#173A2E] bg-[#EFF4EC] shadow-md ring-1 ring-[#173A2E]"
+          : "border-[#D4D9D0] bg-[#FDFCF8] shadow-sm hover:border-[#173A2E]/60 hover:-translate-y-0.5 hover:shadow-md",
       ].join(" ")}
       onClick={onSelect}
       type="button"

@@ -1,6 +1,8 @@
 ﻿import type { Metadata } from "next"
 import { Cormorant_Garamond, Manrope } from "next/font/google"
 
+import { SiteHeader } from "@/components/SiteHeader"
+
 import "./globals.css"
 
 const heading = Cormorant_Garamond({
@@ -25,7 +27,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html className={`${heading.variable} ${body.variable}`} lang="fr">
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        <SiteHeader />
+        <div className="pt-14">{children}</div>
+      </body>
     </html>
   )
 }

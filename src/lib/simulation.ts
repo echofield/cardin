@@ -20,6 +20,8 @@ export type SimulateScenarioInput = {
 
 export type SimulateScenarioResult = {
   revenue_estimate: number
+  revenue_low: number
+  revenue_high: number
   visits_added: number
   retention_gain: number
   monthly_projection: number
@@ -99,11 +101,15 @@ export function simulateScenario(input: SimulateScenarioInput): SimulateScenario
   }
 
   const revenue_estimate = Math.round(baseRevenue * revenueMult)
+  const revenue_low = Math.round(revenue_estimate * 0.62)
+  const revenue_high = Math.round(revenue_estimate * 1.35)
   const visits_added = Math.round(monthlyVisits * Math.min(0.42, visitsAddedRatio))
   const monthly_projection = revenue_estimate
 
   return {
     revenue_estimate,
+    revenue_low,
+    revenue_high,
     visits_added,
     retention_gain: Number(Math.min(0.22, retentionGain).toFixed(4)),
     monthly_projection,
