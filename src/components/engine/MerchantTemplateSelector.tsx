@@ -68,35 +68,25 @@ export function MerchantTemplateSelector({
                   <p className="mt-2 text-sm leading-relaxed text-[#4F5A53]">{template.description}</p>
                 </div>
 
-                {isSelected ? (
-                  <span className="rounded-full border border-[#173A2E] bg-[#173A2E] px-3 py-1 text-[11px] uppercase tracking-[0.12em] text-[#FBFAF6]">
-                    Sélection en cours
-                  </span>
-                ) : null}
+                <span
+                  className={[
+                    "rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.12em]",
+                    isSelected ? "border-[#173A2E] bg-[#173A2E] text-[#FBFAF6]" : "border-[#D8DBD2] bg-[#FBFCF8] text-[#637067]",
+                  ].join(" ")}
+                >
+                  {isSelected ? "Actif" : "Choisir"}
+                </span>
               </div>
 
-              <div className="mt-5 rounded-2xl border border-[#D8DBD2] bg-[#FBFCF8] p-4">
-                <p className="text-xs uppercase tracking-[0.12em] text-[#637067]">Ce que Cardin déclenche</p>
-                <div className="mt-3 space-y-2 text-sm text-[#203B31]">
-                  {template.needs.map((need) => (
-                    <p key={need}>{need}</p>
-                  ))}
+              <div className="mt-5 space-y-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.12em] text-[#637067]">Ce que Cardin travaille</p>
+                  <p className="mt-2 text-sm text-[#203B31]">{template.needs.join(" / ")}</p>
                 </div>
-              </div>
 
-              <div className="mt-4 rounded-2xl border border-[#D8DBD2] bg-[#FBFCF8] p-4">
-                <p className="text-xs uppercase tracking-[0.12em] text-[#637067]">Point de départ</p>
-                <p className="mt-3 text-sm font-medium text-[#173A2E]">{template.pointOfDeparture}</p>
-              </div>
-
-              <div className="mt-4 rounded-2xl border border-[#D8DBD2] bg-[#FBFCF8] p-4">
-                <p className="text-xs uppercase tracking-[0.12em] text-[#637067]">Peut évoluer vers</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {template.evolvesTo.map((option) => (
-                    <span className="rounded-full border border-[#CDD6CB] bg-[#F4F7F0] px-3 py-1 text-xs text-[#173A2E]" key={option}>
-                      {option}
-                    </span>
-                  ))}
+                <div className="rounded-2xl border border-[#D8DBD2] bg-[#FBFCF8] p-4">
+                  <p className="text-xs uppercase tracking-[0.12em] text-[#637067]">Point de depart</p>
+                  <p className="mt-2 text-sm font-medium text-[#173A2E]">{template.pointOfDeparture}</p>
                 </div>
               </div>
             </Card>

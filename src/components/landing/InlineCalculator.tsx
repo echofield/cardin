@@ -54,7 +54,7 @@ const worlds: MerchantWorld[] = [
         hook: "Un statut mensuel qui se merite au comptoir.",
         condition: "5 passages actifs dans le mois",
         effect: "1 boisson signature reservee aux Diamond",
-        rewardLabel: "Diamond Ritual · boisson signature",
+        rewardLabel: "Diamond Ritual / boisson signature",
         statusLabel: "Diamond",
         notificationLabel: "Votre rituel Diamond vous attend",
         caption: "Le client voit qu'il entre dans un cercle vivant.",
@@ -69,7 +69,7 @@ const worlds: MerchantWorld[] = [
         hook: "Venir avec quelqu'un fait monter plus vite.",
         condition: "1 invite validee au comptoir",
         effect: "boost direct vers le palier suivant",
-        rewardLabel: "Domino Invite · boost de progression",
+        rewardLabel: "Domino Invite / boost de progression",
         statusLabel: "Domino",
         notificationLabel: "Un +1 peut accelerer votre carte aujourd'hui",
         caption: "La progression s'accelere quand le lieu circule.",
@@ -84,7 +84,7 @@ const worlds: MerchantWorld[] = [
         hook: "Un privilege annuel au-dessus de la carte.",
         condition: "Cartes Diamond actives sur 6 semaines",
         effect: "1 boisson signature par mois pendant 1 an",
-        rewardLabel: "Grand Prix Cafe · privilege annuel",
+        rewardLabel: "Grand Prix Cafe / privilege annuel",
         statusLabel: "Rare",
         notificationLabel: "Le Grand Prix Cafe approche pour les cartes actives",
         caption: "Une tension rare qui donne envie de suivre sa progression.",
@@ -108,7 +108,7 @@ const worlds: MerchantWorld[] = [
         hook: "Un service faible devient un rendez-vous raconte.",
         condition: "Carte active le mardi soir",
         effect: "dessert secret reserve aux cartes actives",
-        rewardLabel: "Mardi Secret · dessert reserve",
+        rewardLabel: "Mardi Secret / dessert reserve",
         statusLabel: "Actif",
         notificationLabel: "Mardi Secret s'ouvre pour les cartes actives",
         caption: "Le moment faible devient un vrai signe de reconnaissance.",
@@ -123,7 +123,7 @@ const worlds: MerchantWorld[] = [
         hook: "Une place de plus change toute la table.",
         condition: "1 invite validee sur une table active",
         effect: "boost direct vers un acces de table reserve",
-        rewardLabel: "Table Domino · boost a table",
+        rewardLabel: "Table Domino / boost a table",
         statusLabel: "Domino",
         notificationLabel: "Inviter quelqu'un peut accelerer votre table",
         caption: "Le groupe devient la vraie variable Cardin.",
@@ -138,7 +138,7 @@ const worlds: MerchantWorld[] = [
         hook: "Un diner rare qui attire toutes les cartes vers le haut.",
         condition: "Cartes les plus actives du cycle",
         effect: "un diner signature mensuel pendant 1 an",
-        rewardLabel: "Grand Prix Table · diner signature",
+        rewardLabel: "Grand Prix Table / diner signature",
         statusLabel: "Rare",
         notificationLabel: "Le Grand Prix Table se rapproche pour les cartes actives",
         caption: "Un prix rare qui change la perception du lieu.",
@@ -162,7 +162,7 @@ const worlds: MerchantWorld[] = [
         hook: "Un cap visible sur la routine de la semaine.",
         condition: "4 passages actifs dans la semaine",
         effect: "acces a une douceur de fournee reservee",
-        rewardLabel: "Rituel Fournee · douceur reservee",
+        rewardLabel: "Rituel Fournee / douceur reservee",
         statusLabel: "Actif",
         notificationLabel: "Votre rituel de fournee vous attend demain",
         caption: "La carte suit le rythme du quartier.",
@@ -177,7 +177,7 @@ const worlds: MerchantWorld[] = [
         hook: "Faire entrer un proche dans la meme boucle.",
         condition: "1 nouveau passage amene par une carte active",
         effect: "boost vers le prochain cercle",
-        rewardLabel: "Domino Voisin · boost de quartier",
+        rewardLabel: "Domino Voisin / boost de quartier",
         statusLabel: "Domino",
         notificationLabel: "Inviter un voisin peut accelerer votre carte",
         caption: "La rue devient un moteur, pas seulement le comptoir.",
@@ -192,7 +192,7 @@ const worlds: MerchantWorld[] = [
         hook: "Une exception rare au-dessus de la routine.",
         condition: "Cartes actives sur 6 semaines",
         effect: "1 panier du samedi par mois pendant 1 an",
-        rewardLabel: "Grand Tirage Fournee · panier du samedi",
+        rewardLabel: "Grand Tirage Fournee / panier du samedi",
         statusLabel: "Rare",
         notificationLabel: "Le Grand Tirage Fournee approche pour les cartes actives",
         caption: "Le desir reste local mais devient exceptionnel.",
@@ -216,7 +216,7 @@ const worlds: MerchantWorld[] = [
         hook: "Un statut qui s'installe sur le cycle.",
         condition: "3 rendez-vous actifs dans le cycle",
         effect: "acces a un soin signature reserve",
-        rewardLabel: "Diamond Cut · soin signature",
+        rewardLabel: "Diamond Cut / soin signature",
         statusLabel: "Diamond",
         notificationLabel: "Votre Diamond Cut peut s'ouvrir ce mois-ci",
         caption: "Le statut est plus important que le cadeau seul.",
@@ -231,7 +231,7 @@ const worlds: MerchantWorld[] = [
         hook: "Le +1 devient un saut de progression.",
         condition: "1 invitee validee",
         effect: "skip d'etape vers Diamond",
-        rewardLabel: "Bring a Friend · skip vers Diamond",
+        rewardLabel: "Bring a Friend / skip vers Diamond",
         statusLabel: "Domino",
         notificationLabel: "Inviter quelqu'un peut vous faire sauter une etape",
         caption: "Le domino est direct, visible et memorable.",
@@ -246,7 +246,7 @@ const worlds: MerchantWorld[] = [
         hook: "Un privilege annuel qui change la perception du lieu.",
         condition: "cartes Diamond les plus actives",
         effect: "1 coupe offerte par mois pendant 1 an",
-        rewardLabel: "Grand Prix Coupe · privilege annuel",
+        rewardLabel: "Grand Prix Coupe / privilege annuel",
         statusLabel: "Rare",
         notificationLabel: "Le Grand Prix Coupe approche pour les cartes les plus vives",
         caption: "C'est une exception forte, pas une simple remise.",
@@ -270,7 +270,7 @@ const worlds: MerchantWorld[] = [
         hook: "Un statut lie au soin suivi.",
         condition: "3 passages actifs dans le cycle",
         effect: "acces a un geste soin reserve",
-        rewardLabel: "Rituel Peau · geste reserve",
+        rewardLabel: "Rituel Peau / geste reserve",
         statusLabel: "Actif",
         notificationLabel: "Votre rituel peau peut monter cette semaine",
         caption: "Le suivi devient une progression sensible.",
@@ -285,7 +285,7 @@ const worlds: MerchantWorld[] = [
         hook: "Venir a deux pour entrer plus vite dans le cercle.",
         condition: "1 invitee validee sur rendez-vous",
         effect: "boost direct vers un privilege soin",
-        rewardLabel: "Duo Glow · boost de progression",
+        rewardLabel: "Duo Glow / boost de progression",
         statusLabel: "Domino",
         notificationLabel: "Un duo peut accelerer votre carte aujourd'hui",
         caption: "Le domino reste desirant et non agressif.",
@@ -300,7 +300,7 @@ const worlds: MerchantWorld[] = [
         hook: "Un cercle rare au-dessus du rituel.",
         condition: "Diamond actif sur plusieurs cycles",
         effect: "1 soin signature par mois pendant 1 an",
-        rewardLabel: "Diamond Glow · privilege annuel",
+        rewardLabel: "Diamond Glow / privilege annuel",
         statusLabel: "Rare",
         notificationLabel: "Diamond Glow approche pour les cartes actives",
         caption: "Le desir vient de l'exception et du statut.",
@@ -324,7 +324,7 @@ const worlds: MerchantWorld[] = [
         hook: "Donner une progression au retour en boutique.",
         condition: "3 achats ou passages actifs",
         effect: "acces a une preview ou piece reservee",
-        rewardLabel: "Cercle Collection · preview reservee",
+        rewardLabel: "Cercle Collection / preview reservee",
         statusLabel: "Cercle",
         notificationLabel: "Votre cercle collection peut monter cette semaine",
         caption: "La carte nourrit l'envie entre deux achats.",
@@ -339,7 +339,7 @@ const worlds: MerchantWorld[] = [
         hook: "Venir a deux pour ouvrir une porte de plus.",
         condition: "1 invitee validee en boutique",
         effect: "acces plus rapide a la preview reservee",
-        rewardLabel: "Duo Acces · preview acceleree",
+        rewardLabel: "Duo Acces / preview acceleree",
         statusLabel: "Domino",
         notificationLabel: "Un duo peut accelerer votre acces cette semaine",
         caption: "La propagation devient partie du style du lieu.",
@@ -354,7 +354,7 @@ const worlds: MerchantWorld[] = [
         hook: "Une piece ou un acces qui ne s'ouvre pas pour tout le monde.",
         condition: "cartes actives les plus hautes du cycle",
         effect: "acces prioritaire a un rare drop du mois",
-        rewardLabel: "Rare Drop · acces prioritaire",
+        rewardLabel: "Rare Drop / acces prioritaire",
         statusLabel: "Rare",
         notificationLabel: "Un rare drop peut s'ouvrir pour les cartes vives",
         caption: "Le desir nait de l'acces, pas du discount.",
@@ -380,6 +380,22 @@ export function InlineCalculator() {
   const selectedObjective = selectedWorld.concepts[selectedObjectiveId]
   const selectedObjectiveMeta = objectives.find((objective) => objective.id === selectedObjectiveId) ?? objectives[0]
   const setupHref = useMemo(() => buildSetupHref(selectedWorld.id, selectedObjectiveId), [selectedObjectiveId, selectedWorld.id])
+  const selectedWorldIndex = worlds.findIndex((world) => world.id === selectedWorldId)
+
+  const selectWorld = (worldId: MerchantWorldId, source: "pill" | "previous_arrow" | "next_arrow") => {
+    setSelectedWorldId(worldId)
+    trackEvent("calculator_sector_selected", { sector: worldId, source })
+  }
+
+  const previousWorld = () => {
+    const nextIndex = selectedWorldIndex <= 0 ? worlds.length - 1 : selectedWorldIndex - 1
+    selectWorld(worlds[nextIndex].id, "previous_arrow")
+  }
+
+  const nextWorld = () => {
+    const nextIndex = selectedWorldIndex >= worlds.length - 1 ? 0 : selectedWorldIndex + 1
+    selectWorld(worlds[nextIndex].id, "next_arrow")
+  }
 
   return (
     <div className="w-full rounded-[2rem] border border-[#C6CEC2] bg-[linear-gradient(180deg,#FFFEFB_0%,#F6F6F0_100%)] p-5 shadow-[0_30px_70px_-55px_rgba(23,58,46,0.75)] sm:p-8">
@@ -389,35 +405,63 @@ export function InlineCalculator() {
         <p className="mt-2 text-sm text-[#556159]">Chaque lieu garde ses saveurs Cardin: Diamond, Domino, acces rares et progression visible.</p>
       </div>
 
-      <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {worlds.map((world) => {
-          const isActive = world.id === selectedWorldId
-          return (
+      <div className="mt-6 rounded-[1.5rem] border border-[#D8DBD2] bg-white/75 p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.14em] text-[#637067]">Choix du lieu</p>
+            <p className="mt-1 text-sm text-[#556159]">Selection rapide, puis Cardin vous montre la bonne dynamique.</p>
+          </div>
+          <div className="flex items-center gap-2">
             <button
-              className={[
-                "rounded-2xl border p-5 text-left transition-all duration-200",
-                isActive
-                  ? "border-[#173A2E] bg-[#F1F5EF] shadow-[0_18px_40px_-34px_rgba(23,58,46,0.55)]"
-                  : "border-[#D8DBD2] bg-[#FFFDF8] hover:border-[#AEB8AB] hover:shadow-[0_18px_40px_-34px_rgba(23,58,46,0.35)]",
-              ].join(" ")}
-              key={world.id}
-              onClick={() => {
-                setSelectedWorldId(world.id)
-                trackEvent("calculator_sector_selected", { sector: world.id })
-              }}
+              aria-label="Lieu precedent"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#CDD4CA] bg-[#FBFCF8] text-lg text-[#173A2E] transition hover:border-[#173A2E]"
+              onClick={previousWorld}
               type="button"
             >
-              <p className="text-[11px] uppercase tracking-[0.14em] text-[#637067]">{world.eyebrow}</p>
-              <p className="mt-3 font-serif text-2xl text-[#173A2E]">{world.label}</p>
-              <p className="mt-2 text-sm leading-relaxed text-[#4F5A53]">{world.description}</p>
+              &larr;
             </button>
-          )
-        })}
+            <button
+              aria-label="Lieu suivant"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#CDD4CA] bg-[#FBFCF8] text-lg text-[#173A2E] transition hover:border-[#173A2E]"
+              onClick={nextWorld}
+              type="button"
+            >
+              &rarr;
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+          {worlds.map((world) => {
+            const isActive = world.id === selectedWorldId
+            return (
+              <button
+                className={[
+                  "shrink-0 rounded-full border px-4 py-3 text-left transition-all duration-200",
+                  isActive
+                    ? "border-[#173A2E] bg-[#173A2E] text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(23,58,46,0.7)]"
+                    : "border-[#D8DBD2] bg-[#FFFDF8] text-[#173A2E] hover:border-[#AEB8AB]",
+                ].join(" ")}
+                key={world.id}
+                onClick={() => selectWorld(world.id, "pill")}
+                type="button"
+              >
+                <span className="font-medium">{world.label}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-[#E0E4DB] bg-[#FBFCF8] p-4 sm:p-5">
+          <p className="text-[11px] uppercase tracking-[0.14em] text-[#637067]">{selectedWorld.eyebrow}</p>
+          <p className="mt-2 font-serif text-2xl text-[#173A2E]">{selectedWorld.hero}</p>
+          <p className="mt-2 max-w-2xl text-sm text-[#4F5A53]">{selectedWorld.description}</p>
+        </div>
       </div>
 
       <div className="mt-8 rounded-[1.5rem] border border-[#D8DBD2] bg-white/75 p-5 sm:p-6">
         <p className="text-xs uppercase tracking-[0.14em] text-[#637067]">{selectedWorld.label}</p>
-        <p className="mt-2 font-serif text-3xl text-[#173A2E]">{selectedWorld.hero}</p>
+        <p className="mt-2 font-serif text-3xl text-[#173A2E]">Choisissez la dynamique que vous voulez provoquer.</p>
 
         <div className="mt-6 grid gap-3 lg:grid-cols-3">
           {objectives.map((objective) => {
