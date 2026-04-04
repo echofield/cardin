@@ -1,4 +1,4 @@
-﻿import { IdentitySelector } from "@/components/landing/IdentitySelector"
+﻿import { InlineCalculator } from "@/components/landing/InlineCalculator"
 
 export default function LandingPage() {
   return (
@@ -13,17 +13,16 @@ export default function LandingPage() {
             Vos clients passent. Cardin leur donne une raison de revenir.
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#5C655E] sm:text-lg">
-            Choisissez votre situation. On vous montre le premier mouvement a mettre en place, le calcul qui va avec,
-            puis la carte que votre client voit vraiment.
+            Voyez en 10 secondes ce que Cardin peut ramener dans votre commerce.
           </p>
         </div>
 
         <div className="mt-14 w-full">
-          <IdentitySelector />
+          <InlineCalculator />
         </div>
 
         <p className="mt-10 text-center text-sm text-[#7A847B]">
-          En 2 etapes: votre commerce, puis une projection intelligente scenario + audit.
+          Calcul instantané · Résultat concret · Sans engagement
         </p>
       </div>
     </main>
