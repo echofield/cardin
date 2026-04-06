@@ -1,4 +1,4 @@
--- Migration: Domino/Diamond/Winner Season System
+﻿-- Migration: Domino/Diamond/Winner Season System
 -- Adds season-based progression, invitation tracking, and winner selection mechanics
 
 -- ============================================================================
@@ -245,7 +245,7 @@ begin
       1 as season_number,
       3 as season_length,
       'legacy-migration' as summit_id,
-      'Première saison' as summit_title,
+      'Premiere saison' as summit_title,
       m.created_at as started_at,
       (m.created_at + interval '3 months') as ends_at
     from public.merchants m
@@ -350,3 +350,4 @@ comment on column public.seasons.winner_selection_metadata is 'JSON audit trail 
 comment on column public.card_season_progress.direct_invitations_activated is 'Count of invited cards that reached step 2 (activated)';
 comment on column public.card_season_progress.total_branch_capacity is 'Calculated branch capacity (2 direct + 1 per activated for Diamond)';
 comment on column public.card_referrals.branch_level is '1 = direct invitation, 2 = second-ring invitation';
+

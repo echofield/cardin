@@ -2,7 +2,7 @@
 
 import { buildMidpointView, getMidpointMode, getMidpointThreshold, getRewardLabel, getTargetVisits, maybeActivateSharedUnlock } from "@/lib/program-layer"
 import { createClientSupabaseServer } from "@/lib/supabase/server"
-import { handleStamp, getStepDefinition, calculateStep } from "@/lib/season-progression"
+import { handleStamp, getStepDefinition } from "@/lib/season-progression"
 import { checkAndActivateReferral, calculateBranchCapacity } from "@/lib/domino-engine"
 
 export const dynamic = "force-dynamic"
@@ -173,3 +173,4 @@ export async function POST(request: Request, { params }: { params: { cardId: str
     },
   })
 }
+
