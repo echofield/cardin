@@ -9,7 +9,7 @@ export default function LandingPage() {
           <div className="max-w-4xl">
             <p className="text-[11px] uppercase tracking-[0.22em] text-[#677168]">Cardin</p>
             <h1 className="mt-4 font-serif text-5xl leading-[1.02] text-[#163328] sm:text-6xl lg:text-7xl">
-              Argent. Reseau. Confiance.
+              Revenu. Reseau. Influence.
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-[#566159] sm:text-lg">
               Cardin remplace une partie du marketing perdu par une saison de retour, de propagation et d'attraction, visible a travers une carte.
@@ -24,5 +24,6 @@ export default function LandingPage() {
     </main>
   )
 }
+
 
 
