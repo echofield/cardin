@@ -2,6 +2,9 @@
 
 import { buildMidpointView, buildSharedUnlockView, getMidpointMode, getRewardLabel, getTargetVisits } from "@/lib/program-layer"
 import { createClientSupabaseServer } from "@/lib/supabase/server"
+import { getActiveSeason, getStepDefinition } from "@/lib/season-progression"
+import { calculateBranchCapacity } from "@/lib/domino-engine"
+import { getWinnerPoolMetrics } from "@/lib/winner-selection"
 
 export const dynamic = "force-dynamic"
 
@@ -80,6 +83,85 @@ export async function GET(request: Request) {
     shared_unlock_last_triggered_period: merchant.shared_unlock_last_triggered_period,
   })
 
+  // Get active season and season metrics
+  const activeSeason = await getActiveSeason(supabase, merchantId)
+  let seasonMetrics = null
+  let cardSeasonProgress: Map<string, any> = new Map()
+
+  if (activeSeason) {
+    // Get winner pool metrics
+    const winnerMetrics = await getWinnerPoolMetrics(supabase, activeSeason.id)
+
+    // Get step distribution
+    const { data: progressRecords } = await supabase
+      .from("card_season_progress")
+      .select("current_step, card_id, domino_unlocked_at, diamond_unlocked_at, summit_reached_at, branches_used, total_branch_capacity, direct_invitations_activated")
+      .eq("season_id", activeSeason.id)
+
+    // Build step distribution
+    const stepDistribution = Array.from({ length: 8 }, (_, i) => ({
+      step: i + 1,
+      count: 0,
+    }))
+
+    let dominoUnlockedCount = 0
+    let diamondCount = 0
+    let summitCount = 0
+
+    ;(progressRecords ?? []).forEach((progress) => {
+      stepDistribution[progress.current_step - 1].count++
+      if (progress.domino_unlocked_at) dominoUnlockedCount++
+      if (progress.diamond_unlocked_at) diamondCount++
+      if (progress.summit_reached_at) summitCount++
+
+      // Store progress for card response
+      cardSeasonProgress.set(progress.card_id, progress)
+    })
+
+    // Get invitation metrics
+    const { count: totalInvitations } = await supabase
+      .from("card_referrals")
+      .select("*", { count: "exact", head: true })
+      .eq("season_id", activeSeason.id)
+
+    const { count: activatedInvitations } = await supabase
+      .from("card_referrals")
+      .select("*", { count: "exact", head: true })
+      .eq("season_id", activeSeason.id)
+      .eq("is_activated", true)
+
+    // Calculate days remaining
+    const now = new Date()
+    const endsAt = new Date(activeSeason.ends_at)
+    const daysRemaining = Math.max(
+      0,
+      Math.ceil((endsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    )
+
+    seasonMetrics = {
+      seasonId: activeSeason.id,
+      seasonNumber: activeSeason.season_number,
+      summitTitle: activeSeason.summit_title,
+      daysRemaining,
+      endsAt: activeSeason.ends_at,
+      stepDistribution,
+      dominoUnlockedCount,
+      diamondCount,
+      summitCount,
+      totalInvitations: totalInvitations ?? 0,
+      activatedInvitations: activatedInvitations ?? 0,
+      activationRate:
+        totalInvitations && totalInvitations > 0 ? (activatedInvitations ?? 0) / totalInvitations : 0,
+      winnerPool: {
+        eligibleCount: winnerMetrics.eligibleCount,
+        totalWeight: winnerMetrics.totalWeight,
+        averageWeight: winnerMetrics.averageWeight,
+        hasWinner: winnerMetrics.hasWinner,
+        winnerId: winnerMetrics.winnerId,
+      },
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     merchant: {
@@ -100,6 +182,7 @@ export async function GET(request: Request) {
       totalVisits: transactions?.length ?? 0,
       repeatClients,
       midpointReachedCards,
+      season: seasonMetrics,
     },
     cards: (cards ?? []).map((card) => {
       const cardTargetVisits = getTargetVisits(card.target_visits ?? targetVisits)
@@ -110,6 +193,19 @@ export async function GET(request: Request) {
         midpointReachedAt: card.midpoint_reached_at,
         midpointMode,
       })
+      const progress = cardSeasonProgress.get(card.id)
+      const seasonProgress = progress
+        ? {
+            currentStep: progress.current_step,
+            stepLabel: getStepDefinition(progress.current_step).label,
+            dominoUnlocked: Boolean(progress.domino_unlocked_at),
+            diamondUnlocked: Boolean(progress.diamond_unlocked_at),
+            summitReached: Boolean(progress.summit_reached_at),
+            branchesUsed: progress.branches_used,
+            branchCapacity: calculateBranchCapacity(progress),
+            directInvitationsActivated: progress.direct_invitations_activated,
+          }
+        : null
 
       return {
         id: card.id,
@@ -120,6 +216,7 @@ export async function GET(request: Request) {
         status: card.stamps >= cardTargetVisits ? "reward_ready" : "active",
         lastVisitAt: card.created_at,
         midpoint,
+        seasonProgress,
       }
     }),
   })
