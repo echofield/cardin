@@ -24,6 +24,7 @@ export function WalletPassPreview({
   caption,
 }: WalletPassPreviewProps) {
   const filledDots = activeDots ?? Math.max(1, Math.floor(progressDots * 0.4))
+  const progressPercent = Math.max(12, Math.min(100, Math.round((filledDots / progressDots) * 100)))
 
   return (
     <Card className="mt-6 overflow-hidden border-[#9EB2A4] bg-[linear-gradient(180deg,#254C3C_0%,#1B4332_58%,#153327_100%)] p-0 text-[#F7F5EF] shadow-[0_20px_50px_-32px_rgba(27,67,50,0.58)]">
@@ -51,21 +52,19 @@ export function WalletPassPreview({
       ) : null}
 
       <div className="px-6 py-5">
-        <p className="text-[11px] uppercase tracking-[0.16em] text-[#D9E6DE]">Progression visible</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {Array.from({ length: progressDots }).map((_, index) => (
-            <span
-              className={[
-                "inline-flex h-8 w-8 items-center justify-center rounded-full border text-xs",
-                index < filledDots
-                  ? "border-[#DCE9E1] bg-[#F7F5EF] text-[#1B4332]"
-                  : "border-[rgba(221,233,226,0.24)] bg-transparent text-[#D9E6DE]",
-              ].join(" ")}
-              key={index}
-            >
-              {index + 1}
-            </span>
-          ))}
+        <p className="text-[11px] uppercase tracking-[0.16em] text-[#D9E6DE]">Tension visible</p>
+        <div className="mt-4 rounded-full border border-[rgba(221,233,226,0.18)] bg-[rgba(250,248,242,0.05)] px-1 py-1">
+          <div className="h-3 rounded-full bg-[rgba(221,233,226,0.08)]">
+            <div
+              className="h-full rounded-full bg-[linear-gradient(90deg,#E5EFE8_0%,#F4E5A7_100%)] transition-all duration-500"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+        <div className="mt-3 flex items-center justify-between text-[11px] tracking-[0.14em] text-[#D5E2DA]">
+          <span>ENTREE</span>
+          <span>DOMINO</span>
+          <span>SOMMET</span>
         </div>
       </div>
 
@@ -76,3 +75,6 @@ export function WalletPassPreview({
     </Card>
   )
 }
+
+
+
