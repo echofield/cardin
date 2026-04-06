@@ -1,13 +1,11 @@
-"use client"
-
-import Link from "next/link"
+﻿import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 const NAV_ITEMS = [
-  { href: "#methode", label: "Méthode" },
-  { href: "#cas", label: "Cas" },
+  { href: "/landing#methode", label: "Methode" },
+  { href: "/landing#cas", label: "Cas" },
   { href: "/landing", label: "Simuler" },
-  { href: "#contact", label: "Contact" },
+  { href: "/landing#contact", label: "Contact" },
 ]
 
 export function SiteHeader() {
@@ -18,12 +16,12 @@ export function SiteHeader() {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-6">
         <Link className="flex flex-col leading-none" href="/landing">
           <span className="font-serif text-[1.15rem] font-semibold tracking-[0.06em] text-[#15372B]">CARDIN</span>
-          <span className="hidden text-[10px] tracking-[0.08em] text-[#8A9389] sm:block">Systèmes de rétention pour commerces physiques</span>
+          <span className="hidden text-[10px] tracking-[0.08em] text-[#8A9389] sm:block">Systemes de retention pour commerces physiques</span>
         </Link>
 
         <nav className="flex items-center gap-6">
           {NAV_ITEMS.map((item) => {
-            const active = item.href === pathname
+            const active = item.href === pathname || (item.href === "/landing" && pathname === "/")
             return (
               <Link
                 className={[
