@@ -2,6 +2,7 @@
 
 import { buildBehaviorPlan, normalizeEngineActivityId } from "@/lib/behavior-engine"
 import { getTemplateById } from "@/lib/merchant-templates"
+import { normalizeSeasonLength } from "@/lib/season-law"
 import { createClientSupabaseServer } from "@/lib/supabase/server"
 
 type EntryMode = "commerce" | "creator" | "experience"
@@ -32,6 +33,9 @@ export async function POST(request: Request) {
     targetVisits?: number
     rewardLabel?: string
     midpointMode?: string
+    seasonLength?: number
+    summitId?: string
+    summitTitle?: string
     sharedUnlockObjective?: number
     sharedUnlockWindowDays?: number
     sharedUnlockOffer?: string
@@ -51,6 +55,9 @@ export async function POST(request: Request) {
   const targetVisits = clampInt(payload.targetVisits, 3, 20, templateDefaults.target_visits)
   const rewardLabel = normalizeRewardLabel(payload.rewardLabel, templateDefaults.reward_label)
   const midpointMode = normalizeMidpointMode(payload.midpointMode)
+  const seasonLength = normalizeSeasonLength(String(payload.seasonLength ?? "3"))
+  const summitId = normalizeSummitId(payload.summitId)
+  const summitTitle = normalizeSummitTitle(payload.summitTitle)
   const sharedUnlockObjective = clampInt(payload.sharedUnlockObjective, 20, 10000, 120)
   const sharedUnlockWindowDays = clampInt(payload.sharedUnlockWindowDays, 3, 30, 7)
   const sharedUnlockOffer = normalizeOffer(payload.sharedUnlockOffer)
@@ -94,6 +101,9 @@ export async function POST(request: Request) {
       targetVisits,
       rewardLabel,
       midpointMode,
+      seasonLength,
+      summitId,
+      summitTitle,
       objective: sharedUnlockObjective,
       activeWindowDays: sharedUnlockWindowDays,
       unlockedOffer: sharedUnlockOffer,
@@ -137,8 +147,21 @@ function normalizeOffer(value: string | undefined): string {
   return trimmed.slice(0, 140)
 }
 
+function normalizeSummitId(value?: string): string {
+  const trimmed = (value ?? "").trim()
+  if (!trimmed) return "default-summit"
+  return trimmed.slice(0, 80)
+}
+
+function normalizeSummitTitle(value?: string): string {
+  const trimmed = (value ?? "").trim()
+  if (!trimmed) return "Privilege de saison"
+  return trimmed.slice(0, 160)
+}
 function normalizeRewardLabel(value: string | undefined, fallback: string): string {
   const trimmed = (value ?? "").trim()
   if (!trimmed) return fallback
   return trimmed.slice(0, 120)
 }
+
+

@@ -7,6 +7,7 @@ import { InstallLeadForm } from "@/components/landing/InstallLeadForm"
 import { trackEvent } from "@/lib/analytics"
 import { calculateRecovery, formatEuro, percentToRate } from "@/lib/calculator"
 import { getTemplateById, merchantTemplates, type MerchantTemplate } from "@/lib/merchant-templates"
+import { cardinSeasonLaw, getSummitPreset, normalizeSeasonLength } from "@/lib/season-law"
 import { Button, Card, Input, Slider } from "@/ui"
 
 import { MerchantTemplateSelector } from "./MerchantTemplateSelector"
@@ -17,6 +18,8 @@ type EngineStep = 1 | 2 | 3 | 4
 
 type EngineFlowProps = {
   initialObjectiveId?: string
+  initialSeasonLength?: string
+  initialSummitId?: string
   initialTemplateId?: string
 }
 
@@ -49,7 +52,7 @@ const setupLines = [
   "Tableau marchand avec suivi des passages",
 ]
 
-export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlowProps) {
+export function EngineFlow({ initialObjectiveId, initialSeasonLength, initialSummitId, initialTemplateId }: EngineFlowProps) {
   const selectedObjectiveId = normalizeObjectiveId(initialObjectiveId)
   const initialTemplate = getTemplateById(initialTemplateId ?? merchantTemplates[0].id)
   const initialScenario = buildObjectiveScenario(initialTemplate, selectedObjectiveId)
@@ -59,9 +62,13 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
   )
   const hasPreselectedTemplate = Boolean(initialTemplateId)
   const initialObjectiveHint = objectiveHints[selectedObjectiveId]
+  const initialSeason = normalizeSeasonLength(initialSeasonLength)
+  const initialSummit = getSummitPreset(initialTemplate.id, initialSummitId)
 
   const [step, setStep] = useState<EngineStep>(1)
   const [selectedTemplate, setSelectedTemplate] = useState<MerchantTemplate>(initialTemplate)
+  const [seasonLength] = useState(initialSeason)
+  const [selectedSummitId, setSelectedSummitId] = useState(initialSummit.id)
   const [showTemplateSelector, setShowTemplateSelector] = useState(!hasPreselectedTemplate)
   const [targetVisits, setTargetVisits] = useState(initialScenario.targetVisits)
   const [rewardLabel, setRewardLabel] = useState(initialScenario.rewardLabel)
@@ -75,15 +82,22 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
     [selectedObjectiveId, selectedTemplate]
   )
 
+  const selectedSummit = useMemo(() => getSummitPreset(selectedTemplate.id, selectedSummitId), [selectedSummitId, selectedTemplate.id])
+  const seasonLabel = seasonLength === 6 ? "Saison 6 mois" : "Saison 3 mois"
+  const seasonNarrative =
+    seasonLength === 6
+      ? "Cycle long pour laisser monter Diamond, qualifier le Domino et faire naitre un vrai sommet visible."
+      : "Cycle court pour prouver vite le systeme, faire monter les retours et lancer la saison suivante."
+
   const monthlyProjection = useMemo(
     () =>
       calculateRecovery({
         clientsPerDay,
         avgTicket,
         returnLossRate: percentToRate(lossRatePercent),
-        recoveryRate: Math.min(0.45, selectedTemplate.defaults.calculator_recovery_rate * selectedScenario.recoveryMultiplier),
+        recoveryRate: Math.min(0.45, selectedTemplate.defaults.calculator_recovery_rate * selectedScenario.recoveryMultiplier * selectedSummit.monthlyRecoveredBoost),
       }),
-    [avgTicket, clientsPerDay, lossRatePercent, selectedScenario.recoveryMultiplier, selectedTemplate.defaults.calculator_recovery_rate]
+    [avgTicket, clientsPerDay, lossRatePercent, selectedScenario.recoveryMultiplier, selectedSummit.monthlyRecoveredBoost, selectedTemplate.defaults.calculator_recovery_rate]
   )
 
   const progressDots = Math.max(4, Math.min(targetVisits, 10))
@@ -108,6 +122,7 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
     setTargetVisits(scenario.targetVisits)
     setRewardLabel(scenario.rewardLabel)
     setMidpointMode(scenario.midpointMode)
+    setSelectedSummitId(getSummitPreset(template.id).id)
     setClientsPerDay(nextAssumptions.clients)
     setAvgTicket(nextAssumptions.avgTicket)
     setLossRatePercent(nextAssumptions.lossRatePercent)
@@ -158,8 +173,16 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
           <p className="mt-3 max-w-3xl text-sm text-[#556159]">
             La facade reste simple. Cardin prepare ensuite le QR, la carte Wallet et l'espace marchand avec la configuration choisie.
           </p>
-          <div className="mt-4 inline-flex rounded-full border border-[#C5D0C4] bg-[#F2F5EE] px-4 py-2 text-xs uppercase tracking-[0.14em] text-[#1B4332]">
-            Scenario actif : {selectedScenario.label}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <div className="inline-flex rounded-full border border-[#C5D0C4] bg-[#F2F5EE] px-4 py-2 text-xs uppercase tracking-[0.14em] text-[#1B4332]">
+              Scenario actif : {selectedScenario.label}
+            </div>
+            <div className="inline-flex rounded-full border border-[#D4DACF] bg-[#FBFCF8] px-4 py-2 text-xs uppercase tracking-[0.14em] text-[#425248]">
+              {seasonLabel}
+            </div>
+            <div className="inline-flex rounded-full border border-[#D4DACF] bg-[#FBFCF8] px-4 py-2 text-xs uppercase tracking-[0.14em] text-[#425248]">
+              Sommet : {selectedSummit.title}
+            </div>
           </div>
 
           <div className="mt-6 grid gap-2 sm:grid-cols-4">
@@ -271,6 +294,34 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
                 <div className="mt-4 rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4">
                   <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Cadence scenario</p>
                   <p className="mt-2 text-sm text-[#203B31]">{selectedScenario.cadenceLabel}</p>
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-[#D7DED4] bg-[#FBFCF8] p-4">
+                  <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Loi de saison Cardin</p>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <p className="text-sm font-medium text-[#173A2E]">{seasonLabel}</p>
+                      <p className="mt-1 text-sm text-[#556159]">{seasonNarrative}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[#173A2E]">{selectedSummit.title}</p>
+                      <p className="mt-1 text-sm text-[#556159]">{selectedSummit.promise}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-[#E0E4DB] bg-white px-4 py-3">
+                      <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Parcours</p>
+                      <p className="mt-2 text-sm text-[#173A2E]">{cardinSeasonLaw.stepCount} etapes</p>
+                    </div>
+                    <div className="rounded-2xl border border-[#E0E4DB] bg-white px-4 py-3">
+                      <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Domino</p>
+                      <p className="mt-2 text-sm text-[#173A2E]">Etape {cardinSeasonLaw.dominoStartStep} · 2 invitations puis 1 relai</p>
+                    </div>
+                    <div className="rounded-2xl border border-[#E0E4DB] bg-white px-4 py-3">
+                      <p className="text-xs uppercase tracking-[0.12em] text-[#69736C]">Sommet</p>
+                      <p className="mt-2 text-sm text-[#173A2E]">Diamond etape {cardinSeasonLaw.diamondStep} · sommet etape {cardinSeasonLaw.summitStep}</p>
+                    </div>
+                  </div>
                 </div>
               </Card>
             </div>
@@ -425,6 +476,7 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
                     <p className="mt-2 font-serif text-5xl text-[#173A2E]">+{formatEuro(monthlyProjection.extraRevenue)} / mois</p>
                     <p className="mt-3 text-base text-[#2E4339]">{Math.round(monthlyProjection.recoveredClients)} clients recuperes / mois</p>
                     <p className="mt-3 text-sm text-[#4F5E55]">{selectedScenario.projectionCaption}</p>
+                  <p className="mt-2 text-sm text-[#4F5E55]">{seasonLabel} · Sommet retenu : {selectedSummit.promise}</p>
                   </Card>
 
                   <Card className="p-6">
@@ -444,6 +496,9 @@ export function EngineFlow({ initialObjectiveId, initialTemplateId }: EngineFlow
                   embedded
                   midpointMode={midpointMode}
                   rewardLabel={rewardLabel}
+                  seasonLength={seasonLength}
+                  summitId={selectedSummit.id}
+                  summitTitle={selectedSummit.promise}
                   targetVisits={targetVisits}
                   title={selectedScenario.activationTitle}
                 />

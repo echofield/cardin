@@ -16,6 +16,9 @@ type InstallLeadFormProps = {
   targetVisits?: number
   rewardLabel?: string
   midpointMode?: MidpointMode
+  seasonLength?: 3 | 6
+  summitId?: string
+  summitTitle?: string
   embedded?: boolean
   title?: string
   description?: string
@@ -40,6 +43,9 @@ type LeadSubmitState =
         activeWindowDays: number
         unlockedOffer: string
         midpointMode: MidpointMode
+        seasonLength: 3 | 6
+        summitId: string
+        summitTitle: string
       }
     }
 
@@ -49,6 +55,9 @@ export function InstallLeadForm({
   targetVisits = 10,
   rewardLabel = "1 recompense offerte",
   midpointMode = "recognition_only",
+  seasonLength = 3,
+  summitId = "default-summit",
+  summitTitle = "Privilege de saison",
   embedded = false,
   title = "Lancer votre carte en boutique",
   description = "Connexion simple, configuration claire, QR pret en quelques minutes.",
@@ -67,6 +76,9 @@ export function InstallLeadForm({
     targetVisits,
     rewardLabel,
     midpointMode,
+    seasonLength,
+    summitId,
+    summitTitle,
     sharedUnlockObjective: 120,
     sharedUnlockWindowDays: 7,
     sharedUnlockOffer: "Offre collective de la semaine",
@@ -80,8 +92,11 @@ export function InstallLeadForm({
       targetVisits,
       rewardLabel,
       midpointMode,
+      seasonLength,
+      summitId,
+      summitTitle,
     }))
-  }, [activityTemplateId, entryMode, midpointMode, rewardLabel, targetVisits])
+  }, [activityTemplateId, entryMode, midpointMode, rewardLabel, seasonLength, summitId, summitTitle, targetVisits])
 
   useEffect(() => {
     const supabase = createClientSupabaseBrowser()
@@ -156,6 +171,8 @@ export function InstallLeadForm({
         midpointMode: formData.midpointMode,
         sharedUnlockObjective: formData.sharedUnlockObjective,
         sharedUnlockWindowDays: formData.sharedUnlockWindowDays,
+        seasonLength: formData.seasonLength,
+        summitId: formData.summitId,
       })
     } catch {
       setState({
@@ -174,6 +191,8 @@ export function InstallLeadForm({
       <p className="mt-1 text-sm text-[#556159]">
         {formData.midpointMode === "recognition_plus_boost" ? "Cap intermediaire: reconnaissance + boost" : "Cap intermediaire: reconnaissance uniquement"}
       </p>
+      <p className="mt-1 text-sm text-[#556159]">Saison: {formData.seasonLength} mois</p>
+      <p className="mt-1 text-sm text-[#556159]">Sommet: {formData.summitTitle}</p>
       <button
         className="mt-3 text-xs font-medium text-[#173A2E] underline-offset-2 hover:underline"
         onClick={() => setShowNetworkOptions((prev) => !prev)}
@@ -223,6 +242,8 @@ export function InstallLeadForm({
         <div className="mt-3 space-y-1 text-xs text-[#2A3F35]">
           <p>{state.setup.targetVisits} passages {"->"} {state.setup.rewardLabel}</p>
           <p>{state.setup.midpointMode === "recognition_plus_boost" ? "Cap intermediaire : boost actif" : "Cap intermediaire : reconnaissance uniquement"}</p>
+          <p>Saison : {state.setup.seasonLength} mois</p>
+          <p>Sommet : {state.setup.summitTitle}</p>
           <p>Objectif collectif: {state.setup.objective} passages/mois</p>
           <p>Fenetre active: {state.setup.activeWindowDays} jours</p>
         </div>
@@ -328,3 +349,5 @@ function createCallbackOptions() {
     return slots.map((slot) => `${formatter.format(date)} · ${slot}`)
   })
 }
+
+
