@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useMemo, useState } from "react"
 
@@ -44,6 +44,30 @@ type MerchantApiResponse = {
     totalVisits: number
     repeatClients: number
     midpointReachedCards: number
+    season?: {
+      seasonId: string
+      seasonNumber: number
+      summitTitle: string
+      daysRemaining: number
+      endsAt: string
+      stepDistribution: Array<{
+        step: number
+        count: number
+      }>
+      dominoUnlockedCount: number
+      diamondCount: number
+      summitCount: number
+      totalInvitations: number
+      activatedInvitations: number
+      activationRate: number
+      winnerPool: {
+        eligibleCount: number
+        totalWeight: number
+        averageWeight: number
+        hasWinner: boolean
+        winnerId: string | null
+      }
+    } | null
   }
   cards?: Array<{
     id: string
@@ -54,6 +78,16 @@ type MerchantApiResponse = {
     status: "active" | "reward_ready" | "redeemed"
     lastVisitAt: string
     midpoint: MidpointView
+    seasonProgress?: {
+      currentStep: number
+      stepLabel: string
+      dominoUnlocked: boolean
+      diamondUnlocked: boolean
+      summitReached: boolean
+      branchesUsed: number
+      branchCapacity: number
+      directInvitationsActivated: number
+    } | null
   }>
 }
 
@@ -141,6 +175,42 @@ export function MerchantDashboard({ merchantId }: { merchantId: string }) {
           <MetricCard label="Cap franchi" value={data.metrics.midpointReachedCards.toString()} />
         </section>
 
+        {data.metrics.season ? (
+          <Card className="p-6">
+            <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">Saison active</p>
+            <div className="mt-3 grid gap-4 lg:grid-cols-[1fr_1fr]">
+              <div className="space-y-2 text-sm text-[#173A2E]">
+                <p>Saison {data.metrics.season.seasonNumber}</p>
+                <p>Sommet: {data.metrics.season.summitTitle}</p>
+                <p>Jours restants: {data.metrics.season.daysRemaining}</p>
+                <p>Fin: {formatDate(data.metrics.season.endsAt)}</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <StatPill label="Domino ouverts" value={data.metrics.season.dominoUnlockedCount} />
+                <StatPill label="Diamond" value={data.metrics.season.diamondCount} />
+                <StatPill label="Sommet atteint" value={data.metrics.season.summitCount} />
+                <StatPill label="Invitations" value={data.metrics.season.totalInvitations} />
+                <StatPill label="Invitees actives" value={data.metrics.season.activatedInvitations} />
+                <StatPill label="Taux activation" value={`${Math.round(data.metrics.season.activationRate * 100)}%`} />
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-4 lg:grid-cols-8">
+              {data.metrics.season.stepDistribution.map((step) => (
+                <div className="rounded-xl border border-[#D5DBD1] bg-[#FFFEFA] px-3 py-2 text-center" key={step.step}>
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-[#5E6961]">Etape {step.step}</p>
+                  <p className="mt-1 font-serif text-xl text-[#173A2E]">{step.count}</p>
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-4 text-xs text-[#5E6961]">
+              Winner pool: {data.metrics.season.winnerPool.eligibleCount} eligibles · poids total {data.metrics.season.winnerPool.totalWeight}
+              {data.metrics.season.winnerPool.hasWinner ? ` · gagnant ${data.metrics.season.winnerPool.winnerId}` : ""}
+            </p>
+          </Card>
+        ) : null}
+
         <section className="grid gap-4 lg:grid-cols-2">
           <Card className="p-6">
             <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">QR a afficher</p>
@@ -207,6 +277,21 @@ export function MerchantDashboard({ merchantId }: { merchantId: string }) {
                   </p>
                   <p className="mt-1 text-xs text-[#5E6961]">Derniere activite: {formatDate(card.lastVisitAt)}</p>
 
+                  {card.seasonProgress ? (
+                    <div className="mt-2 rounded-xl border border-[#D5DBD1] bg-[#F8FAF6] px-3 py-2 text-xs text-[#234438]">
+                      <p>
+                        Saison: etape {card.seasonProgress.currentStep} · {card.seasonProgress.stepLabel}
+                      </p>
+                      <p>
+                        Domino {card.seasonProgress.branchesUsed}/{card.seasonProgress.branchCapacity} · invitees actives {card.seasonProgress.directInvitationsActivated}
+                      </p>
+                      <p>
+                        Etat: {card.seasonProgress.diamondUnlocked ? "Diamond" : "en progression"}
+                        {card.seasonProgress.summitReached ? " · sommet atteint" : ""}
+                      </p>
+                    </div>
+                  ) : null}
+
                   <div className="mt-3 flex gap-2">
                     <Button onClick={() => onStamp(card.id, "stamp")} size="sm" variant="secondary">
                       +1 passage
@@ -235,6 +320,15 @@ function MetricCard({ label, value }: { label: string; value: string }) {
       <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">{label}</p>
       <p className="mt-2 font-serif text-4xl">{value}</p>
     </Card>
+  )
+}
+
+function StatPill({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-xl border border-[#D5DBD1] bg-[#FFFEFA] px-3 py-2">
+      <p className="text-[10px] uppercase tracking-[0.12em] text-[#5E6961]">{label}</p>
+      <p className="mt-1 font-serif text-xl text-[#173A2E]">{value}</p>
+    </div>
   )
 }
 
