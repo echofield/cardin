@@ -65,6 +65,8 @@ type WorldDefinition = {
 
 type ScreenId = "world" | "system" | "summit" | "season" | "checkmate" | "activate"
 
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sY5kD4RS66P4Tv7xl9Zm07"
+
 const screens: Array<{ id: ScreenId; label: string; eyebrow: string }> = [
   { id: "world", label: "Lieu", eyebrow: "Monde marchand" },
   { id: "system", label: "Systeme", eyebrow: "Entree et trajectoire" },
@@ -553,9 +555,9 @@ export function MerchantSeasonStudio() {
                 Continuer
               </Button>
             ) : (
-              <Link className="inline-flex h-11 items-center justify-center rounded-full border border-[#1B4332] bg-[#1B4332] px-6 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href={engineHref}>
-                Ouvrir cette saison dans Cardin
-              </Link>
+              <a className="inline-flex h-11 items-center justify-center rounded-full border border-[#1B4332] bg-[#1B4332] px-6 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href={STRIPE_PAYMENT_LINK} rel="noreferrer" target="_blank">
+                Payer ma saison (490 EUR)
+              </a>
             )}
           </div>
         </div>
@@ -856,9 +858,11 @@ function ActivateScreen({ selectedWorld, selectedSummit, selectedSeason, monthly
           <Card className="p-6">
             <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Ce qui est inclus</p>
             <div className="mt-4 space-y-3 text-sm leading-7 text-[#203B31]">
-              <p>QR de comptoir pret</p>
-              <p>Carte Apple Wallet / Google Wallet</p>
+              <p>QR de comptoir pret sous 48h</p>
+              <p>Dashboard marchand actif sous 48h</p>
+              <p>Carte Apple Wallet / Google Wallet active sous 48h</p>
               <p>Espace marchand</p>
+              <p>Cartes physiques expediees sous 7 a 10 jours ouvres</p>
               <p>Premiere saison calibree avec vous</p>
             </div>
           </Card>
@@ -878,10 +882,17 @@ function ActivateScreen({ selectedWorld, selectedSummit, selectedSeason, monthly
 
         <Card className="p-6">
           <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Phase 0</p>
-          <p className="mt-3 text-sm leading-7 text-[#556159]">Les premieres activations peuvent etre lancees comme des saisons accompagnees. Ensuite, le systeme devient plus autonome: le lieu garde la narration, la carte garde l'identite, Cardin garde la physique.</p>
+          <p className="mt-3 text-sm leading-7 text-[#556159]">Paiement valide, activation digitale en 48h, puis impression et envoi des cartes physiques. Ensuite, le systeme devient plus autonome: le lieu garde la narration, la carte garde l'identite, Cardin garde la physique.</p>
+          <div className="mt-4 rounded-2xl border border-[#D8DED4] bg-[#FBFCF8] p-4">
+            <p className="text-[10px] uppercase tracking-[0.14em] text-[#6D776F]">Delai operationnel</p>
+            <p className="mt-2 text-sm leading-7 text-[#203B31]">Activation dashboard et wallet: 48h. Cartes physiques: 7 a 10 jours ouvres.</p>
+          </div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Link className="inline-flex h-12 items-center justify-center rounded-full border border-[#1B4332] bg-[#1B4332] px-8 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href={engineHref}>
-              Ouvrir ma saison dans Cardin
+            <a className="inline-flex h-12 items-center justify-center rounded-full border border-[#1B4332] bg-[#1B4332] px-8 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href={STRIPE_PAYMENT_LINK} rel="noreferrer" target="_blank">
+              Payer ma saison (490 EUR)
+            </a>
+            <Link className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-8 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]" href={engineHref}>
+              Configurer ensuite dans Cardin
             </Link>
             <Link className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-8 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]" href="#top">
               Revoir depuis le debut

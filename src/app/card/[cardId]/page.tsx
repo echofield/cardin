@@ -1,5 +1,12 @@
 ﻿import { CardPhoneView } from "@/components/card/CardPhoneView"
 
-export default function CardPage({ params }: { params: { cardId: string } }) {
-  return <CardPhoneView cardId={params.cardId} />
+export default function CardPage({
+  params,
+  searchParams,
+}: {
+  params: { cardId: string }
+  searchParams?: { demo?: string }
+}) {
+  const demo = searchParams?.demo === "1"
+  return <CardPhoneView cardId={params.cardId} demo={demo} />
 }

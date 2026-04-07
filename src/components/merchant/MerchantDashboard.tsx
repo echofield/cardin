@@ -91,10 +91,12 @@ type MerchantApiResponse = {
   }>
 }
 
-export function MerchantDashboard({ merchantId }: { merchantId: string }) {
+export function MerchantDashboard({ merchantId, demo = false }: { merchantId: string; demo?: boolean }) {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<MerchantApiResponse | null>(null)
-  const [scanUrl, setScanUrl] = useState(`/scan/${merchantId}`)
+  const [scanUrl, setScanUrl] = useState(`/scan/${merchantId}${demo ? "?demo=1" : ""}`)
+  const [seasonAction, setSeasonAction] = useState<"idle" | "loading" | "error" | "success">("idle")
+  const [seasonMessage, setSeasonMessage] = useState<string>("")
 
   const loadMerchant = async () => {
     setLoading(true)
@@ -112,9 +114,9 @@ export function MerchantDashboard({ merchantId }: { merchantId: string }) {
     void loadMerchant()
 
     if (typeof window !== "undefined") {
-      setScanUrl(`${window.location.origin}/scan/${merchantId}`)
+      setScanUrl(`${window.location.origin}/scan/${merchantId}${demo ? "?demo=1" : ""}`)
     }
-  }, [merchantId])
+  }, [merchantId, demo])
 
   const midpointLabel = useMemo(() => {
     const mode = data?.merchant?.loyaltyConfig.midpointMode
@@ -133,6 +135,46 @@ export function MerchantDashboard({ merchantId }: { merchantId: string }) {
     })
 
     trackEvent("merchant_stamp", { cardId, action, merchantId })
+    await loadMerchant()
+  }
+
+  const onStartSeason = async () => {
+    setSeasonAction("loading")
+    setSeasonMessage("")
+
+    const response = await fetch("/api/season/start", { method: "POST" })
+    const payload = await response.json()
+
+    if (!response.ok || !payload.ok) {
+      setSeasonAction("error")
+      setSeasonMessage(payload.error ?? "season_start_failed")
+      return
+    }
+
+    setSeasonAction("success")
+    setSeasonMessage(`Saison ${payload.season.seasonNumber} lancee.`)
+    await loadMerchant()
+  }
+
+  const onCloseSeason = async (seasonId: string) => {
+    setSeasonAction("loading")
+    setSeasonMessage("")
+
+    const response = await fetch("/api/season/close", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ seasonId }),
+    })
+    const payload = await response.json()
+
+    if (!response.ok || !payload.ok) {
+      setSeasonAction("error")
+      setSeasonMessage(payload.error ?? "season_close_failed")
+      return
+    }
+
+    setSeasonAction("success")
+    setSeasonMessage(`Saison ${payload.closedSeason.seasonNumber} cloturee, nouvelle saison ouverte.`)
     await loadMerchant()
   }
 
@@ -167,7 +209,13 @@ export function MerchantDashboard({ merchantId }: { merchantId: string }) {
           </Button>
         </header>
 
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                {demo ? (
+          <Card className="p-4">
+            <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">Mode demo</p>
+            <p className="mt-2 text-sm text-[#173A2E]">Parcours en direct: scan QR, creation carte, progression visible cote client et cote marchand.</p>
+          </Card>
+        ) : null}
+<section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <MetricCard label="Cartes actives" value={data.metrics.totalCards.toString()} />
           <MetricCard label="Recompenses pretes" value={data.metrics.rewardReadyCards.toString()} />
           <MetricCard label="Passages valides" value={data.metrics.totalVisits.toString()} />
@@ -177,7 +225,12 @@ export function MerchantDashboard({ merchantId }: { merchantId: string }) {
 
         {data.metrics.season ? (
           <Card className="p-6">
-            <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">Saison active</p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">Saison active</p>
+              <Button onClick={() => onCloseSeason(data.metrics!.season!.seasonId)} size="sm" variant="secondary">
+                Cloturer la saison
+              </Button>
+            </div>
             <div className="mt-3 grid gap-4 lg:grid-cols-[1fr_1fr]">
               <div className="space-y-2 text-sm text-[#173A2E]">
                 <p>Saison {data.metrics.season.seasonNumber}</p>
@@ -209,6 +262,24 @@ export function MerchantDashboard({ merchantId }: { merchantId: string }) {
               {data.metrics.season.winnerPool.hasWinner ? ` · gagnant ${data.metrics.season.winnerPool.winnerId}` : ""}
             </p>
           </Card>
+        ) : (
+          <Card className="p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">Saison</p>
+                <p className="mt-2 text-sm text-[#173A2E]">Aucune saison active pour le moment.</p>
+              </div>
+              <Button onClick={onStartSeason} size="sm">
+                Lancer la saison
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {seasonAction !== "idle" ? (
+          <Card className="p-4">
+            <p className={`text-sm ${seasonAction === "error" ? "text-[#A64040]" : "text-[#173A2E]"}`}>{seasonMessage}</p>
+          </Card>
         ) : null}
 
         <section className="grid gap-4 lg:grid-cols-2">
@@ -220,6 +291,13 @@ export function MerchantDashboard({ merchantId }: { merchantId: string }) {
               src={`/api/merchant/${merchantId}/qr`}
             />
             <p className="mt-3 break-all text-xs text-[#5E6961]">{scanUrl}</p>
+            {data.metrics.season ? (
+              <div className="mt-3 rounded-2xl border border-[#D5DBD1] bg-[#FFFEFA] p-4">
+                <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">Presentoir sommet</p>
+                <p className="mt-2 text-sm text-[#173A2E]">{data.metrics.season.summitTitle}</p>
+                <p className="mt-1 text-xs text-[#5E6961]">Affichage recommande au comptoir avec QR actif.</p>
+              </div>
+            ) : null}
             <div className="mt-4 flex gap-3">
               <Button
                 onClick={() => {
@@ -272,6 +350,7 @@ export function MerchantDashboard({ merchantId }: { merchantId: string }) {
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-[#5E6961]">{card.id}</p>
+                  <p className="mt-1 text-xs text-[#173A2E]">Code carte: {formatCardCode(card.id)}</p>
                   <p className="mt-1 text-xs text-[#5E6961]">
                     {card.midpoint.reached ? "Cap de reconnaissance atteint" : `Cap a ${card.midpoint.threshold} passages`}
                   </p>
@@ -332,6 +411,12 @@ function StatPill({ label, value }: { label: string; value: string | number }) {
   )
 }
 
+function formatCardCode(cardId: string) {
+  const normalized = cardId.replace(/-/g, "").toUpperCase()
+  const head = normalized.slice(0, 2) || "CD"
+  const tail = normalized.slice(-4) || "0000"
+  return `${head}-${tail}`
+}
 function formatDate(value: string | null | undefined): string {
   if (!value) {
     return "-"
@@ -348,3 +433,6 @@ function formatDate(value: string | null | undefined): string {
     year: "numeric",
   })
 }
+
+
+

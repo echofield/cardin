@@ -1,5 +1,12 @@
 ﻿import { MerchantDashboard } from "@/components/merchant/MerchantDashboard"
 
-export default function MerchantPage({ params }: { params: { merchantId: string } }) {
-  return <MerchantDashboard merchantId={params.merchantId} />
+export default function MerchantPage({
+  params,
+  searchParams,
+}: {
+  params: { merchantId: string }
+  searchParams?: { demo?: string }
+}) {
+  const demo = searchParams?.demo === "1"
+  return <MerchantDashboard demo={demo} merchantId={params.merchantId} />
 }

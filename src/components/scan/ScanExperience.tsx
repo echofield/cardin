@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import { FormEvent, useEffect, useMemo, useState } from "react"
@@ -70,7 +70,7 @@ type CardCreateSuccess = {
   googleWalletUrl: string
 }
 
-export function ScanExperience({ merchantId }: { merchantId: string }) {
+export function ScanExperience({ merchantId, demo = false }: { merchantId: string; demo?: boolean }) {
   const [loadingMerchant, setLoadingMerchant] = useState(true)
   const [merchantError, setMerchantError] = useState<string | null>(null)
   const [merchant, setMerchant] = useState<MerchantResponse["merchant"] | null>(null)
@@ -203,6 +203,7 @@ export function ScanExperience({ merchantId }: { merchantId: string }) {
         <p className="text-xs uppercase tracking-[0.14em] text-[#5D675F]">{merchant.businessType}</p>
         <h1 className="mt-2 font-serif text-5xl">{merchant.businessName}</h1>
         <p className="mt-2 text-sm text-[#556159]">Ajoutez votre carte de fidelite en 10 secondes.</p>
+        {demo ? <p className="mt-2 text-xs uppercase tracking-[0.12em] text-[#173A2E]">Mode demo actif · creation rapide pour presentation en live</p> : null}
 
         {!cardData ? (
           <Card className="mt-6 p-6">
@@ -240,7 +241,7 @@ export function ScanExperience({ merchantId }: { merchantId: string }) {
                 </Button>
               </div>
 
-              <Link className="mt-4 inline-block text-sm underline" href={`/card/${cardData.card.id}`}>
+              <Link className="mt-4 inline-block text-sm underline" href={`/card/${cardData.card.id}${demo ? "?demo=1" : ""}`}>
                 Ouvrir ma carte sur le telephone
               </Link>
             </Card>
@@ -264,4 +265,6 @@ export function ScanExperience({ merchantId }: { merchantId: string }) {
     </main>
   )
 }
+
+
 

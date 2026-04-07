@@ -1,5 +1,8 @@
 ﻿import { NextResponse } from "next/server"
 
+import { canInvite, calculateBranchCapacity } from "@/lib/domino-engine"
+import { cardinSeasonLaw } from "@/lib/season-law"
+import { getActiveSeason, getCardSeasonProgress, getStepDefinition } from "@/lib/season-progression"
 import { buildMidpointView, buildSharedUnlockView, getMidpointMode, getRewardLabel, getTargetVisits } from "@/lib/program-layer"
 import { createSupabaseServiceClient } from "@/lib/supabase/service"
 
@@ -53,6 +56,45 @@ export async function GET(_: Request, { params }: { params: { cardId: string } }
         })
       : null
 
+    const activeSeason = merchant ? await getActiveSeason(supabase, merchant.id) : null
+    const seasonProgress = activeSeason ? await getCardSeasonProgress(supabase, card.id, activeSeason.id) : null
+
+    const seasonInfo = activeSeason
+      ? {
+          id: activeSeason.id,
+          number: activeSeason.season_number,
+          summitTitle: activeSeason.summit_title,
+          daysRemaining: Math.max(0, Math.ceil((new Date(activeSeason.ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))),
+          endsAt: activeSeason.ends_at,
+        }
+      : null
+
+    let invite: {
+      enabled: boolean
+      reason: string | null
+      remainingSlots: number
+      branchCapacity: number
+    } | null = null
+
+    if (activeSeason && seasonProgress) {
+      if (seasonProgress.current_step >= cardinSeasonLaw.dominoStartStep) {
+        const result = await canInvite(supabase, card.id, activeSeason.id)
+        invite = {
+          enabled: result.canInvite,
+          reason: result.reason ?? null,
+          remainingSlots: result.remainingSlots ?? 0,
+          branchCapacity: result.branchCapacity ?? calculateBranchCapacity(seasonProgress),
+        }
+      } else {
+        invite = {
+          enabled: false,
+          reason: "domino_not_unlocked",
+          remainingSlots: 0,
+          branchCapacity: 0,
+        }
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       card: {
@@ -63,6 +105,18 @@ export async function GET(_: Request, { params }: { params: { cardId: string } }
         rewardLabel,
         midpoint,
         status: card.stamps >= targetVisits ? "reward_ready" : "active",
+        seasonProgress: seasonProgress
+          ? {
+              currentStep: seasonProgress.current_step,
+              stepLabel: getStepDefinition(seasonProgress.current_step).label,
+              dominoUnlocked: Boolean(seasonProgress.domino_unlocked_at),
+              diamondUnlocked: Boolean(seasonProgress.diamond_unlocked_at),
+              summitReached: Boolean(seasonProgress.summit_reached_at),
+              branchesUsed: seasonProgress.branches_used,
+              branchCapacity: calculateBranchCapacity(seasonProgress),
+              directInvitationsActivated: seasonProgress.direct_invitations_activated,
+            }
+          : null,
       },
       merchant: merchant
         ? {
@@ -72,6 +126,8 @@ export async function GET(_: Request, { params }: { params: { cardId: string } }
             sharedUnlock,
           }
         : null,
+      season: seasonInfo,
+      invite,
     })
   } catch (error) {
     return NextResponse.json({ ok: false, error: (error as Error).message }, { status: 500 })
