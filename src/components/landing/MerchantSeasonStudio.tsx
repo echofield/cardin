@@ -421,7 +421,15 @@ const worlds: WorldDefinition[] = [
 ]
 
 function formatEuro(value: number) {
-  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value)
+  try {
+    return new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "EUR",
+      maximumFractionDigits: 0,
+    }).format(value)
+  } catch {
+    return `${Math.round(value)} EUR`
+  }
 }
 
 function buildEngineHref(worldId: WorldId, season: SeasonLength, summitId: string) {
@@ -947,6 +955,7 @@ function LawCard({ title, body }: { title: string; body: string }) {
     </Card>
   )
 }
+
 
 
 

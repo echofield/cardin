@@ -301,7 +301,14 @@ export function MerchantDashboard({ merchantId, demo = false }: { merchantId: st
             <div className="mt-4 flex gap-3">
               <Button
                 onClick={() => {
-                  navigator.clipboard.writeText(scanUrl)
+                  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+                    void navigator.clipboard.writeText(scanUrl)
+                    return
+                  }
+
+                  if (typeof window !== "undefined") {
+                    window.prompt("Copiez ce lien:", scanUrl)
+                  }
                 }}
                 variant="secondary"
               >
@@ -427,12 +434,17 @@ function formatDate(value: string | null | undefined): string {
     return "-"
   }
 
-  return date.toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  })
+  try {
+    return date.toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    })
+  } catch {
+    return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`
+  }
 }
+
 
 
 
