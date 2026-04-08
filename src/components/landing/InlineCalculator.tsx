@@ -1,10 +1,11 @@
-﻿"use client"
+"use client"
 
 import Link from "next/link"
 import { useMemo, useState } from "react"
 
 import { WalletPassPreview } from "@/components/engine/WalletPassPreview"
 import { trackEvent } from "@/lib/analytics"
+import { LANDING_PRICING } from "@/lib/landing-content"
 
 type MerchantWorldId = "cafe" | "restaurant" | "boulangerie" | "coiffeur" | "institut-beaute" | "boutique"
 type ObjectiveId = "return" | "domino" | "rare"
@@ -522,7 +523,7 @@ export function InlineCalculator() {
 
           <div className="rounded-2xl border border-[#DED9CF] bg-[#FFFEFA] p-5">
             <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Activation</p>
-            <p className="mt-2 font-serif text-3xl text-[#173A2E]">180EUR / mois</p>
+            <p className="mt-2 font-serif text-3xl text-[#173A2E]">{LANDING_PRICING.compactLabel}</p>
             <p className="mt-2 text-sm text-[#556159]">Le moteur Cardin, le QR, la carte wallet et le suivi marchand pour cette version.</p>
             <div className="mt-5">
               <Link
@@ -559,4 +560,6 @@ export function InlineCalculator() {
     </div>
   )
 }
+
+
 

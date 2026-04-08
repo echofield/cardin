@@ -1,6 +1,6 @@
-﻿import type { SupabaseClient } from "@supabase/supabase-js"
+import type { SupabaseClient } from "@supabase/supabase-js"
+import { buildDefaultSeasonScoringConfig, mapScenarioIdToStrategyMode, normalizeActivityType } from "./cardin-scoring"
 import { cardinSeasonLaw } from "./season-law"
-
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -45,9 +45,11 @@ export type Season = {
   winner_card_id: string | null
   winner_selected_at: string | null
   winner_selection_metadata: any
+  scoring_weights: Record<string, unknown> | null
+  status_thresholds: Record<string, unknown> | null
+  journey_config: Record<string, unknown> | null
   created_at: string
 }
-
 // ============================================================================
 // STEP DEFINITIONS
 // ============================================================================
@@ -363,16 +365,34 @@ export async function startNewSeason(
   const now = new Date()
   const seasonNumber = previousSeason ? previousSeason.season_number + 1 : 1
 
-  // Calculate end date (default to 3 months)
   const seasonLength = previousSeason?.season_length ?? 3
   const endsAt = new Date(now)
   endsAt.setMonth(endsAt.getMonth() + seasonLength)
 
-  // Use previous summit or default
-  const summitId = previousSeason?.summit_id ?? "default-summit"
-  const summitTitle = previousSeason?.summit_title ?? "Premiere saison"
+  let summitId = previousSeason?.summit_id ?? "default-summit"
+  let summitTitle = previousSeason?.summit_title ?? "Premiere saison"
+  let scoringWeights = previousSeason?.scoring_weights ?? null
+  let statusThresholds = previousSeason?.status_thresholds ?? null
+  let journeyConfig = previousSeason?.journey_config ?? null
 
-  // Create new season
+  if (!previousSeason) {
+    const { data: launchIntent } = await supabase
+      .from("merchant_launch_intents")
+      .select("activity_template_id, scenario_id, summit_id, summit_title")
+      .eq("merchant_id", merchantId)
+      .maybeSingle()
+
+    const activityType = normalizeActivityType(launchIntent?.activity_template_id)
+    const strategyMode = mapScenarioIdToStrategyMode(launchIntent?.scenario_id)
+    const defaults = buildDefaultSeasonScoringConfig(activityType, strategyMode)
+
+    summitId = launchIntent?.summit_id ?? summitId
+    summitTitle = launchIntent?.summit_title ?? summitTitle
+    scoringWeights = defaults.scoringWeights
+    statusThresholds = defaults.statusThresholds
+    journeyConfig = defaults.journeyConfig
+  }
+
   const { data, error } = await supabase
     .from("seasons")
     .insert({
@@ -383,6 +403,16 @@ export async function startNewSeason(
       summit_title: summitTitle,
       started_at: now.toISOString(),
       ends_at: endsAt.toISOString(),
+      scoring_weights: scoringWeights ?? {},
+      status_thresholds: statusThresholds ?? { warming: 20, active: 40, rising: 60, diamond: 80 },
+      journey_config: journeyConfig ?? {
+        stepCount: cardinSeasonLaw.stepCount,
+        dominoStartStep: cardinSeasonLaw.dominoStartStep,
+        diamondStep: cardinSeasonLaw.diamondStep,
+        summitStep: cardinSeasonLaw.summitStep,
+        activityType: "boulangerie",
+        strategyMode: "frequency",
+      },
     })
     .select()
     .single()
@@ -408,6 +438,7 @@ export async function startNewSeason(
     }))
 
     await supabase.from("card_season_progress").insert(progressRecords)
+    await supabase.from("cards").update({ current_season_id: newSeason.id }).eq("merchant_id", merchantId)
   }
 
   // Update merchant's current season
@@ -428,3 +459,27 @@ export function validateSeasonActive(season: Season): boolean {
   return !season.closed_at
 }
 
+
+/**
+ * Attach a card to the current active season when one exists.
+ */
+export async function initializeCardForActiveSeason(
+  supabase: SupabaseClient,
+  cardId: string,
+  merchantId: string
+): Promise<Season | null> {
+  const activeSeason = await getActiveSeason(supabase, merchantId)
+
+  if (!activeSeason) {
+    return null
+  }
+
+  await supabase
+    .from("cards")
+    .update({ current_season_id: activeSeason.id })
+    .eq("id", cardId)
+
+  await getOrCreateCardSeasonProgress(supabase, cardId, activeSeason.id)
+
+  return activeSeason
+}

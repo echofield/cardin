@@ -1,9 +1,10 @@
-﻿"use client"
+"use client"
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
 import { WalletPassPreview } from "@/components/engine/WalletPassPreview"
+import { LANDING_PRICING } from "@/lib/landing-content"
 import { Button, Card } from "@/ui"
 
 type WorldId = "cafe" | "restaurant" | "beaute" | "boutique"
@@ -92,7 +93,7 @@ const seasonModes: Array<{
     selectiveCards: 50,
     massCards: 200,
     note: "Format simple, premiere preuve terrain.",
-    momentum: "3 mois: activation → retour → premiers Diamond.",
+    momentum: "3 mois: activation ? retour ? premiers Diamond.",
   },
   {
     months: 6,
@@ -120,7 +121,7 @@ const worlds: WorldDefinition[] = [
     adDuration: "3 jours",
     installPrice: 300,
     basketLine: "Exemple sommet: 1 boisson signature par mois pendant 1 an.",
-    proofLine: "Passage → retour structure → propagation mesuree.",
+    proofLine: "Passage ? retour structure ? propagation mesuree.",
     defaultSummitId: "signature-monthly",
     walletRewardLabel: "Progression visible",
     walletNotification: "Votre statut evolue avec vos visites.",
@@ -129,7 +130,7 @@ const worlds: WorldDefinition[] = [
         title: "Entree selective",
         lead: "Patron choisit 50 premieres cartes.",
         steps: ["50 cartes max", "activation visite 1", "statut evolue visite 2"],
-        outcome: "50 cartes → 120-150 parcours actifs via propagation.",
+        outcome: "50 cartes ? 120-150 parcours actifs via propagation.",
       },
       mass: {
         title: "Entree masse",
@@ -198,7 +199,7 @@ const worlds: WorldDefinition[] = [
     adDuration: "3 jours",
     installPrice: 500,
     basketLine: "Exemple sommet: 1 repas signature par mois pendant 1 an.",
-    proofLine: "Table → retour structure → propagation par invitation.",
+    proofLine: "Table ? retour structure ? propagation par invitation.",
     defaultSummitId: "table-monthly",
     walletRewardLabel: "Progression table",
     walletNotification: "Votre statut evolue avec vos visites.",
@@ -207,7 +208,7 @@ const worlds: WorldDefinition[] = [
         title: "Entree selective",
         lead: "Patron choisit 80 premieres cartes.",
         steps: ["80 cartes max", "activation visite 1", "statut evolue visite 2"],
-        outcome: "80 cartes → 110-135 parcours actifs via invitation.",
+        outcome: "80 cartes ? 110-135 parcours actifs via invitation.",
       },
       mass: {
         title: "Entree masse",
@@ -276,7 +277,7 @@ const worlds: WorldDefinition[] = [
     adDuration: "3 jours",
     installPrice: 300,
     basketLine: "Exemple sommet: 1 soin signature par mois pendant 1 an.",
-    proofLine: "Cycle → statut client → recommandation qualitative.",
+    proofLine: "Cycle ? statut client ? recommandation qualitative.",
     defaultSummitId: "cut-monthly",
     walletRewardLabel: "Progression cycle",
     walletNotification: "Votre statut evolue avec votre cycle.",
@@ -285,7 +286,7 @@ const worlds: WorldDefinition[] = [
         title: "Entree selective",
         lead: "Salon choisit 50 clientes cibles.",
         steps: ["50 cartes max", "activation visite 1", "statut evolue visite 2"],
-        outcome: "50 cartes → 90-110 parcours via recommandation.",
+        outcome: "50 cartes ? 90-110 parcours via recommandation.",
       },
       mass: {
         title: "Entree masse",
@@ -354,7 +355,7 @@ const worlds: WorldDefinition[] = [
     adDuration: "3 jours",
     installPrice: 500,
     basketLine: "Exemple sommet: 100 EUR collection par mois pendant 1 an.",
-    proofLine: "Desir → trajectoire client → acces exclusif.",
+    proofLine: "Desir ? trajectoire client ? acces exclusif.",
     defaultSummitId: "collection-credit",
     walletRewardLabel: "Progression collection",
     walletNotification: "Votre acces evolue avec votre trajectoire.",
@@ -363,7 +364,7 @@ const worlds: WorldDefinition[] = [
         title: "Entree selective",
         lead: "Boutique choisit 60 clientes cibles.",
         steps: ["60 cartes max", "activation visite 1", "statut evolue visite 2"],
-        outcome: "60 cartes → 80-95 parcours via desir et style.",
+        outcome: "60 cartes ? 80-95 parcours via desir et style.",
       },
       mass: {
         title: "Entree masse",
@@ -564,7 +565,7 @@ export function MerchantSeasonStudio() {
               </Button>
             ) : (
               <a className="inline-flex h-11 items-center justify-center rounded-full border border-[#1B4332] bg-[#1B4332] px-6 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href={STRIPE_PAYMENT_LINK} rel="noreferrer" target="_blank">
-                Payer ma saison (490 EUR)
+                {LANDING_PRICING.activationLabel}
               </a>
             )}
           </div>
@@ -625,7 +626,7 @@ function SystemScreen({ selectedWorld, selectedSummit, activePaths, dominoMultip
         <div>
           <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Mecanique systeme</p>
           <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Progression pour {selectedWorld.label.toLowerCase()}.</h3>
-          <p className="mt-4 max-w-3xl text-sm leading-7 text-[#59635C] sm:text-base">Entree → Activation → Retour → Propagation → Sommet</p>
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-[#59635C] sm:text-base">Entree ? Activation ? Retour ? Propagation ? Sommet</p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
@@ -653,7 +654,7 @@ function SystemScreen({ selectedWorld, selectedSummit, activePaths, dominoMultip
             <p className="text-[10px] uppercase tracking-[0.16em] text-[#69736C]">Progression statut</p>
             <h4 className="mt-2 font-serif text-3xl text-[#173A2E]">Statut = portee sociale.</h4>
           </div>
-          <p className="max-w-xl text-sm leading-7 text-[#556159]">Carte monte → retour augmente → propagation active → sommet attire.</p>
+          <p className="max-w-xl text-sm leading-7 text-[#556159]">Carte monte ? retour augmente ? propagation active ? sommet attire.</p>
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
@@ -780,7 +781,7 @@ function SeasonScreen({ selectedSeason, onSelectSeason, selectedSeasonMode, sele
 
         <Card className="p-6">
           <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Mecanique</p>
-          <p className="mt-3 text-sm leading-7 text-[#556159]">Cartes limitees → progression mesuree → preuve terrain → saison 2 justifiee.</p>
+          <p className="mt-3 text-sm leading-7 text-[#556159]">Cartes limitees ? progression mesuree ? preuve terrain ? saison 2 justifiee.</p>
         </Card>
       </div>
     </div>
@@ -826,7 +827,7 @@ function CheckmateScreen({ selectedWorld, selectedSummit, selectedSeason, season
         <Card className="p-6">
           <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Revenu</p>
           <p className="mt-3 font-serif text-4xl text-[#173A2E]">{formatEuro(monthlyRecovered)}</p>
-          <p className="mt-2 text-sm leading-7 text-[#556159]">par mois → {formatEuro(seasonValue)} sur {selectedSeason} mois.</p>
+          <p className="mt-2 text-sm leading-7 text-[#556159]">par mois ? {formatEuro(seasonValue)} sur {selectedSeason} mois.</p>
         </Card>
         <Card className="p-6">
           <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Propagation</p>
@@ -858,8 +859,8 @@ function ActivateScreen({ selectedWorld, selectedSummit, selectedSeason, monthly
               <p>{selectedWorld.label}</p>
               <p>{selectedSummit.title}</p>
               <p>{selectedSeason} mois</p>
-              <p>{formatEuro(selectedWorld.installPrice)} d'installation</p>
-              <p>{formatEuro(49)} / mois pendant la saison</p>
+              <p>{formatEuro(LANDING_PRICING.activationFee)} d'installation</p>
+              <p>{LANDING_PRICING.recurringLabel}</p>
             </div>
           </Card>
 
@@ -890,14 +891,14 @@ function ActivateScreen({ selectedWorld, selectedSummit, selectedSeason, monthly
 
         <Card className="p-6">
           <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Activation</p>
-          <p className="mt-3 text-sm leading-7 text-[#556159]">Paiement → activation digitale 48h → impression + envoi cartes physiques.</p>
+          <p className="mt-3 text-sm leading-7 text-[#556159]">Paiement ? activation digitale 48h ? impression + envoi cartes physiques.</p>
           <div className="mt-4 rounded-2xl border border-[#D8DED4] bg-[#FBFCF8] p-4">
             <p className="text-[10px] uppercase tracking-[0.14em] text-[#6D776F]">Delais</p>
             <p className="mt-2 text-sm leading-7 text-[#203B31]">Dashboard + wallet: 48h. Cartes physiques: 7-10 jours.</p>
           </div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <a className="inline-flex h-12 items-center justify-center rounded-full border border-[#1B4332] bg-[#1B4332] px-8 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href={STRIPE_PAYMENT_LINK} rel="noreferrer" target="_blank">
-              Payer ma saison (490 EUR)
+              {LANDING_PRICING.activationLabel}
             </a>
             <Link className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-8 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]" href={engineHref}>
               Configurer ensuite dans Cardin
@@ -955,6 +956,7 @@ function LawCard({ title, body }: { title: string; body: string }) {
     </Card>
   )
 }
+
 
 
 

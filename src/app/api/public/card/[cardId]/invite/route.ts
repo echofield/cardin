@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 
 import { createInvitation } from "@/lib/domino-engine"
 import { getActiveSeason } from "@/lib/season-progression"

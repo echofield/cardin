@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react"
 import { ProgressionStrip } from "@/components/landing/ProgressionStrip"
 import { AnnualProjectionPanel } from "@/components/engine/AnnualProjectionPanel"
 import { trackEvent } from "@/lib/analytics"
+import { LANDING_PRICING } from "@/lib/landing-content"
 import { projectAnnualCardinPlan } from "@/lib/annual-projection-engine"
 import { buildCalendarPlan } from "@/lib/calendar-engine"
 import { type BehaviorPlan } from "@/lib/behavior-engine"
@@ -24,7 +25,7 @@ type LandingCalculatorModuleProps = {
   selectedIntent: MerchantIntent | null
 }
 
-const MONTHLY_PLAN_PRICE = 180
+const MONTHLY_PLAN_PRICE = LANDING_PRICING.recurringFee
 
 export function LandingCalculatorModule({
   ctaHref,
@@ -272,7 +273,7 @@ export function LandingCalculatorModule({
 
             <div className="rounded-2xl border border-[#CCD3C9] bg-[#FEFEFA] p-5">
               <p className="text-xs uppercase tracking-[0.12em] text-[#667068]">Mise en place</p>
-              <p className="mt-2 text-sm text-[#2A3F35]">180EUR / mois</p>
+              <p className="mt-2 text-sm text-[#2A3F35]">{LANDING_PRICING.compactLabel}</p>
               <p className="mt-1 text-sm text-[#2A3F35]">moteur Cardin actif</p>
               <p className="mt-3 text-sm text-[#556159]">Chaque mois, Cardin prÃ©pare une nouvelle proposition prÃªte Ã  lancer, 100% pour votre commerce.</p>
             </div>
@@ -308,6 +309,7 @@ export function LandingCalculatorModule({
     </Card>
   )
 }
+
 
 
 

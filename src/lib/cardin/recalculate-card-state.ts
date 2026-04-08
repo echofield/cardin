@@ -26,7 +26,7 @@ import { getWeightProfile } from "./merchant-strategy-profiles"
 import { getStatusLabel } from "./status-labels"
 import type { ActivityType } from "./status-labels"
 
-const ENGINE_VERSION = "1.0.0"
+export const ENGINE_VERSION = "1.0.0"
 
 /**
  * Score component calculators
@@ -108,10 +108,24 @@ function calculateScarcityScore(facts: CardRawFacts): number {
   return (targetDays - daysSinceCreation) / targetDays
 }
 
+export function calculateScoreComponents(
+  facts: CardRawFacts,
+  merchantAvgSpend: number = 0
+): Record<string, number> {
+  return {
+    frequency: calculateFrequencyScore(facts),
+    social: calculateSocialScore(facts),
+    value: calculateValueScore(facts, merchantAvgSpend),
+    progression: calculateProgressionScore(facts),
+    time: calculateTimeScore(facts),
+    scarcity: calculateScarcityScore(facts),
+  }
+}
+
 /**
  * Calculate total score from components and weights
  */
-function calculateTotalScore(
+export function calculateTotalScore(
   components: Record<string, number>,
   weights: InternalWeightProfile
 ): number {
@@ -146,7 +160,7 @@ function mapScoreToTier(score: number): { scoreBand: ScoreBand; internalTier: In
 /**
  * Determine visual state from score band
  */
-function getVisualState(scoreBand: ScoreBand): VisualState {
+export function getVisualState(scoreBand: ScoreBand): VisualState {
   switch (scoreBand) {
     case "low":
     case "warming":
@@ -162,7 +176,7 @@ function getVisualState(scoreBand: ScoreBand): VisualState {
 /**
  * Calculate tension progress and hint
  */
-function calculateTension(
+export function calculateTension(
   score: number,
   internalTier: InternalTier
 ): { progressHint: TensionHint; lineProgress: number } {
@@ -198,7 +212,7 @@ function calculateTension(
 /**
  * Determine domino state based on recent behavior
  */
-function calculateDominoState(
+export function calculateDominoState(
   facts: CardRawFacts,
   strategyMode: MerchantStrategyMode
 ): DominoState {
@@ -252,14 +266,7 @@ export function recalculateCardState(
   const weights = getWeightProfile(activityType, strategyMode)
 
   // Calculate score components (each 0-1)
-  const components = {
-    frequency: calculateFrequencyScore(facts),
-    social: calculateSocialScore(facts),
-    value: calculateValueScore(facts, merchantAvgSpend),
-    progression: calculateProgressionScore(facts),
-    time: calculateTimeScore(facts),
-    scarcity: calculateScarcityScore(facts),
-  }
+  const components = calculateScoreComponents(facts, merchantAvgSpend)
 
   // Calculate total score (0-100)
   const totalScore = calculateTotalScore(components, weights)

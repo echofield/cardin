@@ -1,7 +1,11 @@
-﻿import { NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 
+import { buildCardGatewayPath } from "@/lib/card-code"
+import { recomputeCardScoreSnapshot } from "@/lib/cardin-scoring"
 import { buildMidpointView, getMidpointMode, getMidpointThreshold, getRewardLabel, getTargetVisits, maybeActivateSharedUnlock } from "@/lib/program-layer"
+import { initializeCardForActiveSeason } from "@/lib/season-progression"
 import { createClientSupabaseServer } from "@/lib/supabase/server"
+import { insertTransactionEvent } from "@/lib/transaction-events"
 
 export const dynamic = "force-dynamic"
 
@@ -16,7 +20,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 })
   }
 
-  const payload = (await request.json()) as { customerName?: string; merchantId?: string }
+  const payload = (await request.json()) as { customerName?: string; merchantId?: string; idempotencyKey?: string }
   const customerName = (payload.customerName ?? "").trim()
   const merchantId = payload.merchantId ?? user.id
 
@@ -53,20 +57,42 @@ export async function POST(request: Request) {
       target_visits: targetVisits,
       reward_label: rewardLabel,
     })
-    .select("id, merchant_id, customer_name, stamps, target_visits, reward_label, midpoint_reached_at, created_at")
+    .select("id, merchant_id, customer_name, stamps, target_visits, reward_label, midpoint_reached_at, created_at, card_code")
     .single()
 
   if (cardError || !card) {
     return NextResponse.json({ ok: false, error: cardError?.message ?? "card_insert_failed" }, { status: 500 })
   }
 
-  const { error: txError } = await supabase.from("transactions").insert({
-    card_id: card.id,
-    type: "issued",
-  })
+  const activeSeason = await initializeCardForActiveSeason(supabase, card.id, merchantId)
 
-  if (txError) {
-    return NextResponse.json({ ok: false, error: txError.message }, { status: 500 })
+  try {
+    await insertTransactionEvent(supabase, {
+      cardId: card.id,
+      legacyType: "issued",
+      eventType: "issued",
+      seasonId: activeSeason?.id ?? null,
+      stepReached: activeSeason ? 1 : null,
+      source: "merchant_panel",
+      metadata: {
+        merchantCreated: true,
+      },
+      idempotencyKey: payload.idempotencyKey,
+      createdBy: user.id,
+    })
+  } catch (error) {
+    return NextResponse.json(
+      { ok: false, error: error instanceof Error ? error.message : "transaction_event_failed" },
+      { status: 500 }
+    )
+  }
+
+  if (activeSeason) {
+    try {
+      await recomputeCardScoreSnapshot(supabase, card.id, { seasonId: activeSeason.id })
+    } catch (error) {
+      console.error("Failed to recompute score snapshot after merchant card creation:", error)
+    }
   }
 
   const sharedUnlock = await maybeActivateSharedUnlock(supabase, {
@@ -90,12 +116,14 @@ export async function POST(request: Request) {
   })
 
   const origin = new URL(request.url).origin
+  const cardGatewayPath = buildCardGatewayPath(card.card_code)
 
   return NextResponse.json({
     ok: true,
     card: {
       id: card.id,
       merchantId: card.merchant_id,
+      code: card.card_code,
       customerName: card.customer_name,
       stamps: card.stamps,
       targetVisits,
@@ -116,7 +144,8 @@ export async function POST(request: Request) {
       },
       sharedUnlock,
     },
-    cardUrl: `${origin}/card/${card.id}`,
+    cardUrl: `${origin}${cardGatewayPath}`,
+    cardLegacyUrl: `${origin}/card/${card.id}`,
     appleWalletUrl: `${origin}/api/wallet/apple/${card.id}`,
     googleWalletUrl: `${origin}/api/wallet/google/${card.id}`,
   })

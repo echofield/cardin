@@ -1,5 +1,9 @@
-﻿import { MerchantSeasonStudio } from "@/components/landing/MerchantSeasonStudio"
+import Link from "next/link"
+
+import { LandingOnboardingJourney } from "@/components/landing/LandingOnboardingJourney"
+import { MerchantSeasonStudio } from "@/components/landing/MerchantSeasonStudio"
 import { PublicFooter } from "@/components/shared/PublicFooter"
+import { LANDING_SECTOR_CARDS } from "@/lib/landing-content"
 
 export default function LandingPage() {
   return (
@@ -15,9 +19,19 @@ export default function LandingPage() {
             <p className="mt-6 max-w-2xl text-base leading-7 text-[#566159] sm:text-lg">
               Une carte + une saison = un systeme qui remplace une partie de votre marketing par du retour client structure.
             </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link className="inline-flex h-12 items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-6 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href="/demo">
+                Voir la demo complete
+              </Link>
+              <a className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-6 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]" href="#onboarding">
+                Voir l'onboarding
+              </a>
+            </div>
           </div>
         </div>
       </section>
+
+      <LandingOnboardingJourney />
 
       <section className="pt-8 lg:pt-10" id="methode">
         <MerchantSeasonStudio />
@@ -28,18 +42,12 @@ export default function LandingPage() {
           <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Par type de commerce</p>
           <h2 className="mt-3 font-serif text-3xl text-[#173328] sm:text-4xl">Logique differente par lieu.</h2>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
-            <div className="rounded-[1.4rem] border border-[#E2DDD1] bg-[#FBF9F3] p-5">
-              <p className="font-serif text-2xl text-[#173A2E]">Cafe</p>
-              <p className="mt-3 text-sm leading-7 text-[#556159]">+4k a 6k par saison. Frequence elevee, panier moyen 5-8 EUR, retour rapide.</p>
-            </div>
-            <div className="rounded-[1.4rem] border border-[#E2DDD1] bg-[#FBF9F3] p-5">
-              <p className="font-serif text-2xl text-[#173A2E]">Restaurant</p>
-              <p className="mt-3 text-sm leading-7 text-[#556159]">+10k a 15k par saison. Panier moyen 40-60 EUR, table et invitation.</p>
-            </div>
-            <div className="rounded-[1.4rem] border border-[#E2DDD1] bg-[#FBF9F3] p-5">
-              <p className="font-serif text-2xl text-[#173A2E]">Beaute / Boutique</p>
-              <p className="mt-3 text-sm leading-7 text-[#556159]">+6k a 10k par saison. Trajectoire, valeur client elevee, selection.</p>
-            </div>
+            {LANDING_SECTOR_CARDS.map((card) => (
+              <div className="rounded-[1.4rem] border border-[#E2DDD1] bg-[#FBF9F3] p-5" key={card.label}>
+                <p className="font-serif text-2xl text-[#173A2E]">{card.label}</p>
+                <p className="mt-3 text-sm leading-7 text-[#556159]">{card.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -48,4 +56,3 @@ export default function LandingPage() {
     </main>
   )
 }
-

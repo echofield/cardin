@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import Link from "next/link"
 import { FormEvent, useEffect, useMemo, useState } from "react"
@@ -46,6 +46,7 @@ type CardCreateSuccess = {
   ok: true
   card: {
     id: string
+    code: string
     customerName: string
     stamps: number
     targetVisits: number
@@ -66,6 +67,7 @@ type CardCreateSuccess = {
     sharedUnlock: SharedUnlockView
   }
   cardUrl: string
+  cardLegacyUrl: string
   appleWalletUrl: string
   googleWalletUrl: string
 }
@@ -149,6 +151,7 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
       trackEvent("scan_card_created", {
         merchantId,
         cardId: payload.card.id,
+        cardCode: payload.card.code,
       })
     } catch {
       alert("Impossible de creer votre carte pour le moment.")
@@ -227,6 +230,7 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
 
             <Card className="p-5">
               <p className="text-sm text-[#556159]">Bienvenue {cardData.card.customerName}. Votre carte est active.</p>
+              <p className="mt-1 text-sm text-[#173A2E]">Code carte: {cardData.card.code}</p>
               <p className="mt-1 text-sm text-[#173A2E]">
                 Progression: {cardData.card.stamps} / {cardData.card.targetVisits}
               </p>
@@ -241,7 +245,7 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
                 </Button>
               </div>
 
-              <Link className="mt-4 inline-block text-sm underline" href={`/card/${cardData.card.id}${demo ? "?demo=1" : ""}`}>
+              <Link className="mt-4 inline-block text-sm underline" href={`${cardData.cardUrl}${demo ? "?demo=1" : ""}`}>
                 Ouvrir ma carte sur le telephone
               </Link>
             </Card>
@@ -265,6 +269,3 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
     </main>
   )
 }
-
-
-

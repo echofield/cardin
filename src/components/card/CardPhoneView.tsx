@@ -1,7 +1,7 @@
-﻿"use client"
+"use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { Card } from "@/ui"
 
@@ -25,22 +25,31 @@ type SharedUnlockView = {
   activeUntil: string | null
 }
 
-function formatCardCode(cardId: string) {
+type CardPrimaryMessage = {
+  kind: "collective" | "comeback" | "domino" | "progress" | "summit" | "weak_day"
+  title: string
+  body: string
+}
+
+function formatLegacyCardCode(cardId: string) {
   const normalized = cardId.replace(/-/g, "").toUpperCase()
   const head = normalized.slice(0, 2) || "CD"
   const tail = normalized.slice(-4) || "0000"
   return `${head}-${tail}`
 }
+
 type CardApiResponse = {
   ok: boolean
   card?: {
     id: string
+    code: string
     customerName: string
     stamps: number
     targetVisits: number
     rewardLabel: string
     midpoint: MidpointView
     status: "active" | "reward_ready" | "redeemed"
+    statusName?: string | null
     seasonProgress?: {
       currentStep: number
       stepLabel: string
@@ -71,30 +80,44 @@ type CardApiResponse = {
     remainingSlots: number
     branchCapacity: number
   } | null
+  message?: CardPrimaryMessage
 }
 
-export function CardPhoneView({ cardId, demo = false }: { cardId: string; demo?: boolean }) {
+export function CardPhoneView({
+  cardRef,
+  refType = "id",
+  demo = false,
+}: {
+  cardRef: string
+  refType?: "id" | "code"
+  demo?: boolean
+}) {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<CardApiResponse | null>(null)
   const [inviteName, setInviteName] = useState("")
   const [inviteState, setInviteState] = useState<"idle" | "loading" | "error" | "success">("idle")
   const [inviteMessage, setInviteMessage] = useState("")
 
-  const loadCard = async () => {
+  const endpoint = useMemo(
+    () => (refType === "code" ? `/api/public/card/code/${encodeURIComponent(cardRef)}` : `/api/public/card/${cardRef}`),
+    [cardRef, refType]
+  )
+
+  const loadCard = useCallback(async () => {
     setLoading(true)
 
     try {
-      const response = await fetch(`/api/public/card/${cardId}`)
+      const response = await fetch(endpoint)
       const payload = (await response.json()) as CardApiResponse
       setData(payload)
     } finally {
       setLoading(false)
     }
-  }
+  }, [endpoint])
 
   useEffect(() => {
     void loadCard()
-  }, [cardId])
+  }, [loadCard])
 
   const statusLabel = useMemo(() => {
     if (!data?.card) return ""
@@ -104,6 +127,14 @@ export function CardPhoneView({ cardId, demo = false }: { cardId: string; demo?:
   }, [data])
 
   const onInvite = async () => {
+    const cardId = data?.card?.id
+
+    if (!cardId) {
+      setInviteState("error")
+      setInviteMessage("Carte introuvable")
+      return
+    }
+
     if (!inviteName.trim()) {
       setInviteState("error")
       setInviteMessage("Nom requis pour inviter")
@@ -142,6 +173,7 @@ export function CardPhoneView({ cardId, demo = false }: { cardId: string; demo?:
 
   const progressDots = Math.max(4, Math.min(data.card.targetVisits, 10))
   const sharedUnlock = data.merchant.sharedUnlock
+  const displayCode = data.card.code || formatLegacyCardCode(data.card.id)
 
   return (
     <main className="min-h-screen bg-[#F8F7F2] px-4 py-8 text-[#173A2E] sm:px-6 lg:px-8">
@@ -149,14 +181,23 @@ export function CardPhoneView({ cardId, demo = false }: { cardId: string; demo?:
         <p className="text-xs uppercase tracking-[0.14em] text-[#5D675F]">Votre carte fidelite</p>
         <h1 className="mt-2 font-serif text-5xl">{data.merchant.businessName}</h1>
         <p className="mt-2 text-sm text-[#556159]">
-          {data.card.customerName} · {statusLabel}
+          {data.card.customerName} Ã‚Â· {statusLabel}
         </p>
         <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#173A2E]">
-          Code carte: {formatCardCode(data.card.id)}{demo ? " · mode demo" : ""}
+          Code carte: {displayCode}
+          {demo ? " Ã‚Â· mode demo" : ""}
         </p>
 
         <div className="mt-6 rounded-[2rem] border border-[#CCD4CA] bg-[#FBFAF6] p-4 shadow-[0_30px_70px_-60px_rgba(20,48,38,0.8)]">
           <WalletPassPreview businessLabel={data.merchant.businessName} progressDots={progressDots} rewardLabel={data.card.rewardLabel} />
+
+          {data.message ? (
+            <Card className="mt-4 p-4">
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Signal du moment</p>
+              <p className="mt-1 text-lg text-[#173A2E]">{data.message.title}</p>
+              <p className="mt-2 text-sm text-[#2A3F35]">{data.message.body}</p>
+            </Card>
+          ) : null}
 
           <Card className="mt-4 p-4">
             <p className="text-sm text-[#556159]">Progression actuelle</p>
@@ -164,10 +205,15 @@ export function CardPhoneView({ cardId, demo = false }: { cardId: string; demo?:
               {data.card.stamps} / {data.card.targetVisits}
             </p>
             <p className="mt-2 text-sm text-[#2A3F35]">{data.card.midpoint.copy}</p>
+            {data.card.statusName ? <p className="mt-2 text-xs uppercase tracking-[0.12em] text-[#355246]">Statut {data.card.statusName}</p> : null}
             {data.card.seasonProgress ? (
               <div className="mt-3 text-xs text-[#355246]">
-                <p>Etape {data.card.seasonProgress.currentStep} · {data.card.seasonProgress.stepLabel}</p>
-                <p>Domino {data.card.seasonProgress.branchesUsed}/{data.card.seasonProgress.branchCapacity}</p>
+                <p>
+                  Etape {data.card.seasonProgress.currentStep} Ã‚Â· {data.card.seasonProgress.stepLabel}
+                </p>
+                <p>
+                  Domino {data.card.seasonProgress.branchesUsed}/{data.card.seasonProgress.branchCapacity}
+                </p>
               </div>
             ) : null}
           </Card>
@@ -217,7 +263,7 @@ export function CardPhoneView({ cardId, demo = false }: { cardId: string; demo?:
 
           {data.season ? (
             <p className="mt-4 text-xs text-[#5E6961]">
-              Saison {data.season.number} · sommet {data.season.summitTitle} · {data.season.daysRemaining} jours restants
+              Saison {data.season.number} Ã‚Â· sommet {data.season.summitTitle} Ã‚Â· {data.season.daysRemaining} jours restants
             </p>
           ) : null}
         </div>
@@ -234,7 +280,3 @@ export function CardPhoneView({ cardId, demo = false }: { cardId: string; demo?:
     </main>
   )
 }
-
-
-
-

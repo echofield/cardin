@@ -1,14 +1,17 @@
-﻿import { NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 
-import { buildMidpointView, getMidpointMode, getMidpointThreshold, getRewardLabel, getTargetVisits, maybeActivateSharedUnlock } from "@/lib/program-layer"
-import { createClientSupabaseServer } from "@/lib/supabase/server"
-import { handleStamp, getStepDefinition } from "@/lib/season-progression"
+import { recomputeCardScoreSnapshot } from "@/lib/cardin-scoring"
 import { checkAndActivateReferral, calculateBranchCapacity } from "@/lib/domino-engine"
+import { buildMidpointView, getMidpointMode, getMidpointThreshold, getRewardLabel, getTargetVisits, maybeActivateSharedUnlock } from "@/lib/program-layer"
+import { handleStamp, getStepDefinition } from "@/lib/season-progression"
+import { createClientSupabaseServer } from "@/lib/supabase/server"
+import { insertTransactionEvent } from "@/lib/transaction-events"
 
 export const dynamic = "force-dynamic"
 
 type StampPayload = {
   action?: "stamp" | "redeem"
+  idempotencyKey?: string
 }
 
 export async function POST(request: Request, { params }: { params: { cardId: string } }) {
@@ -107,15 +110,26 @@ export async function POST(request: Request, { params }: { params: { cardId: str
     return NextResponse.json({ ok: false, error: updateError?.message ?? "card_update_failed" }, { status: 500 })
   }
 
-  const { error: txError } = await supabase.from("transactions").insert({
-    card_id: updatedCard.id,
-    type: action,
-    season_id: stepInfo.seasonId,
-    step_reached: stepInfo.currentStep > 0 ? stepInfo.currentStep : null,
-  })
-
-  if (txError) {
-    return NextResponse.json({ ok: false, error: txError.message }, { status: 500 })
+  try {
+    await insertTransactionEvent(supabase, {
+      cardId: updatedCard.id,
+      legacyType: action,
+      eventType: action,
+      seasonId: stepInfo.seasonId,
+      stepReached: stepInfo.currentStep > 0 ? stepInfo.currentStep : null,
+      source: "merchant_panel",
+      metadata: {
+        stepIncreased: stepInfo.stepIncreased,
+        seasonClosed: stepInfo.seasonClosed,
+      },
+      idempotencyKey: payload.idempotencyKey,
+      createdBy: user.id,
+    })
+  } catch (error) {
+    return NextResponse.json(
+      { ok: false, error: error instanceof Error ? error.message : "transaction_event_failed" },
+      { status: 500 }
+    )
   }
 
   const sharedUnlock = action === "stamp"
@@ -132,6 +146,12 @@ export async function POST(request: Request, { params }: { params: { cardId: str
         shared_unlock_last_triggered_period: merchant.shared_unlock_last_triggered_period,
       })
     : null
+
+  try {
+    await recomputeCardScoreSnapshot(supabase, updatedCard.id, { seasonId: stepInfo.seasonId })
+  } catch (error) {
+    console.error("Failed to recompute score snapshot after stamp:", error)
+  }
 
   const midpoint = buildMidpointView({
     stamps: updatedCard.stamps,
