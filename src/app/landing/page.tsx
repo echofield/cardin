@@ -23,6 +23,12 @@ export default function LandingPage() {
               <Link className="inline-flex h-12 items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-6 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href="/parcours">
                 Voir le parcours marchand
               </Link>
+              <Link
+                className="inline-flex h-12 items-center justify-center rounded-full border border-[#B8C4B0] bg-[#EEF3EA] px-6 text-sm font-medium text-[#173A2E] transition hover:border-[#9AAF9E] hover:bg-[#E4EBE1]"
+                href="/parcours?mode=lite"
+              >
+                Parcours Lite
+              </Link>
               <a className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-6 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]" href="/demo">
                 Voir la démo client
               </a>

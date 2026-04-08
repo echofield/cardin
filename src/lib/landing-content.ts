@@ -24,6 +24,11 @@ export const LANDING_PRICING = {
   recurringLabel: "49 € / mois pendant la saison",
   compactLabel: "490 € puis 49 € / mois pendant la saison",
   stickyLabel: "Activer Cardin — 490 € puis 49 € / mois",
+  /** Cardin Lite — activation display only (no payment wiring). */
+  liteActivationFee: 300,
+  liteActivationLabel: "Activer Cardin Lite (300 €)",
+  liteCompactLabel: "300 € puis 49 € / mois pendant la saison",
+  liteStickyLabel: "Activer Cardin Lite — 300 € puis 49 € / mois",
 } as const
 
 export const LANDING_WORLD_ORDER: LandingWorldId[] = ["cafe", "restaurant", "beaute", "boutique"]

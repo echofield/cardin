@@ -2,9 +2,13 @@
 
 import Link from "next/link"
 import { AnimatePresence, motion } from "framer-motion"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useSearchParams } from "next/navigation"
 
-import { getDemoWorldContent } from "@/lib/demo-content"
+import { ParcoursSeasonTradingChart } from "@/components/parcours/ParcoursSeasonTradingChart"
+import { StepLiteScenarios } from "@/components/parcours/StepLiteScenarios"
+import { computeParcoursProjectionFull, getDemoWorldContent } from "@/lib/demo-content"
+import type { ParcoursProjectionResult } from "@/lib/demo-content"
 import {
   LANDING_PRICING,
   LANDING_WORLD_ORDER,
@@ -12,6 +16,11 @@ import {
   type LandingWorldId,
 } from "@/lib/landing-content"
 import { buildParcoursEngineHref, type ParcoursSummitStyleId } from "@/lib/parcours-contract"
+import {
+  isLiteSelectionsComplete,
+  liteProjectionHintLabel,
+  type LiteSelections,
+} from "@/lib/parcours-lite-scenarios"
 
 /**
  * Mapping contract (Figma / Glow → Cardin-native):
@@ -21,22 +30,21 @@ import { buildParcoursEngineHref, type ParcoursSummitStyleId } from "@/lib/parco
  * - final CTA → /engine?template=…&summit=…&season=…  (via buildParcoursEngineHref)
  * - (optional later) same payload shape reusable for POST /api/leads
  *
- * All projection numbers come from getDemoWorldContent (Cardin source of truth).
+ * Projection: `computeParcoursProjectionFull` + optional `/api/parcours/projection` (SQL `projection_presets` when DB available).
  * No duplicate math engine.
  */
 
-export type ParcoursStepId = "entry" | "lecture" | "summit" | "mechanics" | "projection" | "activation"
+export type ParcoursStepId =
+  | "entry"
+  | "lecture"
+  | "liteScenarios"
+  | "summit"
+  | "mechanics"
+  | "projection"
+  | "activation"
 export type ParcoursOnboardingVariant = "standalone" | "embedded"
 
 type MechanicId = "return" | "surprise" | "domino" | "diamond" | "season"
-
-type Reading = {
-  clientsPerDay: number
-  lostClientsPerMonth: number
-  lostRevenuePerMonth: number
-  currentReturnRate: number
-  recoverableRate: number
-}
 
 type SummitOption = {
   id: ParcoursSummitStyleId
@@ -49,13 +57,18 @@ type SummitOption = {
 
 const PHASE_LABELS = ["Mise en place", "Tension", "Decision"] as const
 
-function phaseForStep(idx: number): number {
+function phaseForStep(isLite: boolean, idx: number): number {
+  if (isLite) {
+    if (idx <= 1) return 0
+    if (idx <= 3) return 1
+    return 2
+  }
   if (idx <= 1) return 0
   if (idx <= 4) return 1
   return 2
 }
 
-const STEPS: { id: ParcoursStepId; num: string; label: string; cta: string }[] = [
+const STEPS_FULL: { id: ParcoursStepId; num: string; label: string; cta: string }[] = [
   { id: "entry", num: "01", label: "Entree", cta: "Continuer" },
   { id: "lecture", num: "02", label: "Lecture", cta: "Activer la recuperation" },
   { id: "summit", num: "03", label: "Sommet", cta: "Continuer" },
@@ -64,18 +77,19 @@ const STEPS: { id: ParcoursStepId; num: string; label: string; cta: string }[] =
   { id: "activation", num: "06", label: "Lancement", cta: "Ajuster le systeme" },
 ]
 
+const STEPS_LITE: { id: ParcoursStepId; num: string; label: string; cta: string }[] = [
+  { id: "entry", num: "01", label: "Entree", cta: "Continuer" },
+  { id: "lecture", num: "02", label: "Lecture", cta: "Activer la recuperation" },
+  { id: "liteScenarios", num: "03", label: "Scenarios", cta: "Voir l'impact" },
+  { id: "projection", num: "04", label: "Projection", cta: "Passer a l'activation" },
+  { id: "activation", num: "05", label: "Lancement", cta: "Ajuster le systeme" },
+]
+
 const SUMMITS: SummitOption[] = [
   { id: "visible", label: "Sommet visible", description: "Le client voit sa progression et sait ce qu'il debloque. Objectif clair.", metric: "x1.0", metricLabel: "boost standard", multiplier: 1 },
   { id: "stronger", label: "Sommet renforce", description: "Recompense amplifiee. Cree de l'attraction et de la conversation autour du lieu.", metric: "x1.25", metricLabel: "boost augmente", multiplier: 1.25 },
   { id: "discreet", label: "Sommet discret", description: "Reserve aux inities. Effet de surprise a l'arrivee. Pas de promesse affichee.", metric: "x0.85", metricLabel: "boost selectif", multiplier: 0.85 },
 ]
-
-const READINGS: Record<LandingWorldId, Reading> = {
-  cafe: { clientsPerDay: 80, lostClientsPerMonth: 312, lostRevenuePerMonth: 1950, currentReturnRate: 25, recoverableRate: 35 },
-  restaurant: { clientsPerDay: 50, lostClientsPerMonth: 195, lostRevenuePerMonth: 5070, currentReturnRate: 18, recoverableRate: 35 },
-  beaute: { clientsPerDay: 12, lostClientsPerMonth: 47, lostRevenuePerMonth: 3990, currentReturnRate: 20, recoverableRate: 35 },
-  boutique: { clientsPerDay: 40, lostClientsPerMonth: 156, lostRevenuePerMonth: 8580, currentReturnRate: 17, recoverableRate: 35 },
-}
 
 const WORLD_DETAILS: Record<LandingWorldId, string> = {
   cafe: "Passage rapide, volume eleve.",
@@ -83,12 +97,6 @@ const WORLD_DETAILS: Record<LandingWorldId, string> = {
   beaute: "Rendez-vous, relation forte.",
   boutique: "Passage opportuniste, conversion cle.",
 }
-
-const clampRange = (value: number, multiplier: number) => ({
-  low: Math.round(value * multiplier * 0.88),
-  high: Math.round(value * multiplier * 1.14),
-  adjusted: Math.round(value * multiplier),
-})
 
 const formatEuro = (value: number) =>
   new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value)
@@ -118,36 +126,95 @@ function useCountUp(target: number, duration = 1200, trigger = true) {
 /* ─── MAIN ─── */
 type Props = { variant: ParcoursOnboardingVariant }
 
-export function ParcoursOnboardingCore({ variant }: Props) {
+function ParcoursOnboardingCoreInner({ variant }: Props) {
+  const searchParams = useSearchParams()
+  const isLite = variant === "standalone" && searchParams.get("mode") === "lite"
+
+  const activeSteps = isLite ? STEPS_LITE : STEPS_FULL
+
   const [worldId, setWorldId] = useState<LandingWorldId>("cafe")
   const [stepIndex, setStepIndex] = useState(0)
   const [summitId, setSummitId] = useState<ParcoursSummitStyleId | null>(null)
   const [openMechanic, setOpenMechanic] = useState<number | null>(0)
+  const [liteSelections, setLiteSelections] = useState<LiteSelections>({})
+  const skipLitePersistRef = useRef(false)
+
+  useEffect(() => {
+    if (!isLite) return
+    skipLitePersistRef.current = true
+    try {
+      const raw = sessionStorage.getItem(`cardin-parcours-lite-${worldId}`)
+      if (raw) setLiteSelections(JSON.parse(raw) as LiteSelections)
+      else setLiteSelections({})
+    } catch {
+      setLiteSelections({})
+    }
+  }, [worldId, isLite])
+
+  useEffect(() => {
+    if (!isLite) return
+    if (skipLitePersistRef.current) {
+      skipLitePersistRef.current = false
+      return
+    }
+    try {
+      sessionStorage.setItem(`cardin-parcours-lite-${worldId}`, JSON.stringify(liteSelections))
+    } catch {
+      /* ignore */
+    }
+  }, [worldId, isLite, liteSelections])
 
   const demo = getDemoWorldContent(worldId)
-  const step = STEPS[stepIndex]
-  const reading = READINGS[worldId]
+  const step = activeSteps[stepIndex]
   const summit = SUMMITS.find((s) => s.id === summitId) ?? SUMMITS[0]
   const seasonMonths = demo.seasonMonths
-  const phaseIndex = phaseForStep(stepIndex)
+  const phaseIndex = phaseForStep(isLite, stepIndex)
 
-  const monthlyRange = useMemo(() => clampRange(demo.projectedMonthlyRevenue, summit.multiplier), [demo.projectedMonthlyRevenue, summit.multiplier])
-  const seasonBase = demo.projectedMonthlyRevenue * seasonMonths
-  const seasonRange = useMemo(() => clampRange(seasonBase, summit.multiplier), [seasonBase, summit.multiplier])
+  const boostedMonthly = Math.round(demo.projectedMonthlyRevenue * summit.multiplier)
+  const localProjection = useMemo(
+    () => computeParcoursProjectionFull(demo, summit.multiplier, undefined, { lite: isLite }),
+    [demo, summit.multiplier, isLite],
+  )
+  const [serverProjection, setServerProjection] = useState<ParcoursProjectionResult | null>(null)
+  useEffect(() => {
+    setServerProjection(null)
+    const ac = new AbortController()
+    const liteQ = isLite ? "&lite=1" : ""
+    fetch(
+      `/api/parcours/projection?world=${encodeURIComponent(worldId)}&summit=${encodeURIComponent(String(summit.multiplier))}${liteQ}`,
+      { signal: ac.signal },
+    )
+      .then((res) => res.json())
+      .then((data: { ok?: boolean; projection?: ParcoursProjectionResult }) => {
+        if (data.ok && data.projection) setServerProjection(data.projection)
+      })
+      .catch(() => {})
+    return () => ac.abort()
+  }, [worldId, summit.multiplier, isLite])
+  const projectionFull = serverProjection ?? localProjection
+
+  const liteHint = useMemo(
+    () => (isLite ? liteProjectionHintLabel(worldId, liteSelections) : ""),
+    [isLite, worldId, liteSelections],
+  )
 
   const engineHref = buildParcoursEngineHref({ worldId, summitStyle: summitId ?? "visible", seasonMonths })
 
   const goNext = useCallback(() => {
-    if (stepIndex === STEPS.length - 1) {
+    if (stepIndex === activeSteps.length - 1) {
       window.location.href = engineHref
       return
     }
     setStepIndex((v) => v + 1)
-  }, [stepIndex, engineHref])
+  }, [stepIndex, engineHref, activeSteps.length])
 
   const goPrev = useCallback(() => setStepIndex((v) => Math.max(0, v - 1)), [])
 
-  const isLive = stepIndex === STEPS.length - 1
+  const isLive = stepIndex === activeSteps.length - 1
+
+  const embeddedNextDisabled =
+    (step.id === "summit" && !summitId) ||
+    (step.id === "liteScenarios" && !isLiteSelectionsComplete(worldId, liteSelections))
 
   return (
     <div className={variant === "standalone" ? "min-h-screen" : ""} style={{ backgroundColor: "var(--cardin-bg-cream)" }}>
@@ -170,7 +237,7 @@ export function ParcoursOnboardingCore({ variant }: Props) {
 
           {!isLive ? (
             <div className="flex items-center gap-1.5">
-              {STEPS.slice(0, -1).map((s, i) => (
+              {activeSteps.slice(0, -1).map((s, i) => (
                 <div className="flex items-center gap-1.5" key={s.id}>
                   <div
                     className="h-1.5 w-1.5 rounded-full transition-all"
@@ -180,7 +247,7 @@ export function ParcoursOnboardingCore({ variant }: Props) {
                       transitionDuration: "400ms",
                     }}
                   />
-                  {i < STEPS.length - 2 && (
+                  {i < activeSteps.length - 2 && (
                     <div
                       className="hidden h-px w-3 md:block md:w-5"
                       style={{
@@ -207,7 +274,7 @@ export function ParcoursOnboardingCore({ variant }: Props) {
               <p className="mt-1" style={{ fontSize: "0.8rem", color: "var(--cardin-body)" }}>{PHASE_LABELS[phaseIndex]} — Etape {step.num}</p>
             </div>
             <div className="flex items-center gap-1.5">
-              {STEPS.map((s, i) => (
+              {activeSteps.map((s, i) => (
                 <div className="flex items-center gap-1.5" key={s.id}>
                   <div
                     className="h-1.5 w-1.5 rounded-full transition-all"
@@ -217,7 +284,7 @@ export function ParcoursOnboardingCore({ variant }: Props) {
                       transitionDuration: "400ms",
                     }}
                   />
-                  {i < STEPS.length - 1 && (
+                  {i < activeSteps.length - 1 && (
                     <div className="hidden h-px w-3 sm:block" style={{ backgroundColor: i < stepIndex ? "var(--cardin-green-primary)" : "var(--cardin-border)" }} />
                   )}
                 </div>
@@ -232,7 +299,7 @@ export function ParcoursOnboardingCore({ variant }: Props) {
         <motion.div
           className="fixed left-0 z-40 h-[1px]"
           style={{ top: 52, backgroundColor: "var(--cardin-green-primary)" }}
-          animate={{ width: `${((stepIndex + 1) / STEPS.length) * 100}%` }}
+          animate={{ width: `${((stepIndex + 1) / activeSteps.length) * 100}%` }}
           transition={{ duration: 0.4, ease }}
         />
       )}
@@ -257,8 +324,8 @@ export function ParcoursOnboardingCore({ variant }: Props) {
               )}
               {step.id === "lecture" && (
                 <StepLecture
+                  demo={demo}
                   onNext={goNext}
-                  reading={reading}
                 />
               )}
               {step.id === "summit" && (
@@ -275,23 +342,35 @@ export function ParcoursOnboardingCore({ variant }: Props) {
                   setOpenIndex={setOpenMechanic}
                 />
               )}
+              {step.id === "liteScenarios" && (
+                <StepLiteScenarios
+                  onNext={goNext}
+                  onSelectionsChange={setLiteSelections}
+                  selections={liteSelections}
+                  worldId={worldId}
+                />
+              )}
               {step.id === "projection" && (
                 <StepProjection
                   demo={demo}
-                  monthlyRange={monthlyRange}
+                  headerNum={step.num}
+                  isLite={isLite}
+                  liteHintLabel={liteHint}
                   onNext={goNext}
+                  projectionFull={projectionFull}
                   seasonMonths={seasonMonths}
-                  seasonRange={seasonRange}
                   summitMultiplier={summit.multiplier}
                 />
               )}
               {step.id === "activation" && (
                 <StepActivation
+                  boostedMonthly={boostedMonthly}
                   demo={demo}
                   engineHref={engineHref}
-                  monthlyRange={monthlyRange}
+                  isLite={isLite}
+                  liteHintLabel={liteHint}
+                  projectionFull={projectionFull}
                   seasonMonths={seasonMonths}
-                  seasonRange={seasonRange}
                   summit={summit}
                   variant={variant}
                   worldId={worldId}
@@ -315,7 +394,8 @@ export function ParcoursOnboardingCore({ variant }: Props) {
             Precedent
           </button>
           <button
-            className="inline-flex h-11 items-center rounded-full px-6 text-sm"
+            className="inline-flex h-11 items-center rounded-full px-6 text-sm transition disabled:opacity-35"
+            disabled={embeddedNextDisabled}
             onClick={goNext}
             style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2" }}
             type="button"
@@ -325,6 +405,21 @@ export function ParcoursOnboardingCore({ variant }: Props) {
         </div>
       )}
     </div>
+  )
+}
+
+export function ParcoursOnboardingCore(props: Props) {
+  return (
+    <Suspense
+      fallback={
+        <div
+          className={props.variant === "standalone" ? "min-h-screen" : undefined}
+          style={{ backgroundColor: "var(--cardin-bg-cream)" }}
+        />
+      }
+    >
+      <ParcoursOnboardingCoreInner {...props} />
+    </Suspense>
   )
 }
 
@@ -370,7 +465,7 @@ function StepEntry({ worldId, onSelectWorld }: { worldId: LandingWorldId; onSele
 /* ═══════════════════════════════════════════════════════════
    STEP 2 — LECTURE
    ═══════════════════════════════════════════════════════════ */
-function StepLecture({ reading, onNext }: { reading: Reading; onNext: () => void }) {
+function StepLecture({ demo, onNext }: { demo: ReturnType<typeof getDemoWorldContent>; onNext: () => void }) {
   const [phase, setPhase] = useState(0)
   useEffect(() => {
     const t1 = setTimeout(() => setPhase(1), 600)
@@ -379,11 +474,14 @@ function StepLecture({ reading, onNext }: { reading: Reading; onNext: () => void
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
   }, [])
 
+  const lostPerSeason = demo.lostRevenuePerMonth * demo.seasonMonths
+  const lostClientsSeason = demo.lostClientsPerMonth * demo.seasonMonths
+
   return (
     <>
       <StepHeader num="02" label="Lecture" />
-      <StepTitle>Ce que le lieu perd aujourd'hui.</StepTitle>
-      <StepSubtitle>Base sur {reading.clientsPerDay} clients/jour et un taux de perte standard de 15%.</StepSubtitle>
+      <StepTitle>Ce que le lieu perd aujourd&apos;hui.</StepTitle>
+      <StepSubtitle>Base sur {demo.monthlyClients} clients/mois et un taux de perte de {demo.inactivePercent}%.</StepSubtitle>
 
       <motion.div
         animate={{ opacity: phase >= 1 ? 1 : 0, y: phase >= 1 ? 0 : 16 }}
@@ -393,13 +491,16 @@ function StepLecture({ reading, onNext }: { reading: Reading; onNext: () => void
         transition={{ duration: 0.4 }}
       >
         <div style={{ fontSize: "0.65rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "rgba(250,248,242,0.5)", marginBottom: "0.5rem" }}>
-          Clients perdus chaque mois
+          Clients perdus sur la saison ({demo.seasonMonths} mois)
         </div>
         <div className="font-serif" style={{ fontSize: "clamp(2.5rem, 6vw, 3.5rem)", color: "#FAF8F2", lineHeight: 1, letterSpacing: "-0.03em" }}>
-          ~{reading.lostClientsPerMonth}
+          ~{lostClientsSeason}
         </div>
         <div style={{ fontSize: "0.8rem", color: "rgba(250,248,242,0.6)", marginTop: "0.5rem" }}>
-          soit {formatEuro(reading.lostRevenuePerMonth)} de revenu non capte
+          soit {formatEuro(lostPerSeason)} de revenu non capte
+        </div>
+        <div style={{ fontSize: "0.65rem", color: "rgba(250,248,242,0.35)", marginTop: "0.25rem" }}>
+          {demo.lostClientsPerMonth}/mois · {formatEuro(demo.lostRevenuePerMonth)}/mois
         </div>
       </motion.div>
 
@@ -411,8 +512,8 @@ function StepLecture({ reading, onNext }: { reading: Reading; onNext: () => void
           style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)" }}
           transition={{ duration: 0.4 }}
         >
-          <div style={{ fontSize: "0.6rem", letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--cardin-label)", marginBottom: "0.25rem" }}>Taux de retour actuel</div>
-          <div style={{ fontSize: "1.25rem", fontWeight: 600, color: "var(--cardin-green-primary)" }}>{reading.currentReturnRate}%</div>
+          <div style={{ fontSize: "0.6rem", letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--cardin-label)", marginBottom: "0.25rem" }}>Perte mensuelle</div>
+          <div style={{ fontSize: "1.25rem", fontWeight: 600, color: "var(--cardin-green-primary)" }}>{demo.inactivePercent}%</div>
         </motion.div>
         <motion.div
           animate={{ opacity: phase >= 2 ? 1 : 0, y: phase >= 2 ? 0 : 12 }}
@@ -421,8 +522,8 @@ function StepLecture({ reading, onNext }: { reading: Reading; onNext: () => void
           style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)" }}
           transition={{ duration: 0.4, delay: 0.09 }}
         >
-          <div style={{ fontSize: "0.6rem", letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--cardin-label)", marginBottom: "0.25rem" }}>Recuperable</div>
-          <div style={{ fontSize: "1.25rem", fontWeight: 600, color: "var(--cardin-summit-gold)" }}>{reading.recoverableRate}%</div>
+          <div style={{ fontSize: "0.6rem", letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--cardin-label)", marginBottom: "0.25rem" }}>Panier moyen</div>
+          <div style={{ fontSize: "1.25rem", fontWeight: 600, color: "var(--cardin-summit-gold)" }}>{formatEuro(demo.avgTicket)}</div>
         </motion.div>
       </div>
 
@@ -797,91 +898,205 @@ function StepMechanics({ openIndex, setOpenIndex, onNext }: { openIndex: number 
    ═══════════════════════════════════════════════════════════ */
 function StepProjection({
   demo,
-  monthlyRange,
-  seasonRange,
+  projectionFull,
   seasonMonths,
   summitMultiplier,
   onNext,
+  isLite,
+  headerNum = "05",
+  liteHintLabel = "",
 }: {
   demo: ReturnType<typeof getDemoWorldContent>
-  monthlyRange: { low: number; high: number }
-  seasonRange: { low: number; high: number }
+  projectionFull: ParcoursProjectionResult
   seasonMonths: 3 | 6
   summitMultiplier: number
   onNext: () => void
+  isLite?: boolean
+  headerNum?: string
+  liteHintLabel?: string
 }) {
   const [reveal, setReveal] = useState(false)
   useEffect(() => {
-    const t = setTimeout(() => setReveal(true), 800)
+    const t = setTimeout(() => setReveal(true), 600)
     return () => clearTimeout(t)
   }, [])
 
-  const low = useCountUp(monthlyRange.low, 1400, reveal)
-  const high = useCountUp(monthlyRange.high, 1600, reveal)
+  const seasonLayers = projectionFull.layers
+  const animatedTotal = useCountUp(seasonLayers.total, 1600, reveal)
+  const animatedLow = useCountUp(projectionFull.monthlyLow, 1300, reveal)
+  const animatedHigh = useCountUp(projectionFull.monthlyHigh, 1500, reveal)
 
-  const bars = useMemo(
-    () => Array.from({ length: seasonMonths }, (_, i) => ({ label: `M${i + 1}`, height: Math.round(38 + ((i + 1) / seasonMonths) * 50) })),
-    [seasonMonths],
-  )
+  const baseLayers = [
+    {
+      key: "recovery",
+      label: "Recuperation",
+      description: "Clients perdus qui reviennent grace au parcours",
+      value: seasonLayers.recovery,
+      color: "var(--cardin-green-primary)",
+      barBg: "rgba(0,61,44,0.2)",
+    },
+    {
+      key: "frequency",
+      label: "Frequence",
+      description: `${seasonLayers.activeCardholders} porteurs actifs visitent plus souvent`,
+      value: seasonLayers.frequency,
+      color: "var(--cardin-green-secondary)",
+      barBg: "rgba(10,77,58,0.18)",
+    },
+    {
+      key: "domino",
+      label: "Domino",
+      description: `${seasonLayers.dominoNewClients} nouveaux clients par propagation`,
+      value: seasonLayers.domino,
+      color: "var(--cardin-domino-blue)",
+      barBg: "rgba(128,164,214,0.2)",
+      compound: true,
+    },
+  ]
+
+  const layers = isLite ? baseLayers.filter((l) => l.key !== "domino") : baseLayers
+
+  const maxLayer = Math.max(...layers.map((l) => l.value), 1)
 
   return (
     <>
-      <StepHeader num="05" label="Projection" />
+      <StepHeader num={headerNum} label="Projection" />
       <StepTitle>Impact sur le revenu.</StepTitle>
-      <StepSubtitle>Projection basee sur vos parametres. Fourchette prudente a optimiste.</StepSubtitle>
+      <StepSubtitle>
+        {isLite ? (
+          <>
+            Cardin Lite: recuperation et frequence sur {seasonMonths} mois (pas de couche Domino). Fourchette prudente a optimiste sur la moyenne mensuelle.
+          </>
+        ) : (
+          <>
+            Trois leviers (recuperation, frequence, Domino) sur {seasonMonths} mois. Fourchette prudente a optimiste sur la moyenne mensuelle.
+          </>
+        )}
+      </StepSubtitle>
+      {isLite && liteHintLabel ? (
+        <motion.p
+          animate={{ opacity: reveal ? 1 : 0 }}
+          className="mb-8 rounded-xl p-3"
+          initial={{ opacity: 0 }}
+          style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)", fontSize: "0.8rem", color: "var(--cardin-body)", lineHeight: 1.5 }}
+          transition={{ duration: 0.35 }}
+        >
+          {liteHintLabel}
+        </motion.p>
+      ) : null}
 
+      {/* Stacked layers */}
+      <div className="mb-4 space-y-2.5">
+        {layers.map((layer, i) => (
+          <motion.div
+            key={layer.key}
+            animate={{ opacity: reveal ? 1 : 0, x: reveal ? 0 : -16 }}
+            className="rounded-xl p-4"
+            initial={{ opacity: 0, x: -16 }}
+            style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)" }}
+            transition={{ duration: 0.35, delay: 0.15 + i * 0.18, ease }}
+          >
+            <div className="mb-2.5 flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full" style={{ backgroundColor: layer.color }} />
+                  <span style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--cardin-text)" }}>
+                    {layer.label}
+                  </span>
+                  {"compound" in layer && layer.compound && (
+                    <span style={{ fontSize: "0.55rem", color: "var(--cardin-domino-blue)", letterSpacing: "0.04em" }}>
+                      croissant
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: "0.65rem", color: "var(--cardin-label)", marginTop: "0.15rem", paddingLeft: "1rem" }}>
+                  {layer.description}
+                </div>
+              </div>
+              <div style={{ fontSize: "1rem", fontWeight: 600, color: layer.color, whiteSpace: "nowrap", fontFamily: "monospace" }}>
+                +{formatEuro(layer.value)}
+              </div>
+            </div>
+            <div style={{ height: 4, borderRadius: 2, backgroundColor: layer.barBg, overflow: "hidden" }}>
+              <motion.div
+                animate={{ width: reveal ? `${Math.max(8, Math.round((layer.value / maxLayer) * 100))}%` : "0%" }}
+                initial={{ width: "0%" }}
+                style={{ height: "100%", borderRadius: 2, backgroundColor: layer.color }}
+                transition={{ duration: 0.7, delay: 0.3 + i * 0.18, ease: [0.22, 1, 0.36, 1] }}
+              />
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Monthly equivalent (moyenne saison) */}
       <motion.div
         animate={{ opacity: reveal ? 1 : 0, y: reveal ? 0 : 16 }}
-        className="mb-4 rounded-2xl p-6"
+        className="mb-3 rounded-2xl p-6"
         initial={{ opacity: 0, y: 16 }}
         style={{ backgroundColor: "var(--cardin-green-primary)" }}
-        transition={{ duration: 0.4 }}
+        transition={{ duration: 0.4, delay: 0.75 }}
       >
         <div style={{ fontSize: "0.65rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "rgba(250,248,242,0.5)", marginBottom: "0.5rem" }}>
-          Revenu supplementaire / mois
+          Revenu supplementaire moyen / mois
         </div>
-        <div className="font-serif" style={{ fontSize: "clamp(2.25rem, 6vw, 3.25rem)", color: "#FAF8F2", lineHeight: 1, letterSpacing: "-0.03em" }}>
-          +{low.toLocaleString("fr-FR")}–{high.toLocaleString("fr-FR")} EUR
+        <div className="font-serif" style={{ fontSize: "clamp(2rem, 5.5vw, 3rem)", color: "#FAF8F2", lineHeight: 1, letterSpacing: "-0.03em" }}>
+          +{animatedLow.toLocaleString("fr-FR")}–{animatedHigh.toLocaleString("fr-FR")} EUR
+        </div>
+        <div style={{ fontSize: "0.75rem", color: "rgba(250,248,242,0.45)", marginTop: "0.45rem" }}>
+          Moyenne: {projectionFull.monthlyAverage.toLocaleString("fr-FR")} EUR/mois · panier {formatEuro(demo.avgTicket)}
         </div>
       </motion.div>
 
       <motion.div
-        animate={{ opacity: reveal ? 1 : 0, y: reveal ? 0 : 12 }}
-        className="mb-4 rounded-xl p-4"
-        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: reveal ? 1 : 0, y: reveal ? 0 : 10 }}
+        className="mb-3 rounded-xl p-4"
+        initial={{ opacity: 0 }}
         style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)" }}
-        transition={{ duration: 0.4, delay: 0.2 }}
+        transition={{ duration: 0.4, delay: 0.82 }}
       >
-        <div style={{ fontSize: "0.6rem", letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--cardin-label)", marginBottom: "0.5rem" }}>
-          Revenu cumule sur {seasonMonths} mois
+        <div style={{ fontSize: "0.6rem", letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--cardin-label)", marginBottom: "0.35rem" }}>
+          Total sur la saison ({seasonMonths} mois)
         </div>
-        <div className="flex items-end gap-3" style={{ height: 120 }}>
-          {bars.map((bar) => (
-            <div className="flex-1" key={bar.label}>
-              <div className="flex items-end" style={{ height: 80 }}>
-                <motion.div
-                  animate={{ height: reveal ? `${bar.height}%` : "0%" }}
-                  className="w-full"
-                  initial={{ height: "0%" }}
-                  style={{ borderRadius: "4px 4px 0 0", background: "rgba(0,61,44,0.25)" }}
-                  transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                />
-              </div>
-              <div style={{ textAlign: "center", fontSize: 9, color: "var(--cardin-label)", marginTop: 6, fontFamily: "monospace" }}>{bar.label}</div>
-            </div>
-          ))}
+        <div className="font-serif" style={{ fontSize: "1.35rem", color: "var(--cardin-green-primary)", letterSpacing: "-0.02em" }}>
+          +{animatedTotal.toLocaleString("fr-FR")} EUR
+        </div>
+        <div style={{ fontSize: "0.7rem", color: "var(--cardin-label)", marginTop: "0.35rem" }}>
+          {demo.projectedMonthlyReturns} retours/mois · payback ~{demo.projectedPaybackDays}j · {demo.confidenceLabel}
         </div>
       </motion.div>
 
       <motion.div
         animate={{ opacity: reveal ? 1 : 0 }}
-        className="mb-10 grid grid-cols-3 gap-3"
+        className="mb-4"
         initial={{ opacity: 0 }}
-        transition={{ duration: 0.4, delay: 0.35 }}
+        transition={{ duration: 0.4, delay: 0.88 }}
       >
-        <MiniStat color="var(--cardin-green-primary)" label="Retours/mois" value={`${demo.projectedMonthlyReturns}`} />
-        <MiniStat color="var(--cardin-summit-gold)" label="Sommet" value={`x${summitMultiplier}`} />
-        <MiniStat color="var(--cardin-green-primary)" label="Saison" value={`${Math.round(seasonRange.low / 1000)}–${Math.round(seasonRange.high / 1000)}k`} />
+        <ParcoursSeasonTradingChart projection={projectionFull} reveal={reveal} seasonMonths={seasonMonths} />
+      </motion.div>
+
+      <motion.div
+        animate={{ opacity: reveal ? 1 : 0 }}
+        className={isLite ? "mb-10 grid grid-cols-2 gap-3" : "mb-10 grid grid-cols-3 gap-3"}
+        initial={{ opacity: 0 }}
+        transition={{ duration: 0.4, delay: 0.95 }}
+      >
+        {isLite ? (
+          <>
+            <MiniStat color="var(--cardin-green-secondary)" label="Porteurs" value={`${seasonLayers.activeCardholders}`} />
+            <MiniStat color="var(--cardin-green-primary)" label="Saison" value={`${Math.round((seasonLayers.total * 0.92) / 1000)}–${Math.round((seasonLayers.total * 1.08) / 1000)}k`} />
+          </>
+        ) : (
+          <>
+            <MiniStat color="var(--cardin-domino-blue)" label="Domino" value={formatEuro(seasonLayers.domino)} />
+            <MiniStat color="var(--cardin-summit-gold)" label="Sommet" value={`x${summitMultiplier}`} />
+            <MiniStat
+              color="var(--cardin-green-primary)"
+              label="Saison"
+              value={`${Math.round((seasonLayers.total * 0.92) / 1000)}–${Math.round((seasonLayers.total * 1.08) / 1000)}k`}
+            />
+          </>
+        )}
       </motion.div>
 
       <motion.button
@@ -890,7 +1105,7 @@ function StepProjection({
         initial={{ opacity: 0 }}
         onClick={onNext}
         style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2", fontSize: "0.95rem" }}
-        transition={{ duration: 0.4, delay: 0.45 }}
+        transition={{ duration: 0.4, delay: 1.0 }}
         type="button"
       >
         Passer a l'activation
@@ -904,22 +1119,26 @@ function StepProjection({
    ═══════════════════════════════════════════════════════════ */
 function StepActivation({
   demo,
-  monthlyRange,
-  seasonRange,
+  boostedMonthly,
+  projectionFull,
   seasonMonths,
   summit,
   worldId,
   engineHref,
   variant,
+  isLite,
+  liteHintLabel = "",
 }: {
   demo: ReturnType<typeof getDemoWorldContent>
-  monthlyRange: { low: number; high: number }
-  seasonRange: { low: number; high: number; adjusted: number }
+  boostedMonthly: number
+  projectionFull: ParcoursProjectionResult
   seasonMonths: 3 | 6
   summit: SummitOption
   worldId: LandingWorldId
   engineHref: string
   variant: ParcoursOnboardingVariant
+  isLite?: boolean
+  liteHintLabel?: string
 }) {
   const [phase, setPhase] = useState(0)
   useEffect(() => {
@@ -931,6 +1150,7 @@ function StepActivation({
 
   const world = LANDING_WORLDS[worldId]
   const summitLabel = summit.id === "visible" ? "Visible" : summit.id === "stronger" ? "Renforce" : "Discret"
+  const seasonLayers = projectionFull.layers
 
   return (
     <>
@@ -975,6 +1195,11 @@ function StepActivation({
         transition={{ duration: 0.4, delay: 0.15 }}
       >
         Le systeme est actif. Les premiers retours peuvent commencer.
+        {isLite && liteHintLabel ? (
+          <span className="mt-3 block rounded-xl p-3" style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)", fontSize: "0.8rem" }}>
+            {liteHintLabel}
+          </span>
+        ) : null}
       </motion.p>
 
       {/* Big number */}
@@ -986,31 +1211,37 @@ function StepActivation({
         transition={{ duration: 0.4 }}
       >
         <div style={{ fontSize: "0.6rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "rgba(250,248,242,0.45)", marginBottom: "0.75rem" }}>
-          Ordre de gain mensuel
+          Moyenne mensuelle (equivalent saison)
         </div>
-        <div className="font-serif" style={{ fontSize: "clamp(2.5rem, 7vw, 3.75rem)", color: "#FAF8F2", lineHeight: 1, letterSpacing: "-0.03em" }}>
-          +{monthlyRange.low.toLocaleString("fr-FR")}–{monthlyRange.high.toLocaleString("fr-FR")} EUR
+        <div className="font-serif" style={{ fontSize: "clamp(2.25rem, 6.5vw, 3.5rem)", color: "#FAF8F2", lineHeight: 1, letterSpacing: "-0.03em" }}>
+          +{projectionFull.monthlyLow.toLocaleString("fr-FR")}–{projectionFull.monthlyHigh.toLocaleString("fr-FR")} EUR
         </div>
         <div style={{ fontSize: "0.7rem", color: "rgba(250,248,242,0.5)", marginTop: "0.75rem", lineHeight: 1.5 }}>
-          {demo.projectedMonthlyReturns} retours/mois · payback ~{demo.projectedPaybackDays}j · {demo.confidenceLabel}
+          Saison {seasonMonths} mois: +{seasonLayers.total.toLocaleString("fr-FR")} EUR · recuperation base +{boostedMonthly.toLocaleString("fr-FR")} EUR/mois · payback ~{demo.projectedPaybackDays}j
         </div>
       </motion.div>
 
-      {/* Domino + Sommet pills */}
+      {/* Layer breakdown pills */}
       <motion.div
         animate={{ opacity: phase >= 2 ? 1 : 0 }}
-        className="mb-8 flex gap-2"
+        className={isLite ? "mb-8 grid grid-cols-2 gap-2" : "mb-8 grid grid-cols-3 gap-2"}
         initial={{ opacity: 0 }}
         transition={{ duration: 0.4, delay: 0.15 }}
       >
-        <div className="flex flex-1 items-center justify-between rounded-xl px-3 py-2.5" style={{ backgroundColor: "var(--cardin-domino-blue-light)", border: "1px solid rgba(128,164,214,0.15)" }}>
-          <span style={{ fontSize: "0.6rem", letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--cardin-domino-blue)" }}>Domino</span>
-          <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--cardin-domino-blue)" }}>x1.15</span>
+        <div className="rounded-xl px-3 py-2.5" style={{ backgroundColor: "var(--cardin-green-tint)", border: "1px solid rgba(0,61,44,0.1)" }}>
+          <div style={{ fontSize: "0.5rem", letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--cardin-green-primary)", marginBottom: 2 }}>Recuperation</div>
+          <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--cardin-green-primary)" }}>{formatEuro(seasonLayers.recovery)}</div>
         </div>
-        <div className="flex flex-1 items-center justify-between rounded-xl px-3 py-2.5" style={{ backgroundColor: "var(--cardin-summit-gold-light)", border: "1px solid rgba(163,135,103,0.15)" }}>
-          <span style={{ fontSize: "0.6rem", letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--cardin-summit-gold)" }}>Sommet</span>
-          <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--cardin-summit-gold)" }}>{summit.metric}</span>
+        <div className="rounded-xl px-3 py-2.5" style={{ backgroundColor: "var(--cardin-green-tint)", border: "1px solid rgba(0,61,44,0.1)" }}>
+          <div style={{ fontSize: "0.5rem", letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--cardin-green-secondary)", marginBottom: 2 }}>Frequence</div>
+          <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--cardin-green-secondary)" }}>{formatEuro(seasonLayers.frequency)}</div>
         </div>
+        {!isLite ? (
+          <div className="rounded-xl px-3 py-2.5" style={{ backgroundColor: "var(--cardin-domino-blue-light)", border: "1px solid rgba(128,164,214,0.15)" }}>
+            <div style={{ fontSize: "0.5rem", letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--cardin-domino-blue)", marginBottom: 2 }}>Domino</div>
+            <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--cardin-domino-blue)" }}>{formatEuro(seasonLayers.domino)}</div>
+          </div>
+        ) : null}
       </motion.div>
 
       {/* Config details */}
@@ -1028,10 +1259,13 @@ function StepActivation({
           {[
             { label: "Lieu", value: world.label },
             { label: "Saison", value: `${seasonMonths} mois` },
-            { label: "Sommet", value: summitLabel },
-            { label: "Retours/mois", value: `${demo.projectedMonthlyReturns}` },
-            { label: "Saison (plage)", value: `${seasonRange.low.toLocaleString("fr-FR")}–${seasonRange.high.toLocaleString("fr-FR")} €` },
-            { label: "Activation", value: `${LANDING_PRICING.activationFee} €` },
+            ...(isLite ? [] : [{ label: "Sommet", value: summitLabel }]),
+            { label: "Porteurs actifs", value: `${seasonLayers.activeCardholders}` },
+            { label: "Revenu saison", value: `${seasonLayers.total.toLocaleString("fr-FR")} EUR` },
+            {
+              label: "Activation",
+              value: isLite ? `${LANDING_PRICING.liteActivationFee} € (Lite)` : `${LANDING_PRICING.activationFee} €`,
+            },
             { label: "Recurrant", value: `${LANDING_PRICING.recurringFee} € / mois` },
           ].map((line) => (
             <div className="flex items-center justify-between" key={line.label}>

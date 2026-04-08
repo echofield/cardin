@@ -3,6 +3,9 @@ import { LANDING_WORLDS, type LandingWorldId } from "@/lib/landing-content"
 import { getTemplateById } from "@/lib/merchant-templates"
 import { projectScenarioImpact } from "@/lib/projection-engine"
 
+export type { ParcoursDemoSlice, ParcoursProjectionResult, SeasonProjectionLayers } from "@/lib/parcours-projection"
+export { computeParcoursProjectionFull, computeSeasonProjection } from "@/lib/parcours-projection"
+
 export type DemoWorldContent = {
   businessName: string
   businessTypeLabel: string
@@ -14,6 +17,13 @@ export type DemoWorldContent = {
   invitePrompt: string
   returnPrompt: string
   weakDayPrompt: string
+  merchantType: string
+  monthlyClients: number
+  avgTicket: number
+  inactivePercent: number
+  recoveryPercent: number
+  lostClientsPerMonth: number
+  lostRevenuePerMonth: number
   projectedMonthlyRevenue: number
   projectedMonthlyReturns: number
   projectedRecoveredClients: number
@@ -110,6 +120,8 @@ export function getDemoWorldContent(worldId: LandingWorldId): DemoWorldContent {
   })
 
   const projectedSeasonRevenue = projection.monthlyRevenue * assumptions.seasonMonths
+  const lostClientsPerMonth = Math.round(assumptions.monthlyClients * (assumptions.inactivePercent / 100))
+  const lostRevenuePerMonth = Math.round(lostClientsPerMonth * assumptions.avgTicket)
 
   return {
     businessName: assumptions.businessName,
@@ -122,6 +134,13 @@ export function getDemoWorldContent(worldId: LandingWorldId): DemoWorldContent {
     invitePrompt: assumptions.invitePrompt,
     returnPrompt: assumptions.returnPrompt,
     weakDayPrompt: assumptions.weakDayPrompt,
+    merchantType: assumptions.merchantType,
+    monthlyClients: assumptions.monthlyClients,
+    avgTicket: assumptions.avgTicket,
+    inactivePercent: assumptions.inactivePercent,
+    recoveryPercent: Math.round(template.defaults.calculator_recovery_rate * 100),
+    lostClientsPerMonth,
+    lostRevenuePerMonth,
     projectedMonthlyRevenue: projection.monthlyRevenue,
     projectedMonthlyReturns: projection.monthlyReturns,
     projectedRecoveredClients: Math.round(projection.recoveredClients),
