@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
@@ -482,10 +482,10 @@ export function MerchantSeasonStudio() {
           <div className="max-w-3xl">
             <p className="text-[11px] uppercase tracking-[0.22em] text-[#667067]">Simulateur saison</p>
             <h2 className="mt-3 font-serif text-4xl leading-[1.02] text-[#173328] sm:text-5xl lg:text-6xl">
-              Configurez votre saison. Voyez le revenu r?cup?rable.
+              Configurez votre saison. Voyez le revenu récupérable.
             </h2>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-[#556159] sm:text-base">
-              Choisissez le lieu, le sommet et la dur?e. Cardin chiffre le revenu r?cup?rable, le r?seau activ? et l?affluence g?n?r?e.
+              Choisissez le lieu, le sommet et la durée. Cardin chiffre le revenu récupérable, le réseau activé et l’affluence générée.
             </p>
           </div>
 
@@ -956,6 +956,9 @@ function LawCard({ title, body }: { title: string; body: string }) {
     </Card>
   )
 }
+
+
+
 
 
 

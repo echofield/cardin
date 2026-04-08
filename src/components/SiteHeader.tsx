@@ -1,10 +1,10 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 const NAV_ITEMS = [
-  { href: "/landing#methode", label: "M?thode" },
+  { href: "/landing#methode", label: "Méthode" },
   { href: "/landing#cas", label: "Cas" },
   { href: "/landing", label: "Simuler" },
   { href: "/landing#contact", label: "Contact" },
@@ -18,7 +18,7 @@ export function SiteHeader() {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-6">
         <Link className="flex flex-col leading-none" href="/landing">
           <span className="font-serif text-[1.15rem] font-semibold tracking-[0.06em] text-[#15372B]">CARDIN</span>
-          <span className="hidden text-[10px] tracking-[0.08em] text-[#8A9389] sm:block">Syst?me de retour client pour commerces physiques</span>
+          <span className="hidden text-[10px] tracking-[0.08em] text-[#8A9389] sm:block">Système de retour client pour commerces physiques</span>
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">

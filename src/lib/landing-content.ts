@@ -1,4 +1,4 @@
-export type LandingWorldId = "cafe" | "restaurant" | "beaute" | "boutique"
+﻿export type LandingWorldId = "cafe" | "restaurant" | "beaute" | "boutique"
 
 type LandingWorldContent = {
   label: string
@@ -19,7 +19,7 @@ type SectorCard = {
 
 export const LANDING_PRICING = {
   activationFee: 490,
-  activationLabel: "Payer ma saison (490 €)",
+  activationLabel: "Activer Cardin (490 €)",
   recurringFee: 49,
   recurringLabel: "49 € / mois pendant la saison",
   compactLabel: "490 € puis 49 € / mois pendant la saison",
@@ -33,7 +33,7 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
     label: "Café",
     eyebrow: "Volume et fréquence",
     claim: "+4 k€ à 6 k€ par saison",
-    basket: "Panier moyen 5-8 €",
+    basket: "Panier moyen 5 à 8 €",
     onboardingLead: "Passage rapide, fréquence élevée, retour client visible très vite.",
     proofLine: "Passage → retour client → réseau activé.",
     summitPromise: "1 boisson signature par mois pendant 1 an.",
@@ -44,7 +44,7 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
     label: "Restaurant",
     eyebrow: "Panier moyen élevé",
     claim: "+10 k€ à 15 k€ par saison",
-    basket: "Panier moyen 40-60 €",
+    basket: "Panier moyen 40 à 60 €",
     onboardingLead: "Table, invitation et retour client à réactiver.",
     proofLine: "Table → retour client → réseau activé par invitation.",
     summitPromise: "1 repas signature par mois pendant 1 an.",
