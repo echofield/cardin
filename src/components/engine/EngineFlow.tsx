@@ -175,7 +175,7 @@ export function EngineFlow({ initialObjectiveId, initialSeasonLength, initialSum
       <div className="rounded-3xl border border-[#D7DDD2] bg-[#FFFEFB] p-4 shadow-[0_20px_60px_-45px_rgba(23,58,46,0.7)] sm:p-6 lg:p-10">
         <header className="border-b border-[#E0E4DB] pb-6">
           <p className="text-xs uppercase tracking-[0.16em] text-[#6B746D]">QR + carte wallet + tableau marchand</p>
-          <h1 className="mt-2 font-serif text-4xl text-[#173A2E]">Construisez votre carte en 4 etapes</h1>
+          <h1 className="mt-2 font-serif text-4xl text-[#173A2E]">Construisez votre carte en {engineSteps.length} etapes</h1>
           <p className="mt-3 max-w-3xl text-sm text-[#556159]">
             La facade reste simple. Cardin prepare ensuite le QR, la carte Wallet et l'espace marchand avec la configuration choisie.
           </p>
@@ -206,6 +206,7 @@ export function EngineFlow({ initialObjectiveId, initialSeasonLength, initialSum
                   key={stepItem.id}
                   onClick={() => setStep(stepItem.id)}
                   type="button"
+                  aria-current={isActive ? "step" : undefined}
                 >
                   {stepItem.id}. {stepItem.label}
                 </button>
@@ -483,7 +484,7 @@ export function EngineFlow({ initialObjectiveId, initialSeasonLength, initialSum
                     <p className="mt-2 font-serif text-5xl text-[#173A2E]">+{formatEuro(monthlyProjection.extraRevenue)} / mois</p>
                     <p className="mt-3 text-base text-[#2E4339]">{Math.round(monthlyProjection.recoveredClients)} clients recuperes / mois</p>
                     <p className="mt-3 text-sm text-[#4F5E55]">{selectedScenario.projectionCaption}</p>
-                  <p className="mt-2 text-sm text-[#4F5E55]">{seasonLabel} · Sommet retenu : {selectedSummit.promise}</p>
+                    <p className="mt-2 text-sm text-[#4F5E55]">{seasonLabel} - Sommet retenu : {selectedSummit.promise}</p>
                   </Card>
 
                   <Card className="p-6">
