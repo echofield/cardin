@@ -140,10 +140,10 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
   const skipLitePersistRef = useRef(false)
 
   useEffect(() => {
-    if (!isLite) return
+    if (!isLite || typeof window === "undefined") return
     skipLitePersistRef.current = true
     try {
-      const raw = sessionStorage.getItem(`cardin-parcours-lite-${worldId}`)
+      const raw = window.sessionStorage.getItem(`cardin-parcours-lite-${worldId}`)
       if (raw) setLiteSelections(JSON.parse(raw) as LiteSelections)
       else setLiteSelections({})
     } catch {
@@ -152,15 +152,15 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
   }, [worldId, isLite])
 
   useEffect(() => {
-    if (!isLite) return
+    if (!isLite || typeof window === "undefined") return
     if (skipLitePersistRef.current) {
       skipLitePersistRef.current = false
       return
     }
     try {
-      sessionStorage.setItem(`cardin-parcours-lite-${worldId}`, JSON.stringify(liteSelections))
+      window.sessionStorage.setItem(`cardin-parcours-lite-${worldId}`, JSON.stringify(liteSelections))
     } catch {
-      /* ignore */
+      /* ignore — private mode / storage blocked on some mobile browsers */
     }
   }, [worldId, isLite, liteSelections])
 
@@ -202,7 +202,9 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
 
   const goNext = useCallback(() => {
     if (stepIndex === activeSteps.length - 1) {
-      window.location.href = engineHref
+      if (typeof window !== "undefined") {
+        window.location.assign(engineHref)
+      }
       return
     }
     setStepIndex((v) => v + 1)
