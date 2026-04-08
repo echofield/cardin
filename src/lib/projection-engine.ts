@@ -22,7 +22,7 @@ export type ProjectionResult = {
   scenarioRole: string
 }
 
-type ScenarioProjectionProfile = {
+export type ScenarioProjectionProfile = {
   revenueWeight: number
   returnsWeight: number
   primaryEffect: string
@@ -30,7 +30,13 @@ type ScenarioProjectionProfile = {
   scenarioRole: string
 }
 
-const PROJECTION_PROFILES: Record<EngineActivityId, Record<BehaviorScenarioId, ScenarioProjectionProfile>> = {
+export type ProjectionProfiles = Record<EngineActivityId, Record<BehaviorScenarioId, ScenarioProjectionProfile>>
+
+export type ProjectionPresetOverrideMap = Partial<
+  Record<EngineActivityId, Partial<Record<BehaviorScenarioId, Partial<ScenarioProjectionProfile>>>>
+>
+
+export const DEFAULT_PROJECTION_PROFILES: ProjectionProfiles = {
   boulangerie: {
     starting_loop: { revenueWeight: 1, returnsWeight: 1, primaryEffect: "Routine de quartier plus solide", secondaryEffect: "Retour régulier plus visible", scenarioRole: "Installe le premier rythme" },
     weekly_rendezvous: { revenueWeight: 0.84, returnsWeight: 0.78, primaryEffect: "Jour creux mieux rempli", secondaryEffect: "Rendez-vous attendu dans la semaine", scenarioRole: "Travaille un temps faible" },
@@ -69,9 +75,40 @@ const PROJECTION_PROFILES: Record<EngineActivityId, Record<BehaviorScenarioId, S
   },
 }
 
-export function projectScenarioImpact(input: ProjectionEngineInput): ProjectionResult {
+function resolveProjectionProfiles(overrides?: ProjectionPresetOverrideMap): ProjectionProfiles {
+  if (!overrides) {
+    return DEFAULT_PROJECTION_PROFILES
+  }
+
+  const merged = JSON.parse(JSON.stringify(DEFAULT_PROJECTION_PROFILES)) as ProjectionProfiles
+
+  const activityIds = Object.keys(overrides) as EngineActivityId[]
+  for (const activityId of activityIds) {
+    const scenarioOverrides = overrides[activityId]
+    if (!scenarioOverrides) continue
+
+    const scenarioIds = Object.keys(scenarioOverrides) as BehaviorScenarioId[]
+    for (const scenarioId of scenarioIds) {
+      const patch = scenarioOverrides[scenarioId]
+      if (!patch) continue
+
+      merged[activityId][scenarioId] = {
+        ...merged[activityId][scenarioId],
+        ...patch,
+      }
+    }
+  }
+
+  return merged
+}
+
+export function projectScenarioImpact(
+  input: ProjectionEngineInput,
+  overrides?: ProjectionPresetOverrideMap
+): ProjectionResult {
+  const profiles = resolveProjectionProfiles(overrides)
   const activityId = normalizeEngineActivityId(input.merchantType)
-  const profile = PROJECTION_PROFILES[activityId][input.scenarioId]
+  const profile = profiles[activityId][input.scenarioId]
   const monthlyClients = Math.max(0, input.monthlyClients)
   const avgTicket = Math.max(0, input.avgTicket)
   const inactiveRate = percentToRate(input.inactivePercent)
@@ -123,8 +160,12 @@ export type FamilyProjectionInput = {
   scenarioRole: string
 }
 
-function getFamilyWeights(activityId: EngineActivityId, family: ProjectionFamily): { revenueWeight: number; returnsWeight: number } {
-  const row = PROJECTION_PROFILES[activityId]
+function getFamilyWeights(
+  activityId: EngineActivityId,
+  family: ProjectionFamily,
+  profiles: ProjectionProfiles
+): { revenueWeight: number; returnsWeight: number } {
+  const row = profiles[activityId]
   switch (family) {
     case "base_return":
       return { revenueWeight: row.starting_loop.revenueWeight, returnsWeight: row.starting_loop.returnsWeight }
@@ -143,9 +184,13 @@ function getFamilyWeights(activityId: EngineActivityId, family: ProjectionFamily
   }
 }
 
-export function projectFamilyImpact(input: FamilyProjectionInput): ProjectionResult {
+export function projectFamilyImpact(
+  input: FamilyProjectionInput,
+  overrides?: ProjectionPresetOverrideMap
+): ProjectionResult {
+  const profiles = resolveProjectionProfiles(overrides)
   const activityId = normalizeEngineActivityId(input.merchantType)
-  const weights = getFamilyWeights(activityId, input.projectionFamily)
+  const weights = getFamilyWeights(activityId, input.projectionFamily, profiles)
   const monthlyClients = Math.max(0, input.monthlyClients)
   const avgTicket = Math.max(0, input.avgTicket)
   const inactiveRate = percentToRate(input.inactivePercent)
@@ -184,3 +229,4 @@ function buildConfidenceLabelForFamily(family: ProjectionFamily) {
   }
   return "Projection collective et désir"
 }
+

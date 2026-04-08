@@ -106,7 +106,7 @@ export function ProjectionView() {
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-[11px] uppercase tracking-[0.18em] text-[#93A094]">{bundle.merchantLabel}</p>
           <h1 className="mt-4 font-serif text-4xl leading-[1.05] text-[#15372B] sm:text-5xl">
-            Voici le mouvement que Cardin lancerait chez vous
+            Projection revenu pour votre {bundle.merchantLabel.toLowerCase()}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-[#5C655E]">{bundle.brandPunchline}</p>
         </div>
@@ -136,10 +136,10 @@ export function ProjectionView() {
 
         <section className="mx-auto mt-8 max-w-4xl rounded-[32px] border border-[#D7DDD2] bg-[#FFFEFB] px-6 py-8 sm:px-8">
           <div className="max-w-2xl">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-[#93A094]">Mini-audit Cardin</p>
-            <h2 className="mt-3 font-serif text-3xl text-[#15372B]">On calibre le calcul a partir de votre carte</h2>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[#93A094]">Calibrage</p>
+            <h2 className="mt-3 font-serif text-3xl text-[#15372B]">Ajustez selon votre commerce</h2>
             <p className="mt-3 text-sm leading-relaxed text-[#5C655E]">
-              Vous choisissez seulement le niveau de flux, de panier et de frequence. Le scenario fait ensuite le reste.
+              Flux + panier moyen + frequence = projection ajustee.
             </p>
           </div>
 
@@ -159,8 +159,8 @@ export function ProjectionView() {
 
         <section className="mx-auto mt-8 max-w-5xl grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
           <div className="rounded-[32px] border border-[#D7DDD2] bg-[#FDFCF8] px-6 py-8 shadow-[0_24px_60px_-42px_rgba(23,58,46,0.2)] sm:px-8">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-[#93A094]">Projection mensuelle</p>
-            <h2 className="mt-3 font-serif text-3xl text-[#15372B]">Ce que ce mouvement peut vraiment recuperer</h2>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[#93A094]">Revenu mensuel</p>
+            <h2 className="mt-3 font-serif text-3xl text-[#15372B]">Estimation recuperable</h2>
             <p className="mt-3 text-sm leading-relaxed text-[#5C655E]">{simulation.rationale}</p>
 
             <div className="mt-8 border-t border-[#E7EAE4] pt-6">
@@ -200,11 +200,11 @@ export function ProjectionView() {
             />
 
             <div className="mt-5 rounded-[28px] border border-[#D7DDD2] bg-[#FDFCF8] px-6 py-6">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-[#93A094]">Ce qui tourne apres le scan</p>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[#93A094]">Mecanique</p>
               <div className="mt-4 space-y-3 text-sm text-[#2A3F35]">
-                <p>1. Le client scanne et ajoute la carte.</p>
-                <p>2. Il voit la progression et l'offre de depart.</p>
-                <p>3. Cardin relance au bon moment pour provoquer le prochain retour.</p>
+                <p>1. Client scanne → carte ajoutee.</p>
+                <p>2. Progression + offre visibles.</p>
+                <p>3. Relance automatique au bon moment.</p>
               </div>
             </div>
           </div>

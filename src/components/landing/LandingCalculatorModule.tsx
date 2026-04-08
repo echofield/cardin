@@ -12,7 +12,7 @@ import { type BehaviorPlan } from "@/lib/behavior-engine"
 import { DEFAULT_DAYS_OPEN, formatEuro, percentToRate } from "@/lib/calculator"
 import { dynamicToLegacyScenarioId, getDynamicDefinition, type DynamicId, type MerchantIntent } from "@/lib/dynamics-library"
 import { type MerchantTemplate } from "@/lib/merchant-templates"
-import { projectFamilyImpact } from "@/lib/projection-engine"
+import { projectFamilyImpact, type ProjectionPresetOverrideMap } from "@/lib/projection-engine"
 import { Button, Card, Slider } from "@/ui"
 
 type LandingCalculatorModuleProps = {
@@ -40,10 +40,35 @@ export function LandingCalculatorModule({
   const [recoveryPercent, setRecoveryPercent] = useState(Math.round(selectedTemplate.defaults.calculator_recovery_rate * 100))
   const [showAssumptionsEditor, setShowAssumptionsEditor] = useState(false)
   const [animateResult, setAnimateResult] = useState(false)
+  const [projectionOverrides, setProjectionOverrides] = useState<ProjectionPresetOverrideMap | undefined>(undefined)
 
   const dynamic = useMemo(() => getDynamicDefinition(selectedDynamicId), [selectedDynamicId])
   const legacyScenarioId = useMemo(() => dynamicToLegacyScenarioId(selectedDynamicId), [selectedDynamicId])
 
+  useEffect(() => {
+    let mounted = true
+
+    const loadProjectionPresets = async () => {
+      try {
+        const response = await fetch(`/api/projection-presets?activity=${encodeURIComponent(selectedTemplate.id)}`)
+        const payload = await response.json()
+
+        if (mounted && payload?.ok && payload?.overrides) {
+          setProjectionOverrides(payload.overrides as ProjectionPresetOverrideMap)
+        }
+      } catch {
+        if (mounted) {
+          setProjectionOverrides(undefined)
+        }
+      }
+    }
+
+    void loadProjectionPresets()
+
+    return () => {
+      mounted = false
+    }
+  }, [selectedTemplate.id])
   useEffect(() => {
     setRecoveryPercent(Math.round(selectedTemplate.defaults.calculator_recovery_rate * 100))
   }, [selectedTemplate.defaults.calculator_recovery_rate])
@@ -60,8 +85,8 @@ export function LandingCalculatorModule({
         primaryEffect: dynamic.calculatorPrimaryEffect,
         secondaryEffect: dynamic.calculatorSecondaryEffect,
         scenarioRole: dynamic.scenarioRole,
-      }),
-    [avgValue, basePerMonth, dynamic, inactivePercent, recoveryPercent, selectedTemplate.id]
+      }, projectionOverrides),
+    [avgValue, basePerMonth, dynamic, inactivePercent, projectionOverrides, recoveryPercent, selectedTemplate.id]
   )
 
   const calendarPlan = useMemo(
@@ -78,8 +103,9 @@ export function LandingCalculatorModule({
         avgTicket: avgValue,
         inactivePercent,
         baseRecoveryPercent: recoveryPercent,
+        projectionProfiles: projectionOverrides,
       }),
-    [avgValue, basePerMonth, inactivePercent, legacyScenarioId, recoveryPercent, selectedTemplate.id]
+    [avgValue, basePerMonth, inactivePercent, legacyScenarioId, projectionOverrides, recoveryPercent, selectedTemplate.id]
   )
 
   const monthlyValueFromOneReturnDaily = useMemo(() => avgValue * DEFAULT_DAYS_OPEN, [avgValue])
@@ -282,5 +308,9 @@ export function LandingCalculatorModule({
     </Card>
   )
 }
+
+
+
+
 
 

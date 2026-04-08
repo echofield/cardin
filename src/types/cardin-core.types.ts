@@ -263,9 +263,11 @@ export type BoutiqueCalculatorInput = {
 export type ConcreteProjection = {
   problemStatement: string      // Natural language problem description
   volumeRecovered: number       // Concrete number
-  revenueImpact: number        // Euros
+  revenueImpact: number        // Euros (mid-range or single value)
+  revenueImpactLow?: number    // Euros (low estimate) - optional for range
+  revenueImpactHigh?: number   // Euros (high estimate) - optional for range
   dominoIntensity: "low" | "medium" | "high"
-  timeframe: string            // "6 semaines"
+  timeframe: string            // e.g., "saison (3 mois)"
   concreteMetric: string       // "8 passages supplÃ©mentaires le lundi matin"
 }
 

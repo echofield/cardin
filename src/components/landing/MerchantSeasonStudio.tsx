@@ -88,20 +88,20 @@ const seasonModes: Array<{
   {
     months: 3,
     title: "Saison courte",
-    description: "Un cycle tendu pour prouver vite le systeme et lancer le desir.",
+    description: "Cycle rapide pour prouver le systeme.",
     selectiveCards: 50,
     massCards: 200,
-    note: "Format le plus simple pour une premiere preuve terrain.",
-    momentum: "3 mois pour activer, faire revenir, montrer les premiers Diamond.",
+    note: "Format simple, premiere preuve terrain.",
+    momentum: "3 mois: activation → retour → premiers Diamond.",
   },
   {
     months: 6,
     title: "Saison longue",
-    description: "Plus de temps pour faire monter les cartes, filtrer et installer les ambassadeurs.",
+    description: "Plus de temps pour installer propagation.",
     selectiveCards: 80,
     massCards: 280,
-    note: "Le bon format quand le lieu veut un recit plus profond et plus de propagation.",
-    momentum: "6 mois pour installer un vrai bouche-a-oreille visible et preparer la saison 2.",
+    note: "Format long, propagation plus profonde.",
+    momentum: "6 mois: bouche-a-oreille structure, preparation saison 2.",
   },
 ]
 
@@ -109,33 +109,33 @@ const worlds: WorldDefinition[] = [
   {
     id: "cafe",
     label: "Cafe",
-    eyebrow: "Rythme quotidien",
-    hero: "Le cafe gagne quand le retour devient bouche-a-oreille.",
-    intro: "Passage rapide, routine visible, comptoir ideal pour un domino discret qui fait revenir sans promotion.",
-    baselineMonthlyRecovered: 1200,
+    eyebrow: "Volume et frequence",
+    hero: "Cafe: frequence elevee, retour rapide.",
+    intro: "Panier moyen 5-8 EUR. Passage quotidien ou hebdomadaire. Le systeme optimise la recurrence.",
+    baselineMonthlyRecovered: 1400,
     baselineActivePaths: 150,
     baselineDominoMultiplier: 1.4,
     baselineTrust: 72,
     adSpend: 500,
     adDuration: "3 jours",
     installPrice: 300,
-    basketLine: "Un sommet type: 1 boisson signature par mois pendant 1 an.",
-    proofLine: "Le cafe transforme le passage en rituel visible et transmissible.",
+    basketLine: "Exemple sommet: 1 boisson signature par mois pendant 1 an.",
+    proofLine: "Passage → retour structure → propagation mesuree.",
     defaultSummitId: "signature-monthly",
-    walletRewardLabel: "Carte vivante / progression cardin",
-    walletNotification: "Votre carte monte quand le lieu circule.",
+    walletRewardLabel: "Progression visible",
+    walletNotification: "Votre statut evolue avec vos visites.",
     entry: {
       selective: {
         title: "Entree selective",
-        lead: "Le patron choisit les premieres cartes. La rarete precede la valeur.",
-        steps: ["50 cartes max", "activation silencieuse", "premier choc a la visite 2"],
-        outcome: "50 cartes initiales peuvent devenir 150 parcours actifs par domino et desir.",
+        lead: "Patron choisit 50 premieres cartes.",
+        steps: ["50 cartes max", "activation visite 1", "statut evolue visite 2"],
+        outcome: "50 cartes → 120-150 parcours actifs via propagation.",
       },
       mass: {
-        title: "Entree masse qualifiee",
-        lead: "QR accessible, la carte reste dormante jusqu'au vrai retour.",
-        steps: ["200 cartes distribuees", "visite 1 = dormante", "visite 2 = la carte s'allume"],
-        outcome: "La masse filtre naturellement: seuls les vrais retours activent la machine.",
+        title: "Entree masse",
+        lead: "QR accessible, filtre par comportement.",
+        steps: ["200 cartes distribuees", "visite 1 = dormante", "visite 2 = activation"],
+        outcome: "Filtre automatique: seuls les retours reels activent le systeme.",
       },
     },
     tiers: [
@@ -152,8 +152,8 @@ const worlds: WorldDefinition[] = [
         promise: "1 boisson signature par mois pendant 1 an.",
         annualCost: 120,
         visibilityLabel: "Sommet visible",
-        socialLiftLabel: "attire fort sans sur-promettre",
-        note: "Le sommet classique d'un cafe: simple, lisible, tres rentable.",
+        socialLiftLabel: "attire sans sur-promettre",
+        note: "Simple, lisible, rentable.",
         monthlyRecoveredBoost: 1,
         dominoBoost: 1,
         trustLift: 1,
@@ -161,11 +161,11 @@ const worlds: WorldDefinition[] = [
       {
         id: "duo-morning",
         title: "Duo du matin",
-        promise: "1 duo signature par mois pour la personne qui tire le plus de cartes vers le haut.",
+        promise: "1 duo signature par mois pour le sommet.",
         annualCost: 180,
         visibilityLabel: "Sommet tres visible",
-        socialLiftLabel: "renforce l'invitation et la venue a deux",
-        note: "Plus vous engagez le sommet, plus le domino devient naturellement social.",
+        socialLiftLabel: "renforce invitation",
+        note: "Pousse la venue a deux.",
         monthlyRecoveredBoost: 1.16,
         dominoBoost: 1.08,
         trustLift: 1.08,
@@ -173,11 +173,11 @@ const worlds: WorldDefinition[] = [
       {
         id: "hidden-cellar",
         title: "Privilege cache",
-        promise: "Un privilege non affiche, reserve au sommet de la saison.",
+        promise: "Privilege non affiche, reserve au sommet.",
         annualCost: 140,
         visibilityLabel: "Sommet discret",
-        socialLiftLabel: "renforce le desir sans tout reveler",
-        note: "Version plus mysterieuse, tres forte en tension narrative.",
+        socialLiftLabel: "desir sans affichage",
+        note: "Version mysterieuse.",
         monthlyRecoveredBoost: 1.08,
         dominoBoost: 1.03,
         trustLift: 1.05,
@@ -187,9 +187,9 @@ const worlds: WorldDefinition[] = [
   {
     id: "restaurant",
     label: "Restaurant",
-    eyebrow: "Table et occasion",
-    hero: "Le restaurant gagne quand la table devient recit.",
-    intro: "Retour plus espace, panier plus fort, desir de table: Cardin transforme les occasions en trajectoire sociale.",
+    eyebrow: "Panier moyen eleve",
+    hero: "Restaurant: panier 40-60 EUR, retour espacé.",
+    intro: "Frequence mensuelle ou bimestrielle. Table et invitation. Le systeme structure les reservations.",
     baselineMonthlyRecovered: 3800,
     baselineActivePaths: 135,
     baselineDominoMultiplier: 1.5,
@@ -197,23 +197,23 @@ const worlds: WorldDefinition[] = [
     adSpend: 800,
     adDuration: "3 jours",
     installPrice: 500,
-    basketLine: "Un sommet type: 1 repas signature par mois pendant 1 an.",
-    proofLine: "Le restaurant installe un ambassadeur qui reserve, invite et raconte.",
+    basketLine: "Exemple sommet: 1 repas signature par mois pendant 1 an.",
+    proofLine: "Table → retour structure → propagation par invitation.",
     defaultSummitId: "table-monthly",
-    walletRewardLabel: "Table cardin / progression vivante",
-    walletNotification: "Les cartes actives font monter le desir de table.",
+    walletRewardLabel: "Progression table",
+    walletNotification: "Votre statut evolue avec vos visites.",
     entry: {
       selective: {
         title: "Entree selective",
-        lead: "Le patron ou le maitre d'hotel choisit les premiers cercles.",
-        steps: ["80 cartes max", "table reconnue des la visite 1", "premier choc a la visite 2"],
-        outcome: "Le lieu cree une rarete lisible avant meme que le domino commence.",
+        lead: "Patron choisit 80 premieres cartes.",
+        steps: ["80 cartes max", "activation visite 1", "statut evolue visite 2"],
+        outcome: "80 cartes → 110-135 parcours actifs via invitation.",
       },
       mass: {
-        title: "Entree masse qualifiee",
-        lead: "QR sur la table ou au comptoir, la visite 2 active vraiment la carte.",
-        steps: ["200 cartes diffusees", "visite 1 = observation", "visite 2 = activation"],
-        outcome: "La salle se remplit avec des retours qualifies et une audience qui revient.",
+        title: "Entree masse",
+        lead: "QR sur table, filtre par retour reel.",
+        steps: ["200 cartes distribuees", "visite 1 = dormante", "visite 2 = activation"],
+        outcome: "Filtre automatique: seules les tables qui reviennent activent.",
       },
     },
     tiers: [
@@ -230,8 +230,8 @@ const worlds: WorldDefinition[] = [
         promise: "1 repas signature par mois pendant 1 an.",
         annualCost: 600,
         visibilityLabel: "Sommet visible",
-        socialLiftLabel: "fait comprendre qu'une vraie table peut se meriter",
-        note: "Le meilleur checkmate commercial: un repas mensuel vaut un ambassadeur sur 12 mois.",
+        socialLiftLabel: "table meritee",
+        note: "Un repas mensuel = ambassadeur 12 mois.",
         monthlyRecoveredBoost: 1,
         dominoBoost: 1,
         trustLift: 1,
@@ -239,11 +239,11 @@ const worlds: WorldDefinition[] = [
       {
         id: "chef-table",
         title: "Table du chef",
-        promise: "Une table chef reservee une fois par mois pour le sommet de la saison.",
+        promise: "Table chef reservee une fois par mois.",
         annualCost: 720,
         visibilityLabel: "Sommet tres visible",
-        socialLiftLabel: "pousse les retours et les invitations de facon plus nette",
-        note: "Plus rare, plus raconte, plus proche d'une histoire que d'une offre.",
+        socialLiftLabel: "pousse retours et invitations",
+        note: "Rare, raconte, histoire.",
         monthlyRecoveredBoost: 1.18,
         dominoBoost: 1.1,
         trustLift: 1.08,
@@ -251,11 +251,11 @@ const worlds: WorldDefinition[] = [
       {
         id: "secret-menu",
         title: "Menu secret",
-        promise: "Un privilege cache reserve a la carte la plus haute du cycle.",
+        promise: "Privilege cache reserve au sommet.",
         annualCost: 480,
         visibilityLabel: "Sommet discret",
-        socialLiftLabel: "mise sur le desir et la confidence",
-        note: "Moins frontal, tres efficace si le lieu prefere le mystere a l'affichage.",
+        socialLiftLabel: "desir et mystere",
+        note: "Mystere plutot qu'affichage.",
         monthlyRecoveredBoost: 1.07,
         dominoBoost: 1.03,
         trustLift: 1.05,
@@ -265,9 +265,9 @@ const worlds: WorldDefinition[] = [
   {
     id: "beaute",
     label: "Beaute",
-    eyebrow: "Cycle et soin",
-    hero: "La beaute gagne quand le suivi devient statut.",
-    intro: "Retour espace, forte confiance, bouche-a-oreille tres qualitatif: Cardin structure le cycle plutot que de le forcer.",
+    eyebrow: "Valeur et selection",
+    hero: "Beaute: valeur client elevee, trajectoire.",
+    intro: "Panier moyen 50-80 EUR. Frequence mensuelle ou bimestrielle. Selection qualitative, propagation par confiance.",
     baselineMonthlyRecovered: 2600,
     baselineActivePaths: 110,
     baselineDominoMultiplier: 1.3,
@@ -275,23 +275,23 @@ const worlds: WorldDefinition[] = [
     adSpend: 600,
     adDuration: "3 jours",
     installPrice: 300,
-    basketLine: "Un sommet type: 1 coupe ou soin signature par mois pendant 1 an.",
-    proofLine: "La beaute installe un recit de statut, de rythme et de recommandation.",
+    basketLine: "Exemple sommet: 1 soin signature par mois pendant 1 an.",
+    proofLine: "Cycle → statut client → recommandation qualitative.",
     defaultSummitId: "cut-monthly",
-    walletRewardLabel: "Rituel cardin / progression visible",
-    walletNotification: "Le statut monte quand le cycle se resserre et circule.",
+    walletRewardLabel: "Progression cycle",
+    walletNotification: "Votre statut evolue avec votre cycle.",
     entry: {
       selective: {
         title: "Entree selective",
-        lead: "Le studio ou le salon donne les premieres cartes aux clientes qu'il veut vraiment installer.",
-        steps: ["50 cartes max", "la carte pose le cycle", "visite 2 = vrai declic"],
-        outcome: "Le lieu choisit ses premieres ambassadrices avant meme d'activer le domino.",
+        lead: "Salon choisit 50 clientes cibles.",
+        steps: ["50 cartes max", "activation visite 1", "statut evolue visite 2"],
+        outcome: "50 cartes → 90-110 parcours via recommandation.",
       },
       mass: {
-        title: "Entree masse qualifiee",
-        lead: "QR a l'accueil ou apres le soin, le vrai retour donne sa chaleur a la carte.",
-        steps: ["150 cartes diffusees", "visite 1 = dormante", "visite 2 = active"],
-        outcome: "Le filtre comportemental garde les clientes qui entrent vraiment dans le cycle.",
+        title: "Entree masse",
+        lead: "QR a l'accueil, filtre par cycle reel.",
+        steps: ["150 cartes distribuees", "visite 1 = dormante", "visite 2 = activation"],
+        outcome: "Filtre automatique: seuls les cycles reels activent.",
       },
     },
     tiers: [
@@ -304,36 +304,36 @@ const worlds: WorldDefinition[] = [
     summits: [
       {
         id: "cut-monthly",
-        title: "Coupe mensuelle",
-        promise: "1 coupe ou soin signature par mois pendant 1 an.",
+        title: "Soin mensuel",
+        promise: "1 soin signature par mois pendant 1 an.",
         annualCost: 300,
         visibilityLabel: "Sommet visible",
-        socialLiftLabel: "fait comprendre qu'il existe un vrai statut dans le lieu",
-        note: "Le sommet le plus lisible pour un salon ou un institut.",
+        socialLiftLabel: "statut visible",
+        note: "Sommet classique salon/institut.",
         monthlyRecoveredBoost: 1,
         dominoBoost: 1,
         trustLift: 1,
       },
       {
         id: "ritual-duo",
-        title: "Rituel duo",
-        promise: "1 privilege duo mensuel pour la carte la plus haute.",
+        title: "Soin duo",
+        promise: "1 privilege duo mensuel pour le sommet.",
         annualCost: 420,
         visibilityLabel: "Sommet tres visible",
-        socialLiftLabel: "renforce naturellement l'effet invitation",
-        note: "Tres fort pour transformer la recommandation en rendez-vous reel.",
+        socialLiftLabel: "renforce invitation",
+        note: "Recommandation en rendez-vous reel.",
         monthlyRecoveredBoost: 1.15,
         dominoBoost: 1.08,
         trustLift: 1.08,
       },
       {
         id: "private-ritual",
-        title: "Rituel prive",
-        promise: "Un privilege non affiche reserve au sommet de la saison.",
+        title: "Acces prive",
+        promise: "Privilege non affiche reserve au sommet.",
         annualCost: 260,
         visibilityLabel: "Sommet discret",
-        socialLiftLabel: "joue la confidence plutot que l'affichage",
-        note: "Version plus silencieuse, tres forte pour un lieu precieux.",
+        socialLiftLabel: "confidence",
+        note: "Version silencieuse.",
         monthlyRecoveredBoost: 1.07,
         dominoBoost: 1.03,
         trustLift: 1.06,
@@ -343,33 +343,33 @@ const worlds: WorldDefinition[] = [
   {
     id: "boutique",
     label: "Boutique",
-    eyebrow: "Collection et desir",
-    hero: "La boutique gagne quand l'acces devient histoire.",
-    intro: "Passage plus rare, desir de piece, propagation elegante: Cardin structure une clientele qui revient pour viser un acces reel.",
-    baselineMonthlyRecovered: 1900,
+    eyebrow: "Desir et statut",
+    hero: "Boutique: valeur par piece, trajectoire client.",
+    intro: "Panier moyen 80-150 EUR. Frequence faible, valeur elevee. Collection et statut, pas volume.",
+    baselineMonthlyRecovered: 2200,
     baselineActivePaths: 95,
     baselineDominoMultiplier: 1.25,
     baselineTrust: 74,
     adSpend: 700,
     adDuration: "3 jours",
     installPrice: 500,
-    basketLine: "Un sommet type: 100 EUR de collection ou un acces reserve chaque mois pendant 1 an.",
-    proofLine: "La boutique transforme l'interet en trajectoire d'acces et de desir.",
+    basketLine: "Exemple sommet: 100 EUR collection par mois pendant 1 an.",
+    proofLine: "Desir → trajectoire client → acces exclusif.",
     defaultSummitId: "collection-credit",
-    walletRewardLabel: "Acces cardin / progression de collection",
-    walletNotification: "La piece se rapproche quand la carte monte et circule.",
+    walletRewardLabel: "Progression collection",
+    walletNotification: "Votre acces evolue avec votre trajectoire.",
     entry: {
       selective: {
         title: "Entree selective",
-        lead: "Le lieu choisit les premieres cartes et donne de la valeur avant toute remise.",
-        steps: ["60 cartes max", "desir installe des l'entree", "visite 2 = bascule"],
-        outcome: "Le cercle se construit avec des clientes qui comprennent deja le style du lieu.",
+        lead: "Boutique choisit 60 clientes cibles.",
+        steps: ["60 cartes max", "activation visite 1", "statut evolue visite 2"],
+        outcome: "60 cartes → 80-95 parcours via desir et style.",
       },
       mass: {
-        title: "Entree masse qualifiee",
-        lead: "QR disponible, la carte reste froide jusqu'au retour.",
-        steps: ["180 cartes diffusees", "visite 1 = regard", "visite 2 = la carte devient vivante"],
-        outcome: "Le lieu retient celles qui reviennent vraiment et fait monter leur desir.",
+        title: "Entree masse",
+        lead: "QR en boutique, filtre par retour reel.",
+        steps: ["180 cartes distribuees", "visite 1 = dormante", "visite 2 = activation"],
+        outcome: "Filtre automatique: seules les clientes qui reviennent activent.",
       },
     },
     tiers: [
@@ -383,23 +383,23 @@ const worlds: WorldDefinition[] = [
       {
         id: "collection-credit",
         title: "Credit collection",
-        promise: "100 EUR de collection par mois pendant 1 an pour la carte la plus haute.",
+        promise: "100 EUR collection par mois pendant 1 an.",
         annualCost: 1200,
         visibilityLabel: "Sommet visible",
-        socialLiftLabel: "installe un desir net dans toute la clientele",
-        note: "Le sommet frontal d'une boutique: simple a comprendre, tres fort a raconter.",
+        socialLiftLabel: "desir net clientele",
+        note: "Simple, fort a raconter.",
         monthlyRecoveredBoost: 1,
         dominoBoost: 1,
         trustLift: 1,
       },
       {
         id: "rare-drop",
-        title: "Rare drop mensuel",
-        promise: "Acces prioritaire mensuel a une piece ou capsule reservee.",
+        title: "Drop mensuel",
+        promise: "Acces prioritaire piece reservee mensuel.",
         annualCost: 800,
         visibilityLabel: "Sommet tres visible",
-        socialLiftLabel: "pousse le desir et le partage de facon plus organique",
-        note: "Tres fort quand la boutique veut faire monter la clientele sans parler remise.",
+        socialLiftLabel: "desir et partage",
+        note: "Montee clientele sans remise.",
         monthlyRecoveredBoost: 1.14,
         dominoBoost: 1.08,
         trustLift: 1.07,
@@ -407,11 +407,11 @@ const worlds: WorldDefinition[] = [
       {
         id: "private-piece",
         title: "Piece cachee",
-        promise: "Une piece ou acces cache reserve au sommet de la saison.",
+        promise: "Piece ou acces cache reserve au sommet.",
         annualCost: 650,
         visibilityLabel: "Sommet discret",
-        socialLiftLabel: "joue la confidence et la tension",
-        note: "La version la plus silencieuse, ideale pour une boutique qui vit de desir plutot que d'affichage.",
+        socialLiftLabel: "confidence et tension",
+        note: "Version silencieuse.",
         monthlyRecoveredBoost: 1.07,
         dominoBoost: 1.03,
         trustLift: 1.05,
@@ -479,12 +479,12 @@ export function MerchantSeasonStudio() {
       <div className="rounded-[2rem] border border-[#DED7CA] bg-[linear-gradient(180deg,#FFFDF8_0%,#F5F1E8_100%)] p-5 shadow-[0_28px_90px_-54px_rgba(21,47,37,0.38)] sm:p-8 lg:p-10">
         <div className="flex flex-col gap-6 border-b border-[#E3DDD0] pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-[#667067]">Revenu. Reseau. Affluence.</p>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-[#667067]">Simulateur saison</p>
             <h2 className="mt-3 font-serif text-4xl leading-[1.02] text-[#173328] sm:text-5xl lg:text-6xl">
-              Une saison pour transformer le simple passage en systeme de recurrence.
+              Configurez votre saison. Voyez le revenu recuperable.
             </h2>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-[#556159] sm:text-base">
-              La carte ouvre la saison. Cardin orchestre ensuite le retour, le domino et le sommet qui eleve tout le lieu.
+              Choisissez: lieu, sommet, duree. Le systeme calcule le retour potentiel sur la saison.
             </p>
           </div>
 
@@ -578,10 +578,10 @@ function WorldScreen({ selectedWorld, onSelectWorld, monthlyRecovered }: { selec
   return (
     <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
       <div>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Monde marchand</p>
-        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Choisissez votre lieu. Cardin vous montre ensuite sa logique complete.</h3>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Type de commerce</p>
+        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Choisissez votre type de lieu.</h3>
         <p className="mt-4 max-w-xl text-sm leading-7 text-[#59635C] sm:text-base">
-          Vous choisissez votre monde. Cardin met ensuite en place l'entree, l'activation, le domino et le sommet.
+          Chaque commerce a sa logique: frequence, panier moyen, type de propagation.
         </p>
 
         <div className="mt-8 grid gap-3 sm:grid-cols-2">
@@ -599,19 +599,19 @@ function WorldScreen({ selectedWorld, onSelectWorld, monthlyRecovered }: { selec
       </div>
 
       <div className="rounded-[1.6rem] border border-[#D8DED4] bg-[linear-gradient(180deg,#F8F7F0_0%,#EEF2EA_100%)] p-6 shadow-[0_22px_48px_-38px_rgba(23,58,46,0.28)]">
-        <p className="text-[11px] uppercase tracking-[0.18em] text-[#637067]">Version en cours</p>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-[#637067]">Metriques de base</p>
         <h4 className="mt-3 font-serif text-4xl leading-tight text-[#173A2E]">{selectedWorld.hero}</h4>
         <p className="mt-4 text-sm leading-7 text-[#556159]">{selectedWorld.proofLine}</p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <MiniMetricCard label="Revenu" value={formatEuro(monthlyRecovered)} note="recuperables / mois" />
-          <MiniMetricCard label="Reseau" value={`${selectedWorld.baselineActivePaths}`} note="parcours actifs" />
-          <MiniMetricCard label="Affluence" value={`${selectedWorld.baselineTrust}%`} note="intensite du recit" />
+          <MiniMetricCard label="Revenu" value={formatEuro(monthlyRecovered)} note="recuperable / mois" />
+          <MiniMetricCard label="Parcours" value={`${selectedWorld.baselineActivePaths}`} note="actifs potentiels" />
+          <MiniMetricCard label="Systeme" value={`${selectedWorld.baselineTrust}%`} note="intensite" />
         </div>
 
         <div className="mt-6 rounded-[1.4rem] border border-[#D8DED4] bg-[#FFFEFA] p-5">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[#69736C]">Le role de la carte</p>
-          <p className="mt-3 text-sm leading-7 text-[#556159]">Le client voit une carte. Le marchand lance en realite une saison avec entree selective ou masse qualifiee, activation au bon moment, domino discret et sommet visible.</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#69736C]">Mecanique</p>
+          <p className="mt-3 text-sm leading-7 text-[#556159]">Client = carte. Marchand = saison complete (entree, activation, propagation, sommet).</p>
         </div>
       </div>
     </div>
@@ -623,9 +623,9 @@ function SystemScreen({ selectedWorld, selectedSummit, activePaths, dominoMultip
     <div className="space-y-8">
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Entree et trajectoire</p>
-          <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Le systeme Cardin pour {selectedWorld.label.toLowerCase()}.</h3>
-          <p className="mt-4 max-w-3xl text-sm leading-7 text-[#59635C] sm:text-base">Cardin organise une suite: entree, activation, retour, domino, attraction. Ce mouvement cree le revenu, le reseau, puis l'influence du lieu.</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Mecanique systeme</p>
+          <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Progression pour {selectedWorld.label.toLowerCase()}.</h3>
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-[#59635C] sm:text-base">Entree → Activation → Retour → Propagation → Sommet</p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
@@ -637,23 +637,23 @@ function SystemScreen({ selectedWorld, selectedSummit, activePaths, dominoMultip
 
       <div className="grid gap-5 xl:grid-cols-[1.12fr_0.88fr]">
         <div className="rounded-[1.5rem] border border-[#E2DDD1] bg-[#FFFDF8] p-5">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[#69736C]">Deux entrees, un meme sommet</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#69736C]">Deux modes d'entree</p>
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <EntryLaneCard lane={selectedWorld.entry.selective} />
             <EntryLaneCard lane={selectedWorld.entry.mass} />
           </div>
         </div>
 
-        <WalletPassPreview activeDots={4} businessLabel={selectedWorld.label} caption="Le client sent que la carte change d'etat et que le lieu a une logique." footerLabel="SAISON CARDIN" notificationLabel={selectedWorld.walletNotification} progressDots={6} rewardLabel={selectedWorld.walletRewardLabel} statusLabel="Active" />
+        <WalletPassPreview activeDots={4} businessLabel={selectedWorld.label} caption="Carte evolue visuellement selon statut." footerLabel="SAISON CARDIN" notificationLabel={selectedWorld.walletNotification} progressDots={6} rewardLabel={selectedWorld.walletRewardLabel} statusLabel="Active" />
       </div>
 
       <div className="rounded-[1.5rem] border border-[#E2DDD1] bg-[#FFFDF8] p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.16em] text-[#69736C]">Ascent</p>
-            <h4 className="mt-2 font-serif text-3xl text-[#173A2E]">Le statut change la portee sociale.</h4>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[#69736C]">Progression statut</p>
+            <h4 className="mt-2 font-serif text-3xl text-[#173A2E]">Statut = portee sociale.</h4>
           </div>
-          <p className="max-w-xl text-sm leading-7 text-[#556159]">Plus la carte monte, plus elle fait revenir, puis circuler. Le Grand Diamond n'invite meme plus seulement: il attire par existence.</p>
+          <p className="max-w-xl text-sm leading-7 text-[#556159]">Carte monte → retour augmente → propagation active → sommet attire.</p>
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
@@ -674,9 +674,9 @@ function SystemScreen({ selectedWorld, selectedSummit, activePaths, dominoMultip
           </div>
 
           <div className="grid gap-3">
-            <LawCard title="Activation" body="En entree masse, la visite 1 ne suffit pas. La visite 2 prouve qu'une personne existe vraiment pour le lieu." />
-            <LawCard title="Domino" body="Diamond porte un rayon social plus large et peut faire naitre d'autres cartes." />
-            <LawCard title="Attraction" body="Le sommet ne fait pas seulement plaisir a une personne. Il tire tout le reste vers le haut en rendant le systeme desirable." />
+            <LawCard title="Activation" body="Visite 1 = dormante. Visite 2 = activation. Filtre comportemental automatique." />
+            <LawCard title="Propagation" body="Diamond = rayon social elargi. Peut inviter 1-2 personnes." />
+            <LawCard title="Sommet" body="Grand Diamond = attracteur. Rend le systeme desirable pour tous." />
           </div>
         </div>
       </div>
@@ -687,9 +687,9 @@ function SummitScreen({ selectedWorld, selectedSummit, onSelectSummit, monthlyRe
   return (
     <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
       <div>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Grand Diamond</p>
-        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Choisissez ce que vous etes pret a mettre au sommet.</h3>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">C'est votre vrai choix. Plus le sommet est fort, plus l'attraction et le domino gagnent en intensite. Le marchand choisit les stakes. Cardin donne sa forme au jeu.</p>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Sommet</p>
+        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Choisissez votre sommet.</h3>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">Sommet fort = attraction forte. Le sommet justifie toute la progression.</p>
 
         <div className="mt-6 grid gap-4">
           {selectedWorld.summits.map((summit) => {
@@ -722,16 +722,16 @@ function SummitScreen({ selectedWorld, selectedSummit, onSelectSummit, monthlyRe
       </div>
 
       <div className="space-y-4">
-        <WalletPassPreview activeDots={5} businessLabel={selectedWorld.label} caption="Le client voit le sommet. Ce decalage nourrit le desir." footerLabel="GRAND DIAMOND" notificationLabel={`Sommet en vue: ${selectedSummit.promise}`} progressDots={6} rewardLabel={selectedSummit.promise} statusLabel="Sommet" />
+        <WalletPassPreview activeDots={5} businessLabel={selectedWorld.label} caption="Client voit sommet proche." footerLabel="GRAND DIAMOND" notificationLabel={`Sommet: ${selectedSummit.promise}`} progressDots={6} rewardLabel={selectedSummit.promise} statusLabel="Sommet" />
 
         <Card className="p-6">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Ce que votre sommet change deja</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Impact sommet</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <MiniMetricCard label="Revenu" value={formatEuro(monthlyRecovered)} note="recuperables / mois" />
-            <MiniMetricCard label="Reseau" value={selectedSummit.socialLiftLabel} note="effet domino" />
-            <MiniMetricCard label="Affluence" value={selectedSummit.visibilityLabel} note="pour le lieu" />
+            <MiniMetricCard label="Revenu" value={formatEuro(monthlyRecovered)} note="recuperable / mois" />
+            <MiniMetricCard label="Effet" value={selectedSummit.socialLiftLabel} note="propagation" />
+            <MiniMetricCard label="Type" value={selectedSummit.visibilityLabel} note="visibilite" />
           </div>
-          <p className="mt-4 text-sm leading-7 text-[#556159]">Le sommet justifie toute l'ascension et donne son poids a la saison.</p>
+          <p className="mt-4 text-sm leading-7 text-[#556159]">Sommet justifie progression complete.</p>
         </Card>
       </div>
     </div>
@@ -742,9 +742,9 @@ function SeasonScreen({ selectedSeason, onSelectSeason, selectedSeasonMode, sele
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
       <div>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Saison</p>
-        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Choisissez la duree du recit.</h3>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">La saison est limitee. C'est ce qui donne de la valeur aux cartes, de la lisibilite au sommet, et un vrai sens a la saison 2 si la preuve est la.</p>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Duree saison</p>
+        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Choisissez la duree.</h3>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">Saison limitee = valeur carte. Preuve saison 1 = vente saison 2.</p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {seasonModes.map((mode) => {
@@ -767,20 +767,20 @@ function SeasonScreen({ selectedSeason, onSelectSeason, selectedSeasonMode, sele
 
       <div className="space-y-4">
         <Card className="p-6">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Narration de saison</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Progression</p>
           <h4 className="mt-3 font-serif text-3xl text-[#173A2E]">{selectedSeasonMode.momentum}</h4>
-          <p className="mt-3 text-sm leading-7 text-[#556159]">Le sommet choisi reste le meme pendant tout le cycle: <strong className="font-medium text-[#173A2E]">{selectedSummit.promise}</strong></p>
+          <p className="mt-3 text-sm leading-7 text-[#556159]">Sommet fixe: <strong className="font-medium text-[#173A2E]">{selectedSummit.promise}</strong></p>
         </Card>
 
         <div className="grid gap-4 sm:grid-cols-3">
           <MiniMetricCard label="Revenu" value={formatEuro(monthlyRecovered)} note="par mois" />
-          <MiniMetricCard label="Reseau" value={`${activePaths}`} note="parcours actifs" />
-          <MiniMetricCard label="Affluence" value={`${selectedSeasonMode.months} mois`} note="duree du recit" />
+          <MiniMetricCard label="Parcours" value={`${activePaths}`} note="actifs potentiels" />
+          <MiniMetricCard label="Duree" value={`${selectedSeasonMode.months} mois`} note="cycle complet" />
         </div>
 
         <Card className="p-6">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Ce que le marchand ressent</p>
-          <p className="mt-3 text-sm leading-7 text-[#556159]">Vous lancez une saison avec des cartes limitees, une progression qui se raconte et une deuxieme saison qui peut se payer par la preuve.</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Mecanique</p>
+          <p className="mt-3 text-sm leading-7 text-[#556159]">Cartes limitees → progression mesuree → preuve terrain → saison 2 justifiee.</p>
         </Card>
       </div>
     </div>
@@ -791,52 +791,52 @@ function CheckmateScreen({ selectedWorld, selectedSummit, selectedSeason, season
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Revenu, reseau, affluence</p>
-        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Le checkmate arrive ici.</h3>
-        <p className="mt-4 max-w-3xl text-sm leading-7 text-[#59635C] sm:text-base">Cardin se mesure au revenu recupere, au bouche-a-oreille structure et a l'influence visible dans le lieu.</p>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Recapitulatif</p>
+        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Revenu potentiel sur la saison.</h3>
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-[#59635C] sm:text-base">Chiffres bases sur: retour client structure, propagation mesuree, sommet attracteur.</p>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[0.9fr_0.1fr_1fr] xl:items-start">
         <Card className="border-[#C9B06D] bg-[linear-gradient(180deg,#FBF4DE_0%,#F5E8B9_100%)] p-6">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[#7A641D]">Grand Diamond</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#7A641D]">Sommet Cardin</p>
           <p className="mt-3 font-serif text-4xl text-[#4B3E12]">{formatEuro(selectedSummit.annualCost)}</p>
-          <p className="mt-2 text-sm text-[#5D5223]">par an pour {selectedSummit.promise.toLowerCase()}</p>
+          <p className="mt-2 text-sm text-[#5D5223]">par an: {selectedSummit.promise.toLowerCase()}</p>
           <div className="mt-6 space-y-3 text-sm leading-7 text-[#5D5223]">
-            <p>Une presence visible pendant {selectedSeason} mois.</p>
-            <p>Une trajectoire que les autres cartes regardent.</p>
-            <p>Un sommet qui transforme la venue en aspiration.</p>
+            <p>{selectedSeason} mois de presence.</p>
+            <p>Trajectoire visible autres clients.</p>
+            <p>Attracteur pour le lieu.</p>
           </div>
         </Card>
 
         <div className="hidden h-full items-center justify-center text-sm italic text-[#8B8F86] xl:flex">vs</div>
 
         <Card className="p-6">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Campagne classique</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Pub classique</p>
           <p className="mt-3 font-serif text-4xl text-[#173A2E]">{formatEuro(selectedWorld.adSpend)}</p>
-          <p className="mt-2 text-sm text-[#556159]">pour {selectedWorld.adDuration} d'attention louee</p>
+          <p className="mt-2 text-sm text-[#556159]">{selectedWorld.adDuration} attention</p>
           <div className="mt-6 space-y-3 text-sm leading-7 text-[#556159]">
-            <p>Pas de carte identitaire.</p>
-            <p>Pas de domino structure.</p>
-            <p>Pas de sommet visible qui dure.</p>
+            <p>Pas de carte.</p>
+            <p>Pas de propagation.</p>
+            <p>Pas de sommet durable.</p>
           </div>
         </Card>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="p-6">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Argent</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Revenu</p>
           <p className="mt-3 font-serif text-4xl text-[#173A2E]">{formatEuro(monthlyRecovered)}</p>
-          <p className="mt-2 text-sm leading-7 text-[#556159]">recuperables par mois, soit {formatEuro(seasonValue)} sur {selectedSeason} mois si la saison prend.</p>
+          <p className="mt-2 text-sm leading-7 text-[#556159]">par mois → {formatEuro(seasonValue)} sur {selectedSeason} mois.</p>
         </Card>
         <Card className="p-6">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Reseau</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Propagation</p>
           <p className="mt-3 font-serif text-4xl text-[#173A2E]">x{dominoMultiplier}</p>
-          <p className="mt-2 text-sm leading-7 text-[#556159]">jusqu'a {activePaths} parcours actifs avec {seasonCards.selective} cartes selectives ou {seasonCards.mass} cartes masse.</p>
+          <p className="mt-2 text-sm leading-7 text-[#556159]">{activePaths} parcours actifs via {seasonCards.selective} selective ou {seasonCards.mass} masse.</p>
         </Card>
         <Card className="p-6">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Affluence</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Systeme</p>
           <p className="mt-3 font-serif text-4xl text-[#173A2E]">{trustScore}%</p>
-          <p className="mt-2 text-sm leading-7 text-[#556159]">de force narrative percue: le lieu gagne en affluence et en presence.</p>
+          <p className="mt-2 text-sm leading-7 text-[#556159]">Intensite systeme. Lieu gagne en presence.</p>
         </Card>
       </div>
     </div>
@@ -847,9 +847,9 @@ function ActivateScreen({ selectedWorld, selectedSummit, selectedSeason, monthly
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
       <div>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Activation</p>
-        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Votre saison est prete a partir.</h3>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">Maintenant le recit est simple: un lieu, un sommet, une duree, un systeme. Le client voit une carte. Vous, vous lancez une machine qui remplace une partie du marketing par du retour, du reseau et de la confiance.</p>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Lancement</p>
+        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Saison prete.</h3>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">Un lieu + un sommet + une duree = systeme complet. Client voit carte. Marchand lance machine.</p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <Card className="p-6">
@@ -879,21 +879,21 @@ function ActivateScreen({ selectedWorld, selectedSummit, selectedSeason, monthly
 
       <div className="space-y-4">
         <Card className="p-6">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Ce que vous visez</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Objectif saison</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <MiniMetricCard label="Revenu" value={formatEuro(monthlyRecovered)} note="par mois" />
-            <MiniMetricCard label="Reseau" value={`${activePaths}`} note="parcours actifs" />
-            <MiniMetricCard label="Affluence" value={formatEuro(seasonValue)} note="signal sur la saison" />
+            <MiniMetricCard label="Parcours" value={`${activePaths}`} note="actifs potentiels" />
+            <MiniMetricCard label="Total" value={formatEuro(seasonValue)} note="sur saison" />
           </div>
-          <p className="mt-4 text-sm leading-7 text-[#556159]">La saison 2 se vend par la preuve que la saison 1 a laissee derriere elle.</p>
+          <p className="mt-4 text-sm leading-7 text-[#556159]">Saison 2 justifiee par preuve saison 1.</p>
         </Card>
 
         <Card className="p-6">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Phase 0</p>
-          <p className="mt-3 text-sm leading-7 text-[#556159]">Paiement valide, activation digitale en 48h, puis impression et envoi des cartes physiques. Ensuite, le systeme devient plus autonome: le lieu garde la narration, la carte garde l'identite, Cardin garde la physique.</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Activation</p>
+          <p className="mt-3 text-sm leading-7 text-[#556159]">Paiement → activation digitale 48h → impression + envoi cartes physiques.</p>
           <div className="mt-4 rounded-2xl border border-[#D8DED4] bg-[#FBFCF8] p-4">
-            <p className="text-[10px] uppercase tracking-[0.14em] text-[#6D776F]">Delai operationnel</p>
-            <p className="mt-2 text-sm leading-7 text-[#203B31]">Activation dashboard et wallet: 48h. Cartes physiques: 7 a 10 jours ouvres.</p>
+            <p className="text-[10px] uppercase tracking-[0.14em] text-[#6D776F]">Delais</p>
+            <p className="mt-2 text-sm leading-7 text-[#203B31]">Dashboard + wallet: 48h. Cartes physiques: 7-10 jours.</p>
           </div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <a className="inline-flex h-12 items-center justify-center rounded-full border border-[#1B4332] bg-[#1B4332] px-8 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href={STRIPE_PAYMENT_LINK} rel="noreferrer" target="_blank">

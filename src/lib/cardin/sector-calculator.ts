@@ -23,7 +23,13 @@ export function calculateCafeProjection(input: CafeCalculatorInput): ConcretePro
   const emptyDayCount = emptyDays.length
   const recoveryPerDay = Math.floor(8 + (regularCount / 50) * 4)
   const volumeRecovered = emptyDayCount * recoveryPerDay
-  const revenueImpact = Math.round(volumeRecovered * 8.5)
+
+  // Seasonal calculation (3 months = ~13 weeks = ~90 days)
+  const weeklyRevenue = Math.round(volumeRecovered * 8.5)
+  const seasonalRevenueMid = weeklyRevenue * 13
+  const seasonalRevenueLow = Math.round(seasonalRevenueMid * 0.85)
+  const seasonalRevenueHigh = Math.round(seasonalRevenueMid * 1.15)
+
   const dominoIntensity: "low" | "medium" | "high" =
     regularCount >= 50 ? "high" : regularCount >= 30 ? "medium" : "low"
 
@@ -32,11 +38,13 @@ export function calculateCafeProjection(input: CafeCalculatorInput): ConcretePro
 
   return {
     problemStatement,
-    volumeRecovered,
-    revenueImpact,
+    volumeRecovered: volumeRecovered * 13, // Weekly volume over season
+    revenueImpact: seasonalRevenueMid,
+    revenueImpactLow: seasonalRevenueLow,
+    revenueImpactHigh: seasonalRevenueHigh,
     dominoIntensity,
-    timeframe: "6 semaines",
-    concreteMetric: `${volumeRecovered} passages supplementaires ${firstEmptyDay} ${firstPeakTime}`,
+    timeframe: "saison (3 mois)",
+    concreteMetric: `${volumeRecovered} passages/semaine recuperes`,
   }
 }
 
@@ -46,27 +54,33 @@ export function calculateRestaurantProjection(input: RestaurantCalculatorInput):
   const emptyServicesFr = emptyServices.map(serviceToFrench).join(", ")
   const weekendFlowFr =
     weekendFlow === "full"
-      ? "vos weekends sont pleins"
+      ? "weekends complets"
       : weekendFlow === "moderate"
-        ? "vos weekends sont moderes"
-        : "vos weekends sont vides"
-  const problemStatement = `Vos ${emptyServicesFr} sont faibles et ${weekendFlowFr}`
+        ? "weekends moderes"
+        : "weekends faibles"
+  const problemStatement = `Services faibles: ${emptyServicesFr}. Weekends: ${weekendFlowFr}. Panier moyen: ${avgCoverPrice}EUR`
 
-  const recoveryPerService = weekendFlow === "full" ? 10 : weekendFlow === "moderate" ? 8 : 6
-  const volumeRecovered = emptyServices.length * recoveryPerService
-  const revenueImpact = Math.round(volumeRecovered * avgCoverPrice)
+  const recoveryPerService = weekendFlow === "full" ? 12 : weekendFlow === "moderate" ? 9 : 7
+  const weeklyCovers = emptyServices.length * recoveryPerService
+
+  // Seasonal calculation (3 months = ~13 weeks)
+  const seasonalCovers = weeklyCovers * 13
+  const seasonalRevenueMid = Math.round(seasonalCovers * avgCoverPrice)
+  const seasonalRevenueLow = Math.round(seasonalRevenueMid * 0.88)
+  const seasonalRevenueHigh = Math.round(seasonalRevenueMid * 1.12)
+
   const dominoIntensity: "low" | "medium" | "high" =
     weekendFlow === "full" ? "high" : weekendFlow === "moderate" ? "medium" : "low"
 
-  const firstService = emptyServices[0] ? serviceToFrench(emptyServices[0]) : "service cible"
-
   return {
     problemStatement,
-    volumeRecovered,
-    revenueImpact,
+    volumeRecovered: seasonalCovers,
+    revenueImpact: seasonalRevenueMid,
+    revenueImpactLow: seasonalRevenueLow,
+    revenueImpactHigh: seasonalRevenueHigh,
     dominoIntensity,
-    timeframe: "6 semaines",
-    concreteMetric: `${volumeRecovered} couverts supplementaires ${firstService}`,
+    timeframe: "saison (3 mois)",
+    concreteMetric: `${weeklyCovers} couverts/semaine recuperables`,
   }
 }
 
@@ -74,24 +88,22 @@ export function calculateCreatorProjection(input: CreatorCalculatorInput): Concr
   const { communitySize, avgReturnRate, contentFrequency } = input
 
   const returnRatePercent = Math.round(avgReturnRate * 100)
-  const frequencyFr =
-    contentFrequency === "daily" ? "quotidien" : contentFrequency === "weekly" ? "hebdomadaire" : "mensuel"
-  const problemStatement = `Vous avez ${communitySize} personnes mais seulement ${returnRatePercent}% reviennent avec un rythme ${frequencyFr}`
+  const problemStatement = `${communitySize} membres, ${returnRatePercent}% retour actuel`
 
-  const liftRate = contentFrequency === "daily" ? 0.25 : contentFrequency === "weekly" ? 0.2 : 0.15
-  const newReturnRate = Math.min(1, avgReturnRate + liftRate)
-  const volumeRecovered = Math.round(communitySize * (newReturnRate - avgReturnRate))
-  const revenueImpact = Math.round(volumeRecovered * 15)
+  // Simplified: focus on engagement lift
+  const engagementLift = 0.18 // Fixed lift rate
+  const volumeRecovered = Math.round(communitySize * engagementLift)
+  const revenueImpact = Math.round(volumeRecovered * 12) // Simplified value per member
   const dominoIntensity: "low" | "medium" | "high" =
-    communitySize >= 500 && contentFrequency === "daily" ? "high" : communitySize >= 200 ? "medium" : "low"
+    communitySize >= 400 ? "high" : communitySize >= 150 ? "medium" : "low"
 
   return {
     problemStatement,
     volumeRecovered,
     revenueImpact,
     dominoIntensity,
-    timeframe: "8 semaines",
-    concreteMetric: `${volumeRecovered} membres engages supplementaires avec propagation sociale`,
+    timeframe: "2 mois",
+    concreteMetric: `${volumeRecovered} membres engages supplementaires`,
   }
 }
 
@@ -99,19 +111,16 @@ export function calculateLocalCommerceProjection(input: LocalCommerceCalculatorI
   const { clientsPerDay, avgBasket, quietDays, repeatRhythm } = input
 
   const repeatLabel =
-    repeatRhythm === "high"
-      ? "une clientele qui revient deja souvent"
-      : repeatRhythm === "mixed"
-        ? "un melange d'habitudes et de passages occasionnels"
-        : "une clientele encore trop occasionnelle"
+    repeatRhythm === "high" ? "bon retour" : repeatRhythm === "mixed" ? "retour mixte" : "faible retour"
 
-  const problemStatement = `Vous voyez environ ${clientsPerDay} clients par jour, avec ${quietDays} jour${quietDays > 1 ? "s" : ""} plus calme${quietDays > 1 ? "s" : ""} et ${repeatLabel}`
+  const problemStatement = `${clientsPerDay} clients/jour, ${quietDays} jour${quietDays > 1 ? "s" : ""} calme${quietDays > 1 ? "s" : ""}, ${repeatLabel}`
 
-  const rhythmFactor = repeatRhythm === "high" ? 0.18 : repeatRhythm === "mixed" ? 0.14 : 0.1
-  const volumeRecovered = Math.max(6, Math.round(clientsPerDay * quietDays * rhythmFactor * 1.4))
+  // Simplified: focus on repeat improvement
+  const baseRecovery = Math.round(clientsPerDay * 0.15)
+  const volumeRecovered = baseRecovery * quietDays
   const revenueImpact = Math.round(volumeRecovered * avgBasket)
   const dominoIntensity: "low" | "medium" | "high" =
-    repeatRhythm === "high" || clientsPerDay >= 55 ? "high" : repeatRhythm === "mixed" || clientsPerDay >= 30 ? "medium" : "low"
+    clientsPerDay >= 50 ? "high" : clientsPerDay >= 25 ? "medium" : "low"
 
   return {
     problemStatement,
@@ -119,32 +128,40 @@ export function calculateLocalCommerceProjection(input: LocalCommerceCalculatorI
     revenueImpact,
     dominoIntensity,
     timeframe: "6 semaines",
-    concreteMetric: `${volumeRecovered} retours recuperables sur vos ${quietDays} jour${quietDays > 1 ? "s" : ""} les plus calmes`,
+    concreteMetric: `${volumeRecovered} retours supplementaires`,
   }
 }
 
 export function calculateBoutiqueProjection(input: BoutiqueCalculatorInput): ConcreteProjection {
   const { footfall, conversionRate, avgBasket, seasonalPeaks } = input
 
-  const conversionPercent = Math.round(conversionRate * 100)
-  const peakCount = seasonalPeaks.length
-  const problemStatement = `Vous avez ${footfall} passages par jour avec ${conversionPercent}% de conversion et ${peakCount} pics saisonniers`
+  const returnPercent = Math.round(conversionRate * 100)
+  const collectionCount = seasonalPeaks.length
+  const problemStatement = `${footfall} clientes actives/mois, ${returnPercent}% de retour, ${collectionCount} collection${collectionCount > 1 ? "s" : ""} forte${collectionCount > 1 ? "s" : ""}`
 
-  const liftRate = peakCount >= 3 ? 0.12 : peakCount >= 2 ? 0.1 : 0.08
-  const newConversionRate = Math.min(1, conversionRate + liftRate)
-  const dailyLift = footfall * (newConversionRate - conversionRate)
-  const volumeRecovered = Math.round(dailyLift * 26)
-  const revenueImpact = Math.round(volumeRecovered * avgBasket)
+  // Focus on repeat purchase trajectory
+  const trajectoryLift = collectionCount >= 3 ? 0.18 : collectionCount >= 2 ? 0.14 : 0.10
+  const newReturnRate = Math.min(1, conversionRate + trajectoryLift)
+  const monthlyReturns = footfall * (newReturnRate - conversionRate)
+
+  // Seasonal calculation (3 months)
+  const seasonalReturns = Math.round(monthlyReturns * 3)
+  const seasonalRevenueMid = Math.round(seasonalReturns * avgBasket)
+  const seasonalRevenueLow = Math.round(seasonalRevenueMid * 0.82)
+  const seasonalRevenueHigh = Math.round(seasonalRevenueMid * 1.18)
+
   const dominoIntensity: "low" | "medium" | "high" =
-    footfall >= 50 && peakCount >= 3 ? "high" : footfall >= 30 ? "medium" : "low"
+    footfall >= 40 && collectionCount >= 3 ? "high" : footfall >= 25 ? "medium" : "low"
 
   return {
     problemStatement,
-    volumeRecovered,
-    revenueImpact,
+    volumeRecovered: seasonalReturns,
+    revenueImpact: seasonalRevenueMid,
+    revenueImpactLow: seasonalRevenueLow,
+    revenueImpactHigh: seasonalRevenueHigh,
     dominoIntensity,
-    timeframe: "6 semaines",
-    concreteMetric: `${volumeRecovered} conversions supplementaires par mois`,
+    timeframe: "saison (3 mois)",
+    concreteMetric: `${Math.round(monthlyReturns)} retours supplementaires/mois`,
   }
 }
 

@@ -19,6 +19,8 @@ type InstallLeadFormProps = {
   seasonLength?: 3 | 6
   summitId?: string
   summitTitle?: string
+  scenarioId?: string
+  scenarioLabel?: string
   embedded?: boolean
   title?: string
   description?: string
@@ -46,6 +48,8 @@ type LeadSubmitState =
         seasonLength: 3 | 6
         summitId: string
         summitTitle: string
+        scenarioId: string
+        scenarioLabel: string
       }
     }
 
@@ -58,6 +62,8 @@ export function InstallLeadForm({
   seasonLength = 3,
   summitId = "default-summit",
   summitTitle = "Privilege de saison",
+  scenarioId = "starting_loop",
+  scenarioLabel = "Scenario Cardin",
   embedded = false,
   title = "Lancer votre carte en boutique",
   description = "Connexion simple, configuration claire, QR pret en quelques minutes.",
@@ -79,6 +85,8 @@ export function InstallLeadForm({
     seasonLength,
     summitId,
     summitTitle,
+    scenarioId,
+    scenarioLabel,
     sharedUnlockObjective: 120,
     sharedUnlockWindowDays: 7,
     sharedUnlockOffer: "Offre collective de la semaine",
@@ -95,8 +103,10 @@ export function InstallLeadForm({
       seasonLength,
       summitId,
       summitTitle,
+      scenarioId,
+      scenarioLabel,
     }))
-  }, [activityTemplateId, entryMode, midpointMode, rewardLabel, seasonLength, summitId, summitTitle, targetVisits])
+  }, [activityTemplateId, entryMode, midpointMode, rewardLabel, seasonLength, summitId, summitTitle, scenarioId, scenarioLabel, targetVisits])
 
   useEffect(() => {
     const supabase = createClientSupabaseBrowser()
@@ -110,7 +120,7 @@ export function InstallLeadForm({
       setCheckingSession(false)
     }
 
-    loadSession()
+    void loadSession()
 
     const {
       data: { subscription },
@@ -173,6 +183,8 @@ export function InstallLeadForm({
         sharedUnlockWindowDays: formData.sharedUnlockWindowDays,
         seasonLength: formData.seasonLength,
         summitId: formData.summitId,
+        scenarioId: formData.scenarioId,
+        scenarioLabel: formData.scenarioLabel,
       })
     } catch {
       setState({
@@ -192,6 +204,7 @@ export function InstallLeadForm({
         {formData.midpointMode === "recognition_plus_boost" ? "Cap intermediaire: reconnaissance + boost" : "Cap intermediaire: reconnaissance uniquement"}
       </p>
       <p className="mt-1 text-sm text-[#556159]">Saison: {formData.seasonLength} mois</p>
+      <p className="mt-1 text-sm text-[#556159]">Scenario: {formData.scenarioLabel}</p>
       <p className="mt-1 text-sm text-[#556159]">Sommet: {formData.summitTitle}</p>
       <button
         className="mt-3 text-xs font-medium text-[#173A2E] underline-offset-2 hover:underline"
@@ -223,10 +236,7 @@ export function InstallLeadForm({
           </div>
           <div>
             <label className="block text-xs uppercase tracking-[0.12em] text-[#5A645D]">Offre debloquee</label>
-            <Input
-              onChange={(event) => setFormData((prev) => ({ ...prev, sharedUnlockOffer: event.target.value }))}
-              value={formData.sharedUnlockOffer}
-            />
+            <Input onChange={(event) => setFormData((prev) => ({ ...prev, sharedUnlockOffer: event.target.value }))} value={formData.sharedUnlockOffer} />
           </div>
         </div>
       ) : null}
@@ -243,6 +253,7 @@ export function InstallLeadForm({
           <p>{state.setup.targetVisits} passages {"->"} {state.setup.rewardLabel}</p>
           <p>{state.setup.midpointMode === "recognition_plus_boost" ? "Cap intermediaire : boost actif" : "Cap intermediaire : reconnaissance uniquement"}</p>
           <p>Saison : {state.setup.seasonLength} mois</p>
+          <p>Scenario : {state.setup.scenarioLabel}</p>
           <p>Sommet : {state.setup.summitTitle}</p>
           <p>Objectif collectif: {state.setup.objective} passages/mois</p>
           <p>Fenetre active: {state.setup.activeWindowDays} jours</p>
@@ -339,15 +350,21 @@ export function InstallLeadForm({
 
 function createCallbackOptions() {
   const now = new Date()
-  const formatter = new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "2-digit", month: "2-digit" })
   const slots = ["10h-12h", "12h-14h", "14h-16h", "16h-18h"]
+
+  const formatDay = (date: Date) => {
+    try {
+      const formatter = new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "2-digit", month: "2-digit" })
+      return formatter.format(date)
+    } catch {
+      return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`
+    }
+  }
 
   return Array.from({ length: 3 }).flatMap((_, index) => {
     const date = new Date(now)
     date.setDate(now.getDate() + index)
 
-    return slots.map((slot) => `${formatter.format(date)} · ${slot}`)
+    return slots.map((slot) => `${formatDay(date)} · ${slot}`)
   })
 }
-
-

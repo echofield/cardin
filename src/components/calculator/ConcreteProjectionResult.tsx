@@ -26,8 +26,14 @@ export function ConcreteProjectionResult({ projection, sectorType }: Props) {
 
       <div className="mt-6 rounded-2xl border border-[#CCD3C9] bg-white/70 p-5">
         <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Potentiel recuperable</p>
-        <p className="mt-2 font-serif text-5xl text-[#173A2E] sm:text-6xl">+{projection.revenueImpact}EUR</p>
-        <p className="mt-2 text-sm text-[#556159]">ordre de grandeur sur {projection.timeframe}</p>
+        {projection.revenueImpactLow && projection.revenueImpactHigh ? (
+          <p className="mt-2 font-serif text-5xl text-[#173A2E] sm:text-6xl">
+            +{Math.round(projection.revenueImpactLow / 1000)}k <span className="text-[#98A297]">a</span> +{Math.round(projection.revenueImpactHigh / 1000)}k
+          </p>
+        ) : (
+          <p className="mt-2 font-serif text-5xl text-[#173A2E] sm:text-6xl">+{projection.revenueImpact} EUR</p>
+        )}
+        <p className="mt-2 text-sm text-[#556159]">sur {projection.timeframe}</p>
       </div>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -49,8 +55,13 @@ export function ConcreteProjectionResult({ projection, sectorType }: Props) {
 
       <div className="mt-6 rounded-xl border border-[#CCD3C9] bg-white/55 p-4">
         <p className="text-sm leading-relaxed text-[#2A3F35]">
-          Avec votre flux actuel, <strong>Cardin peut recuperer {projection.volumeRecovered} {getSectorUnit(sectorType)}</strong> et produire
-          <strong> environ {projection.revenueImpact}EUR supplementaires</strong> sur <strong>{projection.timeframe}</strong>.
+          Flux actuel: <strong>{projection.volumeRecovered} {getSectorUnit(sectorType)} recuperables</strong> {" "}
+          {projection.revenueImpactLow && projection.revenueImpactHigh ? (
+            <>→ <strong>{Math.round(projection.revenueImpactLow / 1000)}k a {Math.round(projection.revenueImpactHigh / 1000)}k EUR</strong></>
+          ) : (
+            <>→ <strong>~{projection.revenueImpact} EUR</strong></>
+          )}
+          {" "}sur <strong>{projection.timeframe}</strong>.
         </p>
       </div>
     </div>

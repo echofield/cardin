@@ -36,6 +36,8 @@ export async function POST(request: Request) {
     seasonLength?: number
     summitId?: string
     summitTitle?: string
+    scenarioId?: string
+    scenarioLabel?: string
     sharedUnlockObjective?: number
     sharedUnlockWindowDays?: number
     sharedUnlockOffer?: string
@@ -58,6 +60,8 @@ export async function POST(request: Request) {
   const seasonLength = normalizeSeasonLength(String(payload.seasonLength ?? "3"))
   const summitId = normalizeSummitId(payload.summitId)
   const summitTitle = normalizeSummitTitle(payload.summitTitle)
+  const scenarioId = normalizeScenarioId(payload.scenarioId)
+  const scenarioLabel = normalizeScenarioLabel(payload.scenarioLabel)
   const sharedUnlockObjective = clampInt(payload.sharedUnlockObjective, 20, 10000, 120)
   const sharedUnlockWindowDays = clampInt(payload.sharedUnlockWindowDays, 3, 30, 7)
   const sharedUnlockOffer = normalizeOffer(payload.sharedUnlockOffer)
@@ -82,6 +86,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
   }
 
+  const { error: intentError } = await supabase.from("merchant_launch_intents").upsert(
+    {
+      merchant_id: user.id,
+      activity_template_id: activityTemplateId,
+      scenario_id: scenarioId,
+      scenario_label: scenarioLabel,
+      summit_id: summitId,
+      summit_title: summitTitle,
+      season_length_months: seasonLength,
+    },
+    { onConflict: "merchant_id" }
+  )
+
+  if (intentError) {
+    console.warn("merchant_launch_intent_upsert_failed", intentError.message)
+  }
+
   const origin = new URL(request.url).origin
   const enginePlan = buildBehaviorPlan({ merchantType: activityTemplateId })
 
@@ -90,7 +111,7 @@ export async function POST(request: Request) {
     leadId: `LD-${user.id.slice(0, 8)}`,
     merchantId: user.id,
     entryMode,
-    confirmation: `${ENTRY_MODE_LABELS[entryMode]} pret.`,
+    confirmation: `${ENTRY_MODE_LABELS[entryMode]} pret · ${scenarioLabel}.`,
     dashboardPath: `/merchant/${user.id}`,
     scanPath: `/scan/${user.id}`,
     dashboardUrl: `${origin}/merchant/${user.id}`,
@@ -104,6 +125,8 @@ export async function POST(request: Request) {
       seasonLength,
       summitId,
       summitTitle,
+      scenarioId,
+      scenarioLabel,
       objective: sharedUnlockObjective,
       activeWindowDays: sharedUnlockWindowDays,
       unlockedOffer: sharedUnlockOffer,
@@ -158,10 +181,21 @@ function normalizeSummitTitle(value?: string): string {
   if (!trimmed) return "Privilege de saison"
   return trimmed.slice(0, 160)
 }
+
+function normalizeScenarioId(value?: string): string {
+  const trimmed = (value ?? "").trim()
+  if (!trimmed) return "starting_loop"
+  return trimmed.slice(0, 80)
+}
+
+function normalizeScenarioLabel(value?: string): string {
+  const trimmed = (value ?? "").trim()
+  if (!trimmed) return "Scenario Cardin"
+  return trimmed.slice(0, 160)
+}
+
 function normalizeRewardLabel(value: string | undefined, fallback: string): string {
   const trimmed = (value ?? "").trim()
   if (!trimmed) return fallback
   return trimmed.slice(0, 120)
 }
-
-

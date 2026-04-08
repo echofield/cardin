@@ -3,11 +3,10 @@
 /**
  * Boutique Calculator
  *
- * Natural language inputs for boutique owners:
- * - Footfall per day?
- * - Conversion rate?
- * - Average basket?
- * - Seasonal peaks?
+ * Focus on client trajectory and value, not traffic:
+ * - Repeat clients vs one-time
+ * - Average spend per client over time
+ * - Collection/season cycles that drive returns
  */
 
 import { useState } from "react"
@@ -34,9 +33,9 @@ const MONTHS = [
 ]
 
 export function BoutiqueCalculator({ onCalculate }: Props) {
-  const [footfall, setFootfall] = useState(40)
-  const [conversionRate, setConversionRate] = useState(0.15) // 15%
-  const [avgBasket, setAvgBasket] = useState(45)
+  const [footfall, setFootfall] = useState(30) // Keeping for calculation but renamed conceptually
+  const [conversionRate, setConversionRate] = useState(0.20) // Repeat client rate
+  const [avgBasket, setAvgBasket] = useState(80) // Higher for boutique
   const [seasonalPeaks, setSeasonalPeaks] = useState<string[]>(["december"])
 
   const toggleMonth = (month: string) => {
@@ -65,17 +64,17 @@ export function BoutiqueCalculator({ onCalculate }: Props) {
     <div className="rounded-2xl border-2 border-[#173A2E] bg-white p-6">
       <h3 className="font-serif text-2xl text-[#173A2E]">Calculateur Boutique</h3>
       <p className="mt-2 text-sm text-[#556159]">
-        Transformez plus de passages en achats. Dites-nous votre réalité.
+        Focus: valeur client, trajectoire, collection.
       </p>
 
       <div className="mt-6 space-y-6">
-        {/* Question 1: Footfall */}
+        {/* Question 1: Client base */}
         <div>
           <label className="block text-sm font-medium text-[#2A3F35]">
-            Passages par jour ?
+            Clientes actives par mois ?
           </label>
           <p className="mt-1 text-xs text-[#5E6961]">
-            Combien de personnes entrent dans votre boutique par jour
+            Clientes qui passent au moins une fois par mois
           </p>
           <div className="mt-3 flex items-center gap-4">
             <input
@@ -106,13 +105,13 @@ export function BoutiqueCalculator({ onCalculate }: Props) {
           </div>
         </div>
 
-        {/* Question 2: Conversion rate */}
+        {/* Question 2: Repeat rate */}
         <div>
           <label className="block text-sm font-medium text-[#2A3F35]">
-            Taux de conversion ?
+            Taux de retour ?
           </label>
           <p className="mt-1 text-xs text-[#5E6961]">
-            Sur 100 personnes qui entrent, combien achètent ?
+            Sur 100 clientes, combien reviennent pour une collection ?
           </p>
           <div className="mt-3 flex items-center gap-4">
             <input
@@ -146,10 +145,10 @@ export function BoutiqueCalculator({ onCalculate }: Props) {
         {/* Question 3: Average basket */}
         <div>
           <label className="block text-sm font-medium text-[#2A3F35]">
-            Panier moyen ?
+            Valeur par visite ?
           </label>
           <p className="mt-1 text-xs text-[#5E6961]">
-            Montant moyen dépensé par achat
+            Panier moyen quand une cliente achète
           </p>
           <div className="mt-3 flex items-center gap-4">
             <input
@@ -180,13 +179,13 @@ export function BoutiqueCalculator({ onCalculate }: Props) {
           </div>
         </div>
 
-        {/* Question 4: Seasonal peaks */}
+        {/* Question 4: Collection peaks */}
         <div>
           <label className="block text-sm font-medium text-[#2A3F35]">
-            Vos pics saisonniers ?
+            Vos collections fortes ?
           </label>
           <p className="mt-1 text-xs text-[#5E6961]">
-            Mois où vous vendez le plus (collections, fêtes, soldes)
+            Mois où vos clientes reviennent pour la collection
           </p>
           <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
             {MONTHS.map((month) => (
@@ -229,8 +228,8 @@ export function BoutiqueCalculator({ onCalculate }: Props) {
       <div className="mt-4 rounded-xl bg-[#F8F7F2] p-4">
         <p className="text-xs text-[#5E6961]">Votre profil :</p>
         <p className="mt-1 text-sm text-[#2A3F35]">
-          {footfall} passages/jour, {conversionPercent}% de conversion, {avgBasket}€ panier moyen,{" "}
-          {seasonalPeaks.length} pic{seasonalPeaks.length > 1 ? "s" : ""} saisonnier
+          {footfall} clientes actives/mois, {conversionPercent}% de retour, {avgBasket}€ par visite,{" "}
+          {seasonalPeaks.length} collection{seasonalPeaks.length > 1 ? "s" : ""} forte
           {seasonalPeaks.length > 1 ? "s" : ""}
         </p>
       </div>

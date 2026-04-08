@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import Link from "next/link"
 import { useMemo, useState } from "react"
@@ -13,8 +13,6 @@ import { Button, Card, Input, Slider } from "@/ui"
 import { MerchantTemplateSelector } from "./MerchantTemplateSelector"
 import { WalletPassPreview } from "./WalletPassPreview"
 import { applyObjectiveToAssumptions, buildObjectiveScenario, objectiveHints, normalizeObjectiveId, type MidpointMode } from "./objective-scenarios"
-
-type EngineStep = 1 | 2 | 3 | 4
 
 type EngineFlowProps = {
   initialObjectiveId?: string
@@ -51,6 +49,15 @@ const setupLines = [
   "Carte Apple Wallet / Google Wallet cote client",
   "Tableau marchand avec suivi des passages",
 ]
+
+const engineSteps = [
+  { id: 1, label: "Activite" },
+  { id: 2, label: "Configuration" },
+  { id: 3, label: "Apercu" },
+  { id: 4, label: "Activation" },
+] as const
+
+type EngineStep = (typeof engineSteps)[number]["id"]
 
 export function EngineFlow({ initialObjectiveId, initialSeasonLength, initialSummitId, initialTemplateId }: EngineFlowProps) {
   const selectedObjectiveId = normalizeObjectiveId(initialObjectiveId)
@@ -108,8 +115,9 @@ export function EngineFlow({ initialObjectiveId, initialSeasonLength, initialSum
       ? "Cap intermediaire visible avant la recompense finale."
       : "Progression simple, sans etape supplementaire cote client."
 
-  const canGoBack = step > 1
-  const canGoNext = step < 4
+  const currentStepIndex = engineSteps.findIndex(({ id }) => id === step)
+  const canGoBack = currentStepIndex > 0
+  const canGoNext = currentStepIndex < engineSteps.length - 1
 
   const applyTemplate = (template: MerchantTemplate) => {
     const scenario = buildObjectiveScenario(template, selectedObjectiveId)
@@ -134,10 +142,9 @@ export function EngineFlow({ initialObjectiveId, initialSeasonLength, initialSum
 
   const goToPreviousStep = () => {
     setStep((prev) => {
-      if (prev === 4) return 3
-      if (prev === 3) return 2
-      if (prev === 2) return 1
-      return 1
+      const previousIndex = engineSteps.findIndex(({ id }) => id === prev)
+      const safeIndex = previousIndex === -1 ? 0 : previousIndex
+      return engineSteps[Math.max(0, safeIndex - 1)].id
     })
   }
 
@@ -151,10 +158,9 @@ export function EngineFlow({ initialObjectiveId, initialSeasonLength, initialSum
     })
 
     setStep((prev) => {
-      if (prev === 1) return 2
-      if (prev === 2) return 3
-      if (prev === 3) return 4
-      return 4
+      const previousIndex = engineSteps.findIndex(({ id }) => id === prev)
+      const safeIndex = previousIndex === -1 ? 0 : previousIndex
+      return engineSteps[Math.min(engineSteps.length - 1, safeIndex + 1)].id
     })
   }
 
@@ -186,22 +192,23 @@ export function EngineFlow({ initialObjectiveId, initialSeasonLength, initialSum
           </div>
 
           <div className="mt-6 grid gap-2 sm:grid-cols-4">
-            {["Activite", "Configuration", "Apercu", "Activation"].map((label, index) => {
-              const current = index + 1
-              const isActive = current === step
-              const isCompleted = current < step
+            {engineSteps.map((stepItem) => {
+              const isActive = stepItem.id === step
+              const isCompleted = stepItem.id < step
 
               return (
-                <div
+                <button
                   className={[
-                    "rounded-full border px-3 py-2 text-center text-sm",
+                    "rounded-full border px-3 py-2 text-center text-sm transition hover:border-[#173A2E]",
                     isActive ? "border-[#173A2E] bg-[#E9F0E7] text-[#173A2E]" : "border-[#D6DCD3] text-[#667068]",
                     isCompleted ? "bg-[#F4F7F0]" : "",
                   ].join(" ")}
-                  key={label}
+                  key={stepItem.id}
+                  onClick={() => setStep(stepItem.id)}
+                  type="button"
                 >
-                  {current}. {label}
-                </div>
+                  {stepItem.id}. {stepItem.label}
+                </button>
               )
             })}
           </div>
@@ -499,6 +506,8 @@ export function EngineFlow({ initialObjectiveId, initialSeasonLength, initialSum
                   seasonLength={seasonLength}
                   summitId={selectedSummit.id}
                   summitTitle={selectedSummit.promise}
+                  scenarioId={selectedObjectiveId}
+                  scenarioLabel={selectedScenario.label}
                   targetVisits={targetVisits}
                   title={selectedScenario.activationTitle}
                 />
@@ -511,7 +520,7 @@ export function EngineFlow({ initialObjectiveId, initialSeasonLength, initialSum
           <div>{canGoBack ? <Button onClick={goToPreviousStep} variant="subtle">Retour</Button> : null}</div>
 
           <div className="flex items-center gap-3">
-            {canGoNext ? <Button onClick={goToNextStep}>Continuer</Button> : <Button onClick={() => setStep(1)}>Revoir depuis le debut</Button>}
+            {canGoNext ? <Button onClick={goToNextStep}>Continuer</Button> : <Button onClick={() => setStep(engineSteps[0].id)}>Revoir depuis le debut</Button>}
           </div>
         </footer>
       </div>

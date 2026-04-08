@@ -1,6 +1,6 @@
 ﻿import { buildCalendarPlan } from "@/lib/calendar-engine"
 import { type BehaviorScenarioId } from "@/lib/behavior-engine"
-import { projectScenarioImpact } from "@/lib/projection-engine"
+import { projectScenarioImpact, type ProjectionPresetOverrideMap } from "@/lib/projection-engine"
 
 export type AnnualProjectionInput = {
   merchantType: string
@@ -9,6 +9,7 @@ export type AnnualProjectionInput = {
   avgTicket: number
   inactivePercent: number
   baseRecoveryPercent: number
+  projectionProfiles?: ProjectionPresetOverrideMap
 }
 
 export type AnnualProjectionMonth = {
@@ -31,14 +32,17 @@ export type AnnualProjectionResult = {
 const MONTH_LABELS = ["Jan", "Fev", "Mar", "Avr", "Mai", "Jun", "Jul", "Aou", "Sep", "Oct", "Nov", "Dec"]
 
 export function projectAnnualCardinPlan(input: AnnualProjectionInput): AnnualProjectionResult {
-  const monthlyProjection = projectScenarioImpact({
-    merchantType: input.merchantType,
-    scenarioId: input.scenarioId,
-    monthlyClients: input.monthlyClients,
-    avgTicket: input.avgTicket,
-    inactivePercent: input.inactivePercent,
-    baseRecoveryPercent: input.baseRecoveryPercent,
-  })
+  const monthlyProjection = projectScenarioImpact(
+    {
+      merchantType: input.merchantType,
+      scenarioId: input.scenarioId,
+      monthlyClients: input.monthlyClients,
+      avgTicket: input.avgTicket,
+      inactivePercent: input.inactivePercent,
+      baseRecoveryPercent: input.baseRecoveryPercent,
+    },
+    input.projectionProfiles
+  )
 
   const calendarPlan = buildCalendarPlan(input.merchantType, input.scenarioId)
   const momentByMonth = new Map(calendarPlan.annualMoments.map((moment) => [moment.month, moment]))
