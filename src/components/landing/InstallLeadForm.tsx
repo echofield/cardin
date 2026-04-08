@@ -211,7 +211,7 @@ export function InstallLeadForm({
         onClick={() => setShowNetworkOptions((prev) => !prev)}
         type="button"
       >
-        {showNetworkOptions ? "Masquer les options reseau" : "Afficher les options reseau"}
+        {showNetworkOptions ? "Masquer les options réseau" : "Afficher les options réseau"}
       </button>
 
       {showNetworkOptions ? (
@@ -226,7 +226,7 @@ export function InstallLeadForm({
             />
           </div>
           <div>
-            <label className="block text-xs uppercase tracking-[0.12em] text-[#5A645D]">Fenetre active (jours)</label>
+            <label className="block text-xs uppercase tracking-[0.12em] text-[#5A645D]">Fenêtre active (jours)</label>
             <Input
               min={3}
               onChange={(event) => setFormData((prev) => ({ ...prev, sharedUnlockWindowDays: Number(event.target.value) || 7 }))}
@@ -235,7 +235,7 @@ export function InstallLeadForm({
             />
           </div>
           <div>
-            <label className="block text-xs uppercase tracking-[0.12em] text-[#5A645D]">Offre debloquee</label>
+            <label className="block text-xs uppercase tracking-[0.12em] text-[#5A645D]">Offre débloquée</label>
             <Input onChange={(event) => setFormData((prev) => ({ ...prev, sharedUnlockOffer: event.target.value }))} value={formData.sharedUnlockOffer} />
           </div>
         </div>
