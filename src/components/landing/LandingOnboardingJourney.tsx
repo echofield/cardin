@@ -282,7 +282,7 @@ function ActivationPanel({ confidenceLabel, engineHref, projectedReturns, projec
       </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <Link className="inline-flex h-12 items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-6 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href="#methode">Voir le simulateur</Link>
-        <Link className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-6 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]" href="/parcours">Voir la démo complète</Link>
+        <Link className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-6 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]" href="/demo">Voir la démo client</Link>
         <Link className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-6 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]" href={engineHref}>Ouvrir l'outil</Link>
       </div>
     </div>
@@ -343,4 +343,6 @@ function getSupportingLine(stepId: OnboardingStepId, worldId: LandingWorldId, pr
   if (stepId === "projection") return `La projection part d'un ordre de grandeur d'environ ${formatEuro(projectedMonthlyRevenue)} de revenu récupéré par mois.`
   return `L'activation garde la formule Cardin : ${LANDING_PRICING.activationFee} € puis ${LANDING_PRICING.recurringLabel.toLowerCase()}.`
 }
+
+
 

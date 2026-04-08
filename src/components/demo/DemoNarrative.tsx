@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import { useMemo, useState } from "react"
@@ -230,12 +230,12 @@ export function DemoNarrative() {
         <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-14 sm:px-6 lg:px-8 lg:pb-14 lg:pt-18">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-4xl">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[#677168]">Demo Cardin</p>
+              <p className="text-[11px] uppercase tracking-[0.22em] text-[#677168]">Démo client</p>
               <h1 className="mt-4 font-serif text-5xl leading-[1.02] text-[#163328] sm:text-6xl lg:text-7xl">
-                La preuve client puis la preuve commercant, dans un seul parcours.
+                Ce que le client voit, comprend et ressent sur sa carte.
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-7 text-[#566159] sm:text-lg">
-                Cette route sert au rendez-vous commercial. Elle montre ce que le client verra, puis ce que le commercant pilotera, sans confondre demo et produit live.
+                Cette route sert à montrer la carte côté client: premier contact, retour, propagation et messages de carte vivante.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -416,3 +416,4 @@ function ChainCard({ label, note }: { label: string; note: string }) {
     </div>
   )
 }
+
