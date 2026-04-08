@@ -13,20 +13,23 @@ import {
 } from "@/lib/landing-content"
 import { buildParcoursEngineHref, type ParcoursSummitStyleId } from "@/lib/parcours-contract"
 
-/** Six internal steps (single product stack). */
+/**
+ * Mapping contract (Figma / Glow → Cardin-native):
+ * - world → LandingWorldId (cafe | restaurant | beaute | boutique)
+ * - summit → ParcoursSummitStyleId (visible | stronger | discreet)
+ * - season → 3 | 6 (from getDemoWorldContent.seasonMonths)
+ * - final CTA → /engine?template=…&summit=…&season=…  (via buildParcoursEngineHref)
+ * - (optional later) same payload shape reusable for POST /api/leads
+ *
+ * All projection numbers come from getDemoWorldContent (Cardin source of truth).
+ * No duplicate math engine.
+ */
+
 export type ParcoursStepId = "entry" | "lecture" | "summit" | "mechanics" | "projection" | "activation"
+export type ParcoursOnboardingVariant = "standalone" | "embedded"
 
 type MechanicId = "return" | "surprise" | "domino" | "diamond" | "season"
 
-type StepMeta = { id: ParcoursStepId; eyebrow: string; title: string; lead: string; cta: string }
-type SummitOption = {
-  id: ParcoursSummitStyleId
-  label: string
-  description: string
-  metric: string
-  multiplier: number
-}
-type MechanicOption = { id: MechanicId; index: string; title: string; description: string; proof: string }
 type Reading = {
   clientsPerDay: number
   lostClientsPerMonth: number
@@ -35,166 +38,51 @@ type Reading = {
   recoverableRate: number
 }
 
-/** Three external phases shown in chrome (not 6 micro-steps). */
-const PARCOURS_PHASES = [
-  { id: "setup", label: "Mise en place" },
-  { id: "tension", label: "Tension" },
-  { id: "decision", label: "Décision" },
-] as const
+type SummitOption = {
+  id: ParcoursSummitStyleId
+  label: string
+  description: string
+  metric: string
+  metricLabel: string
+  multiplier: number
+}
 
-function phaseIndexForStep(stepIndex: number): number {
-  if (stepIndex <= 1) return 0
-  if (stepIndex <= 4) return 1
+const PHASE_LABELS = ["Mise en place", "Tension", "Decision"] as const
+
+function phaseForStep(idx: number): number {
+  if (idx <= 1) return 0
+  if (idx <= 4) return 1
   return 2
 }
 
-const STEPS: StepMeta[] = [
-  {
-    id: "entry",
-    eyebrow: "Étape 1 — Entrée",
-    title: "Quel lieu connectez-vous ?",
-    lead: "Le système s'adapte au type de commerce. Commencez par votre monde réel.",
-    cta: "Continuer",
-  },
-  {
-    id: "lecture",
-    eyebrow: "Étape 2 — Lecture",
-    title: "Ce que le lieu perd aujourd'hui.",
-    lead: "Avant toute promesse, le manque est visible: passage perdu, retour absent, revenu non capté.",
-    cta: "Voir le sommet",
-  },
-  {
-    id: "summit",
-    eyebrow: "Étape 3 — Activation",
-    title: "Comment déclencher le retour.",
-    lead: "Le grand prix définit la force du rappel. Plus il est lisible, plus le retour client monte.",
-    cta: "Lire la mécanique",
-  },
-  {
-    id: "mechanics",
-    eyebrow: "Étape 4 — Mécanique",
-    title: "Ce qui fait revenir les gens.",
-    lead: "Le parcours reste simple pour le client, mais précis pour le commerce.",
-    cta: "Voir la projection",
-  },
-  {
-    id: "projection",
-    eyebrow: "Étape 5 — Projection",
-    title: "Impact sur le revenu.",
-    lead: "Les chiffres viennent du passage, du retour client et du réseau activé.",
-    cta: "Passer à l'activation",
-  },
-  {
-    id: "activation",
-    eyebrow: "Étape 6 — Lancement",
-    title: "Le moteur tourne.",
-    lead: "Le système est actif: QR prêt, carte client en place, et lecture immédiate du revenu récupéré.",
-    cta: "Revoir le parcours",
-  },
+const STEPS: { id: ParcoursStepId; num: string; label: string; cta: string }[] = [
+  { id: "entry", num: "01", label: "Entree", cta: "Continuer" },
+  { id: "lecture", num: "02", label: "Lecture", cta: "Activer la recuperation" },
+  { id: "summit", num: "03", label: "Sommet", cta: "Continuer" },
+  { id: "mechanics", num: "04", label: "Mecanique", cta: "Voir l'impact sur le revenu" },
+  { id: "projection", num: "05", label: "Projection", cta: "Passer a l'activation" },
+  { id: "activation", num: "06", label: "Lancement", cta: "Ajuster le systeme" },
 ]
 
-const SUMMIT_OPTIONS: SummitOption[] = [
-  {
-    id: "visible",
-    label: "Sommet visible",
-    description: "Le client comprend ce qu'il débloque. Objectif clair.",
-    metric: "×1,00",
-    multiplier: 1,
-  },
-  {
-    id: "stronger",
-    label: "Sommet renforcé",
-    description: "Récompense amplifiée. Le retour et le réseau montent plus vite.",
-    metric: "×1,25",
-    multiplier: 1.25,
-  },
-  {
-    id: "discreet",
-    label: "Sommet discret",
-    description: "Version plus sélective. Surprise forte, communication plus rare.",
-    metric: "×0,85",
-    multiplier: 0.85,
-  },
-]
-
-const MECHANICS: MechanicOption[] = [
-  {
-    id: "return",
-    index: "01",
-    title: "Il revient",
-    description: "La progression crée une raison de repasser.",
-    proof: "Il voit où il en est. Il ne veut pas repartir à zéro.",
-  },
-  {
-    id: "surprise",
-    index: "02",
-    title: "Il reçoit quelque chose tôt",
-    description: "Pas à la 10e visite. Variable. Imprévisible.",
-    proof: "Une récompense précoce augmente la fréquence sans dégrader la marge en continu.",
-  },
-  {
-    id: "domino",
-    index: "03",
-    title: "Il amène quelqu'un",
-    description: "Une personne en amène une autre. Le réseau s'active.",
-    proof: "Le bouche-à-oreille devient mesurable, pas seulement espéré.",
-  },
-  {
-    id: "diamond",
-    index: "04",
-    title: "Le grand prix compte",
-    description: "Le sommet donne une raison nette de revenir.",
-    proof: "Le prix final structure le désir et ancre la mémoire du lieu.",
-  },
-  {
-    id: "season",
-    index: "05",
-    title: "Vision long terme",
-    description: "Cartes limitées. Chaque saison pèse davantage.",
-    proof: "La saison structure la valeur et prépare la suite commerciale.",
-  },
+const SUMMITS: SummitOption[] = [
+  { id: "visible", label: "Sommet visible", description: "Le client voit sa progression et sait ce qu'il debloque. Objectif clair.", metric: "x1.0", metricLabel: "boost standard", multiplier: 1 },
+  { id: "stronger", label: "Sommet renforce", description: "Recompense amplifiee. Cree de l'attraction et de la conversation autour du lieu.", metric: "x1.25", metricLabel: "boost augmente", multiplier: 1.25 },
+  { id: "discreet", label: "Sommet discret", description: "Reserve aux inities. Effet de surprise a l'arrivee. Pas de promesse affichee.", metric: "x0.85", metricLabel: "boost selectif", multiplier: 0.85 },
 ]
 
 const READINGS: Record<LandingWorldId, Reading> = {
-  cafe: {
-    clientsPerDay: 80,
-    lostClientsPerMonth: 312,
-    lostRevenuePerMonth: 1950,
-    currentReturnRate: 25,
-    recoverableRate: 35,
-  },
-  restaurant: {
-    clientsPerDay: 50,
-    lostClientsPerMonth: 195,
-    lostRevenuePerMonth: 5070,
-    currentReturnRate: 18,
-    recoverableRate: 35,
-  },
-  beaute: {
-    clientsPerDay: 12,
-    lostClientsPerMonth: 47,
-    lostRevenuePerMonth: 3990,
-    currentReturnRate: 20,
-    recoverableRate: 35,
-  },
-  boutique: {
-    clientsPerDay: 40,
-    lostClientsPerMonth: 156,
-    lostRevenuePerMonth: 8580,
-    currentReturnRate: 17,
-    recoverableRate: 35,
-  },
+  cafe: { clientsPerDay: 80, lostClientsPerMonth: 312, lostRevenuePerMonth: 1950, currentReturnRate: 25, recoverableRate: 35 },
+  restaurant: { clientsPerDay: 50, lostClientsPerMonth: 195, lostRevenuePerMonth: 5070, currentReturnRate: 18, recoverableRate: 35 },
+  beaute: { clientsPerDay: 12, lostClientsPerMonth: 47, lostRevenuePerMonth: 3990, currentReturnRate: 20, recoverableRate: 35 },
+  boutique: { clientsPerDay: 40, lostClientsPerMonth: 156, lostRevenuePerMonth: 8580, currentReturnRate: 17, recoverableRate: 35 },
 }
 
-const WORLD_CODES: Record<LandingWorldId, string> = {
-  cafe: "CA",
-  restaurant: "RE",
-  beaute: "BE",
-  boutique: "BO",
+const WORLD_DETAILS: Record<LandingWorldId, string> = {
+  cafe: "Passage rapide, volume eleve.",
+  restaurant: "Experience longue, panier fort.",
+  beaute: "Rendez-vous, relation forte.",
+  boutique: "Passage opportuniste, conversion cle.",
 }
-
-const formatEuro = (value: number) =>
-  new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value)
 
 const clampRange = (value: number, multiplier: number) => ({
   low: Math.round(value * multiplier * 0.88),
@@ -202,763 +90,1035 @@ const clampRange = (value: number, multiplier: number) => ({
   adjusted: Math.round(value * multiplier),
 })
 
-function buildBars(months: 3 | 6) {
-  return Array.from({ length: months }, (_, index) => ({
-    label: `M${index + 1}`,
-    height: Math.round(38 + ((index + 1) / months) * 50),
-  }))
+const formatEuro = (value: number) =>
+  new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value)
+
+const ease = [0.25, 0.1, 0.25, 1] as const
+
+/* ─── COUNT-UP HOOK ─── */
+function useCountUp(target: number, duration = 1200, trigger = true) {
+  const [value, setValue] = useState(0)
+  useEffect(() => {
+    if (!trigger) { setValue(0); return }
+    const startTime = Date.now()
+    let raf: number
+    const tick = () => {
+      const elapsed = Date.now() - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setValue(Math.round(eased * target))
+      if (progress < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target, duration, trigger])
+  return value
 }
 
-const stepTransition = { duration: 0.32, ease: [0.25, 0.1, 0.25, 1] as const }
+/* ─── MAIN ─── */
+type Props = { variant: ParcoursOnboardingVariant }
 
-export type ParcoursOnboardingVariant = "standalone" | "embedded"
-
-type ParcoursOnboardingCoreProps = {
-  variant: ParcoursOnboardingVariant
-}
-
-export function ParcoursOnboardingCore({ variant }: ParcoursOnboardingCoreProps) {
+export function ParcoursOnboardingCore({ variant }: Props) {
   const [worldId, setWorldId] = useState<LandingWorldId>("cafe")
   const [stepIndex, setStepIndex] = useState(0)
-  const [summitId, setSummitId] = useState<ParcoursSummitStyleId>("stronger")
-  const [mechanicId, setMechanicId] = useState<MechanicId>("return")
-  /** Season length for CTA and season totals; revenue still from `getDemoWorldContent` monthly × months. */
-  const [seasonMonths, setSeasonMonths] = useState<3 | 6>(3)
+  const [summitId, setSummitId] = useState<ParcoursSummitStyleId | null>(null)
+  const [openMechanic, setOpenMechanic] = useState<number | null>(0)
 
   const demo = getDemoWorldContent(worldId)
   const step = STEPS[stepIndex]
   const reading = READINGS[worldId]
-  const world = LANDING_WORLDS[worldId]
-  const summit = SUMMIT_OPTIONS.find((item) => item.id === summitId) ?? SUMMIT_OPTIONS[1]
-  const phaseIndex = phaseIndexForStep(stepIndex)
+  const summit = SUMMITS.find((s) => s.id === summitId) ?? SUMMITS[0]
+  const seasonMonths = demo.seasonMonths
+  const phaseIndex = phaseForStep(stepIndex)
 
-  useEffect(() => {
-    setSeasonMonths(demo.seasonMonths)
-  }, [worldId, demo.seasonMonths])
-
-  const monthlyRange = useMemo(
-    () => clampRange(demo.projectedMonthlyRevenue, summit.multiplier),
-    [demo.projectedMonthlyRevenue, summit.multiplier],
-  )
-
+  const monthlyRange = useMemo(() => clampRange(demo.projectedMonthlyRevenue, summit.multiplier), [demo.projectedMonthlyRevenue, summit.multiplier])
   const seasonBase = demo.projectedMonthlyRevenue * seasonMonths
-  const seasonRange = useMemo(
-    () => clampRange(seasonBase, summit.multiplier),
-    [seasonBase, summit.multiplier],
-  )
+  const seasonRange = useMemo(() => clampRange(seasonBase, summit.multiplier), [seasonBase, summit.multiplier])
 
-  const recoveredScaled = useMemo(() => {
-    const base = demo.projectedRecoveredClients
-    return Math.max(1, Math.round((base * seasonMonths) / demo.seasonMonths))
-  }, [demo.projectedRecoveredClients, demo.seasonMonths, seasonMonths])
-
-  const engineHref = buildParcoursEngineHref({ worldId, summitStyle: summitId, seasonMonths })
+  const engineHref = buildParcoursEngineHref({ worldId, summitStyle: summitId ?? "visible", seasonMonths })
 
   const goNext = useCallback(() => {
-    setStepIndex((value) => (value === STEPS.length - 1 ? 0 : value + 1))
-  }, [])
+    if (stepIndex === STEPS.length - 1) {
+      window.location.href = engineHref
+      return
+    }
+    setStepIndex((v) => v + 1)
+  }, [stepIndex, engineHref])
 
-  const goPrev = useCallback(() => {
-    setStepIndex((value) => Math.max(0, value - 1))
-  }, [])
+  const goPrev = useCallback(() => setStepIndex((v) => Math.max(0, v - 1)), [])
 
-  const content = (
-    <>
+  const isLive = stepIndex === STEPS.length - 1
+
+  return (
+    <div className={variant === "standalone" ? "min-h-screen" : ""} style={{ backgroundColor: "var(--cardin-bg-cream)" }}>
+      {/* ─── HEADER ─── */}
       {variant === "standalone" ? (
-        <header className="sticky top-0 z-40 border-b border-[#E8E3D9]/80 bg-[#F7F3EA]/92 backdrop-blur-md">
-          <div className="mx-auto flex max-w-5xl flex-col gap-3 px-5 pb-3 pt-3 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
-                <Link
-                  className="shrink-0 text-[13px] font-medium text-[#173A2E] sm:text-[15px]"
-                  href="/landing"
-                >
-                  ← Accueil
-                </Link>
-                <div className="hidden h-4 w-px bg-[#D9D5CC] sm:block" />
-                <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
-                  {PARCOURS_PHASES.map((ph, i) => {
-                    const active = i === phaseIndex
-                    const done = i < phaseIndex
-                    return (
-                      <span
-                        className={[
-                          "truncate text-[10px] uppercase tracking-[0.14em] sm:text-[11px]",
-                          active ? "font-semibold text-[#0F523D]" : done ? "text-[#5C665E]" : "text-[#9A9A94]",
-                        ].join(" ")}
-                        key={ph.id}
-                      >
-                        {ph.label}
-                        {i < PARCOURS_PHASES.length - 1 ? (
-                          <span className="hidden text-[#C9C4BC] sm:inline"> · </span>
-                        ) : null}
-                      </span>
-                    )
-                  })}
-                </div>
-              </div>
-              <span className="shrink-0 font-mono text-[10px] text-[#7A817A] tabular-nums">
-                {stepIndex + 1}/{STEPS.length}
-              </span>
-            </div>
-            <div className="h-[2px] w-full overflow-hidden rounded-full bg-[#E4DFD4]">
-              <motion.div
-                animate={{ width: `${((stepIndex + 1) / STEPS.length) * 100}%` }}
-                className="h-full rounded-full bg-[#0F523D]"
-                initial={false}
-                transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-              />
-            </div>
-            <StepDots accent="forest" onSelectStep={setStepIndex} stepIndex={stepIndex} />
+        <header
+          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-4 md:px-8"
+          style={{ backgroundColor: "rgba(250,248,242,0.92)", backdropFilter: "blur(12px)" }}
+        >
+          <div className="flex items-center gap-3">
+            {stepIndex > 0 && !isLive && (
+              <button aria-label="Retour" onClick={goPrev} style={{ color: "var(--cardin-label)", fontSize: "0.85rem", padding: "4px 0" }} type="button">
+                ←
+              </button>
+            )}
+            <Link className="font-serif" href="/landing" style={{ fontSize: "1.05rem", color: "var(--cardin-green-primary)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+              Cardin
+            </Link>
           </div>
-        </header>
-      ) : (
-        <div className="border-b border-[#E3DDD0] px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[#677168]">Parcours marchand</p>
-              <p className="mt-1 text-sm text-[#566159]">
-                {PARCOURS_PHASES[phaseIndex].label} — {step.eyebrow.replace(/^Étape \d+ — /, "")}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-              {PARCOURS_PHASES.map((ph, i) => (
-                <span
-                  className={[
-                    "rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.12em]",
-                    i === phaseIndex ? "bg-[#EEF3EC] text-[#173A2E]" : "text-[#9A9A94]",
-                  ].join(" ")}
-                  key={ph.id}
-                >
-                  {ph.label}
-                </span>
+
+          {!isLive ? (
+            <div className="flex items-center gap-1.5">
+              {STEPS.slice(0, -1).map((s, i) => (
+                <div className="flex items-center gap-1.5" key={s.id}>
+                  <div
+                    className="h-1.5 w-1.5 rounded-full transition-all"
+                    style={{
+                      backgroundColor: i <= stepIndex ? "var(--cardin-green-primary)" : "var(--cardin-border)",
+                      transform: i === stepIndex ? "scale(1.5)" : "scale(1)",
+                      transitionDuration: "400ms",
+                    }}
+                  />
+                  {i < STEPS.length - 2 && (
+                    <div
+                      className="hidden h-px w-3 md:block md:w-5"
+                      style={{
+                        backgroundColor: i < stepIndex ? "var(--cardin-green-primary)" : "var(--cardin-border)",
+                        transitionDuration: "400ms",
+                      }}
+                    />
+                  )}
+                </div>
               ))}
             </div>
-          </div>
-          <div className="mt-4 h-[2px] w-full overflow-hidden rounded-full bg-[#E4DFD4]">
-            <motion.div
-              animate={{ width: `${((stepIndex + 1) / STEPS.length) * 100}%` }}
-              className="h-full rounded-full bg-[#173A2E]"
-              initial={false}
-              transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-            />
-          </div>
-          <div className="mt-3 flex justify-center sm:justify-end">
-            <StepDots accent="landing" onSelectStep={setStepIndex} stepIndex={stepIndex} />
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "var(--cardin-green-primary)" }} />
+              <span style={{ fontSize: "0.65rem", letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--cardin-green-primary)", fontWeight: 600 }}>Actif</span>
+            </div>
+          )}
+        </header>
+      ) : (
+        <div className="border-b px-4 py-4 sm:px-6 sm:py-5 lg:px-8" style={{ borderColor: "var(--cardin-border)" }}>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p style={{ fontSize: "0.6rem", letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "var(--cardin-label-light)" }}>Parcours marchand</p>
+              <p className="mt-1" style={{ fontSize: "0.8rem", color: "var(--cardin-body)" }}>{PHASE_LABELS[phaseIndex]} — Etape {step.num}</p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {STEPS.map((s, i) => (
+                <div className="flex items-center gap-1.5" key={s.id}>
+                  <div
+                    className="h-1.5 w-1.5 rounded-full transition-all"
+                    style={{
+                      backgroundColor: i <= stepIndex ? "var(--cardin-green-primary)" : "var(--cardin-border)",
+                      transform: i === stepIndex ? "scale(1.5)" : "scale(1)",
+                      transitionDuration: "400ms",
+                    }}
+                  />
+                  {i < STEPS.length - 1 && (
+                    <div className="hidden h-px w-3 sm:block" style={{ backgroundColor: i < stepIndex ? "var(--cardin-green-primary)" : "var(--cardin-border)" }} />
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
-      <div className={variant === "standalone" ? "mx-auto max-w-5xl px-5 pb-12 pt-8 sm:px-6 lg:px-8 lg:pb-16 lg:pt-10" : "px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-10"}>
-        <div className={variant === "embedded" ? "mx-auto max-w-4xl" : "mx-auto max-w-3xl lg:mt-0"}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              initial={{ opacity: 0, y: 14 }}
-              key={step.id}
-              transition={stepTransition}
-            >
-              <p className="text-[11px] uppercase tracking-[0.2em] text-[#7A817A]">{step.eyebrow}</p>
-              <h1
-                className={
-                  variant === "standalone"
-                    ? "mt-4 font-serif text-[clamp(2.2rem,7vw,5.4rem)] leading-[0.96] text-[#0F523D]"
-                    : "mt-3 font-serif text-[clamp(2rem,6vw,4.7rem)] leading-[0.98] text-[#173328]"
-                }
-              >
-                {step.title}
-              </h1>
-              <p className="mt-5 max-w-xl text-[1.05rem] leading-8 text-[#59635C]">{step.lead}</p>
+      {/* ─── PROGRESS BAR ─── */}
+      {variant === "standalone" && (
+        <motion.div
+          className="fixed left-0 z-40 h-[1px]"
+          style={{ top: 52, backgroundColor: "var(--cardin-green-primary)" }}
+          animate={{ width: `${((stepIndex + 1) / STEPS.length) * 100}%` }}
+          transition={{ duration: 0.4, ease }}
+        />
+      )}
 
-              <div className="mt-10">
-                <StepBody
-                  demo={demo}
-                  engineHref={engineHref}
-                  mechanicId={mechanicId}
-                  monthlyRange={monthlyRange}
-                  reading={reading}
-                  recoveredScaled={recoveredScaled}
-                  seasonMonths={seasonMonths}
-                  seasonRange={seasonRange}
-                  setMechanicId={setMechanicId}
-                  setSeasonMonths={setSeasonMonths}
-                  setSummitId={setSummitId}
-                  setWorldId={setWorldId}
-                  stepId={step.id}
-                  summitId={summitId}
-                  variant={variant}
-                  world={world}
+      {/* ─── CONTENT ─── */}
+      <main className={variant === "standalone" ? "pt-14" : ""}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step.id}
+            animate={{ opacity: 1, y: 0 }}
+            className={variant === "standalone" ? "flex min-h-[calc(100vh-5rem)] flex-col px-5 md:px-8" : "px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-10"}
+            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease }}
+          >
+            <div className={variant === "standalone" ? "mx-auto flex w-full max-w-xl flex-1 flex-col justify-center py-12" : "mx-auto max-w-xl"}>
+              {step.id === "entry" && (
+                <StepEntry
+                  onSelectWorld={(w) => { setWorldId(w); setStepIndex(1) }}
                   worldId={worldId}
                 />
-              </div>
-            </motion.div>
-          </AnimatePresence>
+              )}
+              {step.id === "lecture" && (
+                <StepLecture
+                  onNext={goNext}
+                  reading={reading}
+                />
+              )}
+              {step.id === "summit" && (
+                <StepSummit
+                  onNext={() => { if (summitId) goNext() }}
+                  selectedId={summitId}
+                  setSelectedId={setSummitId}
+                />
+              )}
+              {step.id === "mechanics" && (
+                <StepMechanics
+                  onNext={goNext}
+                  openIndex={openMechanic}
+                  setOpenIndex={setOpenMechanic}
+                />
+              )}
+              {step.id === "projection" && (
+                <StepProjection
+                  demo={demo}
+                  monthlyRange={monthlyRange}
+                  onNext={goNext}
+                  seasonMonths={seasonMonths}
+                  seasonRange={seasonRange}
+                  summitMultiplier={summit.multiplier}
+                />
+              )}
+              {step.id === "activation" && (
+                <StepActivation
+                  demo={demo}
+                  engineHref={engineHref}
+                  monthlyRange={monthlyRange}
+                  seasonMonths={seasonMonths}
+                  seasonRange={seasonRange}
+                  summit={summit}
+                  variant={variant}
+                  worldId={worldId}
+                />
+              )}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </main>
 
-          <div className="mt-10 flex items-center justify-between gap-4">
-            <button
-              className="inline-flex h-12 min-w-[7rem] items-center justify-center rounded-full border border-[#D8D4CB] bg-[#F4F1E9] px-6 text-sm font-medium text-[#173A2E] transition disabled:opacity-35"
-              disabled={stepIndex === 0}
-              onClick={goPrev}
-              type="button"
-            >
-              Précédent
-            </button>
-            <button
-              className="inline-flex h-12 items-center justify-center rounded-full border border-[#0F523D] bg-[#0F523D] px-8 text-sm font-medium text-[#FBFAF6] transition hover:bg-[#1B664F]"
-              onClick={goNext}
-              type="button"
-            >
-              {step.cta}
-            </button>
-          </div>
+      {/* ─── EMBEDDED NAV ─── */}
+      {variant === "embedded" && (
+        <div className="flex items-center justify-between gap-4 px-4 pb-6 sm:px-6 lg:px-8">
+          <button
+            className="inline-flex h-11 items-center gap-2 rounded-full border px-5 text-sm transition disabled:opacity-35"
+            disabled={stepIndex === 0}
+            onClick={goPrev}
+            style={{ borderColor: "var(--cardin-border)", color: "var(--cardin-body)" }}
+            type="button"
+          >
+            Precedent
+          </button>
+          <button
+            className="inline-flex h-11 items-center rounded-full px-6 text-sm"
+            onClick={goNext}
+            style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2" }}
+            type="button"
+          >
+            {step.cta}
+          </button>
         </div>
-      </div>
-    </>
-  )
-
-  if (variant === "standalone") {
-    return <main className="min-h-[calc(100vh-56px)] bg-[#F7F3EA] text-[#18271F]">{content}</main>
-  }
-
-  return <div className="text-[#18271F]">{content}</div>
-}
-
-function StepDots({
-  stepIndex,
-  onSelectStep,
-  accent,
-}: {
-  stepIndex: number
-  onSelectStep: (index: number) => void
-  accent: "forest" | "landing"
-}) {
-  const on = accent === "landing" ? "bg-[#173A2E]" : "bg-[#0F523D]"
-  return (
-    <div className="flex items-center justify-end gap-2">
-      {STEPS.map((item, index) => {
-        const active = index < stepIndex
-        const current = index === stepIndex
-        return (
-          <div className="flex items-center gap-2" key={item.id}>
-            <button
-              aria-label={item.title}
-              className={[
-                "h-2.5 w-2.5 rounded-full transition-all duration-300",
-                active || current ? on : "bg-[#D9D5CC]",
-                current ? "scale-125" : "scale-100",
-              ].join(" ")}
-              onClick={() => onSelectStep(index)}
-              type="button"
-            />
-            {index < STEPS.length - 1 ? (
-              <span className={["h-px w-4 sm:w-5", active ? on : "bg-[#D9D5CC]"].join(" ")} />
-            ) : null}
-          </div>
-        )
-      })}
+      )}
     </div>
   )
 }
 
-type StepBodyProps = {
-  variant: ParcoursOnboardingVariant
-  stepId: ParcoursStepId
-  worldId: LandingWorldId
-  setWorldId: (id: LandingWorldId) => void
-  seasonMonths: 3 | 6
-  setSeasonMonths: (m: 3 | 6) => void
-  reading: Reading
-  world: (typeof LANDING_WORLDS)[LandingWorldId]
-  summitId: ParcoursSummitStyleId
-  setSummitId: (id: ParcoursSummitStyleId) => void
-  mechanicId: MechanicId
-  setMechanicId: (id: MechanicId) => void
-  monthlyRange: { low: number; high: number; adjusted: number }
-  seasonRange: { low: number; high: number; adjusted: number }
-  demo: ReturnType<typeof getDemoWorldContent>
-  recoveredScaled: number
-  engineHref: string
+/* ═══════════════════════════════════════════════════════════
+   STEP 1 — ENTRY
+   ═══════════════════════════════════════════════════════════ */
+function StepEntry({ worldId, onSelectWorld }: { worldId: LandingWorldId; onSelectWorld: (w: LandingWorldId) => void }) {
+  return (
+    <>
+      <StepHeader num="01" label="Entree" />
+      <StepTitle>Quel lieu connectez-vous ?</StepTitle>
+      <StepSubtitle>Le systeme s'adapte a votre type d'activite.</StepSubtitle>
+
+      <div className="space-y-3">
+        {LANDING_WORLD_ORDER.map((id, i) => (
+          <motion.button
+            key={id}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex w-full items-center gap-5 rounded-2xl p-5 text-left transition-colors"
+            initial={{ opacity: 0, x: -12 }}
+            onClick={() => onSelectWorld(id)}
+            style={{ backgroundColor: "var(--cardin-card)", border: `1px solid ${id === worldId ? "var(--cardin-green-primary)" : "var(--cardin-border)"}` }}
+            transition={{ delay: 0.2 + i * 0.09, duration: 0.4 }}
+            type="button"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: "var(--cardin-bg-cream)" }}>
+              <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--cardin-green-primary)", letterSpacing: "0.06em" }}>
+                {LANDING_WORLDS[id].label.slice(0, 2).toUpperCase()}
+              </span>
+            </div>
+            <div className="flex-1">
+              <div style={{ fontSize: "0.95rem", fontWeight: 500, color: "var(--cardin-text)" }}>{LANDING_WORLDS[id].label}</div>
+              <div style={{ fontSize: "0.75rem", color: "var(--cardin-label)", marginTop: "0.1rem" }}>{WORLD_DETAILS[id]}</div>
+            </div>
+            <svg fill="none" height="16" stroke="var(--cardin-label)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="16"><polyline points="9 18 15 12 9 6" /></svg>
+          </motion.button>
+        ))}
+      </div>
+    </>
+  )
 }
 
-function StepBody(props: StepBodyProps) {
-  const {
-    variant,
-    stepId,
-    worldId,
-    setWorldId,
-    seasonMonths,
-    setSeasonMonths,
-    reading,
-    world,
-    summitId,
-    setSummitId,
-    mechanicId,
-    setMechanicId,
-    monthlyRange,
-    seasonRange,
-    demo,
-    recoveredScaled,
-    engineHref,
-  } = props
+/* ═══════════════════════════════════════════════════════════
+   STEP 2 — LECTURE
+   ═══════════════════════════════════════════════════════════ */
+function StepLecture({ reading, onNext }: { reading: Reading; onNext: () => void }) {
+  const [phase, setPhase] = useState(0)
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase(1), 600)
+    const t2 = setTimeout(() => setPhase(2), 1400)
+    const t3 = setTimeout(() => setPhase(3), 2200)
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
+  }, [])
 
-  if (stepId === "entry") {
-    return (
-      <div className="space-y-4">
-        <div className="flex flex-wrap gap-2">
-          {([3, 6] as const).map((m) => (
-            <button
-              className={[
-                "rounded-full border px-3 py-1.5 text-xs font-medium transition",
-                seasonMonths === m
-                  ? "border-[#0F523D] bg-[#EEF4F0] text-[#0F523D]"
-                  : "border-[#E3DED3] bg-[#FCFBF7] text-[#59635C] hover:border-[#B8C6BC]",
-              ].join(" ")}
-              key={m}
-              onClick={() => setSeasonMonths(m)}
-              type="button"
-            >
-              Saison {m} mois
-            </button>
-          ))}
-          <span className="self-center text-xs text-[#7A817A]">(prix et cumul saison)</span>
+  return (
+    <>
+      <StepHeader num="02" label="Lecture" />
+      <StepTitle>Ce que le lieu perd aujourd'hui.</StepTitle>
+      <StepSubtitle>Base sur {reading.clientsPerDay} clients/jour et un taux de perte standard de 15%.</StepSubtitle>
+
+      <motion.div
+        animate={{ opacity: phase >= 1 ? 1 : 0, y: phase >= 1 ? 0 : 16 }}
+        className="mb-4 rounded-2xl p-6"
+        initial={{ opacity: 0, y: 16 }}
+        style={{ backgroundColor: "var(--cardin-green-primary)" }}
+        transition={{ duration: 0.4 }}
+      >
+        <div style={{ fontSize: "0.65rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "rgba(250,248,242,0.5)", marginBottom: "0.5rem" }}>
+          Clients perdus chaque mois
         </div>
-        {LANDING_WORLD_ORDER.map((candidate) => {
-          const candidateReading = READINGS[candidate]
-          const active = candidate === worldId
-          return (
-            <button
-              className={[
-                "w-full rounded-[1.6rem] border px-5 py-5 text-left transition duration-300",
-                active
-                  ? "border-[#7EA694] bg-[#EEF4F0] shadow-[0_18px_40px_-34px_rgba(15,82,61,0.35)]"
-                  : "border-[#E3DED3] bg-[#FCFBF7] hover:border-[#B8C6BC] hover:bg-[#F6F4ED]",
-              ].join(" ")}
-              key={candidate}
-              onClick={() => setWorldId(candidate)}
-              type="button"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-4">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full border border-[#E6E1D8] bg-[#FFFEFA] text-[0.75rem] font-semibold tracking-[0.12em] text-[#0F523D]">
-                    {WORLD_CODES[candidate]}
-                  </span>
-                  <div>
-                    <p className="text-[1.35rem] font-medium text-[#173A2E]">{LANDING_WORLDS[candidate].label}</p>
-                    <p className="mt-1 text-sm text-[#677168]">{LANDING_WORLDS[candidate].onboardingLead}</p>
-                  </div>
+        <div className="font-serif" style={{ fontSize: "clamp(2.5rem, 6vw, 3.5rem)", color: "#FAF8F2", lineHeight: 1, letterSpacing: "-0.03em" }}>
+          ~{reading.lostClientsPerMonth}
+        </div>
+        <div style={{ fontSize: "0.8rem", color: "rgba(250,248,242,0.6)", marginTop: "0.5rem" }}>
+          soit {formatEuro(reading.lostRevenuePerMonth)} de revenu non capte
+        </div>
+      </motion.div>
+
+      <div className="mb-12 grid grid-cols-2 gap-3">
+        <motion.div
+          animate={{ opacity: phase >= 2 ? 1 : 0, y: phase >= 2 ? 0 : 12 }}
+          className="rounded-xl p-4"
+          initial={{ opacity: 0, y: 12 }}
+          style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)" }}
+          transition={{ duration: 0.4 }}
+        >
+          <div style={{ fontSize: "0.6rem", letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--cardin-label)", marginBottom: "0.25rem" }}>Taux de retour actuel</div>
+          <div style={{ fontSize: "1.25rem", fontWeight: 600, color: "var(--cardin-green-primary)" }}>{reading.currentReturnRate}%</div>
+        </motion.div>
+        <motion.div
+          animate={{ opacity: phase >= 2 ? 1 : 0, y: phase >= 2 ? 0 : 12 }}
+          className="rounded-xl p-4"
+          initial={{ opacity: 0, y: 12 }}
+          style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)" }}
+          transition={{ duration: 0.4, delay: 0.09 }}
+        >
+          <div style={{ fontSize: "0.6rem", letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--cardin-label)", marginBottom: "0.25rem" }}>Recuperable</div>
+          <div style={{ fontSize: "1.25rem", fontWeight: 600, color: "var(--cardin-summit-gold)" }}>{reading.recoverableRate}%</div>
+        </motion.div>
+      </div>
+
+      <motion.button
+        animate={{ opacity: phase >= 3 ? 1 : 0, y: phase >= 3 ? 0 : 8 }}
+        className="w-full rounded-full py-4"
+        initial={{ opacity: 0, y: 8 }}
+        onClick={onNext}
+        style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2", fontSize: "0.95rem" }}
+        transition={{ duration: 0.4 }}
+        type="button"
+      >
+        Activer la recuperation
+      </motion.button>
+    </>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STEP 3 — SUMMIT
+   ═══════════════════════════════════════════════════════════ */
+function StepSummit({ selectedId, setSelectedId, onNext }: { selectedId: ParcoursSummitStyleId | null; setSelectedId: (id: ParcoursSummitStyleId) => void; onNext: () => void }) {
+  return (
+    <>
+      <StepHeader num="03" label="Sommet" accent="gold" />
+      <StepTitle>Comment declencher le retour.</StepTitle>
+      <StepSubtitle>Le Sommet est l'objectif final du parcours. Son intensite determine la force de rappel.</StepSubtitle>
+
+      <div className="mb-10 space-y-3">
+        {SUMMITS.map((opt, i) => (
+          <motion.button
+            key={opt.id}
+            animate={{ opacity: 1, x: 0 }}
+            className="w-full rounded-2xl p-5 text-left transition-all"
+            initial={{ opacity: 0, x: -12 }}
+            onClick={() => setSelectedId(opt.id)}
+            style={{
+              backgroundColor: selectedId === opt.id ? "var(--cardin-summit-gold-light)" : "var(--cardin-card)",
+              border: `1.5px solid ${selectedId === opt.id ? "var(--cardin-summit-gold)" : "var(--cardin-border)"}`,
+            }}
+            transition={{ delay: 0.2 + i * 0.09, duration: 0.4 }}
+            type="button"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <div className="mb-1.5 flex items-center gap-2.5">
+                  <div className="h-2 w-2 rounded-full transition-colors" style={{ backgroundColor: selectedId === opt.id ? "var(--cardin-summit-gold)" : "var(--cardin-border)" }} />
+                  <span style={{ fontSize: "0.95rem", fontWeight: 500, color: "var(--cardin-text)" }}>{opt.label}</span>
                 </div>
-                <div className="text-right text-xs text-[#6E766E]">
-                  <p>{candidateReading.clientsPerDay} clients / jour</p>
-                  <p className="mt-1">~{candidateReading.lostClientsPerMonth} perdus / mois</p>
-                </div>
+                <p style={{ fontSize: "0.8rem", color: "var(--cardin-body)", lineHeight: 1.5, paddingLeft: "1.1rem" }}>{opt.description}</p>
               </div>
-            </button>
-          )
-        })}
-      </div>
-    )
-  }
-
-  if (stepId === "lecture") {
-    return (
-      <div className="space-y-5">
-        <div className="rounded-[1.9rem] bg-[#0B4F3C] p-7 text-[#FBFAF6] shadow-[0_28px_60px_-38px_rgba(11,79,60,0.45)] sm:p-8">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-[#AFC7BE]">Clients perdus chaque mois</p>
-          <p className="mt-4 font-serif text-[clamp(3.6rem,9vw,5.6rem)] leading-none">~{reading.lostClientsPerMonth}</p>
-          <p className="mt-3 text-sm text-[#D5E2DC]">soit {formatEuro(reading.lostRevenuePerMonth)} de revenu non capté</p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <MetricCard label="Passage" value={`${reading.clientsPerDay}/jour`} note="base de lecture" />
-          <MetricCard label="Retour actuel" value={`${reading.currentReturnRate}%`} note="sans Cardin" />
-          <MetricCard label="Récupérable" value={`${reading.recoverableRate}%`} note="revenu récupéré possible" />
-        </div>
-      </div>
-    )
-  }
-
-  if (stepId === "summit") {
-    return (
-      <div className="space-y-4">
-        {SUMMIT_OPTIONS.map((item) => {
-          const active = item.id === summitId
-          const scenarioRange = clampRange(demo.projectedMonthlyRevenue, item.multiplier)
-          return (
-            <button
-              className={[
-                "w-full rounded-[1.6rem] border p-5 text-left transition duration-300",
-                active
-                  ? "border-[#C5A355] bg-[linear-gradient(180deg,#FBF3DB_0%,#F6E8BF_100%)] shadow-[0_18px_40px_-32px_rgba(140,114,34,0.24)]"
-                  : "border-[#E3DED3] bg-[#FCFBF7] hover:border-[#D1C17F] hover:bg-[#FBF8EF]",
-              ].join(" ")}
-              key={item.id}
-              onClick={() => setSummitId(item.id)}
-              type="button"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xl font-medium text-[#173A2E]">{item.label}</p>
-                  <p className="mt-2 text-sm leading-7 text-[#5F665E]">{item.description}</p>
-                  <p className="mt-2 text-xs text-[#6F766F]">
-                    revenu estimé: +{scenarioRange.low.toLocaleString("fr-FR")}–{scenarioRange.high.toLocaleString("fr-FR")}{" "}
-                    € / mois
-                  </p>
-                </div>
-                <p className="pt-1 text-2xl font-semibold text-[#B38A2D]">{item.metric}</p>
+              <div className="shrink-0 pt-0.5 text-right">
+                <div style={{ fontSize: "1.1rem", fontWeight: 600, color: "var(--cardin-summit-gold)" }}>{opt.metric}</div>
+                <div style={{ fontSize: "0.6rem", color: "var(--cardin-label)", letterSpacing: "0.04em" }}>{opt.metricLabel}</div>
               </div>
-            </button>
-          )
-        })}
+            </div>
+          </motion.button>
+        ))}
       </div>
-    )
-  }
 
-  if (stepId === "mechanics") {
-    return (
-      <div className="space-y-3">
-        {MECHANICS.map((item) => {
-          const active = item.id === mechanicId
+      <motion.button
+        animate={{ opacity: 1 }}
+        className="w-full rounded-full py-4 transition-all"
+        disabled={!selectedId}
+        initial={{ opacity: 0 }}
+        onClick={onNext}
+        style={{
+          backgroundColor: selectedId ? "var(--cardin-green-primary)" : "var(--cardin-border)",
+          color: "#FAF8F2",
+          fontSize: "0.95rem",
+          cursor: selectedId ? "pointer" : "not-allowed",
+        }}
+        transition={{ delay: 0.5, duration: 0.4 }}
+        type="button"
+      >
+        Continuer
+      </motion.button>
+    </>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STEP 4 — MECHANICS (accordion with diagrams)
+   ═══════════════════════════════════════════════════════════ */
+type MechanicStep = {
+  num: string
+  name: string
+  sub: string
+  accent: "default" | "blue" | "gold"
+  diagram: React.ReactNode
+  effect: React.ReactNode
+}
+
+const c = {
+  green: "var(--cardin-green-primary)",
+  text: "var(--cardin-text)",
+  body: "var(--cardin-body)",
+  label: "var(--cardin-label)",
+  labelLight: "var(--cardin-label-light)",
+  border: "var(--cardin-border)",
+  card: "var(--cardin-card)",
+  cardAlt: "var(--cardin-card-alt)",
+  cream: "var(--cardin-bg-cream)",
+  blue: "var(--cardin-domino-blue)",
+  blueLight: "rgba(128,164,214,0.12)",
+  blueBorder: "rgba(128,164,214,0.25)",
+  blueDim: "rgba(128,164,214,0.4)",
+  gold: "var(--cardin-summit-gold)",
+  goldLight: "rgba(163,135,103,0.1)",
+  goldBorder: "rgba(163,135,103,0.25)",
+  goldDim: "rgba(163,135,103,0.45)",
+}
+
+function hdrBorder(accent: string, open: boolean) {
+  if (accent === "blue") return open ? c.blueBorder : "rgba(128,164,214,0.15)"
+  if (accent === "gold") return open ? c.goldBorder : "rgba(163,135,103,0.15)"
+  return open ? c.green : c.border
+}
+function bodyBorder(accent: string) {
+  if (accent === "blue") return c.blueBorder
+  if (accent === "gold") return c.goldBorder
+  return c.border
+}
+
+/* Diagram: Timeline */
+function DiagramTimeline() {
+  const nodes = [
+    { label: "V1", style: "dim", glyph: "◦" },
+    { label: "V2", style: "bright", glyph: "◆" },
+    { label: "V3", style: "mid", glyph: "◦" },
+    { label: "V4", style: "dim", glyph: "◦" },
+    { label: "V5", style: "dim", glyph: "◦" },
+    { label: "DIAMOND", style: "gold", glyph: "★" },
+  ]
+  const dotStyle = (s: string) => {
+    if (s === "gold") return { borderColor: c.goldDim, background: c.goldLight }
+    if (s === "bright") return { borderColor: c.green, background: "rgba(0,61,44,0.08)" }
+    if (s === "mid") return { borderColor: "rgba(0,61,44,0.35)", background: "rgba(0,61,44,0.04)" }
+    return { borderColor: c.border, background: "transparent" }
+  }
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 0, margin: "4px 0 16px" }}>
+        {nodes.map((n, i) => (
+          <div key={n.label} style={{ display: "contents" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid", display: "flex", alignItems: "center", justifyContent: "center", ...dotStyle(n.style) }}>
+                <span style={{ fontFamily: "monospace", fontSize: n.glyph === "◦" ? 7 : 10, color: n.style === "gold" ? c.gold : n.style === "bright" ? c.green : c.label }}>{n.glyph}</span>
+              </div>
+              <span style={{ fontSize: 8, letterSpacing: "0.06em", fontFamily: "monospace", textAlign: "center", color: n.style === "gold" ? c.goldDim : n.style === "bright" || n.style === "mid" ? c.body : c.labelLight }}>{n.label}</span>
+            </div>
+            {i < nodes.length - 1 && <div style={{ flex: 1, height: 1, marginBottom: 22, background: i < 2 ? "rgba(0,61,44,0.3)" : c.border }} />}
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+        <div style={{ flex: 1, height: 4, background: "rgba(0,61,44,0.08)", borderRadius: 2, overflow: "hidden", position: "relative" }}>
+          <div style={{ height: "100%", width: "40%", background: "rgba(0,61,44,0.3)", borderRadius: 2 }} />
+          <span style={{ position: "absolute", right: 0, top: -5, fontSize: 8, color: c.goldDim, fontFamily: "monospace" }}>★</span>
+        </div>
+        <span style={{ fontSize: 10, color: c.label, fontFamily: "monospace", whiteSpace: "nowrap" }}>3 / 8</span>
+      </div>
+    </div>
+  )
+}
+
+/* Diagram: Bar chart comparison */
+function DiagramBars() {
+  const classic = [1, 1, 1, 1, 1, 1, 1, 1, 1, 5]
+  const cardin = [1, 5, 1, 3, 1, 2, 1, 4, 1, 5]
+  const barOpacity = (h: number, isCardin: boolean) => {
+    if (!isCardin) return h === 5 ? 0.25 : 0.06
+    if (h > 3) return 0.4
+    if (h > 2) return 0.2
+    if (h > 1) return 0.12
+    return 0.05
+  }
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, margin: "4px 0 16px" }}>
+      {[{ title: "Systeme classique", data: classic, hi: false }, { title: "Cardin", data: cardin, hi: true }].map((col) => (
+        <div key={col.title}>
+          <div style={{ fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 8, fontFamily: "monospace", color: col.hi ? c.body : c.labelLight }}>{col.title}</div>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 44 }}>
+            {col.data.map((h, i) => (
+              <div key={i} style={{ flex: 1, height: (h / 5) * 44, borderRadius: "2px 2px 0 0", background: `rgba(0,61,44,${barOpacity(h, col.hi)})` }} />
+            ))}
+          </div>
+          <div style={{ fontSize: 9, color: col.hi ? c.label : c.labelLight, marginTop: 6, fontFamily: "monospace" }}>{col.hi ? "variable — imprevisible" : "attendre × 10"}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/* Diagram: Domino tree */
+function DiagramDomino() {
+  return (
+    <div style={{ margin: "4px 0 16px" }}>
+      {[
+        { label: "50 cartes\ninitiales", count: 10, glyph: "◆", borderC: "rgba(0,61,44,0.35)", bg: "rgba(0,61,44,0.06)", txtC: "rgba(0,61,44,0.5)", labelC: c.label, mult: "×5" },
+        { label: "chacun\ninvite 1", count: 10, glyph: "+1", borderC: c.blueBorder, bg: c.blueLight, txtC: c.blueDim, labelC: c.blueDim, mult: "×5" },
+        { label: "ceux-la\ninvitent 1", count: 10, glyph: "+1", borderC: "rgba(128,164,214,0.15)", bg: "rgba(128,164,214,0.04)", txtC: "rgba(128,164,214,0.3)", labelC: "rgba(128,164,214,0.3)", mult: "×5" },
+      ].map((row, ri) => (
+        <div key={ri}>
+          {ri > 0 && <div style={{ display: "flex", alignItems: "center", paddingLeft: 66, height: 12, marginBottom: 2 }}><div style={{ borderLeft: `1px solid ${ri === 1 ? c.blueDim : "rgba(128,164,214,0.15)"}`, height: "100%" }} /></div>}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <div style={{ fontSize: 9, color: row.labelC, fontFamily: "monospace", width: 56, flexShrink: 0, textAlign: "right", lineHeight: 1.4, whiteSpace: "pre-line" }}>{row.label}</div>
+            <div style={{ display: "flex", gap: 4, flexWrap: "wrap", flex: 1 }}>
+              {Array.from({ length: row.count }).map((_, i) => (
+                <div key={i} style={{ width: 22, height: 22, borderRadius: 3, border: `1px solid ${row.borderC}`, background: row.bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "monospace", fontSize: 8, color: row.txtC }}>{row.glyph}</div>
+              ))}
+              <span style={{ fontSize: 9, color: row.labelC, alignSelf: "center", marginLeft: 2 }}>{row.mult}</span>
+            </div>
+          </div>
+        </div>
+      ))}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", background: "rgba(0,61,44,0.03)", border: `1px solid ${c.border}`, borderRadius: 6, marginTop: 4 }}>
+        <div>
+          <div className="font-serif" style={{ fontSize: 30, color: c.green, lineHeight: 1 }}>150</div>
+          <div style={{ fontSize: 9, color: c.label, fontFamily: "monospace", marginTop: 2 }}>parcours actifs</div>
+        </div>
+        <div style={{ fontSize: 10, color: c.label, textAlign: "right", lineHeight: 1.5 }}>depuis<br />50 cartes<br />initiales</div>
+      </div>
+    </div>
+  )
+}
+
+/* Diagram: Cost table */
+function DiagramCost() {
+  const rows = [
+    { label: "Grand Diamond cafe", cost: "120€ / an", duration: "12 mois", gold: true },
+    { label: "Grand Diamond beaute", cost: "300€ / an", duration: "12 mois", gold: true },
+    { label: "Grand Diamond restaurant", cost: "600€ / an", duration: "12 mois", gold: true },
+  ]
+  const cell: React.CSSProperties = { padding: "10px 10px", fontSize: 11, border: `1px solid ${c.border}`, background: c.card }
+  return (
+    <div style={{ margin: "4px 0 16px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px" }}>
+        <div style={{ ...cell, fontSize: 9, color: c.labelLight, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "monospace", borderRadius: "6px 0 0 0" }} />
+        <div style={{ ...cell, fontSize: 9, color: c.labelLight, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "monospace" }}>Cout</div>
+        <div style={{ ...cell, fontSize: 9, color: c.labelLight, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "monospace", borderRadius: "0 6px 0 0" }}>Duree</div>
+      </div>
+      {rows.map((r, i) => (
+        <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px" }}>
+          <div style={{ ...cell, color: c.text, fontWeight: 500 }}>{r.label}</div>
+          <div style={{ ...cell, color: c.gold, background: c.goldLight }}>{r.cost}</div>
+          <div style={{ ...cell, color: c.gold, background: c.goldLight }}>{r.duration}</div>
+        </div>
+      ))}
+      <div style={{ height: 4 }} />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px" }}>
+        <div style={{ ...cell, color: c.label, borderRadius: "0 0 0 6px" }}>Campagne Instagram</div>
+        <div style={{ ...cell, color: c.labelLight }}>500€</div>
+        <div style={{ ...cell, color: c.labelLight, borderRadius: "0 0 6px 0" }}>3 jours</div>
+      </div>
+    </div>
+  )
+}
+
+/* Diagram: Saison 2 */
+function DiagramSaison2() {
+  return (
+    <div style={{ margin: "4px 0 16px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+        {[
+          { num: "150", lbl: "parcours actifs\nfin Saison 1", gold: false },
+          { num: "8", lbl: "Grand Diamonds\nvisibles dans le lieu", gold: true },
+          { num: "50", lbl: "cartes limitees\nplus d'impact par carte", gold: false },
+          { num: "S2", lbl: "les memes clients\nveulent recommencer", gold: false },
+        ].map((card, i) => (
+          <div key={i} style={{ padding: "12px 14px", border: `1px solid ${card.gold ? c.goldBorder : c.border}`, borderRadius: 8, background: card.gold ? c.goldLight : c.card }}>
+            <div className="font-serif" style={{ fontSize: card.num === "S2" ? 22 : 28, lineHeight: 1, marginBottom: 3, color: card.gold ? c.gold : c.green }}>{card.num}</div>
+            <div style={{ fontSize: 10, color: card.gold ? c.goldDim : c.label, lineHeight: 1.4, whiteSpace: "pre-line" }}>{card.lbl}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ textAlign: "center", fontSize: 11, color: c.labelLight, fontFamily: "monospace", marginBottom: 8 }}>↓</div>
+      <div style={{ padding: "12px 14px", border: `1px solid ${c.border}`, borderRadius: 8, background: c.cardAlt, fontSize: 12, color: c.body, lineHeight: 1.6, textAlign: "center" }}>
+        Moins de cartes = plus de valeur par carte.<br /><strong style={{ color: c.text, fontWeight: 500 }}>La rarete fait le travail. La Saison 2 a plus d'impact que la premiere.</strong>
+      </div>
+    </div>
+  )
+}
+
+const MECHANIC_STEPS: MechanicStep[] = [
+  { num: "01", name: "Il revient", sub: "La progression cree une raison de repasser.", accent: "default", diagram: <DiagramTimeline />, effect: <>Il voit ou il en est. <strong>Il ne veut pas repartir a zero.</strong> Le Grand Diamond est visible depuis le debut.</> },
+  { num: "02", name: "Il recoit quelque chose tot", sub: "Pas a la 10eme visite. Variable. Imprevisible.", accent: "default", diagram: <DiagramBars />, effect: <>Des la 2eme visite, quelque chose arrive. <strong>L'incertitude maintient l'engagement mieux que la previsibilite.</strong></> },
+  { num: "03", name: "Il amene quelqu'un", sub: "Cette personne en amene une autre. Et ainsi de suite.", accent: "blue", diagram: <DiagramDomino />, effect: <><strong>Vos clients deviennent votre meilleur canal.</strong> Sans publicite. Sans effort de votre part.</> },
+  { num: "04", name: "Grand Diamond", sub: "Le sommet visible depuis le debut. Tout le monde le sait.", accent: "gold", diagram: <DiagramCost />, effect: <>Le Grand Diamond <strong>tire tous les autres vers le haut.</strong> Sa seule existence vaut une campagne.</> },
+  { num: "05", name: "Vision long terme", sub: "Cartes limitees. Chaque saison a plus d'impact.", accent: "default", diagram: <DiagramSaison2 />, effect: <>Moins de cartes, plus de valeur. <strong>Chaque saison renforce la precedente.</strong></> },
+]
+
+function StepMechanics({ openIndex, setOpenIndex, onNext }: { openIndex: number | null; setOpenIndex: (v: number | null) => void; onNext: () => void }) {
+  const toggle = (i: number) => setOpenIndex(openIndex === i ? null : i)
+
+  return (
+    <>
+      <StepHeader num="04" label="Mecanique" />
+      <StepTitle>Ce qui fait revenir les gens.</StepTitle>
+      <motion.p animate={{ opacity: 1 }} className="mb-8" initial={{ opacity: 0 }} style={{ color: c.labelLight, fontSize: "0.75rem" }} transition={{ delay: 0.25, duration: 0.4 }}>
+        Cliquez sur chaque etape.
+      </motion.p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        {MECHANIC_STEPS.map((ms, i) => {
+          const isOpen = openIndex === i
           return (
-            <motion.div className="overflow-hidden rounded-[1.45rem] border border-[#E3DED3] bg-[#FCFBF7]" key={item.id} layout>
+            <motion.div
+              key={ms.num}
+              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 8 }}
+              transition={{ delay: 0.2 + i * 0.06, duration: 0.4 }}
+            >
               <button
-                className={[
-                  "flex w-full items-start justify-between gap-4 p-5 text-left transition",
-                  active ? "bg-[#F4FAF6]" : "hover:bg-[#FAFAF6]",
-                ].join(" ")}
-                onClick={() => setMechanicId(item.id)}
+                onClick={() => toggle(i)}
+                style={{
+                  width: "100%", textAlign: "left",
+                  display: "grid", gridTemplateColumns: "24px 1fr auto", alignItems: "center", gap: 14,
+                  padding: "13px 16px",
+                  border: `1px solid ${hdrBorder(ms.accent, isOpen)}`,
+                  borderRadius: isOpen ? "10px 10px 0 0" : "10px",
+                  backgroundColor: isOpen ? c.cardAlt : c.card,
+                  cursor: "pointer", transition: "all 0.2s",
+                }}
                 type="button"
               >
-                <div className="flex items-start gap-4">
-                  <span className="pt-1 font-mono text-xs text-[#7A817A]">{item.index}</span>
-                  <div>
-                    <p className="text-lg font-medium text-[#173A2E]">{item.title}</p>
-                    <p className="mt-1 text-sm text-[#5F665E]">{item.description}</p>
-                  </div>
+                <span style={{ fontSize: 9, fontFamily: "monospace", textAlign: "right", color: ms.accent === "blue" ? c.blueDim : ms.accent === "gold" ? c.goldDim : c.labelLight }}>{ms.num}</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 2, color: ms.accent === "blue" ? c.blue : ms.accent === "gold" ? c.gold : c.text }}>{ms.name}</div>
+                  <div style={{ fontSize: 10, color: c.label }}>{ms.sub}</div>
                 </div>
-                <motion.span animate={{ rotate: active ? 45 : 0 }} className="text-lg text-[#7A817A]" transition={{ duration: 0.2 }}>
-                  +
-                </motion.span>
+                <span style={{ fontSize: 12, fontFamily: "monospace", color: c.label, transition: "transform 0.25s", transform: isOpen ? "rotate(45deg)" : "none", display: "inline-block", width: 16, textAlign: "center" }}>+</span>
               </button>
-              <AnimatePresence initial={false}>
-                {active ? (
+              <AnimatePresence>
+                {isOpen && (
                   <motion.div
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     initial={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
+                    style={{ overflow: "hidden", border: `1px solid ${bodyBorder(ms.accent)}`, borderTop: "none", borderRadius: "0 0 10px 10px", background: c.cream }}
+                    transition={{ duration: 0.2, ease }}
                   >
-                    <div className="border-t border-[#DCE5DE] px-5 pb-5 pt-0">
-                      <div className="pt-4">
-                        <MechanicVisual mechanicId={item.id} seasonMonths={seasonMonths} />
-                        <p className="mt-4 text-sm leading-7 text-[#4F5B54]">{item.proof}</p>
-                      </div>
+                    <div style={{ padding: "20px 20px 16px" }}>
+                      {ms.diagram}
+                      <div style={{ paddingTop: 14, borderTop: `1px solid ${c.border}`, fontSize: 12, color: c.body, lineHeight: 1.6 }}>{ms.effect}</div>
                     </div>
                   </motion.div>
-                ) : null}
+                )}
               </AnimatePresence>
             </motion.div>
           )
         })}
       </div>
-    )
-  }
 
-  if (stepId === "projection") {
-    const summitOption = SUMMIT_OPTIONS.find((s) => s.id === summitId) ?? SUMMIT_OPTIONS[1]
-    return (
-      <ProjectionReveal
-        bars={buildBars(seasonMonths)}
-        confidenceLabel={demo.confidenceLabel}
-        demo={demo}
-        monthlyRange={monthlyRange}
-        recoveredScaled={recoveredScaled}
-        seasonMonths={seasonMonths}
-        seasonRange={seasonRange}
-        summitMetric={summitOption.metric}
-      />
-    )
-  }
-
-  if (stepId === "activation") {
-    return (
-      <div className="space-y-5">
-        <div className="rounded-[1.9rem] bg-[#0B4F3C] p-7 text-[#FBFAF6] shadow-[0_28px_60px_-38px_rgba(11,79,60,0.45)] sm:p-8">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-[#AFC7BE]">Ordre de gain mensuel</p>
-          <p className="mt-4 font-serif text-[clamp(3.2rem,8vw,5.1rem)] leading-none">
-            +{monthlyRange.low.toLocaleString("fr-FR")}–{monthlyRange.high.toLocaleString("fr-FR")} €
-          </p>
-          <p className="mt-4 text-sm text-[#D5E2DC]">
-            {demo.projectedMonthlyReturns} retours / mois · {recoveredScaled} clients récupérés sur {seasonMonths} mois ·
-            payback ~{demo.projectedPaybackDays} j
-          </p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <MetricCard
-            label="Revenu saison"
-            value={`${seasonRange.low.toLocaleString("fr-FR")}–${seasonRange.high.toLocaleString("fr-FR")} €`}
-            note={demo.confidenceLabel}
-          />
-          <MetricCard label="Activation" value={`${LANDING_PRICING.activationFee} €`} note="mise en place" />
-          <MetricCard label="Récurrent" value={`${LANDING_PRICING.recurringFee} €`} note="par mois de saison" />
-        </div>
-        <motion.details className="rounded-[1.5rem] border border-[#E3DED3] bg-[#FCFBF7] p-5 text-[#173A2E]" initial={false}>
-          <summary className="cursor-pointer text-sm font-medium outline-none transition hover:text-[#0F523D]">
-            Voir la configuration
-          </summary>
-          <motion.div
-            animate={{ opacity: 1 }}
-            className="mt-4 grid gap-3 text-sm text-[#5F665E] sm:grid-cols-2"
-            initial={{ opacity: 0.85 }}
-            transition={{ duration: 0.2 }}
-          >
-            <p>
-              {world.label} — {world.eyebrow}
-            </p>
-            <p>
-              Saison {seasonMonths} mois · {demo.seasonLabel}
-            </p>
-            <p>{demo.projectedMonthlyReturns} retours clients projetés / mois</p>
-            <p>{formatEuro(demo.projectedMonthlyRevenue * seasonMonths)} revenu saisonnier (base)</p>
-          </motion.div>
-        </motion.details>
-        <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap">
-          <Link
-            className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#FFFEFA] px-6 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F6F3EB]"
-            href={engineHref}
-          >
-            Ajuster le système
-          </Link>
-          <Link
-            className="inline-flex h-12 items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-6 text-sm font-medium text-[#FBFAF6] transition hover:bg-[#24533F]"
-            href={variant === "embedded" ? "#methode" : "/landing#methode"}
-          >
-            Voir le simulateur
-          </Link>
-          <Link
-            className="inline-flex h-12 items-center justify-center rounded-full border border-[#0F523D] bg-[#0F523D] px-6 text-sm font-medium text-[#FBFAF6] transition hover:bg-[#1B664F]"
-            href="/demo"
-          >
-            Voir la démo client
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
-  return null
+      <motion.button
+        animate={{ opacity: 1 }}
+        className="mt-8 w-full rounded-full py-4"
+        initial={{ opacity: 0 }}
+        onClick={onNext}
+        style={{ backgroundColor: c.green, color: "#FAF8F2", fontSize: "0.95rem" }}
+        transition={{ delay: 0.6, duration: 0.4 }}
+        type="button"
+      >
+        Voir l'impact sur le revenu
+      </motion.button>
+    </>
+  )
 }
 
-function ProjectionReveal({
+/* ═══════════════════════════════════════════════════════════
+   STEP 5 — PROJECTION (count-up reveal)
+   ═══════════════════════════════════════════════════════════ */
+function StepProjection({
+  demo,
   monthlyRange,
   seasonRange,
-  demo,
   seasonMonths,
-  recoveredScaled,
-  confidenceLabel,
-  summitMetric,
-  bars,
+  summitMultiplier,
+  onNext,
 }: {
-  monthlyRange: { low: number; high: number; adjusted: number }
-  seasonRange: { low: number; high: number; adjusted: number }
   demo: ReturnType<typeof getDemoWorldContent>
+  monthlyRange: { low: number; high: number }
+  seasonRange: { low: number; high: number }
   seasonMonths: 3 | 6
-  recoveredScaled: number
-  confidenceLabel: string
-  summitMetric: string
-  bars: { label: string; height: number }[]
+  summitMultiplier: number
+  onNext: () => void
 }) {
-  const [stage, setStage] = useState(0)
-
+  const [reveal, setReveal] = useState(false)
   useEffect(() => {
-    setStage(0)
-    const t1 = window.setTimeout(() => setStage(1), 380)
-    const t2 = window.setTimeout(() => setStage(2), 780)
-    return () => {
-      window.clearTimeout(t1)
-      window.clearTimeout(t2)
-    }
-  }, [seasonMonths, demo.projectedMonthlyRevenue, monthlyRange.adjusted])
+    const t = setTimeout(() => setReveal(true), 800)
+    return () => clearTimeout(t)
+  }, [])
+
+  const low = useCountUp(monthlyRange.low, 1400, reveal)
+  const high = useCountUp(monthlyRange.high, 1600, reveal)
+
+  const bars = useMemo(
+    () => Array.from({ length: seasonMonths }, (_, i) => ({ label: `M${i + 1}`, height: Math.round(38 + ((i + 1) / seasonMonths) * 50) })),
+    [seasonMonths],
+  )
 
   return (
-    <div className="space-y-5">
-      <div className="rounded-[1.6rem] border border-[#E3DED3] bg-[#FCFBF7] p-5 sm:p-6">
-        <p className="text-[10px] uppercase tracking-[0.16em] text-[#7A817A]">Revenu cumulé sur {seasonMonths} mois</p>
-        <div className="mt-5 flex h-44 items-end gap-3 rounded-[1.25rem] border border-[#ECE7DC] bg-[linear-gradient(180deg,#F8F6EF_0%,#F2EEE4_100%)] px-4 pb-5 pt-8 sm:gap-4 sm:px-5">
+    <>
+      <StepHeader num="05" label="Projection" />
+      <StepTitle>Impact sur le revenu.</StepTitle>
+      <StepSubtitle>Projection basee sur vos parametres. Fourchette prudente a optimiste.</StepSubtitle>
+
+      <motion.div
+        animate={{ opacity: reveal ? 1 : 0, y: reveal ? 0 : 16 }}
+        className="mb-4 rounded-2xl p-6"
+        initial={{ opacity: 0, y: 16 }}
+        style={{ backgroundColor: "var(--cardin-green-primary)" }}
+        transition={{ duration: 0.4 }}
+      >
+        <div style={{ fontSize: "0.65rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "rgba(250,248,242,0.5)", marginBottom: "0.5rem" }}>
+          Revenu supplementaire / mois
+        </div>
+        <div className="font-serif" style={{ fontSize: "clamp(2.25rem, 6vw, 3.25rem)", color: "#FAF8F2", lineHeight: 1, letterSpacing: "-0.03em" }}>
+          +{low.toLocaleString("fr-FR")}–{high.toLocaleString("fr-FR")} EUR
+        </div>
+      </motion.div>
+
+      <motion.div
+        animate={{ opacity: reveal ? 1 : 0, y: reveal ? 0 : 12 }}
+        className="mb-4 rounded-xl p-4"
+        initial={{ opacity: 0, y: 12 }}
+        style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)" }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+      >
+        <div style={{ fontSize: "0.6rem", letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--cardin-label)", marginBottom: "0.5rem" }}>
+          Revenu cumule sur {seasonMonths} mois
+        </div>
+        <div className="flex items-end gap-3" style={{ height: 120 }}>
           {bars.map((bar) => (
             <div className="flex-1" key={bar.label}>
-              <div className="flex h-24 items-end">
+              <div className="flex items-end" style={{ height: 80 }}>
                 <motion.div
-                  animate={{ height: stage >= 1 ? `${bar.height}%` : "0%" }}
-                  className="w-full rounded-t-[1rem] bg-[linear-gradient(180deg,#2B5B48_0%,#0F523D_100%)]"
+                  animate={{ height: reveal ? `${bar.height}%` : "0%" }}
+                  className="w-full"
                   initial={{ height: "0%" }}
-                  transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                  style={{ borderRadius: "4px 4px 0 0", background: "rgba(0,61,44,0.25)" }}
+                  transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
                 />
               </div>
-              <p className="mt-3 text-center text-xs text-[#677168]">{bar.label}</p>
+              <div style={{ textAlign: "center", fontSize: 9, color: "var(--cardin-label)", marginTop: 6, fontFamily: "monospace" }}>{bar.label}</div>
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
 
-      <AnimatePresence mode="wait">
-        {stage >= 2 ? (
-          <motion.div
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-5"
-            exit={{ opacity: 0, y: 8 }}
-            initial={{ opacity: 0, y: 16 }}
-            key="full"
-            transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <div className="rounded-[1.9rem] bg-[#0B4F3C] p-7 text-[#FBFAF6] shadow-[0_28px_60px_-38px_rgba(11,79,60,0.45)] sm:p-8">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-[#AFC7BE]">Revenu supplémentaire / mois</p>
-              <p className="mt-4 font-serif text-[clamp(3.2rem,8vw,5.1rem)] leading-none">
-                +{monthlyRange.low.toLocaleString("fr-FR")}–{monthlyRange.high.toLocaleString("fr-FR")} €
-              </p>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <MetricCard label="Retours / mois" value={`${demo.projectedMonthlyReturns}`} note="affluence générée" />
-              <MetricCard label="Clients récupérés" value={`${recoveredScaled}`} note={`sur ${seasonMonths} mois`} />
-              <MetricCard label="Payback" value={`${demo.projectedPaybackDays} j`} note="amortissement" />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <MetricCard label="Sommet" value={summitMetric} note="sélection" />
-              <MetricCard
-                label="Saison (plage)"
-                value={`${seasonRange.low.toLocaleString("fr-FR")}–${seasonRange.high.toLocaleString("fr-FR")} €`}
-                note={confidenceLabel}
-              />
-              <MetricCard
-                label="Revenu saison (base)"
-                value={formatEuro(Math.round(demo.projectedMonthlyRevenue * seasonMonths))}
-                note="avant sommet marketing"
-              />
-            </div>
-          </motion.div>
-        ) : (
-          <motion.p
-            animate={{ opacity: 1 }}
-            className="text-center text-sm text-[#7A817A]"
-            exit={{ opacity: 0 }}
-            initial={{ opacity: 0.6 }}
-            key="wait"
-          >
-            Construction de la courbe…
-          </motion.p>
-        )}
-      </AnimatePresence>
-    </div>
+      <motion.div
+        animate={{ opacity: reveal ? 1 : 0 }}
+        className="mb-10 grid grid-cols-3 gap-3"
+        initial={{ opacity: 0 }}
+        transition={{ duration: 0.4, delay: 0.35 }}
+      >
+        <MiniStat color="var(--cardin-green-primary)" label="Retours/mois" value={`${demo.projectedMonthlyReturns}`} />
+        <MiniStat color="var(--cardin-summit-gold)" label="Sommet" value={`x${summitMultiplier}`} />
+        <MiniStat color="var(--cardin-green-primary)" label="Saison" value={`${Math.round(seasonRange.low / 1000)}–${Math.round(seasonRange.high / 1000)}k`} />
+      </motion.div>
+
+      <motion.button
+        animate={{ opacity: reveal ? 1 : 0 }}
+        className="w-full rounded-full py-4"
+        initial={{ opacity: 0 }}
+        onClick={onNext}
+        style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2", fontSize: "0.95rem" }}
+        transition={{ duration: 0.4, delay: 0.45 }}
+        type="button"
+      >
+        Passer a l'activation
+      </motion.button>
+    </>
   )
 }
 
-function MechanicVisual({ mechanicId, seasonMonths }: { mechanicId: MechanicId; seasonMonths: 3 | 6 }) {
-  if (mechanicId === "return") {
-    const visits = ["V1", "V2", "V3", "V4", "V5", "Diamond"]
-    return (
-      <div>
-        <div className="flex items-center justify-between gap-2">
-          {visits.map((visit, index) => {
-            const active = index <= 1
-            const isDiamond = visit === "Diamond"
-            return (
-              <div className="flex flex-col items-center" key={visit}>
-                <span
-                  className={[
-                    "flex h-8 w-8 items-center justify-center rounded-full border text-[10px]",
-                    active ? "border-[#7EA694] bg-[#DDEFE5] text-[#0F523D]" : "border-[#D8DCD3] bg-[#FBFBF8] text-[#8E948B]",
-                    isDiamond ? "border-[#C5A355] text-[#A17D31]" : "",
-                  ].join(" ")}
-                >
-                  {isDiamond ? "D" : "•"}
-                </span>
-                <span className="mt-2 text-[10px] uppercase tracking-[0.08em] text-[#7D857D]">{visit}</span>
-              </div>
-            )
-          })}
-        </div>
-        <div className="mt-4 h-1.5 rounded-full bg-[#E4E8DF]">
-          <div className="h-1.5 w-[37.5%] rounded-full bg-[#8FB1A2]" />
-        </div>
-        <div className="mt-2 text-right text-xs text-[#7A817A]">3 / 8</div>
-      </div>
-    )
-  }
-
-  if (mechanicId === "surprise") {
-    const classic = [14, 14, 14, 14, 14, 14, 14, 14, 14, 56]
-    const cardin = [14, 56, 14, 38, 14, 30, 14, 44, 14, 56]
-    return (
-      <div className="grid gap-4 sm:grid-cols-2">
-        <BarGroup bars={classic} label="Système classique" sublabel="attendre ×10" />
-        <BarGroup bars={cardin} highlight label="Cardin" sublabel="variable et vivant" />
-      </div>
-    )
-  }
-
-  if (mechanicId === "domino") {
-    return (
-      <div className="grid gap-3 sm:grid-cols-3">
-        <MetricCard label="Carte A" value="50" note="cartes initiales" />
-        <MetricCard label="Carte B" value="+50" note="invitation 1:1" />
-        <MetricCard label="Carte C" value="+50" note="deuxième cercle" />
-      </div>
-    )
-  }
-
-  if (mechanicId === "diamond") {
-    return (
-      <div className="rounded-[1.2rem] border border-[#C5A355]/40 bg-[linear-gradient(180deg,#FBF8EF_0%,#F4EDE0_100%)] p-4">
-        <p className="text-sm font-medium text-[#173A2E]">Diamond verrouille le sommet</p>
-        <p className="mt-2 text-sm text-[#5F665E]">Le client voit la récompense finale avant la fin de la saison.</p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="grid gap-3 sm:grid-cols-3">
-      <MetricCard label="Saison" value={`${seasonMonths} mois`} note="cycle" />
-      <MetricCard label="Cartes" value="50" note="sélectives" />
-      <MetricCard label="Traction" value="S2" note="preuve cumulée" />
-    </div>
-  )
-}
-
-function BarGroup({
-  bars,
-  label,
-  sublabel,
-  highlight,
+/* ═══════════════════════════════════════════════════════════
+   STEP 6 — ACTIVATION (final)
+   ═══════════════════════════════════════════════════════════ */
+function StepActivation({
+  demo,
+  monthlyRange,
+  seasonRange,
+  seasonMonths,
+  summit,
+  worldId,
+  engineHref,
+  variant,
 }: {
-  bars: number[]
-  label: string
-  sublabel: string
-  highlight?: boolean
+  demo: ReturnType<typeof getDemoWorldContent>
+  monthlyRange: { low: number; high: number }
+  seasonRange: { low: number; high: number; adjusted: number }
+  seasonMonths: 3 | 6
+  summit: SummitOption
+  worldId: LandingWorldId
+  engineHref: string
+  variant: ParcoursOnboardingVariant
 }) {
+  const [phase, setPhase] = useState(0)
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase(1), 400)
+    const t2 = setTimeout(() => setPhase(2), 1200)
+    const t3 = setTimeout(() => setPhase(3), 2000)
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
+  }, [])
+
+  const world = LANDING_WORLDS[worldId]
+  const summitLabel = summit.id === "visible" ? "Visible" : summit.id === "stronger" ? "Renforce" : "Discret"
+
   return (
-    <div>
-      <p className={["text-[10px] uppercase tracking-[0.14em]", highlight ? "text-[#173A2E]" : "text-[#899188]"].join(" ")}>
-        {label}
-      </p>
-      <div className="mt-3 flex h-16 items-end gap-1">
-        {bars.map((height, index) => (
-          <div
-            className={["flex-1 rounded-t-sm", highlight ? "bg-[#AFC4B6]" : "bg-[#E1E7E0]"].join(" ")}
-            key={`${label}-${index}`}
-            style={{ height }}
+    <>
+      {/* Status pulse */}
+      <motion.div
+        animate={{ opacity: phase >= 1 ? 1 : 0 }}
+        className="mb-8 flex items-center gap-3"
+        initial={{ opacity: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <motion.div
+          animate={{ scale: [1, 1.3, 1] }}
+          className="relative h-3 w-3"
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <div className="absolute inset-0 rounded-full" style={{ backgroundColor: "var(--cardin-green-primary)" }} />
+          <motion.div
+            animate={{ scale: [1, 2.5], opacity: [0.4, 0] }}
+            className="absolute inset-0 rounded-full"
+            style={{ backgroundColor: "var(--cardin-green-primary)" }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
           />
-        ))}
-      </div>
-      <p className="mt-2 text-xs text-[#7A827B]">{sublabel}</p>
-    </div>
+        </motion.div>
+        <span style={{ fontSize: "0.7rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--cardin-green-primary)", fontWeight: 600 }}>Systeme actif</span>
+      </motion.div>
+
+      <motion.h1
+        animate={{ opacity: phase >= 1 ? 1 : 0, y: phase >= 1 ? 0 : 16 }}
+        className="mb-3 font-serif"
+        initial={{ opacity: 0, y: 16 }}
+        style={{ fontSize: "clamp(2.25rem, 5vw, 3.5rem)", color: "var(--cardin-green-primary)", letterSpacing: "-0.03em", lineHeight: 1.08 }}
+        transition={{ duration: 0.4 }}
+      >
+        Le moteur tourne.
+      </motion.h1>
+
+      <motion.p
+        animate={{ opacity: phase >= 1 ? 1 : 0 }}
+        className="mb-10"
+        initial={{ opacity: 0 }}
+        style={{ color: "var(--cardin-body)", fontSize: "0.95rem", lineHeight: 1.55, maxWidth: "400px" }}
+        transition={{ duration: 0.4, delay: 0.15 }}
+      >
+        Le systeme est actif. Les premiers retours peuvent commencer.
+      </motion.p>
+
+      {/* Big number */}
+      <motion.div
+        animate={{ opacity: phase >= 2 ? 1 : 0, y: phase >= 2 ? 0 : 16 }}
+        className="mb-2 rounded-2xl p-7 text-center"
+        initial={{ opacity: 0, y: 16 }}
+        style={{ backgroundColor: "var(--cardin-green-primary)" }}
+        transition={{ duration: 0.4 }}
+      >
+        <div style={{ fontSize: "0.6rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "rgba(250,248,242,0.45)", marginBottom: "0.75rem" }}>
+          Ordre de gain mensuel
+        </div>
+        <div className="font-serif" style={{ fontSize: "clamp(2.5rem, 7vw, 3.75rem)", color: "#FAF8F2", lineHeight: 1, letterSpacing: "-0.03em" }}>
+          +{monthlyRange.low.toLocaleString("fr-FR")}–{monthlyRange.high.toLocaleString("fr-FR")} EUR
+        </div>
+        <div style={{ fontSize: "0.7rem", color: "rgba(250,248,242,0.5)", marginTop: "0.75rem", lineHeight: 1.5 }}>
+          {demo.projectedMonthlyReturns} retours/mois · payback ~{demo.projectedPaybackDays}j · {demo.confidenceLabel}
+        </div>
+      </motion.div>
+
+      {/* Domino + Sommet pills */}
+      <motion.div
+        animate={{ opacity: phase >= 2 ? 1 : 0 }}
+        className="mb-8 flex gap-2"
+        initial={{ opacity: 0 }}
+        transition={{ duration: 0.4, delay: 0.15 }}
+      >
+        <div className="flex flex-1 items-center justify-between rounded-xl px-3 py-2.5" style={{ backgroundColor: "var(--cardin-domino-blue-light)", border: "1px solid rgba(128,164,214,0.15)" }}>
+          <span style={{ fontSize: "0.6rem", letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--cardin-domino-blue)" }}>Domino</span>
+          <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--cardin-domino-blue)" }}>x1.15</span>
+        </div>
+        <div className="flex flex-1 items-center justify-between rounded-xl px-3 py-2.5" style={{ backgroundColor: "var(--cardin-summit-gold-light)", border: "1px solid rgba(163,135,103,0.15)" }}>
+          <span style={{ fontSize: "0.6rem", letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--cardin-summit-gold)" }}>Sommet</span>
+          <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--cardin-summit-gold)" }}>{summit.metric}</span>
+        </div>
+      </motion.div>
+
+      {/* Config details */}
+      <motion.details
+        animate={{ opacity: phase >= 3 ? 1 : 0 }}
+        className="mb-10"
+        initial={{ opacity: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <summary className="flex cursor-pointer select-none items-center gap-2 py-2" style={{ listStyle: "none", fontSize: "0.75rem", color: "var(--cardin-label)" }}>
+          <span>Voir la configuration</span>
+          <svg fill="none" height="12" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" style={{ marginLeft: "auto" }} viewBox="0 0 24 24" width="12"><polyline points="6 9 12 15 18 9" /></svg>
+        </summary>
+        <div className="mt-2 space-y-2.5 rounded-xl p-4" style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)" }}>
+          {[
+            { label: "Lieu", value: world.label },
+            { label: "Saison", value: `${seasonMonths} mois` },
+            { label: "Sommet", value: summitLabel },
+            { label: "Retours/mois", value: `${demo.projectedMonthlyReturns}` },
+            { label: "Saison (plage)", value: `${seasonRange.low.toLocaleString("fr-FR")}–${seasonRange.high.toLocaleString("fr-FR")} €` },
+            { label: "Activation", value: `${LANDING_PRICING.activationFee} €` },
+            { label: "Recurrant", value: `${LANDING_PRICING.recurringFee} € / mois` },
+          ].map((line) => (
+            <div className="flex items-center justify-between" key={line.label}>
+              <span style={{ fontSize: "0.75rem", color: "var(--cardin-label)" }}>{line.label}</span>
+              <span style={{ fontSize: "0.8rem", color: "var(--cardin-text)", fontWeight: 500 }}>{line.value}</span>
+            </div>
+          ))}
+        </div>
+      </motion.details>
+
+      {/* CTAs */}
+      <motion.div
+        animate={{ opacity: phase >= 3 ? 1 : 0 }}
+        className="flex flex-col gap-3 sm:flex-row"
+        initial={{ opacity: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <Link
+          className="flex-1 rounded-full py-3.5 text-center text-sm"
+          href={engineHref}
+          style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2" }}
+        >
+          Ajuster le systeme
+        </Link>
+        <Link
+          className="flex-1 rounded-full py-3.5 text-center text-sm"
+          href={variant === "embedded" ? "#methode" : "/landing#methode"}
+          style={{ border: "1px solid var(--cardin-border)", color: "var(--cardin-text)" }}
+        >
+          Voir le simulateur
+        </Link>
+        <Link
+          className="flex-1 rounded-full py-3.5 text-center text-sm"
+          href="/demo"
+          style={{ border: "1px solid var(--cardin-border)", color: "var(--cardin-text)" }}
+        >
+          Voir la demo client
+        </Link>
+      </motion.div>
+    </>
   )
 }
 
-function MetricCard({ label, value, note }: { label: string; value: string; note: string }) {
+/* ─── SHARED ATOMS ─── */
+function StepHeader({ num, label, accent }: { num: string; label: string; accent?: "gold" }) {
   return (
-    <div className="rounded-[1.4rem] border border-[#E3DED3] bg-[#FCFBF7] p-5">
-      <p className="text-[10px] uppercase tracking-[0.16em] text-[#7A817A]">{label}</p>
-      <p className="mt-2 font-serif text-3xl text-[#173A2E]">{value}</p>
-      <p className="mt-2 text-xs leading-6 text-[#6E766E]">{note}</p>
+    <motion.div animate={{ opacity: 1, y: 0 }} className="mb-8 flex items-center gap-2" initial={{ opacity: 0, y: 12 }} transition={{ delay: 0.09, duration: 0.4 }}>
+      <span style={{ fontSize: "0.7rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: accent === "gold" ? "var(--cardin-summit-gold)" : "var(--cardin-label)" }}>
+        Etape {num} — {label}
+      </span>
+    </motion.div>
+  )
+}
+
+function StepTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <motion.h1
+      animate={{ opacity: 1, y: 0 }}
+      className="mb-3 font-serif"
+      initial={{ opacity: 0, y: 16 }}
+      style={{ fontSize: "clamp(2rem, 5vw, 3.25rem)", color: "var(--cardin-green-primary)", letterSpacing: "-0.03em", lineHeight: 1.08 }}
+      transition={{ delay: 0.15, duration: 0.4 }}
+    >
+      {children}
+    </motion.h1>
+  )
+}
+
+function StepSubtitle({ children }: { children: React.ReactNode }) {
+  return (
+    <motion.p
+      animate={{ opacity: 1 }}
+      className="mb-12"
+      initial={{ opacity: 0 }}
+      style={{ color: "var(--cardin-body)", fontSize: "0.95rem", lineHeight: 1.55, maxWidth: "400px" }}
+      transition={{ delay: 0.25, duration: 0.4 }}
+    >
+      {children}
+    </motion.p>
+  )
+}
+
+function MiniStat({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div className="rounded-xl p-3 text-center" style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)" }}>
+      <div style={{ fontSize: "0.55rem", letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--cardin-label)", marginBottom: "0.15rem" }}>{label}</div>
+      <div style={{ fontSize: "1rem", fontWeight: 600, color }}>{value}</div>
     </div>
   )
 }
