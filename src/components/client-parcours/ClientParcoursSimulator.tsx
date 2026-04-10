@@ -1,0 +1,220 @@
+"use client"
+
+import Link from "next/link"
+import { useCallback, useMemo, useState } from "react"
+
+import { LANDING_WORLDS, LANDING_WORLD_ORDER, type LandingWorldId } from "@/lib/landing-content"
+import {
+  CLIENT_PARCOURS_SCREENS,
+  WORLD_TARGET_VISITS,
+  getScreenForVisits,
+} from "@/lib/client-parcours-config"
+
+import { ScreenEntree } from "@/components/client-parcours/ScreenEntree"
+import { ScreenProgression } from "@/components/client-parcours/ScreenProgression"
+import { ScreenActivation } from "@/components/client-parcours/ScreenActivation"
+import { ScreenProchaineEtape } from "@/components/client-parcours/ScreenProchaineEtape"
+import { ScreenDomino } from "@/components/client-parcours/ScreenDomino"
+import { ScreenSommet } from "@/components/client-parcours/ScreenSommet"
+
+const MAX_SHARES = 2
+
+export function ClientParcoursSimulator() {
+  const [worldId, setWorldId] = useState<LandingWorldId>("cafe")
+  const [visits, setVisits] = useState(0)
+  const [sharesUsed, setSharesUsed] = useState(0)
+
+  const targetVisits = WORLD_TARGET_VISITS[worldId]
+  const world = LANDING_WORLDS[worldId]
+  const screenIndex = useMemo(() => getScreenForVisits(visits, targetVisits), [visits, targetVisits])
+  const screen = CLIENT_PARCOURS_SCREENS[screenIndex]
+  const isSummit = screenIndex === 5
+
+  const handleAdvance = useCallback(() => {
+    if (isSummit) {
+      setVisits(0)
+      setSharesUsed(0)
+    } else {
+      setVisits((v) => Math.min(v + 1, targetVisits))
+    }
+  }, [isSummit, targetVisits])
+
+  const handleShare = useCallback(() => {
+    setSharesUsed((s) => Math.min(s + 1, MAX_SHARES))
+  }, [])
+
+  const handleWorldChange = useCallback((id: LandingWorldId) => {
+    setWorldId(id)
+    setVisits(0)
+    setSharesUsed(0)
+  }, [])
+
+  const screenContent = useMemo(() => {
+    switch (screen.id) {
+      case "entree":
+        return (
+          <ScreenEntree
+            worldId={worldId}
+            targetVisits={targetVisits}
+            summitLabel={world.summitPromise}
+          />
+        )
+      case "progression":
+        return (
+          <ScreenProgression
+            worldId={worldId}
+            visits={visits}
+            targetVisits={targetVisits}
+          />
+        )
+      case "activation":
+        return (
+          <ScreenActivation
+            worldId={worldId}
+            visits={visits}
+            targetVisits={targetVisits}
+          />
+        )
+      case "prochaine-etape":
+        return (
+          <ScreenProchaineEtape
+            worldId={worldId}
+            visits={visits}
+            targetVisits={targetVisits}
+          />
+        )
+      case "domino":
+        return (
+          <ScreenDomino
+            worldId={worldId}
+            visits={visits}
+            targetVisits={targetVisits}
+            sharesUsed={sharesUsed}
+            maxShares={MAX_SHARES}
+            onShare={handleShare}
+          />
+        )
+      case "sommet":
+        return (
+          <ScreenSommet
+            visits={visits}
+            targetVisits={targetVisits}
+            summitLabel={world.summitPromise}
+          />
+        )
+      default:
+        return null
+    }
+  }, [screen.id, worldId, visits, targetVisits, sharesUsed, world.summitPromise, handleShare])
+
+  return (
+    <main className="min-h-screen bg-[#F7F3EA] text-[#18271F]">
+      <section className="relative overflow-hidden border-b border-[#E7E2D8]">
+        <div className="absolute inset-x-0 top-[-220px] mx-auto h-[380px] w-[380px] rounded-full bg-[#E8EFE6] blur-3xl" />
+        <div className="relative mx-auto max-w-xl px-4 pb-8 pt-12 sm:px-6">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-[#677168]">Parcours client</p>
+          <h1 className="mt-4 font-serif text-4xl leading-[1.06] text-[#163328] sm:text-5xl">
+            Ce que le client vit après le scan
+          </h1>
+          <p className="mt-4 max-w-md text-sm leading-7 text-[#566159]">
+            Entrée, activation, retour, propagation, sommet — simulez le parcours complet d&apos;un client.
+          </p>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-xl px-4 py-8 sm:px-6">
+        <div className="space-y-6">
+          {/* World picker */}
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Lieu</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {LANDING_WORLD_ORDER.map((candidate) => {
+                const active = candidate === worldId
+                return (
+                  <button
+                    className={[
+                      "rounded-full border px-4 py-2 text-sm transition",
+                      active
+                        ? "border-[#173A2E] bg-[#EEF3EC] text-[#173A2E]"
+                        : "border-[#DAD4C7] bg-[#F8F5EE] text-[#5C695F] hover:border-[#B9C4B8] hover:text-[#173A2E]",
+                    ].join(" ")}
+                    key={candidate}
+                    onClick={() => handleWorldChange(candidate)}
+                    type="button"
+                  >
+                    {LANDING_WORLDS[candidate].label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Persistent progress summary */}
+          <div className="flex items-center justify-between rounded-[1.3rem] border border-[#DDE3DA] bg-[#F8FAF6] px-5 py-4">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">
+                Votre progression
+              </p>
+              <p className="mt-1 text-sm text-[#173A2E]">
+                {visits} passage{visits !== 1 ? "s" : ""} validé{visits !== 1 ? "s" : ""}
+                {" · "}
+                Sommet à {targetVisits}
+              </p>
+            </div>
+            <div className="rounded-full border border-[#D8DED4] bg-[#FBFCF8] px-3 py-1.5 text-xs uppercase tracking-[0.14em] text-[#173A2E]">
+              {world.label}
+            </div>
+          </div>
+
+          {/* Screen header */}
+          <div className="rounded-[1.8rem] border border-[#DED9CF] bg-[linear-gradient(180deg,#FFFEFA_0%,#F4F0E7_100%)] p-6 shadow-[0_26px_80px_-60px_rgba(24,39,31,0.36)]">
+            <div className="flex items-start justify-between border-b border-[#E6E0D5] pb-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">
+                  Étape {screenIndex + 1} / {CLIENT_PARCOURS_SCREENS.length}
+                </p>
+                <h2 className="mt-2 font-serif text-2xl text-[#173328] sm:text-3xl">
+                  {screen.title}
+                </h2>
+              </div>
+            </div>
+
+            <div className="mt-5">
+              {screenContent}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <button
+            className="w-full rounded-full border border-[#173A2E] bg-[#173A2E] px-6 py-4 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]"
+            onClick={handleAdvance}
+            type="button"
+          >
+            {isSummit ? "Recommencer le parcours" : "Valider un passage"}
+          </button>
+
+          {/* Footer */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-[#69736C]">
+              Simulation — aucun compte, aucune donnée enregistrée
+            </p>
+            <div className="flex gap-3">
+              <Link
+                className="text-xs text-[#173A2E] underline underline-offset-2"
+                href="/landing"
+              >
+                Retour landing
+              </Link>
+              <Link
+                className="text-xs text-[#173A2E] underline underline-offset-2"
+                href="/demo"
+              >
+                Démo complète
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  )
+}
