@@ -6,6 +6,7 @@ import { useCallback, useMemo, useState } from "react"
 import { LANDING_WORLDS, LANDING_WORLD_ORDER, type LandingWorldId } from "@/lib/landing-content"
 import {
   CLIENT_PARCOURS_SCREENS,
+  SOFT_INVITE_MAX,
   WORLD_TARGET_VISITS,
   getScreenForVisits,
 } from "@/lib/client-parcours-config"
@@ -23,6 +24,7 @@ export function ClientParcoursSimulator() {
   const [worldId, setWorldId] = useState<LandingWorldId>("cafe")
   const [visits, setVisits] = useState(0)
   const [sharesUsed, setSharesUsed] = useState(0)
+  const [softInviteUsed, setSoftInviteUsed] = useState(0)
 
   const targetVisits = WORLD_TARGET_VISITS[worldId]
   const world = LANDING_WORLDS[worldId]
@@ -34,6 +36,7 @@ export function ClientParcoursSimulator() {
     if (isSummit) {
       setVisits(0)
       setSharesUsed(0)
+      setSoftInviteUsed(0)
     } else {
       setVisits((v) => Math.min(v + 1, targetVisits))
     }
@@ -43,20 +46,24 @@ export function ClientParcoursSimulator() {
     setSharesUsed((s) => Math.min(s + 1, MAX_SHARES))
   }, [])
 
+  const handleSoftInvite = useCallback(() => {
+    setSoftInviteUsed((s) => Math.min(s + 1, SOFT_INVITE_MAX))
+  }, [])
+
   const handleWorldChange = useCallback((id: LandingWorldId) => {
     setWorldId(id)
     setVisits(0)
     setSharesUsed(0)
+    setSoftInviteUsed(0)
   }, [])
 
-  const screenContent = useMemo(() => {
+  function renderScreenContent() {
     switch (screen.id) {
       case "entree":
         return (
           <ScreenEntree
             worldId={worldId}
             targetVisits={targetVisits}
-            summitLabel={world.summitPromise}
           />
         )
       case "progression":
@@ -73,6 +80,8 @@ export function ClientParcoursSimulator() {
             worldId={worldId}
             visits={visits}
             targetVisits={targetVisits}
+            softInviteUsed={softInviteUsed}
+            onSoftInvite={handleSoftInvite}
           />
         )
       case "prochaine-etape":
@@ -105,7 +114,7 @@ export function ClientParcoursSimulator() {
       default:
         return null
     }
-  }, [screen.id, worldId, visits, targetVisits, sharesUsed, world.summitPromise, handleShare])
+  }
 
   return (
     <main className="min-h-screen bg-[#F7F3EA] text-[#18271F]">
@@ -176,11 +185,12 @@ export function ClientParcoursSimulator() {
                 <h2 className="mt-2 font-serif text-2xl text-[#173328] sm:text-3xl">
                   {screen.title}
                 </h2>
+                <p className="mt-2 text-sm leading-relaxed text-[#556159]">{screen.subtitle}</p>
               </div>
             </div>
 
             <div className="mt-5">
-              {screenContent}
+              {renderScreenContent()}
             </div>
           </div>
 

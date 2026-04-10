@@ -1,29 +1,23 @@
 import type { LandingWorldId } from "@/lib/landing-content"
-import { CLIENT_PARCOURS_TIMING, getExpirationDays } from "@/lib/client-parcours-config"
+import { getTensionPair } from "@/lib/client-parcours-config"
 
 type Props = {
   worldId: LandingWorldId
   targetVisits: number
-  summitLabel: string
 }
 
-export function ScreenEntree({ worldId, targetVisits, summitLabel }: Props) {
-  const timing = CLIENT_PARCOURS_TIMING[worldId]
-  const expDays = getExpirationDays(worldId)
+export function ScreenEntree({ worldId, targetVisits }: Props) {
+  const { expireLine, actionLine } = getTensionPair(worldId, "entree")
 
   return (
     <div className="space-y-5">
       <div className="rounded-[1.6rem] border border-[#D8DED4] bg-[#FFFEFA] p-6">
         <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Entrée</p>
-        <h2 className="mt-3 font-serif text-3xl leading-tight text-[#173A2E]">
-          Vous êtes entré dans le parcours
-        </h2>
-        <p className="mt-3 text-sm leading-7 text-[#556159]">
-          {timing.actionPhrase}
+        <p className="mt-3 text-sm italic leading-7 text-[#556159]">
+          Un pas dans le lieu, sans friction — le parcours vous reconnaît.
         </p>
-        <p className="mt-2 text-xs text-[#69736C]">
-          Expire dans {expDays} jours
-        </p>
+        <p className="mt-4 text-sm leading-7 text-[#2A3F35]">{actionLine}</p>
+        <p className="mt-2 text-xs text-[#69736C]">{expireLine}</p>
       </div>
 
       <div className="rounded-[1.6rem] border border-[#D8DED4] bg-[#FFFEFA] p-6">
@@ -42,12 +36,12 @@ export function ScreenEntree({ worldId, targetVisits, summitLabel }: Props) {
       </div>
 
       <div className="rounded-[1.6rem] border border-dashed border-[#D8DED4] bg-[#F8F7F2]/60 p-6">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Sommet — verrouillé</p>
-        <p className="mt-3 font-serif text-xl text-[#173A2E]/30">
-          {summitLabel}
+        <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Réserve</p>
+        <p className="mt-3 font-serif text-lg leading-snug text-[#173A2E]/50">
+          Une suite se prépare en fin de parcours — le lieu vous la révélera au moment venu.
         </p>
         <p className="mt-2 text-xs text-[#69736C]">
-          Atteignez {targetVisits} passages pour débloquer
+          Aucun détail avant la dernière étape
         </p>
       </div>
     </div>

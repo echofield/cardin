@@ -1,5 +1,5 @@
 import type { LandingWorldId } from "@/lib/landing-content"
-import { getExpirationDays } from "@/lib/client-parcours-config"
+import { getTensionPair } from "@/lib/client-parcours-config"
 
 type Props = {
   worldId: LandingWorldId
@@ -11,7 +11,7 @@ type Props = {
 }
 
 export function ScreenDomino({ worldId, visits, targetVisits, sharesUsed, maxShares, onShare }: Props) {
-  const expDays = getExpirationDays(worldId)
+  const { expireLine, actionLine } = getTensionPair(worldId, "domino")
   const canShare = sharesUsed < maxShares
   const remaining = Math.max(0, targetVisits - visits)
 
@@ -19,7 +19,10 @@ export function ScreenDomino({ worldId, visits, targetVisits, sharesUsed, maxSha
     <div className="space-y-5">
       <div className="rounded-[1.6rem] border border-[#D8DED4] bg-[#FFFEFA] p-6">
         <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Propagation</p>
-        <h2 className="mt-3 font-serif text-3xl leading-tight text-[#173A2E]">
+        <p className="mt-3 text-sm italic leading-7 text-[#556159]">
+          Ici le parcours s’amplifie : vous ouvrez la porte à quelqu’un d’autre, avec mesure.
+        </p>
+        <h2 className="mt-4 font-serif text-3xl leading-tight text-[#173A2E]">
           {maxShares - sharesUsed} entrée{maxShares - sharesUsed > 1 ? "s" : ""} à partager
         </h2>
         <p className="mt-3 text-sm leading-7 text-[#556159]">
@@ -38,7 +41,7 @@ export function ScreenDomino({ worldId, visits, targetVisits, sharesUsed, maxSha
       ) : (
         <div className="rounded-[1.6rem] border border-[#D8DED4] bg-[#F8FAF6] p-5 text-center">
           <p className="text-sm text-[#556159]">
-            {maxShares} accès donnés — maximum atteint
+            {maxShares} accès donnés — amplification complète
           </p>
         </div>
       )}
@@ -60,9 +63,8 @@ export function ScreenDomino({ worldId, visits, targetVisits, sharesUsed, maxSha
       </div>
 
       <div className="rounded-[1.6rem] border border-[#D8DED4] bg-[#F8FAF6] p-5">
-        <p className="text-xs text-[#69736C]">
-          Expire dans {expDays} jours
-        </p>
+        <p className="text-sm text-[#556159]">{expireLine}</p>
+        <p className="mt-2 text-xs leading-relaxed text-[#69736C]">{actionLine}</p>
       </div>
     </div>
   )

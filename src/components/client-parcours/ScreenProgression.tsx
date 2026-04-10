@@ -1,5 +1,5 @@
 import type { LandingWorldId } from "@/lib/landing-content"
-import { CLIENT_PARCOURS_TIMING, getExpirationDays } from "@/lib/client-parcours-config"
+import { getTensionPair } from "@/lib/client-parcours-config"
 
 type Props = {
   worldId: LandingWorldId
@@ -8,19 +8,21 @@ type Props = {
 }
 
 export function ScreenProgression({ worldId, visits, targetVisits }: Props) {
-  const timing = CLIENT_PARCOURS_TIMING[worldId]
-  const expDays = getExpirationDays(worldId)
+  const { expireLine, actionLine } = getTensionPair(worldId, "progression")
   const remaining = Math.max(0, targetVisits - visits)
 
   return (
     <div className="space-y-5">
       <div className="rounded-[1.6rem] border border-[#D8DED4] bg-[#FFFEFA] p-6">
         <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Progression</p>
-        <h2 className="mt-3 font-serif text-3xl leading-tight text-[#173A2E]">
+        <p className="mt-3 text-sm italic leading-7 text-[#556159]">
+          Le premier geste compte : vous confirmez que vous reviendrez.
+        </p>
+        <h2 className="mt-4 font-serif text-3xl leading-tight text-[#173A2E]">
           {visits} passage{visits > 1 ? "s" : ""} validé{visits > 1 ? "s" : ""}
         </h2>
         <p className="mt-3 text-sm leading-7 text-[#556159]">
-          Encore {remaining} pour débloquer
+          Encore {remaining} pour débloquer la suite
         </p>
       </div>
 
@@ -41,12 +43,8 @@ export function ScreenProgression({ worldId, visits, targetVisits }: Props) {
       </div>
 
       <div className="rounded-[1.6rem] border border-[#D8DED4] bg-[#F8FAF6] p-5">
-        <p className="text-sm text-[#556159]">
-          Expire dans {expDays} jours
-        </p>
-        <p className="mt-1 text-xs text-[#69736C]">
-          {timing.actionPhrase}
-        </p>
+        <p className="text-sm text-[#556159]">{expireLine}</p>
+        <p className="mt-2 text-xs leading-relaxed text-[#69736C]">{actionLine}</p>
       </div>
     </div>
   )
