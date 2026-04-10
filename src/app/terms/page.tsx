@@ -23,11 +23,11 @@ export default function TermsPage() {
     <LegalShell eyebrow="Cadre public" title="Conditions">
       <section>
         <h2 className="font-serif text-2xl text-[#173328]">Activation</h2>
-        <p className="mt-3">Cardin est actuellement active saison par saison, lieu par lieu. Chaque activation precise le perimetre, la duree, le nombre de cartes et le sommet choisi.</p>
+        <p className="mt-3">Cardin est actuellement activé saison par saison, lieu par lieu. Chaque activation précise le périmètre, la durée, le volume d&apos;accès digitaux et le sommet choisi.</p>
       </section>
       <section>
         <h2 className="font-serif text-2xl text-[#173328]">Usage</h2>
-        <p className="mt-3">Le lieu utilise Cardin pour lancer une saison de recurrence, de propagation et d'attraction via une carte et un espace marchand associe.</p>
+        <p className="mt-3">Le lieu utilise Cardin pour lancer une saison de récurrence, de propagation et d&apos;affluence via un parcours digital et un espace marchand associé.</p>
       </section>
       <section>
         <h2 className="font-serif text-2xl text-[#173328]">Evolution</h2>

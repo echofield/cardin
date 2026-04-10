@@ -65,7 +65,7 @@ export function InstallLeadForm({
   scenarioId = "starting_loop",
   scenarioLabel = "Scenario Cardin",
   embedded = false,
-  title = "Lancer votre carte en boutique",
+  title = "Lancer votre accès digital en boutique",
   description = "Connexion simple, configuration claire, QR pret en quelques minutes.",
 }: InstallLeadFormProps) {
   const callbackOptions = useMemo(() => createCallbackOptions(), [])
@@ -302,7 +302,7 @@ export function InstallLeadForm({
       </select>
 
       <Button className="w-full" size="lg" type="submit">
-        {state.status === "loading" ? "Activation en cours..." : "Lancer ma carte"}
+        {state.status === "loading" ? "Activation en cours..." : "Activer l&apos;accès digital"}
       </Button>
 
       {state.status === "error" ? <p className="text-sm text-[#A64040]">{state.message}</p> : null}

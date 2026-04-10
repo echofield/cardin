@@ -174,10 +174,10 @@ export function EngineFlow({ initialObjectiveId, initialSeasonLength, initialSum
 
       <div className="rounded-3xl border border-[#D7DDD2] bg-[#FFFEFB] p-4 shadow-[0_20px_60px_-45px_rgba(23,58,46,0.7)] sm:p-6 lg:p-10">
         <header className="border-b border-[#E0E4DB] pb-6">
-          <p className="text-xs uppercase tracking-[0.16em] text-[#6B746D]">QR + carte wallet + tableau marchand</p>
-          <h1 className="mt-2 font-serif text-4xl text-[#173A2E]">Construisez votre carte en {engineSteps.length} etapes</h1>
+          <p className="text-xs uppercase tracking-[0.16em] text-[#6B746D]">QR + carte digitale + tableau marchand</p>
+          <h1 className="mt-2 font-serif text-4xl text-[#173A2E]">Construisez votre parcours digital en {engineSteps.length} étapes</h1>
           <p className="mt-3 max-w-3xl text-sm text-[#556159]">
-            La facade reste simple. Cardin prepare ensuite le QR, la carte Wallet et l'espace marchand avec la configuration choisie.
+            La façade reste simple. Cardin prépare ensuite le QR d&apos;entrée, la carte digitale (wallet client) et l&apos;espace marchand avec la configuration choisie.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <div className="inline-flex rounded-full border border-[#C5D0C4] bg-[#F2F5EE] px-4 py-2 text-xs uppercase tracking-[0.14em] text-[#1B4332]">
@@ -227,7 +227,7 @@ export function EngineFlow({ initialObjectiveId, initialSeasonLength, initialSum
                     <p className="mt-2 max-w-2xl text-sm text-[#58625C]">
                       {hasPreselectedTemplate && !showTemplateSelector
                         ? "On reprend le lieu choisi sur la landing. Vous pouvez le changer si besoin, sans repasser par toute la grille."
-                        : "Cardin part d'un point de depart simple pour votre rythme de clientele, puis le backend prend le relais pour le QR et la carte wallet."}
+                        : "Cardin part d'un point de départ simple pour votre rythme de clientèle, puis le système prend le relais pour le QR et la carte digitale."}
                     </p>
                   </div>
 

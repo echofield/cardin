@@ -871,7 +871,7 @@ function ActivateScreen({ selectedWorld, selectedSummit, selectedSeason, monthly
               <p>Tableau marchand actif sous 48 h</p>
               <p>Carte digitale active sous 48 h</p>
               <p>Espace marchand</p>
-              <p>Cartes physiques expédiées sous 7 à 10 jours ouvrés</p>
+              <p>Option premium : cartes imprimées (hors cœur V1)</p>
               <p>Première saison calibrée avec vous</p>
             </div>
           </Card>
@@ -891,10 +891,10 @@ function ActivateScreen({ selectedWorld, selectedSummit, selectedSeason, monthly
 
         <Card className="p-6">
           <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Activation</p>
-          <p className="mt-3 text-sm leading-7 text-[#556159]">Paiement, activation digitale en 48 h, puis impression et envoi des cartes physiques.</p>
+          <p className="mt-3 text-sm leading-7 text-[#556159]">Paiement puis activation digitale (QR, carte digitale, wallet client) sous 48 h. Cartes imprimées possibles en option plus tard.</p>
           <div className="mt-4 rounded-2xl border border-[#D8DED4] bg-[#FBFCF8] p-4">
             <p className="text-[10px] uppercase tracking-[0.14em] text-[#6D776F]">Délais</p>
-            <p className="mt-2 text-sm leading-7 text-[#203B31]">Tableau marchand + carte digitale : 48 h. Cartes physiques : 7 à 10 jours ouvrés.</p>
+            <p className="mt-2 text-sm leading-7 text-[#203B31]">Tableau marchand + carte digitale : 48 h. Support imprimé : sur demande (option).</p>
           </div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <a className="inline-flex h-12 items-center justify-center rounded-full border border-[#1B4332] bg-[#1B4332] px-8 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href={STRIPE_PAYMENT_LINK} rel="noreferrer" target="_blank">

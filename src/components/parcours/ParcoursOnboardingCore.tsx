@@ -170,7 +170,6 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
   const seasonMonths = demo.seasonMonths
   const phaseIndex = phaseForStep(isLite, stepIndex)
 
-  const boostedMonthly = Math.round(demo.projectedMonthlyRevenue * summit.multiplier)
   const localProjection = useMemo(
     () => computeParcoursProjectionFull(demo, summit.multiplier, undefined, { lite: isLite }),
     [demo, summit.multiplier, isLite],
@@ -366,7 +365,6 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
               )}
               {step.id === "activation" && (
                 <StepActivation
-                  boostedMonthly={boostedMonthly}
                   demo={demo}
                   engineHref={engineHref}
                   isLite={isLite}
@@ -725,7 +723,7 @@ function DiagramDomino() {
   return (
     <div style={{ margin: "4px 0 16px" }}>
       {[
-        { label: "50 cartes\ninitiales", count: 10, glyph: "◆", borderC: "rgba(0,61,44,0.35)", bg: "rgba(0,61,44,0.06)", txtC: "rgba(0,61,44,0.5)", labelC: c.label, mult: "×5" },
+        { label: "50 accès\ninitiaux", count: 10, glyph: "◆", borderC: "rgba(0,61,44,0.35)", bg: "rgba(0,61,44,0.06)", txtC: "rgba(0,61,44,0.5)", labelC: c.label, mult: "×5" },
         { label: "chacun\ninvite 1", count: 10, glyph: "+1", borderC: c.blueBorder, bg: c.blueLight, txtC: c.blueDim, labelC: c.blueDim, mult: "×5" },
         { label: "ceux-la\ninvitent 1", count: 10, glyph: "+1", borderC: "rgba(128,164,214,0.15)", bg: "rgba(128,164,214,0.04)", txtC: "rgba(128,164,214,0.3)", labelC: "rgba(128,164,214,0.3)", mult: "×5" },
       ].map((row, ri) => (
@@ -747,7 +745,7 @@ function DiagramDomino() {
           <div className="font-serif" style={{ fontSize: 30, color: c.green, lineHeight: 1 }}>150</div>
           <div style={{ fontSize: 9, color: c.label, fontFamily: "monospace", marginTop: 2 }}>parcours actifs</div>
         </div>
-        <div style={{ fontSize: 10, color: c.label, textAlign: "right", lineHeight: 1.5 }}>depuis<br />50 cartes<br />initiales</div>
+        <div style={{ fontSize: 10, color: c.label, textAlign: "right", lineHeight: 1.5 }}>depuis<br />50 accès<br />initiaux</div>
       </div>
     </div>
   )
@@ -793,7 +791,7 @@ function DiagramSaison2() {
         {[
           { num: "150", lbl: "parcours actifs\nfin Saison 1", gold: false },
           { num: "8", lbl: "Grand Diamonds\nvisibles dans le lieu", gold: true },
-          { num: "50", lbl: "cartes limitees\nplus d'impact par carte", gold: false },
+          { num: "50", lbl: "accès limités\nplus d'impact par client", gold: false },
           { num: "S2", lbl: "les memes clients\nveulent recommencer", gold: false },
         ].map((card, i) => (
           <div key={i} style={{ padding: "12px 14px", border: `1px solid ${card.gold ? c.goldBorder : c.border}`, borderRadius: 8, background: card.gold ? c.goldLight : c.card }}>
@@ -804,7 +802,7 @@ function DiagramSaison2() {
       </div>
       <div style={{ textAlign: "center", fontSize: 11, color: c.labelLight, fontFamily: "monospace", marginBottom: 8 }}>↓</div>
       <div style={{ padding: "12px 14px", border: `1px solid ${c.border}`, borderRadius: 8, background: c.cardAlt, fontSize: 12, color: c.body, lineHeight: 1.6, textAlign: "center" }}>
-        Moins de cartes = plus de valeur par carte.<br /><strong style={{ color: c.text, fontWeight: 500 }}>La rarete fait le travail. La Saison 2 a plus d'impact que la premiere.</strong>
+        Moins d&apos;accès = plus de valeur par client.<br /><strong style={{ color: c.text, fontWeight: 500 }}>La rareté fait le travail. La saison 2 a plus d&apos;impact que la première.</strong>
       </div>
     </div>
   )
@@ -815,7 +813,7 @@ const MECHANIC_STEPS: MechanicStep[] = [
   { num: "02", name: "Il recoit quelque chose tot", sub: "Pas a la 10eme visite. Variable. Imprevisible.", accent: "default", diagram: <DiagramBars />, effect: <>Des la 2eme visite, quelque chose arrive. <strong>L'incertitude maintient l'engagement mieux que la previsibilite.</strong></> },
   { num: "03", name: "Il amene quelqu'un", sub: "Cette personne en amene une autre. Et ainsi de suite.", accent: "blue", diagram: <DiagramDomino />, effect: <><strong>Vos clients deviennent votre meilleur canal.</strong> Sans publicite. Sans effort de votre part.</> },
   { num: "04", name: "Grand Diamond", sub: "Le sommet visible depuis le debut. Tout le monde le sait.", accent: "gold", diagram: <DiagramCost />, effect: <>Le Grand Diamond <strong>tire tous les autres vers le haut.</strong> Sa seule existence vaut une campagne.</> },
-  { num: "05", name: "Vision long terme", sub: "Cartes limitees. Chaque saison a plus d'impact.", accent: "default", diagram: <DiagramSaison2 />, effect: <>Moins de cartes, plus de valeur. <strong>Chaque saison renforce la precedente.</strong></> },
+  { num: "05", name: "Vision long terme", sub: "Accès limités. Chaque saison a plus d'impact.", accent: "default", diagram: <DiagramSaison2 />, effect: <>Moins d&apos;accès, plus de valeur. <strong>Chaque saison renforce la précédente.</strong></> },
 ]
 
 function StepMechanics({ openIndex, setOpenIndex, onNext }: { openIndex: number | null; setOpenIndex: (v: number | null) => void; onNext: () => void }) {
@@ -924,7 +922,7 @@ function StepProjection({
   }, [])
 
   const seasonLayers = projectionFull.layers
-  const animatedTotal = useCountUp(seasonLayers.total, 1600, reveal)
+  const animatedNetSeason = useCountUp(projectionFull.netCardinSeason, 1600, reveal)
   const animatedLow = useCountUp(projectionFull.monthlyLow, 1300, reveal)
   const animatedHigh = useCountUp(projectionFull.monthlyHigh, 1500, reveal)
 
@@ -967,11 +965,11 @@ function StepProjection({
       <StepSubtitle>
         {isLite ? (
           <>
-            Cardin Lite: recuperation et frequence sur {seasonMonths} mois (pas de couche Domino). Fourchette prudente a optimiste sur la moyenne mensuelle.
+            Décomposition <strong>brute</strong> (récupération, fréquence) sur {seasonMonths} mois — pas de Domino en Lite. Les grands chiffres sont des <strong>montants nets</strong> après récompenses et coûts système.
           </>
         ) : (
           <>
-            Trois leviers (recuperation, frequence, Domino) sur {seasonMonths} mois. Fourchette prudente a optimiste sur la moyenne mensuelle.
+            Décomposition <strong>brute</strong> par levier sur {seasonMonths} mois. Le revenu net (titres) inclut récompenses, Diamond ({formatEuro(projectionFull.diamondCostMonth)}/mois) et frais.
           </>
         )}
       </StepSubtitle>
@@ -987,7 +985,10 @@ function StepProjection({
         </motion.p>
       ) : null}
 
-      {/* Stacked layers */}
+      <p className="mb-3" style={{ fontSize: "0.65rem", letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--cardin-label-light)" }}>
+        Levier · montants bruts saison
+      </p>
+      {/* Stacked layers (gross) */}
       <div className="mb-4 space-y-2.5">
         {layers.map((layer, i) => (
           <motion.div
@@ -1031,7 +1032,7 @@ function StepProjection({
         ))}
       </div>
 
-      {/* Monthly equivalent (moyenne saison) */}
+      {/* Primary: net season */}
       <motion.div
         animate={{ opacity: reveal ? 1 : 0, y: reveal ? 0 : 16 }}
         className="mb-3 rounded-2xl p-6"
@@ -1040,16 +1041,17 @@ function StepProjection({
         transition={{ duration: 0.4, delay: 0.75 }}
       >
         <div style={{ fontSize: "0.65rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "rgba(250,248,242,0.5)", marginBottom: "0.5rem" }}>
-          Revenu supplementaire moyen / mois
+          Revenu net sur la saison ({seasonMonths} mois)
         </div>
         <div className="font-serif" style={{ fontSize: "clamp(2rem, 5.5vw, 3rem)", color: "#FAF8F2", lineHeight: 1, letterSpacing: "-0.03em" }}>
-          +{animatedLow.toLocaleString("fr-FR")}–{animatedHigh.toLocaleString("fr-FR")} EUR
+          +{animatedNetSeason.toLocaleString("fr-FR")} EUR
         </div>
-        <div style={{ fontSize: "0.75rem", color: "rgba(250,248,242,0.45)", marginTop: "0.45rem" }}>
-          Moyenne: {projectionFull.monthlyAverage.toLocaleString("fr-FR")} EUR/mois · panier {formatEuro(demo.avgTicket)}
+        <div style={{ fontSize: "0.72rem", color: "rgba(250,248,242,0.55)", marginTop: "0.5rem", lineHeight: 1.45 }}>
+          Projection nette après récompenses et coûts système · panier moyen {formatEuro(demo.avgTicket)}
         </div>
       </motion.div>
 
+      {/* Secondary: net monthly band */}
       <motion.div
         animate={{ opacity: reveal ? 1 : 0, y: reveal ? 0 : 10 }}
         className="mb-3 rounded-xl p-4"
@@ -1058,13 +1060,13 @@ function StepProjection({
         transition={{ duration: 0.4, delay: 0.82 }}
       >
         <div style={{ fontSize: "0.6rem", letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--cardin-label)", marginBottom: "0.35rem" }}>
-          Total sur la saison ({seasonMonths} mois)
+          Net mensuel (fourchette)
         </div>
         <div className="font-serif" style={{ fontSize: "1.35rem", color: "var(--cardin-green-primary)", letterSpacing: "-0.02em" }}>
-          +{animatedTotal.toLocaleString("fr-FR")} EUR
+          +{animatedLow.toLocaleString("fr-FR")}–{animatedHigh.toLocaleString("fr-FR")} EUR
         </div>
         <div style={{ fontSize: "0.7rem", color: "var(--cardin-label)", marginTop: "0.35rem" }}>
-          {demo.projectedMonthlyReturns} retours/mois · payback ~{demo.projectedPaybackDays}j · {demo.confidenceLabel}
+          Moyenne nette {projectionFull.monthlyAverage.toLocaleString("fr-FR")} EUR/mois · {projectionFull.monthlyReturns} retours/mois · payback ~{demo.projectedPaybackDays} j · {demo.confidenceLabel}
         </div>
       </motion.div>
 
@@ -1086,16 +1088,16 @@ function StepProjection({
         {isLite ? (
           <>
             <MiniStat color="var(--cardin-green-secondary)" label="Porteurs" value={`${seasonLayers.activeCardholders}`} />
-            <MiniStat color="var(--cardin-green-primary)" label="Saison" value={`${Math.round((seasonLayers.total * 0.92) / 1000)}–${Math.round((seasonLayers.total * 1.08) / 1000)}k`} />
+            <MiniStat color="var(--cardin-green-primary)" label="Net saison" value={`${Math.round((projectionFull.netCardinSeason * 0.92) / 1000)}–${Math.round((projectionFull.netCardinSeason * 1.08) / 1000)}k`} />
           </>
         ) : (
           <>
-            <MiniStat color="var(--cardin-domino-blue)" label="Domino" value={formatEuro(seasonLayers.domino)} />
-            <MiniStat color="var(--cardin-summit-gold)" label="Sommet" value={`x${summitMultiplier}`} />
+            <MiniStat color="var(--cardin-domino-blue)" label="Domino (brut)" value={formatEuro(seasonLayers.domino)} />
+            <MiniStat color="var(--cardin-summit-gold)" label="Sommet" value={`×${summitMultiplier.toLocaleString("fr-FR")}`} />
             <MiniStat
               color="var(--cardin-green-primary)"
-              label="Saison"
-              value={`${Math.round((seasonLayers.total * 0.92) / 1000)}–${Math.round((seasonLayers.total * 1.08) / 1000)}k`}
+              label="Net saison"
+              value={`${Math.round((projectionFull.netCardinSeason * 0.92) / 1000)}–${Math.round((projectionFull.netCardinSeason * 1.08) / 1000)}k`}
             />
           </>
         )}
@@ -1121,7 +1123,6 @@ function StepProjection({
    ═══════════════════════════════════════════════════════════ */
 function StepActivation({
   demo,
-  boostedMonthly,
   projectionFull,
   seasonMonths,
   summit,
@@ -1132,7 +1133,6 @@ function StepActivation({
   liteHintLabel = "",
 }: {
   demo: ReturnType<typeof getDemoWorldContent>
-  boostedMonthly: number
   projectionFull: ParcoursProjectionResult
   seasonMonths: 3 | 6
   summit: SummitOption
@@ -1213,13 +1213,13 @@ function StepActivation({
         transition={{ duration: 0.4 }}
       >
         <div style={{ fontSize: "0.6rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "rgba(250,248,242,0.45)", marginBottom: "0.75rem" }}>
-          Moyenne mensuelle (equivalent saison)
+          Revenu net sur la saison ({seasonMonths} mois)
         </div>
         <div className="font-serif" style={{ fontSize: "clamp(2.25rem, 6.5vw, 3.5rem)", color: "#FAF8F2", lineHeight: 1, letterSpacing: "-0.03em" }}>
-          +{projectionFull.monthlyLow.toLocaleString("fr-FR")}–{projectionFull.monthlyHigh.toLocaleString("fr-FR")} EUR
+          +{projectionFull.netCardinSeason.toLocaleString("fr-FR")} EUR
         </div>
-        <div style={{ fontSize: "0.7rem", color: "rgba(250,248,242,0.5)", marginTop: "0.75rem", lineHeight: 1.5 }}>
-          Saison {seasonMonths} mois: +{seasonLayers.total.toLocaleString("fr-FR")} EUR · recuperation base +{boostedMonthly.toLocaleString("fr-FR")} EUR/mois · payback ~{demo.projectedPaybackDays}j
+        <div style={{ fontSize: "0.72rem", color: "rgba(250,248,242,0.55)", marginTop: "0.75rem", lineHeight: 1.5 }}>
+          Projection nette après récompenses et coûts système · net mensuel ~{projectionFull.netCardinMonth.toLocaleString("fr-FR")} EUR · payback ~{demo.projectedPaybackDays} j
         </div>
       </motion.div>
 
@@ -1263,7 +1263,7 @@ function StepActivation({
             { label: "Saison", value: `${seasonMonths} mois` },
             ...(isLite ? [] : [{ label: "Sommet", value: summitLabel }]),
             { label: "Porteurs actifs", value: `${seasonLayers.activeCardholders}` },
-            { label: "Revenu saison", value: `${seasonLayers.total.toLocaleString("fr-FR")} EUR` },
+            { label: "Revenu net saison", value: `${projectionFull.netCardinSeason.toLocaleString("fr-FR")} EUR` },
             {
               label: "Activation",
               value: isLite ? `${LANDING_PRICING.liteActivationFee} € (Lite)` : `${LANDING_PRICING.activationFee} €`,

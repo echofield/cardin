@@ -48,7 +48,7 @@ export function ParcoursSeasonTradingChart({ projection, seasonMonths, reveal }:
     <div className="relative w-full overflow-hidden rounded-xl" style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)" }}>
       <div className="flex items-baseline justify-between px-3 pt-3">
         <p style={{ fontSize: "0.6rem", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--cardin-label)" }}>
-          Courbe cumulee + flux mensuel
+          Courbe cumulée nette + flux mensuel
         </p>
         <span style={{ fontSize: "0.55rem", color: "var(--cardin-label-light)", fontFamily: "monospace" }}>
           max {maxY.toLocaleString("fr-FR")} EUR

@@ -1,7 +1,6 @@
-import { type BehaviorScenarioId } from "@/lib/behavior-engine"
-import { LANDING_WORLDS, type LandingWorldId } from "@/lib/landing-content"
+import { LANDING_PRICING, LANDING_WORLDS, type LandingWorldId } from "@/lib/landing-content"
 import { getTemplateById } from "@/lib/merchant-templates"
-import { projectScenarioImpact } from "@/lib/projection-engine"
+import { computeParcoursProjectionFull } from "@/lib/parcours-projection"
 
 export type { ParcoursDemoSlice, ParcoursProjectionResult, SeasonProjectionLayers } from "@/lib/parcours-projection"
 export { computeParcoursProjectionFull, computeSeasonProjection } from "@/lib/parcours-projection"
@@ -24,9 +23,11 @@ export type DemoWorldContent = {
   recoveryPercent: number
   lostClientsPerMonth: number
   lostRevenuePerMonth: number
+  /** Net EUR/month after rewards & costs (same engine as parcours, summit ×1) */
   projectedMonthlyRevenue: number
   projectedMonthlyReturns: number
   projectedRecoveredClients: number
+  /** Net EUR season (same engine) */
   projectedSeasonRevenue: number
   projectedPaybackDays: number
   confidenceLabel: string
@@ -38,7 +39,6 @@ type DemoWorldAssumptions = {
   sampleClientName: string
   seasonMonths: 3 | 6
   merchantType: string
-  scenarioId: BehaviorScenarioId
   monthlyClients: number
   avgTicket: number
   inactivePercent: number
@@ -49,12 +49,11 @@ type DemoWorldAssumptions = {
 
 const DEMO_WORLD_ASSUMPTIONS: Record<LandingWorldId, DemoWorldAssumptions> = {
   cafe: {
-    businessName: "Cafe Brulerie",
-    businessTypeLabel: "Cafe",
+    businessName: "Café Brûlerie",
+    businessTypeLabel: "Café",
     sampleClientName: "Marie L.",
     seasonMonths: 3,
     merchantType: "cafe",
-    scenarioId: "starting_loop",
     monthlyClients: 420,
     avgTicket: 6.5,
     inactivePercent: 28,
@@ -68,7 +67,6 @@ const DEMO_WORLD_ASSUMPTIONS: Record<LandingWorldId, DemoWorldAssumptions> = {
     sampleClientName: "Claire M.",
     seasonMonths: 3,
     merchantType: "restaurant",
-    scenarioId: "starting_loop",
     monthlyClients: 185,
     avgTicket: 48,
     inactivePercent: 24,
@@ -78,11 +76,10 @@ const DEMO_WORLD_ASSUMPTIONS: Record<LandingWorldId, DemoWorldAssumptions> = {
   },
   beaute: {
     businessName: "Atelier Source",
-    businessTypeLabel: "Beaute",
-    sampleClientName: "Ines R.",
-    seasonMonths: 6,
+    businessTypeLabel: "Beauté",
+    sampleClientName: "Inès R.",
+    seasonMonths: 3,
     merchantType: "institut-beaute",
-    scenarioId: "starting_loop",
     monthlyClients: 95,
     avgTicket: 72,
     inactivePercent: 26,
@@ -93,15 +90,14 @@ const DEMO_WORLD_ASSUMPTIONS: Record<LandingWorldId, DemoWorldAssumptions> = {
   boutique: {
     businessName: "Maison Tissu",
     businessTypeLabel: "Boutique",
-    sampleClientName: "Lea D.",
-    seasonMonths: 6,
+    sampleClientName: "Léa D.",
+    seasonMonths: 3,
     merchantType: "boutique",
-    scenarioId: "starting_loop",
     monthlyClients: 110,
     avgTicket: 56,
     inactivePercent: 24,
-    invitePrompt: "Une amie a inviter",
-    returnPrompt: "Votre prochaine visite debloque la suite",
+    invitePrompt: "Une amie à inviter",
+    returnPrompt: "Votre prochaine visite débloque la suite",
     weakDayPrompt: "Mercredi plus calme",
   },
 }
@@ -110,18 +106,28 @@ export function getDemoWorldContent(worldId: LandingWorldId): DemoWorldContent {
   const world = LANDING_WORLDS[worldId]
   const assumptions = DEMO_WORLD_ASSUMPTIONS[worldId]
   const template = getTemplateById(assumptions.merchantType)
-  const projection = projectScenarioImpact({
-    merchantType: assumptions.merchantType,
-    scenarioId: assumptions.scenarioId,
-    monthlyClients: assumptions.monthlyClients,
-    avgTicket: assumptions.avgTicket,
-    inactivePercent: assumptions.inactivePercent,
-    baseRecoveryPercent: Math.round(template.defaults.calculator_recovery_rate * 100),
-  })
+  const recoveryPercent = Math.round(template.defaults.calculator_recovery_rate * 100)
 
-  const projectedSeasonRevenue = projection.monthlyRevenue * assumptions.seasonMonths
+  const engine = computeParcoursProjectionFull(
+    {
+      merchantType: assumptions.merchantType,
+      monthlyClients: assumptions.monthlyClients,
+      avgTicket: assumptions.avgTicket,
+      inactivePercent: assumptions.inactivePercent,
+      recoveryPercent,
+      seasonMonths: assumptions.seasonMonths,
+    },
+    1,
+    undefined,
+    { lite: false },
+  )
+
   const lostClientsPerMonth = Math.round(assumptions.monthlyClients * (assumptions.inactivePercent / 100))
   const lostRevenuePerMonth = Math.round(lostClientsPerMonth * assumptions.avgTicket)
+
+  const dailyNet = engine.netCardinMonth / 26
+  const projectedPaybackDays =
+    dailyNet > 0 ? Math.max(1, Math.ceil(LANDING_PRICING.activationFee / dailyNet)) : 999
 
   return {
     businessName: assumptions.businessName,
@@ -130,7 +136,7 @@ export function getDemoWorldContent(worldId: LandingWorldId): DemoWorldContent {
     summitLabel: world.summitPromise,
     targetVisits: template.defaults.target_visits,
     seasonMonths: assumptions.seasonMonths,
-    seasonLabel: assumptions.seasonMonths === 3 ? "Saison courte - 3 mois" : "Saison longue - 6 mois",
+    seasonLabel: assumptions.seasonMonths === 3 ? "Saison — 3 mois" : "Saison longue — 6 mois",
     invitePrompt: assumptions.invitePrompt,
     returnPrompt: assumptions.returnPrompt,
     weakDayPrompt: assumptions.weakDayPrompt,
@@ -138,14 +144,14 @@ export function getDemoWorldContent(worldId: LandingWorldId): DemoWorldContent {
     monthlyClients: assumptions.monthlyClients,
     avgTicket: assumptions.avgTicket,
     inactivePercent: assumptions.inactivePercent,
-    recoveryPercent: Math.round(template.defaults.calculator_recovery_rate * 100),
+    recoveryPercent,
     lostClientsPerMonth,
     lostRevenuePerMonth,
-    projectedMonthlyRevenue: projection.monthlyRevenue,
-    projectedMonthlyReturns: projection.monthlyReturns,
-    projectedRecoveredClients: Math.round(projection.recoveredClients),
-    projectedSeasonRevenue,
-    projectedPaybackDays: projection.paybackDays,
-    confidenceLabel: projection.confidenceLabel,
+    projectedMonthlyRevenue: engine.netCardinMonth,
+    projectedMonthlyReturns: engine.monthlyReturns,
+    projectedRecoveredClients: engine.recoveredClientsMonth,
+    projectedSeasonRevenue: engine.netCardinSeason,
+    projectedPaybackDays,
+    confidenceLabel: engine.confidenceLabel,
   }
 }

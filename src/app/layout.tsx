@@ -21,7 +21,8 @@ const body = Manrope({
 
 export const metadata: Metadata = {
   title: "Cardin - Return Engine pour commerces et communautés",
-  description: "Cardin crée des boucles de retour mesurables via Apple Wallet et Google Wallet. Installation en 24h.",
+  description:
+    "Cardin crée des boucles de retour mesurables : QR d'entrée, carte digitale, wallet Apple / Google. Activation digitale rapide.",
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

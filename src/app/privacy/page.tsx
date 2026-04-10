@@ -23,15 +23,15 @@ export default function PrivacyPage() {
     <LegalShell eyebrow="Cadre public" title="Confidentialite">
       <section>
         <h2 className="font-serif text-2xl text-[#173328]">Principe</h2>
-        <p className="mt-3">Cardin traite les donnees necessaires au fonctionnement de la saison, a l'activation des cartes et au suivi marchand.</p>
+        <p className="mt-3">Cardin traite les données nécessaires au fonctionnement de la saison, à l&apos;activation des accès digitaux et au suivi marchand.</p>
       </section>
       <section>
         <h2 className="font-serif text-2xl text-[#173328]">Donnees traitees</h2>
-        <p className="mt-3">Selon le parcours active, Cardin peut traiter des identifiants de carte, des evenements de visite, des informations de progression, des journaux d'activation et des donnees techniques de service.</p>
+        <p className="mt-3">Selon le parcours activé, Cardin peut traiter des identifiants de carte digitale, des événements de visite, des informations de progression, des journaux d&apos;activation et des données techniques de service.</p>
       </section>
       <section>
         <h2 className="font-serif text-2xl text-[#173328]">Usage</h2>
-        <p className="mt-3">Ces donnees servent a faire fonctionner la carte, mesurer la recurrence, suivre le domino, piloter la saison et ameliorer les versions suivantes du systeme.</p>
+        <p className="mt-3">Ces données servent à faire fonctionner le parcours digital, mesurer la récurrence, suivre le domino, piloter la saison et améliorer les versions suivantes du système.</p>
       </section>
       <section>
         <h2 className="font-serif text-2xl text-[#173328]">Cadre</h2>

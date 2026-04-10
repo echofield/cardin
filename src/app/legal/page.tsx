@@ -23,7 +23,7 @@ export default function LegalPage() {
     <LegalShell eyebrow="Cadre public" title="Mentions">
       <section>
         <h2 className="font-serif text-2xl text-[#173328]">Projet</h2>
-        <p className="mt-3">Cardin est un systeme de recurrence pour commerces physiques, actuellement propose dans un cadre de deploiement progressif.</p>
+        <p className="mt-3">Cardin est un système de récurrence pour commerces de proximité, actuellement proposé dans un cadre de déploiement progressif.</p>
       </section>
       <section>
         <h2 className="font-serif text-2xl text-[#173328]">Publication</h2>

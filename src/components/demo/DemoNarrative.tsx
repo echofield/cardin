@@ -71,12 +71,12 @@ export function DemoNarrative() {
                 <FeatureCard title="QR actif" body="Le commerce peut deja faire entrer un client." />
                 <FeatureCard title="Carte codee" body="Chaque carte porte son identite sans login." />
                 <FeatureCard title="Dashboard" body="Le marchand voit la progression sans dashboard lourd." />
-                <FeatureCard title="Support physique" body="48h digital, 7-10 jours pour les cartes physiques." />
+                <FeatureCard title="Activation digitale" body="QR et carte digitale sous 48 h. Cartes premium optionnelles plus tard." />
               </div>
             </Panel>
             <div className="rounded-[1.6rem] border border-[#D8DED4] bg-[#FFFEFA] p-5">
               <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Ce que le commercant comprend</p>
-              <p className="mt-3 text-base leading-7 text-[#173A2E]">Pas une app a installer, pas un compte a ouvrir. Le QR active la carte. La carte devient l'identite.</p>
+              <p className="mt-3 text-base leading-7 text-[#173A2E]">Pas une app à installer, pas un compte à ouvrir. Le QR d&apos;entrée active la carte digitale — elle devient l&apos;identité.</p>
               <p className="mt-3 text-sm leading-7 text-[#556159]">La couche commerciale s'appuie deja sur une projection de {formatEuro(demo.projectedMonthlyRevenue)} recuperes par mois.</p>
             </div>
           </div>

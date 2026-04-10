@@ -1,3 +1,5 @@
+import { computeCardinFinancialProjection } from "@/lib/cardin-projection-engine"
+import { getTemplateById } from "@/lib/merchant-templates"
 import type {
   AuditSelection,
   FrequencyLevel,
@@ -8,6 +10,12 @@ import type {
 } from "@/lib/projection-scenarios"
 
 const DAYS_OPEN_PER_MONTH = 26
+
+/** Maps projection page merchant ids to engine template ids. */
+function engineMerchantType(mt: MerchantProjectionType): string {
+  if (mt === "beaute") return "institut-beaute"
+  return mt
+}
 
 type MerchantBaseModel = {
   traffic: Record<TrafficLevel, number>
@@ -107,10 +115,27 @@ export function simulateScenario(input: SimulateScenarioInput): SimulateScenario
   const engagedCustomers = monthlyTraffic * input.scenario.impact.captureRate * TRAFFIC_PRESSURE[input.audit.traffic]
   const visitsAdded = Math.round(engagedCustomers * input.scenario.impact.revisitRate * FREQUENCY_PRESSURE[input.audit.frequency])
   const upliftedTicket = avgTicket * (1 + input.scenario.impact.basketLift) * TICKET_PRESSURE[input.audit.ticket]
-  const revenueEstimate = Math.round(visitsAdded * upliftedTicket)
+  const retentionGain = Number((input.scenario.impact.retentionLift * frequencyBase).toFixed(4))
+
+  const mt = engineMerchantType(input.merchantType)
+  const template = getTemplateById(mt)
+  const recoveryPercent = Math.round(template.defaults.calculator_recovery_rate * 100)
+  const inactivePercent = 26
+
+  const engine = computeCardinFinancialProjection({
+    merchantType: mt,
+    monthlyClients: Math.max(1, Math.round(monthlyTraffic)),
+    avgTicket: Math.max(0.01, upliftedTicket),
+    inactivePercent,
+    baseRecoveryPercent: recoveryPercent,
+    seasonMonths: 3,
+    summitMultiplier: 1,
+    lite: false,
+  })
+
+  const revenueEstimate = engine.netCardinSeason
   const revenueLow = Math.round(revenueEstimate * input.scenario.impact.confidenceLow)
   const revenueHigh = Math.round(revenueEstimate * input.scenario.impact.confidenceHigh)
-  const retentionGain = Number((input.scenario.impact.retentionLift * frequencyBase).toFixed(4))
 
   return {
     revenue_estimate: revenueEstimate,
@@ -118,7 +143,7 @@ export function simulateScenario(input: SimulateScenarioInput): SimulateScenario
     revenue_high: revenueHigh,
     visits_added: visitsAdded,
     retention_gain: retentionGain,
-    monthly_projection: revenueEstimate,
+    monthly_projection: engine.netCardinMonth,
     proofLines: [
       `${input.merchantLabel} avec ${TRAFFIC_LABELS[input.audit.traffic]}`,
       `${TICKET_LABELS[input.audit.ticket]} autour de ${formatCompactEuro(avgTicket)}`,

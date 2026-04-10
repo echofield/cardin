@@ -159,8 +159,8 @@ export function ProjectionView() {
 
         <section className="mx-auto mt-8 max-w-5xl grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
           <div className="rounded-[32px] border border-[#D7DDD2] bg-[#FDFCF8] px-6 py-8 shadow-[0_24px_60px_-42px_rgba(23,58,46,0.2)] sm:px-8">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-[#93A094]">Revenu mensuel</p>
-            <h2 className="mt-3 font-serif text-3xl text-[#15372B]">Estimation recuperable</h2>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[#93A094]">Moteur Cardin unifié</p>
+            <h2 className="mt-3 font-serif text-3xl text-[#15372B]">Revenu net sur la saison (3 mois)</h2>
             <p className="mt-3 text-sm leading-relaxed text-[#5C655E]">{simulation.rationale}</p>
 
             <div className="mt-8 border-t border-[#E7EAE4] pt-6">
@@ -170,7 +170,8 @@ export function ProjectionView() {
                 <span className="mx-2 text-[#98A297]">a</span>
                 +{formatEuro(animHigh)}
               </p>
-              <p className="mt-3 text-base text-[#2A3F35]">/ mois</p>
+              <p className="mt-3 text-xs text-[#7A847B]">Projection nette après récompenses et coûts système (Diamond inclus en Full).</p>
+              <p className="mt-2 text-sm text-[#2A3F35]">Équivalent net mensuel ≈ {formatEuro(simulation.monthly_projection)}</p>
             </div>
 
             <div className="mt-6 rounded-3xl bg-[#F4F6F1] px-5 py-4">
