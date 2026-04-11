@@ -6,6 +6,7 @@ import {
   isValidSummitOptionId,
   normalizeCardinWorld,
 } from "@/lib/client-parcours-config"
+import { requireCardBearerForWrite } from "@/lib/card-access-auth"
 import { getActiveSeason, getCardSeasonProgress } from "@/lib/season-progression"
 import { getPublicCardPayloadById } from "@/lib/public-card"
 import { createSupabaseServiceClient } from "@/lib/supabase/service"
@@ -38,6 +39,14 @@ export async function POST(request: Request, { params }: { params: { cardId: str
   }
 
   const supabase = createSupabaseServiceClient()
+
+  const writeOk = await requireCardBearerForWrite(request, supabase, cardId)
+  if (!writeOk) {
+    return NextResponse.json(
+      { ok: false, error: "card_token_required", message: "Authorization: Bearer requis." },
+      { status: 401 },
+    )
+  }
 
   const { data: card, error: cardError } = await supabase
     .from("cards")

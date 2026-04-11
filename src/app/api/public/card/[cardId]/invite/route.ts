@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 
+import { requireCardBearerForWrite } from "@/lib/card-access-auth"
 import { createInvitation } from "@/lib/domino-engine"
 import { getActiveSeason } from "@/lib/season-progression"
 import { createSupabaseServiceClient } from "@/lib/supabase/service"
@@ -12,6 +13,11 @@ type InvitePayload = {
 
 export async function POST(request: Request, { params }: { params: { cardId: string } }) {
   const supabase = createSupabaseServiceClient()
+
+  const writeOk = await requireCardBearerForWrite(request, supabase, params.cardId)
+  if (!writeOk) {
+    return NextResponse.json({ ok: false, error: "card_token_required" }, { status: 401 })
+  }
 
   let payload: InvitePayload = {}
   try {

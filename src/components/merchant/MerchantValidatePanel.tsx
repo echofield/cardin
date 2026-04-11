@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { Button, Card } from "@/ui"
 
@@ -25,13 +25,24 @@ type PendingPayload = {
   }
 }
 
+type PostValidate = {
+  cardId: string
+  sessionId: string
+  customerName: string
+  summitReward: SummitRewardPending | null
+}
+
 export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
   const [pending, setPending] = useState<PendingPayload["pending"]>(null)
+  const [postValidate, setPostValidate] = useState<PostValidate | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionState, setActionState] = useState<"idle" | "loading" | "success" | "error">("idle")
   const [consumeState, setConsumeState] = useState<"idle" | "loading" | "success" | "error">("idle")
   const [message, setMessage] = useState("")
   const [consumeMessage, setConsumeMessage] = useState("")
+
+  const validateIdemRef = useRef<string | null>(null)
+  const consumeIdemRef = useRef<string | null>(null)
 
   const loadPending = useCallback(async () => {
     try {
@@ -52,13 +63,16 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
   }, [loadPending])
 
   const onValidate = async () => {
+    if (!validateIdemRef.current) {
+      validateIdemRef.current = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `v-${Date.now()}`
+    }
     setActionState("loading")
     setMessage("")
     try {
       const res = await fetch("/api/merchant/validate-passage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ idempotencyKey: validateIdemRef.current }),
       })
       const data = await res.json()
       if (!res.ok || !data.ok) {
@@ -68,6 +82,15 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
       }
       setActionState("success")
       setMessage("Passage validé — la carte du client se met à jour.")
+      if (pending && data.sessionId) {
+        setPostValidate({
+          cardId: pending.cardId,
+          sessionId: data.sessionId as string,
+          customerName: pending.customerName,
+          summitReward: pending.summitReward,
+        })
+      }
+      validateIdemRef.current = null
       await loadPending()
     } catch {
       setActionState("error")
@@ -76,14 +99,23 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
   }
 
   const onConsumeReward = async () => {
-    if (!pending?.cardId) return
+    const cardId = postValidate?.cardId ?? pending?.cardId
+    const sessionId = postValidate?.sessionId
+    if (!cardId) return
+    if (!consumeIdemRef.current) {
+      consumeIdemRef.current = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `c-${Date.now()}`
+    }
     setConsumeState("loading")
     setConsumeMessage("")
     try {
       const res = await fetch("/api/merchant/consume-summit-reward", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cardId: pending.cardId }),
+        body: JSON.stringify({
+          cardId,
+          sessionId: sessionId ?? undefined,
+          idempotencyKey: consumeIdemRef.current,
+        }),
       })
       const data = (await res.json()) as { ok?: boolean; error?: string; usageRemaining?: number }
       if (!res.ok || !data.ok) {
@@ -93,16 +125,28 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
             ? "Plus d’utilisation disponible sur cet avantage."
             : data.error === "no_active_reward"
               ? "Aucun avantage sommet actif sur cette carte."
-              : data.error ?? "Erreur",
+              : data.error === "no_recent_validated_session"
+                ? "Validez d’abord un passage pour ce client (session trop ancienne ou absente)."
+                : data.error ?? "Erreur",
         )
         return
       }
       setConsumeState("success")
+      consumeIdemRef.current = null
       setConsumeMessage(
         typeof data.usageRemaining === "number"
           ? `Utilisation enregistrée. Reste : ${data.usageRemaining}.`
           : "Utilisation enregistrée.",
       )
+      setPostValidate((prev) => {
+        if (!prev) return prev
+        if (typeof data.usageRemaining !== "number" || !prev.summitReward) return null
+        if (data.usageRemaining <= 0) return null
+        return {
+          ...prev,
+          summitReward: { ...prev.summitReward, usageRemaining: data.usageRemaining },
+        }
+      })
       await loadPending()
     } catch {
       setConsumeState("error")
@@ -110,11 +154,10 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
     }
   }
 
+  const activeSummit = postValidate?.summitReward ?? pending?.summitReward
+  const activeCardId = postValidate?.cardId ?? pending?.cardId
   const canConsume =
-    pending?.summitReward &&
-    pending.summitReward.usageRemaining > 0 &&
-    consumeState !== "loading" &&
-    actionState !== "loading"
+    activeSummit && activeSummit.usageRemaining > 0 && activeCardId && actionState !== "loading"
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-10">
@@ -152,6 +195,23 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
               </div>
             ) : null}
           </div>
+        ) : postValidate ? (
+          <div>
+            <p className="text-xs uppercase tracking-[0.14em] text-[#5E6961]">Dernier passage validé</p>
+            <p className="mt-2 font-serif text-2xl text-[#173A2E]">{postValidate.customerName}</p>
+            <p className="mt-2 text-sm text-[#556159]">Le client n’est plus « en attente » — vous pouvez encore enregistrer une utilisation d’avantage si besoin.</p>
+            {postValidate.summitReward ? (
+              <div className="mt-5 rounded-[1.2rem] border border-[#173A2E]/15 bg-[#F8FAF6] px-4 py-3">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-[#5E6961]">Avantage actif</p>
+                <p className="mt-1 font-medium text-[#173A2E]">{postValidate.summitReward.title}</p>
+                <p className="mt-1 text-sm text-[#2A3F35]">{postValidate.summitReward.description}</p>
+                <p className="mt-2 text-sm text-[#556159]">
+                  Reste {postValidate.summitReward.usageRemaining} utilisation
+                  {postValidate.summitReward.usageRemaining > 1 ? "s" : ""}
+                </p>
+              </div>
+            ) : null}
+          </div>
         ) : (
           <p className="text-sm text-[#556159]">Aucun client en attente de validation pour le moment.</p>
         )}
@@ -160,10 +220,10 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
           {actionState === "loading" ? "Validation…" : "Valider un passage"}
         </Button>
 
-        {pending?.summitReward && pending.summitReward.usageRemaining > 0 ? (
+        {canConsume ? (
           <Button
             className="mt-3 w-full"
-            disabled={!canConsume}
+            disabled={consumeState === "loading"}
             onClick={() => void onConsumeReward()}
             type="button"
             variant="secondary"

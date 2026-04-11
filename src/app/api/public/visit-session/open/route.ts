@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 
+import { requireCardBearerForWrite } from "@/lib/card-access-auth"
 import { createSupabaseServiceClient } from "@/lib/supabase/service"
 
 export const dynamic = "force-dynamic"
@@ -21,6 +22,14 @@ export async function POST(request: Request) {
     }
 
     const supabase = createSupabaseServiceClient()
+
+    const writeOk = await requireCardBearerForWrite(request, supabase, cardId)
+    if (!writeOk) {
+      return NextResponse.json(
+        { ok: false, error: "card_token_required", message: "Authorization: Bearer requis." },
+        { status: 401 },
+      )
+    }
 
     const { data: card, error: cardError } = await supabase
       .from("cards")

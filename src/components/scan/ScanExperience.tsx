@@ -70,6 +70,7 @@ type CardCreateSuccess = {
   cardLegacyUrl: string
   appleWalletUrl: string
   googleWalletUrl: string
+  accessToken?: string
 }
 
 export function ScanExperience({ merchantId, demo = false }: { merchantId: string; demo?: boolean }) {
@@ -147,6 +148,10 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
       }
 
       setCardData(payload)
+
+      if (payload.accessToken && payload.card?.id && typeof window !== "undefined") {
+        sessionStorage.setItem(`cardin:access:${payload.card.id}`, payload.accessToken)
+      }
 
       trackEvent("scan_card_created", {
         merchantId,

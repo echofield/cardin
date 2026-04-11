@@ -1,3 +1,5 @@
+import { randomBytes } from "crypto"
+
 import { NextResponse } from "next/server"
 
 import { buildCardGatewayPath } from "@/lib/card-code"
@@ -45,6 +47,8 @@ export async function POST(request: Request) {
     const rewardLabel = getRewardLabel(merchant.reward_label)
     const midpointMode = getMidpointMode(merchant.midpoint_mode)
 
+    const clientAccessToken = randomBytes(24).toString("hex")
+
     const { data: card, error: cardError } = await supabase
       .from("cards")
       .insert({
@@ -53,6 +57,7 @@ export async function POST(request: Request) {
         stamps: 1,
         target_visits: targetVisits,
         reward_label: rewardLabel,
+        client_access_token: clientAccessToken,
       })
       .select("id, merchant_id, customer_name, stamps, target_visits, reward_label, midpoint_reached_at, created_at, card_code")
       .single()
@@ -106,9 +111,11 @@ export async function POST(request: Request) {
 
     const origin = new URL(request.url).origin
     const cardGatewayPath = buildCardGatewayPath(card.card_code)
+    const accessQuery = `access_token=${encodeURIComponent(clientAccessToken)}`
 
     return NextResponse.json({
       ok: true,
+      accessToken: clientAccessToken,
       card: {
         id: card.id,
         code: card.card_code,
@@ -131,8 +138,8 @@ export async function POST(request: Request) {
         },
         sharedUnlock,
       },
-      cardUrl: `${origin}${cardGatewayPath}`,
-      cardLegacyUrl: `${origin}/card/${card.id}`,
+      cardUrl: `${origin}${cardGatewayPath}?${accessQuery}`,
+      cardLegacyUrl: `${origin}/card/${card.id}?${accessQuery}`,
       appleWalletUrl: `${origin}/api/wallet/apple/${card.id}`,
       googleWalletUrl: `${origin}/api/wallet/google/${card.id}`,
     })

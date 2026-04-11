@@ -109,40 +109,77 @@ export function CardPhoneView({
   const [merchantValidatedBanner, setMerchantValidatedBanner] = useState(false)
   const [summitPickState, setSummitPickState] = useState<"idle" | "loading" | "error">("idle")
   const [summitPickMessage, setSummitPickMessage] = useState("")
+  const [accessGateReady, setAccessGateReady] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const lastStampsRef = useRef<number | null>(null)
+
+  const storageKey = useMemo(() => `cardin:access:${cardRef}`, [cardRef])
 
   const endpoint = useMemo(
     () => (refType === "code" ? `/api/public/card/code/${encodeURIComponent(cardRef)}` : `/api/public/card/${cardRef}`),
     [cardRef, refType]
   )
 
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const params = new URLSearchParams(window.location.search)
+    const t = params.get("access_token")
+    if (t) {
+      sessionStorage.setItem(storageKey, t)
+      params.delete("access_token")
+      const qs = params.toString()
+      window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`)
+    }
+    setAccessGateReady(true)
+  }, [storageKey])
+
+  const authHeaders = useCallback((): HeadersInit => {
+    if (typeof window === "undefined") return {}
+    const token = sessionStorage.getItem(storageKey)
+    if (!token) return {}
+    return { Authorization: `Bearer ${token}` }
+  }, [storageKey])
+
   const loadCard = useCallback(async () => {
     setLoading(true)
 
     try {
-      const response = await fetch(endpoint)
-      const payload = (await response.json()) as CardApiResponse
+      const response = await fetch(endpoint, { headers: authHeaders() })
+      const payload = (await response.json()) as CardApiResponse & { error?: string }
+      if (!response.ok) {
+        setLoadError(payload.error ?? "load_failed")
+        setData(null)
+        return
+      }
+      setLoadError(null)
       setData(payload)
+      if (payload.ok && payload.card?.id && typeof window !== "undefined") {
+        const tok = sessionStorage.getItem(storageKey)
+        if (tok && cardRef !== payload.card.id) {
+          sessionStorage.setItem(`cardin:access:${payload.card.id}`, tok)
+        }
+      }
     } finally {
       setLoading(false)
     }
-  }, [endpoint])
+  }, [endpoint, authHeaders, storageKey, cardRef])
 
   useEffect(() => {
+    if (!accessGateReady) return
     void loadCard()
-  }, [loadCard])
+  }, [loadCard, accessGateReady])
 
   useEffect(() => {
     if (demo || !data?.ok || !data.card?.id) return
     void fetch("/api/public/visit-session/open", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ cardId: data.card.id }),
     }).catch(() => {
       /* table migration may be pending locally */
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps -- only when card id is known
-  }, [data?.card?.id, data?.ok, demo])
+  }, [data?.card?.id, data?.ok, demo, authHeaders])
 
   useEffect(() => {
     if (demo || !data?.ok || !data.card) return
@@ -178,7 +215,7 @@ export function CardPhoneView({
     try {
       const response = await fetch(`/api/public/card/${cardId}/summit-reward`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({ optionId }),
       })
       const payload = (await response.json()) as CardApiResponse & { error?: string }
@@ -215,7 +252,7 @@ export function CardPhoneView({
 
     const response = await fetch(`/api/public/card/${cardId}/invite`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ customerName: inviteName.trim() }),
     })
 
@@ -234,6 +271,14 @@ export function CardPhoneView({
 
   if (loading) {
     return <p className="p-6 text-sm">Chargement de votre carte...</p>
+  }
+
+  if (loadError === "card_token_required") {
+    return (
+      <p className="p-6 text-sm text-[#A64040]">
+        Accès à la carte refusé. Ouvrez le lien complet depuis le QR (avec jeton) ou rescanez depuis le lieu.
+      </p>
+    )
   }
 
   if (!data?.ok || !data.card || !data.merchant) {

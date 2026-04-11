@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 
+import { IDEMPOTENCY_SCOPE_VALIDATE, getCachedIdempotentResponse, saveIdempotentResponse } from "@/lib/merchant-api-idempotency"
 import { isWithinMerchantCooldown, runMerchantStamp } from "@/lib/merchant-stamp-core"
 import { createClientSupabaseServer } from "@/lib/supabase/server"
 
@@ -8,6 +9,7 @@ export const dynamic = "force-dynamic"
 type Body = {
   sessionId?: string
   cardId?: string
+  idempotencyKey?: string
 }
 
 /**
@@ -28,6 +30,14 @@ export async function POST(request: Request) {
     body = (await request.json()) as Body
   } catch {
     body = {}
+  }
+
+  const idem = (body.idempotencyKey ?? "").trim()
+  if (idem) {
+    const cached = await getCachedIdempotentResponse(supabase, user.id, IDEMPOTENCY_SCOPE_VALIDATE, idem)
+    if (cached !== null) {
+      return NextResponse.json(cached)
+    }
   }
 
   let sessionId: string | null = (body.sessionId ?? "").trim() || null
@@ -114,15 +124,25 @@ export async function POST(request: Request) {
       source: "merchant_validate",
     })
 
+    const validatedAt = new Date().toISOString()
+
     if (sessionId) {
-      await supabase.from("visit_sessions").update({ validated_at: new Date().toISOString() }).eq("id", sessionId)
+      await supabase.from("visit_sessions").update({ validated_at: validatedAt }).eq("id", sessionId)
     }
 
-    return NextResponse.json({
-      ok: true,
+    const payload = {
+      ok: true as const,
       ...result,
       message: "Passage validé",
-    })
+      sessionId: sessionId ?? null,
+      validatedAt,
+    }
+
+    if (idem) {
+      await saveIdempotentResponse(supabase, user.id, IDEMPOTENCY_SCOPE_VALIDATE, idem, payload)
+    }
+
+    return NextResponse.json(payload)
   } catch (error) {
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "validate_failed" },

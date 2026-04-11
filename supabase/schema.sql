@@ -113,3 +113,17 @@ alter table public.cards add column if not exists summit_reward_option_id text;
 alter table public.cards add column if not exists summit_reward_title text;
 alter table public.cards add column if not exists summit_reward_description text;
 alter table public.cards add column if not exists summit_reward_usage_remaining integer;
+
+-- Card Bearer access + API idempotency (see migration 007_card_access_and_idempotency.sql)
+alter table public.cards add column if not exists client_access_token text;
+create unique index if not exists idx_cards_client_access_token on public.cards (client_access_token);
+
+create table if not exists public.api_idempotency (
+  id uuid primary key default gen_random_uuid(),
+  merchant_id uuid not null references public.merchants (id) on delete cascade,
+  scope text not null,
+  idempotency_key text not null,
+  response_json jsonb not null,
+  created_at timestamptz not null default now(),
+  unique (merchant_id, scope, idempotency_key)
+);

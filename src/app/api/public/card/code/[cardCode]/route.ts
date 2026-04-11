@@ -1,15 +1,32 @@
 import { NextResponse } from "next/server"
 
 import { normalizeCardCode } from "@/lib/card-code"
+import { requireCardBearerForRead } from "@/lib/card-access-auth"
 import { getPublicCardPayloadByCode } from "@/lib/public-card"
 import { createSupabaseServiceClient } from "@/lib/supabase/service"
 
 export const dynamic = "force-dynamic"
 
-export async function GET(_: Request, { params }: { params: { cardCode: string } }) {
+export async function GET(request: Request, { params }: { params: { cardCode: string } }) {
   try {
     const supabase = createSupabaseServiceClient()
-    const payload = await getPublicCardPayloadByCode(supabase, normalizeCardCode(params.cardCode))
+    const code = normalizeCardCode(params.cardCode)
+
+    const { data: row, error: lookupError } = await supabase.from("cards").select("id").eq("card_code", code).maybeSingle()
+
+    if (lookupError || !row) {
+      return NextResponse.json({ ok: false, error: "card_not_found" }, { status: 404 })
+    }
+
+    const auth = await requireCardBearerForRead(request, supabase, row.id)
+    if (!auth.ok) {
+      return NextResponse.json(
+        { ok: false, error: "card_token_required", message: "Jeton carte requis (Authorization: Bearer ou access_token en requête)." },
+        { status: 401 },
+      )
+    }
+
+    const payload = await getPublicCardPayloadByCode(supabase, code)
 
     if (!payload) {
       return NextResponse.json({ ok: false, error: "card_not_found" }, { status: 404 })
