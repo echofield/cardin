@@ -168,31 +168,36 @@ export function getTasteSignal(worldId: LandingWorldId, step: TasteStep): { eyeb
 export type SummitOption = {
   id: string
   title: string
+  description: string
   whisper: string
 }
 
-/** Three directions at the summit — choice, not a single fixed sentence (experiential). */
+/**
+ * Three concrete reward directions at the summit.
+ * Always: 1 = récurrence (ROI), 2 = impact (plaisir), 3 = statut (image).
+ * The client chooses behaviour, not a discount.
+ */
 export function getSummitOptions(worldId: LandingWorldId): SummitOption[] {
   const options: Record<LandingWorldId, SummitOption[]> = {
     cafe: [
-      { id: "signature", title: "La signature", whisper: "Un geste qui revient, mois après mois." },
-      { id: "duo", title: "Le duo", whisper: "Pour deux — quand le matin le permet." },
-      { id: "reserve", title: "La réserve", whisper: "Ce que le lieu ne montre pas à tout le monde." },
+      { id: "recurrence", title: "Continuer à venir", description: "1 boisson offerte par semaine pendant 1 mois", whisper: "Le rythme vous appartient." },
+      { id: "impact", title: "Profiter maintenant", description: "-30 % sur vos 5 prochains passages", whisper: "Un élan, tout de suite." },
+      { id: "statut", title: "Accès privilégié", description: "Traitement spécial au comptoir", whisper: "Ce que le lieu réserve à ceux qui restent." },
     ],
     restaurant: [
-      { id: "table", title: "La table", whisper: "Un repas qui marque le calendrier." },
-      { id: "chef", title: "Le chef", whisper: "Quand la cuisine se fait plus étroite." },
-      { id: "secret", title: "Le secret", whisper: "Un volet que la salle ne crie pas." },
+      { id: "recurrence", title: "Continuer à venir", description: "1 dessert offert sur vos 3 prochaines tables", whisper: "La table vous attend encore." },
+      { id: "impact", title: "Profiter maintenant", description: "-40 % sur une prochaine réservation", whisper: "Un repas qui marque le calendrier." },
+      { id: "statut", title: "Accès privilégié", description: "Accès prioritaire + attention spéciale du chef", whisper: "Ce que la salle ne montre pas à tout le monde." },
     ],
     beaute: [
-      { id: "soin", title: "Le soin", whisper: "Un rythme qui vous sculpte dans la durée." },
-      { id: "rituel", title: "Le rituel", whisper: "À deux — quand la confiance est là." },
-      { id: "prive", title: "Le privé", whisper: "Une fenêtre rare — le lieu décide quand." },
+      { id: "recurrence", title: "Continuer à venir", description: "1 soin offert après 3 rendez-vous", whisper: "Le rythme sculpte dans la durée." },
+      { id: "impact", title: "Profiter maintenant", description: "-25 % sur vos 2 prochains rendez-vous", whisper: "Un geste, sans attendre." },
+      { id: "statut", title: "Accès privilégié", description: "Accès prioritaire + créneaux réservés", whisper: "Une fenêtre que le lieu n'ouvre pas à tous." },
     ],
     boutique: [
-      { id: "collection", title: "La collection", whisper: "Une ligne qui vous suit dans le temps." },
-      { id: "priorite", title: "La priorité", whisper: "Avant les autres — quand la pièce le permet." },
-      { id: "piece", title: "La pièce", whisper: "Ce qui ne passe pas deux fois." },
+      { id: "recurrence", title: "Continuer à venir", description: "-20 % sur vos 3 prochaines visites", whisper: "La sélection vous accompagne." },
+      { id: "impact", title: "Profiter maintenant", description: "-50 € sur votre prochain achat", whisper: "Un objet, une décision." },
+      { id: "statut", title: "Accès privilégié", description: "Accès privé aux nouvelles collections", whisper: "Avant les autres — quand la pièce le permet." },
     ],
   }
   return options[worldId]
