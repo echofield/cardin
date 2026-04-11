@@ -36,9 +36,25 @@ export async function GET() {
 
   const { data: card } = await supabase
     .from("cards")
-    .select("customer_name, stamps, target_visits")
+    .select(
+      "customer_name, stamps, target_visits, summit_reward_option_id, summit_reward_title, summit_reward_description, summit_reward_usage_remaining",
+    )
     .eq("id", session.card_id)
     .maybeSingle()
+
+  const summitReward =
+    card &&
+    card.summit_reward_option_id &&
+    card.summit_reward_title &&
+    card.summit_reward_description != null &&
+    typeof card.summit_reward_usage_remaining === "number"
+      ? {
+          optionId: card.summit_reward_option_id,
+          title: card.summit_reward_title,
+          description: card.summit_reward_description,
+          usageRemaining: card.summit_reward_usage_remaining,
+        }
+      : null
 
   return NextResponse.json({
     ok: true,
@@ -49,6 +65,7 @@ export async function GET() {
       customerName: card?.customer_name ?? "Client",
       stamps: card?.stamps ?? 0,
       targetVisits: card?.target_visits ?? 10,
+      summitReward,
     },
   })
 }

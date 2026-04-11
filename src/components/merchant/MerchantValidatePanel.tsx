@@ -5,6 +5,13 @@ import { useCallback, useEffect, useState } from "react"
 
 import { Button, Card } from "@/ui"
 
+type SummitRewardPending = {
+  optionId: string
+  title: string
+  description: string
+  usageRemaining: number
+}
+
 type PendingPayload = {
   ok: boolean
   pending: null | {
@@ -14,6 +21,7 @@ type PendingPayload = {
     customerName: string
     stamps: number
     targetVisits: number
+    summitReward: SummitRewardPending | null
   }
 }
 
@@ -21,7 +29,9 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
   const [pending, setPending] = useState<PendingPayload["pending"]>(null)
   const [loading, setLoading] = useState(true)
   const [actionState, setActionState] = useState<"idle" | "loading" | "success" | "error">("idle")
+  const [consumeState, setConsumeState] = useState<"idle" | "loading" | "success" | "error">("idle")
   const [message, setMessage] = useState("")
+  const [consumeMessage, setConsumeMessage] = useState("")
 
   const loadPending = useCallback(async () => {
     try {
@@ -65,6 +75,47 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
     }
   }
 
+  const onConsumeReward = async () => {
+    if (!pending?.cardId) return
+    setConsumeState("loading")
+    setConsumeMessage("")
+    try {
+      const res = await fetch("/api/merchant/consume-summit-reward", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cardId: pending.cardId }),
+      })
+      const data = (await res.json()) as { ok?: boolean; error?: string; usageRemaining?: number }
+      if (!res.ok || !data.ok) {
+        setConsumeState("error")
+        setConsumeMessage(
+          data.error === "no_uses_remaining"
+            ? "Plus d’utilisation disponible sur cet avantage."
+            : data.error === "no_active_reward"
+              ? "Aucun avantage sommet actif sur cette carte."
+              : data.error ?? "Erreur",
+        )
+        return
+      }
+      setConsumeState("success")
+      setConsumeMessage(
+        typeof data.usageRemaining === "number"
+          ? `Utilisation enregistrée. Reste : ${data.usageRemaining}.`
+          : "Utilisation enregistrée.",
+      )
+      await loadPending()
+    } catch {
+      setConsumeState("error")
+      setConsumeMessage("Réseau indisponible.")
+    }
+  }
+
+  const canConsume =
+    pending?.summitReward &&
+    pending.summitReward.usageRemaining > 0 &&
+    consumeState !== "loading" &&
+    actionState !== "loading"
+
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-10">
       <div>
@@ -88,6 +139,18 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
             <p className="mt-3 text-xs text-[#69736C]">
               Depuis {new Date(pending.startedAt).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })}
             </p>
+
+            {pending.summitReward ? (
+              <div className="mt-5 rounded-[1.2rem] border border-[#173A2E]/15 bg-[#F8FAF6] px-4 py-3">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-[#5E6961]">Avantage actif</p>
+                <p className="mt-1 font-medium text-[#173A2E]">{pending.summitReward.title}</p>
+                <p className="mt-1 text-sm text-[#2A3F35]">{pending.summitReward.description}</p>
+                <p className="mt-2 text-sm text-[#556159]">
+                  Reste {pending.summitReward.usageRemaining} utilisation
+                  {pending.summitReward.usageRemaining > 1 ? "s" : ""}
+                </p>
+              </div>
+            ) : null}
           </div>
         ) : (
           <p className="text-sm text-[#556159]">Aucun client en attente de validation pour le moment.</p>
@@ -97,8 +160,22 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
           {actionState === "loading" ? "Validation…" : "Valider un passage"}
         </Button>
 
+        {pending?.summitReward && pending.summitReward.usageRemaining > 0 ? (
+          <Button
+            className="mt-3 w-full"
+            disabled={!canConsume}
+            onClick={() => void onConsumeReward()}
+            type="button"
+            variant="secondary"
+          >
+            {consumeState === "loading" ? "Enregistrement…" : "Valider + utiliser l’avantage"}
+          </Button>
+        ) : null}
+
         {actionState === "success" ? <p className="mt-4 text-sm text-[#173A2E]">{message}</p> : null}
         {actionState === "error" ? <p className="mt-4 text-sm text-[#A64040]">{message}</p> : null}
+        {consumeState === "success" ? <p className="mt-4 text-sm text-[#173A2E]">{consumeMessage}</p> : null}
+        {consumeState === "error" ? <p className="mt-4 text-sm text-[#A64040]">{consumeMessage}</p> : null}
       </Card>
 
       <p className="text-center text-xs text-[#69736C]">

@@ -106,3 +106,10 @@ create table if not exists public.visit_sessions (
 );
 
 alter table public.cards add column if not exists last_merchant_validation_at timestamptz;
+
+-- Summit reward (see migration 006_summit_reward.sql)
+alter table public.merchants add column if not exists cardin_world text not null default 'cafe';
+alter table public.cards add column if not exists summit_reward_option_id text;
+alter table public.cards add column if not exists summit_reward_title text;
+alter table public.cards add column if not exists summit_reward_description text;
+alter table public.cards add column if not exists summit_reward_usage_remaining integer;

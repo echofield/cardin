@@ -29,7 +29,7 @@ export async function GET(request: Request) {
   const { data: merchant, error: merchantError } = await supabase
     .from("merchants")
     .select(
-      "id, name, email, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period, created_at"
+      "id, name, email, cardin_world, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period, created_at"
     )
     .eq("id", merchantId)
     .single()
@@ -44,7 +44,9 @@ export async function GET(request: Request) {
 
   const { data: cards, error: cardsError } = await supabase
     .from("cards")
-    .select("id, customer_name, stamps, target_visits, reward_label, midpoint_reached_at, created_at")
+    .select(
+      "id, customer_name, stamps, target_visits, reward_label, midpoint_reached_at, created_at, summit_reward_option_id, summit_reward_title, summit_reward_description, summit_reward_usage_remaining",
+    )
     .eq("merchant_id", merchantId)
     .order("created_at", { ascending: false })
 
@@ -169,6 +171,7 @@ export async function GET(request: Request) {
       businessName: merchant.name,
       businessType: "Commerce",
       city: "France",
+      cardinWorld: merchant.cardin_world ?? "cafe",
       loyaltyConfig: {
         targetVisits,
         rewardLabel,
@@ -207,6 +210,19 @@ export async function GET(request: Request) {
           }
         : null
 
+      const summitReward =
+        card.summit_reward_option_id &&
+        card.summit_reward_title &&
+        card.summit_reward_description != null &&
+        typeof card.summit_reward_usage_remaining === "number"
+          ? {
+              optionId: card.summit_reward_option_id,
+              title: card.summit_reward_title,
+              description: card.summit_reward_description,
+              usageRemaining: card.summit_reward_usage_remaining,
+            }
+          : null
+
       return {
         id: card.id,
         customerName: card.customer_name,
@@ -217,6 +233,7 @@ export async function GET(request: Request) {
         lastVisitAt: card.created_at,
         midpoint,
         seasonProgress,
+        summitReward,
       }
     }),
   })

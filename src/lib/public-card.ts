@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
+import { normalizeCardinWorld } from "@/lib/client-parcours-config"
 import { buildCardPrimaryMessage } from "@/lib/card-messaging"
 import { canInvite, calculateBranchCapacity } from "@/lib/domino-engine"
 import { buildMidpointView, buildSharedUnlockView, getMidpointMode, getRewardLabel, getTargetVisits, type MidpointMode } from "@/lib/program-layer"
@@ -18,11 +19,16 @@ type CardRecord = {
   midpoint_reached_at: string | null
   created_at: string
   card_code: string
+  summit_reward_option_id: string | null
+  summit_reward_title: string | null
+  summit_reward_description: string | null
+  summit_reward_usage_remaining: number | null
 }
 
 type MerchantRecord = {
   id: string
   name: string
+  cardin_world: string | null
   midpoint_mode: MidpointMode | null
   target_visits: number | null
   reward_label: string | null
@@ -48,13 +54,27 @@ async function buildPublicCardPayload(supabase: SupabaseClient, card: CardRecord
   const { data: merchantData } = await supabase
     .from("merchants")
     .select(
-      "id, name, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period"
+      "id, name, cardin_world, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period"
     )
     .eq("id", card.merchant_id)
     .single()
 
   const merchant = (merchantData as MerchantRecord | null) ?? null
+  const cardinWorld = normalizeCardinWorld(merchant?.cardin_world)
   const targetVisits = getTargetVisits(card.target_visits ?? merchant?.target_visits)
+
+  const summitReward =
+    card.summit_reward_option_id &&
+    card.summit_reward_title &&
+    card.summit_reward_description != null &&
+    typeof card.summit_reward_usage_remaining === "number"
+      ? {
+          optionId: card.summit_reward_option_id,
+          title: card.summit_reward_title,
+          description: card.summit_reward_description,
+          usageRemaining: card.summit_reward_usage_remaining,
+        }
+      : null
   const rewardLabel = getRewardLabel(card.reward_label ?? merchant?.reward_label)
   const midpointMode = getMidpointMode(merchant?.midpoint_mode)
 
@@ -180,12 +200,14 @@ async function buildPublicCardPayload(supabase: SupabaseClient, card: CardRecord
             directInvitationsActivated: seasonProgress.direct_invitations_activated,
           }
         : null,
+      summitReward,
     },
     merchant: merchant
       ? {
           id: merchant.id,
           businessName: merchant.name,
           businessType: "Commerce",
+          cardinWorld: cardinWorld,
           sharedUnlock,
         }
       : null,
@@ -198,7 +220,9 @@ async function buildPublicCardPayload(supabase: SupabaseClient, card: CardRecord
 export async function getPublicCardPayloadById(supabase: SupabaseClient, cardId: string) {
   const { data, error } = await supabase
     .from("cards")
-    .select("id, merchant_id, customer_name, stamps, target_visits, reward_label, midpoint_reached_at, created_at, card_code")
+    .select(
+      "id, merchant_id, customer_name, stamps, target_visits, reward_label, midpoint_reached_at, created_at, card_code, summit_reward_option_id, summit_reward_title, summit_reward_description, summit_reward_usage_remaining",
+    )
     .eq("id", cardId)
     .single()
 
@@ -212,7 +236,9 @@ export async function getPublicCardPayloadById(supabase: SupabaseClient, cardId:
 export async function getPublicCardPayloadByCode(supabase: SupabaseClient, cardCode: string) {
   const { data, error } = await supabase
     .from("cards")
-    .select("id, merchant_id, customer_name, stamps, target_visits, reward_label, midpoint_reached_at, created_at, card_code")
+    .select(
+      "id, merchant_id, customer_name, stamps, target_visits, reward_label, midpoint_reached_at, created_at, card_code, summit_reward_option_id, summit_reward_title, summit_reward_description, summit_reward_usage_remaining",
+    )
     .eq("card_code", cardCode)
     .single()
 

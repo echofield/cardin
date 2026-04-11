@@ -3,6 +3,8 @@
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
+import { getSummitOptions, normalizeCardinWorld } from "@/lib/client-parcours-config"
+import type { LandingWorldId } from "@/lib/landing-content"
 import { Card } from "@/ui"
 
 import { WalletPassPreview } from "@/components/engine/WalletPassPreview"
@@ -60,11 +62,18 @@ type CardApiResponse = {
       branchCapacity: number
       directInvitationsActivated: number
     } | null
+    summitReward?: {
+      optionId: string
+      title: string
+      description: string
+      usageRemaining: number
+    } | null
   }
   merchant?: {
     id: string
     businessName: string
     businessType: string
+    cardinWorld?: string
     sharedUnlock?: SharedUnlockView | null
   } | null
   season?: {
@@ -98,6 +107,8 @@ export function CardPhoneView({
   const [inviteState, setInviteState] = useState<"idle" | "loading" | "error" | "success">("idle")
   const [inviteMessage, setInviteMessage] = useState("")
   const [merchantValidatedBanner, setMerchantValidatedBanner] = useState(false)
+  const [summitPickState, setSummitPickState] = useState<"idle" | "loading" | "error">("idle")
+  const [summitPickMessage, setSummitPickMessage] = useState("")
   const lastStampsRef = useRef<number | null>(null)
 
   const endpoint = useMemo(
@@ -159,6 +170,31 @@ export function CardPhoneView({
     return "Carte active"
   }, [data])
 
+  const onPickSummit = async (optionId: string) => {
+    const cardId = data?.card?.id
+    if (!cardId || demo) return
+    setSummitPickState("loading")
+    setSummitPickMessage("")
+    try {
+      const response = await fetch(`/api/public/card/${cardId}/summit-reward`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ optionId }),
+      })
+      const payload = (await response.json()) as CardApiResponse & { error?: string }
+      if (!response.ok || !payload.ok) {
+        setSummitPickState("error")
+        setSummitPickMessage(payload.error ?? "Choix impossible pour le moment.")
+        return
+      }
+      setSummitPickState("idle")
+      setData(payload)
+    } catch {
+      setSummitPickState("error")
+      setSummitPickMessage("Réseau indisponible.")
+    }
+  }
+
   const onInvite = async () => {
     const cardId = data?.card?.id
 
@@ -207,6 +243,10 @@ export function CardPhoneView({
   const progressDots = Math.max(4, Math.min(data.card.targetVisits, 10))
   const sharedUnlock = data.merchant.sharedUnlock
   const displayCode = data.card.code || formatLegacyCardCode(data.card.id)
+  const cardinWorld: LandingWorldId = normalizeCardinWorld(data.merchant.cardinWorld)
+  const summitOptions = getSummitOptions(cardinWorld)
+  const showSummitPicker =
+    !demo && data.card.seasonProgress?.summitReached && !data.card.summitReward
 
   return (
     <main className="min-h-screen bg-[#F8F7F2] px-4 py-8 text-[#173A2E] sm:px-6 lg:px-8">
@@ -256,6 +296,41 @@ export function CardPhoneView({
               </div>
             ) : null}
           </Card>
+
+          {data.card.summitReward ? (
+            <Card className="mt-4 p-4">
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Avantage activé</p>
+              <p className="mt-2 text-lg text-[#173A2E]">{data.card.summitReward.title}</p>
+              <p className="mt-1 text-sm text-[#2A3F35]">{data.card.summitReward.description}</p>
+              <p className="mt-3 text-sm text-[#556159]">
+                Reste {data.card.summitReward.usageRemaining} utilisation
+                {data.card.summitReward.usageRemaining > 1 ? "s" : ""}
+              </p>
+              <p className="mt-2 text-xs italic text-[#69736C]">Disponible lors de votre prochain passage (le lieu confirme).</p>
+            </Card>
+          ) : null}
+
+          {showSummitPicker ? (
+            <Card className="mt-4 p-4">
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Sommet atteint</p>
+              <p className="mt-2 text-sm text-[#2A3F35]">Choisissez l&apos;avantage qui vous correspond.</p>
+              <div className="mt-4 space-y-2">
+                {summitOptions.map((opt) => (
+                  <button
+                    className="w-full rounded-2xl border border-[#D5DBD1] bg-white px-4 py-3 text-left text-sm transition hover:border-[#173A2E]/40 disabled:opacity-50"
+                    disabled={summitPickState === "loading"}
+                    key={opt.id}
+                    onClick={() => void onPickSummit(opt.id)}
+                    type="button"
+                  >
+                    <span className="font-medium text-[#173A2E]">{opt.title}</span>
+                    <span className="mt-1 block text-[#556159]">{opt.description}</span>
+                  </button>
+                ))}
+              </div>
+              {summitPickState === "error" ? <p className="mt-2 text-xs text-[#A64040]">{summitPickMessage}</p> : null}
+            </Card>
+          ) : null}
 
           {data.invite ? (
             <Card className="mt-4 p-4">

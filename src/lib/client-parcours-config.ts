@@ -202,3 +202,40 @@ export function getSummitOptions(worldId: LandingWorldId): SummitOption[] {
   }
   return options[worldId]
 }
+
+const SUMMIT_OPTION_IDS = new Set(["recurrence", "impact", "statut"])
+
+export function isValidSummitOptionId(id: string): boolean {
+  return SUMMIT_OPTION_IDS.has(id)
+}
+
+/** Maps merchant / demo world string to a valid LandingWorldId. */
+export function normalizeCardinWorld(raw: string | null | undefined): LandingWorldId {
+  const v = (raw ?? "cafe").toLowerCase().trim()
+  if (v === "restaurant" || v === "beaute" || v === "boutique" || v === "cafe") {
+    return v as LandingWorldId
+  }
+  return "cafe"
+}
+
+/**
+ * Initial usage count when a summit option is activated (operational, not shown to client as "cost").
+ */
+export function getSummitUsageInitial(worldId: LandingWorldId, optionId: string): number {
+  const key = `${worldId}:${optionId}` as const
+  const map: Record<string, number> = {
+    "cafe:recurrence": 4,
+    "cafe:impact": 5,
+    "cafe:statut": 1,
+    "restaurant:recurrence": 3,
+    "restaurant:impact": 1,
+    "restaurant:statut": 1,
+    "beaute:recurrence": 1,
+    "beaute:impact": 2,
+    "beaute:statut": 1,
+    "boutique:recurrence": 3,
+    "boutique:impact": 1,
+    "boutique:statut": 1,
+  }
+  return map[key] ?? 1
+}
