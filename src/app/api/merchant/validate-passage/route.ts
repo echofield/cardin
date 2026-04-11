@@ -12,9 +12,6 @@ type Body = {
   idempotencyKey?: string
 }
 
-/**
- * Merchant validates reality: one click = one passage (links to active visit session).
- */
 export async function POST(request: Request) {
   const supabase = createClientSupabaseServer()
   const {
@@ -40,13 +37,15 @@ export async function POST(request: Request) {
     }
   }
 
-  let sessionId: string | null = (body.sessionId ?? "").trim() || null
-  let cardId: string | null = (body.cardId ?? "").trim() || null
+  if ((body.cardId ?? "").trim() && !(body.sessionId ?? "").trim()) {
+    return NextResponse.json({ ok: false, error: "session_required" }, { status: 400 })
+  }
 
-  if (!sessionId && !cardId) {
+  let sessionId = (body.sessionId ?? "").trim()
+  if (!sessionId) {
     const { data: latest } = await supabase
       .from("visit_sessions")
-      .select("id, card_id")
+      .select("id")
       .eq("merchant_id", user.id)
       .is("validated_at", null)
       .order("started_at", { ascending: false })
@@ -56,28 +55,22 @@ export async function POST(request: Request) {
     if (!latest) {
       return NextResponse.json({ ok: false, error: "no_pending_client" }, { status: 400 })
     }
+
     sessionId = latest.id
-    cardId = latest.card_id
   }
 
-  if (!cardId && sessionId) {
-    const { data: s } = await supabase
-      .from("visit_sessions")
-      .select("id, card_id, merchant_id, validated_at")
-      .eq("id", sessionId)
-      .maybeSingle()
+  const { data: session, error: sessionError } = await supabase
+    .from("visit_sessions")
+    .select("id, card_id, merchant_id, validated_at")
+    .eq("id", sessionId)
+    .maybeSingle()
 
-    if (!s || s.merchant_id !== user.id) {
-      return NextResponse.json({ ok: false, error: "session_not_found" }, { status: 404 })
-    }
-    if (s.validated_at) {
-      return NextResponse.json({ ok: false, error: "session_already_validated" }, { status: 400 })
-    }
-    cardId = s.card_id
+  if (sessionError || !session || session.merchant_id !== user.id) {
+    return NextResponse.json({ ok: false, error: "session_not_found" }, { status: 404 })
   }
 
-  if (!cardId) {
-    return NextResponse.json({ ok: false, error: "missing_card" }, { status: 400 })
+  if (session.validated_at) {
+    return NextResponse.json({ ok: false, error: "session_already_validated" }, { status: 400 })
   }
 
   const { data: card, error: cardError } = await supabase
@@ -85,7 +78,7 @@ export async function POST(request: Request) {
     .select(
       "id, merchant_id, customer_name, stamps, target_visits, reward_label, midpoint_reached_at, created_at, last_merchant_validation_at",
     )
-    .eq("id", cardId)
+    .eq("id", session.card_id)
     .single()
 
   if (cardError || !card) {
@@ -98,7 +91,7 @@ export async function POST(request: Request) {
 
   if (isWithinMerchantCooldown(card.last_merchant_validation_at)) {
     return NextResponse.json(
-      { ok: false, error: "cooldown_active", message: "Réessayez plus tard (fenêtre courte entre deux validations)." },
+      { ok: false, error: "cooldown_active", message: "Réessayez plus tard : cette carte est encore dans la fenêtre courte entre deux validations." },
       { status: 429 },
     )
   }
@@ -115,6 +108,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "merchant_not_found" }, { status: 404 })
   }
 
+  const validatedAt = new Date().toISOString()
+  const { data: lockedSession, error: lockError } = await supabase
+    .from("visit_sessions")
+    .update({ validated_at: validatedAt })
+    .eq("id", session.id)
+    .eq("merchant_id", user.id)
+    .is("validated_at", null)
+    .select("id")
+    .maybeSingle()
+
+  if (lockError) {
+    return NextResponse.json({ ok: false, error: lockError.message }, { status: 500 })
+  }
+
+  if (!lockedSession) {
+    return NextResponse.json({ ok: false, error: "session_already_validated" }, { status: 400 })
+  }
+
   try {
     const result = await runMerchantStamp(supabase, {
       card,
@@ -122,19 +133,14 @@ export async function POST(request: Request) {
       merchantUserId: user.id,
       action: "stamp",
       source: "merchant_validate",
+      visitSessionId: session.id,
     })
-
-    const validatedAt = new Date().toISOString()
-
-    if (sessionId) {
-      await supabase.from("visit_sessions").update({ validated_at: validatedAt }).eq("id", sessionId)
-    }
 
     const payload = {
       ok: true as const,
       ...result,
       message: "Passage validé",
-      sessionId: sessionId ?? null,
+      sessionId: session.id,
       validatedAt,
     }
 
@@ -144,6 +150,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json(payload)
   } catch (error) {
+    await supabase
+      .from("visit_sessions")
+      .update({ validated_at: null })
+      .eq("id", session.id)
+      .eq("validated_at", validatedAt)
+
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "validate_failed" },
       { status: 500 },

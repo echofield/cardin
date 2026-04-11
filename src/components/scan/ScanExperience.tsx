@@ -1,9 +1,10 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import { FormEvent, useEffect, useMemo, useState } from "react"
 
 import { trackEvent } from "@/lib/analytics"
+import { getMerchantProfile, type MerchantProfileId } from "@/lib/merchant-profile"
 import { Button, Card, Input } from "@/ui"
 
 import { WalletPassPreview } from "@/components/engine/WalletPassPreview"
@@ -32,6 +33,9 @@ type MerchantResponse = {
     id: string
     businessName: string
     businessType: string
+    profileId: MerchantProfileId
+    cardinWorld: string
+    promise: string
     loyaltyConfig: {
       targetVisits: number
       rewardLabel: string
@@ -58,6 +62,9 @@ type CardCreateSuccess = {
     id: string
     businessName: string
     businessType: string
+    profileId: MerchantProfileId
+    cardinWorld: string
+    promise: string
     loyaltyConfig: {
       targetVisits: number
       rewardLabel: string
@@ -103,7 +110,7 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
         }
       } catch {
         if (isMounted) {
-          setMerchantError("Commerce introuvable. Verifiez le QR code utilise.")
+          setMerchantError(getMerchantProfile("generic").scan.notFound)
         }
       } finally {
         if (isMounted) {
@@ -112,7 +119,7 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
       }
     }
 
-    loadMerchant()
+    void loadMerchant()
 
     return () => {
       isMounted = false
@@ -124,6 +131,8 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
     return Math.max(4, Math.min(cardData.card.targetVisits, 10))
   }, [cardData])
 
+  const activeMerchant = cardData?.merchant ?? merchant
+  const profile = getMerchantProfile(activeMerchant?.profileId ?? "generic")
   const sharedUnlock = cardData?.merchant.sharedUnlock ?? merchant?.sharedUnlock
 
   const onCreateCard = async (event: FormEvent<HTMLFormElement>) => {
@@ -159,7 +168,7 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
         cardCode: payload.card.code,
       })
     } catch {
-      alert("Impossible de creer votre carte pour le moment.")
+      alert(profile.scan.createError)
     } finally {
       setSubmitting(false)
     }
@@ -187,18 +196,19 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
   if (loadingMerchant) {
     return (
       <main className="min-h-screen bg-[#F8F7F2] px-4 py-12 text-[#173A2E]">
-        <p className="mx-auto max-w-xl text-sm">Chargement de la carte...</p>
+        <p className="mx-auto max-w-xl text-sm">{profile.scan.loading}</p>
       </main>
     )
   }
 
   if (merchantError || !merchant) {
+    const fallbackProfile = getMerchantProfile("generic")
     return (
       <main className="min-h-screen bg-[#F8F7F2] px-4 py-12 text-[#173A2E]">
         <Card className="mx-auto max-w-xl p-6">
-          <p className="text-sm text-[#A64040]">{merchantError ?? "Commerce introuvable"}</p>
+          <p className="text-sm text-[#A64040]">{merchantError ?? fallbackProfile.scan.notFound}</p>
           <Link className="mt-4 inline-block text-sm underline" href="/landing">
-            Retour a l'accueil
+            {fallbackProfile.scan.backHome}
           </Link>
         </Card>
       </main>
@@ -207,67 +217,90 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
 
   return (
     <main className="min-h-screen bg-[#F8F7F2] px-4 py-8 text-[#173A2E] sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-2xl">
-        <p className="text-xs uppercase tracking-[0.14em] text-[#5D675F]">{merchant.businessType}</p>
-        <h1 className="mt-2 font-serif text-5xl">{merchant.businessName}</h1>
-        <p className="mt-2 text-sm text-[#556159]">Ajoutez votre carte de fidelite en 10 secondes.</p>
-        {demo ? <p className="mt-2 text-xs uppercase tracking-[0.12em] text-[#173A2E]">Mode demo actif · creation rapide pour presentation en live</p> : null}
+      <div className="mx-auto max-w-2xl space-y-6">
+        <header>
+          <p className="text-xs uppercase tracking-[0.14em] text-[#5D675F]">{profile.scan.eyebrow}</p>
+          <h1 className="mt-2 font-serif text-5xl">{merchant.businessName}</h1>
+          <p className="mt-2 text-sm text-[#556159]">{profile.scan.intro}</p>
+          <p className="mt-2 text-sm text-[#2A3F35]">{merchant.promise}</p>
+          {demo ? <p className="mt-3 text-xs uppercase tracking-[0.12em] text-[#173A2E]">Mode démo</p> : null}
+        </header>
+
+        <section className="grid gap-4 md:grid-cols-2">
+          <Card className="p-6">
+            <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">{profile.scan.firstImpressionTitle}</p>
+            <div className="mt-3 space-y-2 text-sm text-[#173A2E]">
+              {profile.scan.firstImpression.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">{profile.scan.ritualTitle}</p>
+            <div className="mt-3 space-y-2 text-sm text-[#173A2E]">
+              {profile.scan.ritualSteps.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+            </div>
+          </Card>
+        </section>
 
         {!cardData ? (
-          <Card className="mt-6 p-6">
-            <p className="text-sm text-[#556159]">
-              Programme: {merchant.loyaltyConfig.targetVisits} passages {"->"} {merchant.loyaltyConfig.rewardLabel}
+          <Card className="p-6">
+            <p className="text-sm text-[#556159]">{profile.scan.formIntro}</p>
+            <p className="mt-3 text-sm text-[#173A2E]">
+              {merchant.loyaltyConfig.targetVisits} passages vers {merchant.loyaltyConfig.rewardLabel}
             </p>
-            <p className="mt-1 text-sm text-[#2A3F35]">Cap de reconnaissance: {merchant.loyaltyConfig.midpointThreshold} passages.</p>
+            <p className="mt-1 text-sm text-[#2A3F35]">Cap intermédiaire à {merchant.loyaltyConfig.midpointThreshold} passages.</p>
 
             <form className="mt-5 space-y-3" onSubmit={onCreateCard}>
-              <Input onChange={(event) => setCustomerName(event.target.value)} placeholder="Votre prenom" required value={customerName} />
-              <Input onChange={(event) => setCustomerPhone(event.target.value)} placeholder="Telephone (optionnel)" value={customerPhone} />
+              <Input onChange={(event) => setCustomerName(event.target.value)} placeholder={profile.scan.namePlaceholder} required value={customerName} />
+              <Input onChange={(event) => setCustomerPhone(event.target.value)} placeholder={profile.scan.phonePlaceholder} value={customerPhone} />
 
               <Button className="w-full" size="lg" type="submit">
-                {submitting ? "Creation..." : "Ajouter ma carte"}
+                {submitting ? profile.scan.submittingLabel : profile.scan.submitLabel}
               </Button>
             </form>
           </Card>
         ) : (
-          <div className="mt-6 space-y-4">
+          <div className="space-y-4">
             <WalletPassPreview businessLabel={merchant.businessName} progressDots={progressDots} rewardLabel={cardData.card.rewardLabel} />
 
             <Card className="p-5">
-              <p className="text-sm text-[#556159]">Bienvenue {cardData.card.customerName}. Votre carte est active.</p>
-              <p className="mt-1 text-sm text-[#173A2E]">Code carte: {cardData.card.code}</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">{profile.scan.createdTitle}</p>
+              <p className="mt-2 text-sm text-[#556159]">{profile.scan.createdBody}</p>
+              <p className="mt-2 text-sm text-[#173A2E]">{cardData.card.customerName}</p>
               <p className="mt-1 text-sm text-[#173A2E]">
-                Progression: {cardData.card.stamps} / {cardData.card.targetVisits}
+                {cardData.card.stamps} / {cardData.card.targetVisits}
               </p>
               <p className="mt-1 text-sm text-[#2A3F35]">{cardData.card.midpoint.copy}</p>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <Button onClick={() => openWalletFlow(cardData.appleWalletUrl, "apple")} variant="secondary">
-                  Ajouter a Apple Wallet
+                <Button onClick={() => void openWalletFlow(cardData.appleWalletUrl, "apple")} variant="secondary">
+                  {profile.scan.appleWalletLabel}
                 </Button>
-                <Button onClick={() => openWalletFlow(cardData.googleWalletUrl, "google")} variant="secondary">
-                  Ajouter a Google Wallet
+                <Button onClick={() => void openWalletFlow(cardData.googleWalletUrl, "google")} variant="secondary">
+                  {profile.scan.googleWalletLabel}
                 </Button>
               </div>
 
               <Link className="mt-4 inline-block text-sm underline" href={`${cardData.cardUrl}${demo ? "?demo=1" : ""}`}>
-                Ouvrir ma carte sur le telephone
+                {profile.scan.openCardLabel}
               </Link>
             </Card>
           </div>
         )}
 
         {sharedUnlock?.enabled ? (
-          <Card className="mt-4 p-5">
-            <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">Deblocage collectif</p>
+          <Card className="p-5">
+            <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">{profile.scan.sharedUnlockTitle}</p>
             <p className="mt-2 text-sm text-[#173A2E]">
               {sharedUnlock.progress} / {sharedUnlock.objective} passages ce mois
             </p>
-            <p className="mt-1 text-sm text-[#556159]">Offre debloquee: {sharedUnlock.offer}</p>
-            <p className="mt-1 text-xs text-[#556159]">Fenetre active: {sharedUnlock.windowDays} jours</p>
-            {sharedUnlock.status === "active" ? (
-              <p className="mt-2 text-sm text-[#173A2E]">Deblocage collectif actif.</p>
-            ) : null}
+            <p className="mt-1 text-sm text-[#556159]">{sharedUnlock.offer}</p>
+            <p className="mt-1 text-xs text-[#556159]">Fenêtre active : {sharedUnlock.windowDays} jours</p>
+            {sharedUnlock.status === "active" ? <p className="mt-2 text-sm text-[#173A2E]">{profile.scan.sharedUnlockActive}</p> : null}
           </Card>
         ) : null}
       </div>

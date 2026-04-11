@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server"
+﻿import { NextResponse } from "next/server"
 
 import { buildCardGatewayPath } from "@/lib/card-code"
 import { recomputeCardScoreSnapshot } from "@/lib/cardin-scoring"
+import { getMerchantProfileFromRaw, normalizeMerchantProfileId, getLandingWorldForProfile } from "@/lib/merchant-profile"
 import { buildMidpointView, getMidpointMode, getMidpointThreshold, getRewardLabel, getTargetVisits, maybeActivateSharedUnlock } from "@/lib/program-layer"
 import { initializeCardForActiveSeason } from "@/lib/season-progression"
 import { createClientSupabaseServer } from "@/lib/supabase/server"
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
   const { data: merchant, error: merchantError } = await supabase
     .from("merchants")
     .select(
-      "id, name, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period"
+      "id, name, cardin_world, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period",
     )
     .eq("id", merchantId)
     .single()
@@ -44,6 +45,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "merchant_not_found" }, { status: 404 })
   }
 
+  const profileId = normalizeMerchantProfileId(merchant.cardin_world)
+  const profile = getMerchantProfileFromRaw(merchant.cardin_world)
   const targetVisits = getTargetVisits(merchant.target_visits)
   const rewardLabel = getRewardLabel(merchant.reward_label)
   const midpointMode = getMidpointMode(merchant.midpoint_mode)
@@ -83,7 +86,7 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "transaction_event_failed" },
-      { status: 500 }
+      { status: 500 },
     )
   }
 
@@ -135,7 +138,9 @@ export async function POST(request: Request) {
     merchant: {
       id: merchant.id,
       businessName: merchant.name,
-      businessType: "Commerce",
+      businessType: profile.businessTypeLabel,
+      profileId,
+      cardinWorld: getLandingWorldForProfile(profileId),
       loyaltyConfig: {
         targetVisits,
         rewardLabel,

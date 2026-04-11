@@ -1,9 +1,10 @@
-import { randomBytes } from "crypto"
+﻿import { randomBytes } from "crypto"
 
 import { NextResponse } from "next/server"
 
 import { buildCardGatewayPath } from "@/lib/card-code"
 import { recomputeCardScoreSnapshot } from "@/lib/cardin-scoring"
+import { getLandingWorldForProfile, getMerchantProfileFromRaw, normalizeMerchantProfileId } from "@/lib/merchant-profile"
 import { buildMidpointView, getMidpointMode, getMidpointThreshold, getRewardLabel, getTargetVisits, maybeActivateSharedUnlock } from "@/lib/program-layer"
 import { initializeCardForActiveSeason } from "@/lib/season-progression"
 import { createSupabaseServiceClient } from "@/lib/supabase/service"
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
     const { data: merchant, error: merchantError } = await supabase
       .from("merchants")
       .select(
-        "id, name, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period"
+        "id, name, cardin_world, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period",
       )
       .eq("id", merchantId)
       .single()
@@ -43,10 +44,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: "merchant_not_found" }, { status: 404 })
     }
 
+    const profileId = normalizeMerchantProfileId(merchant.cardin_world)
+    const profile = getMerchantProfileFromRaw(merchant.cardin_world)
     const targetVisits = getTargetVisits(merchant.target_visits)
     const rewardLabel = getRewardLabel(merchant.reward_label)
     const midpointMode = getMidpointMode(merchant.midpoint_mode)
-
     const clientAccessToken = randomBytes(24).toString("hex")
 
     const { data: card, error: cardError } = await supabase
@@ -129,7 +131,10 @@ export async function POST(request: Request) {
       merchant: {
         id: merchant.id,
         businessName: merchant.name,
-        businessType: "Commerce",
+        businessType: profile.businessTypeLabel,
+        profileId,
+        cardinWorld: getLandingWorldForProfile(profileId),
+        promise: profile.promise,
         loyaltyConfig: {
           targetVisits,
           rewardLabel,

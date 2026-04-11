@@ -127,3 +127,25 @@ create table if not exists public.api_idempotency (
   created_at timestamptz not null default now(),
   unique (merchant_id, scope, idempotency_key)
 );
+
+create unique index if not exists idx_visit_sessions_one_active_per_card
+  on public.visit_sessions(card_id)
+  where validated_at is null;
+
+alter table public.transactions add column if not exists visit_session_id uuid references public.visit_sessions(id) on delete set null;
+alter table public.transactions add column if not exists reward_use_index integer;
+
+create unique index if not exists idx_transactions_stamp_visit_session
+  on public.transactions(visit_session_id)
+  where visit_session_id is not null
+    and type = 'stamp';
+
+create unique index if not exists idx_transactions_reward_use_visit_session
+  on public.transactions(visit_session_id)
+  where visit_session_id is not null
+    and type = 'summit_reward_use';
+
+create unique index if not exists idx_transactions_reward_use_unit
+  on public.transactions(card_id, reward_use_index)
+  where reward_use_index is not null
+    and type = 'summit_reward_use';

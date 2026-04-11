@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js"
+﻿import type { SupabaseClient } from "@supabase/supabase-js"
 
 export type TransactionEventInput = {
   cardId: string
@@ -10,6 +10,8 @@ export type TransactionEventInput = {
   metadata?: Record<string, unknown>
   idempotencyKey?: string | null
   createdBy?: string | null
+  visitSessionId?: string | null
+  rewardUseIndex?: number | null
 }
 
 type TransactionEventRecord = {
@@ -23,6 +25,8 @@ type TransactionEventRecord = {
   metadata: Record<string, unknown>
   idempotency_key: string | null
   created_by: string | null
+  visit_session_id: string | null
+  reward_use_index: number | null
   created_at: string
 }
 
@@ -35,6 +39,9 @@ function normalizeEventType(legacyType: string, eventType?: string): string {
   return legacyType.trim()
 }
 
+const SELECT_FIELDS =
+  "id, card_id, type, event_type, season_id, step_reached, source, metadata, idempotency_key, created_by, visit_session_id, reward_use_index, created_at"
+
 export async function insertTransactionEvent(
   supabase: SupabaseClient,
   input: TransactionEventInput
@@ -45,7 +52,7 @@ export async function insertTransactionEvent(
   if (idempotencyKey) {
     const { data: existing, error: existingError } = await supabase
       .from("transactions")
-      .select("id, card_id, type, event_type, season_id, step_reached, source, metadata, idempotency_key, created_by, created_at")
+      .select(SELECT_FIELDS)
       .eq("card_id", input.cardId)
       .eq("idempotency_key", idempotencyKey)
       .maybeSingle()
@@ -69,17 +76,56 @@ export async function insertTransactionEvent(
     metadata: input.metadata ?? {},
     idempotency_key: idempotencyKey,
     created_by: input.createdBy ?? null,
+    visit_session_id: input.visitSessionId ?? null,
+    reward_use_index: input.rewardUseIndex ?? null,
   }
 
   const { data, error } = await supabase
     .from("transactions")
     .insert(payload)
-    .select("id, card_id, type, event_type, season_id, step_reached, source, metadata, idempotency_key, created_by, created_at")
+    .select(SELECT_FIELDS)
     .single()
 
-  if (error || !data) {
-    throw new Error(error?.message ?? "transaction_event_insert_failed")
+  if (!error && data) {
+    return data as TransactionEventRecord
   }
 
-  return data as TransactionEventRecord
+  if (error?.code === "23505") {
+    if (input.visitSessionId) {
+      const { data: existingBySession, error: sessionError } = await supabase
+        .from("transactions")
+        .select(SELECT_FIELDS)
+        .eq("visit_session_id", input.visitSessionId)
+        .eq("type", input.legacyType)
+        .maybeSingle()
+
+      if (sessionError) {
+        throw new Error(`Failed to read unique transaction by session: ${sessionError.message}`)
+      }
+
+      if (existingBySession) {
+        return existingBySession as TransactionEventRecord
+      }
+    }
+
+    if (typeof input.rewardUseIndex === "number") {
+      const { data: existingByRewardUse, error: rewardError } = await supabase
+        .from("transactions")
+        .select(SELECT_FIELDS)
+        .eq("card_id", input.cardId)
+        .eq("reward_use_index", input.rewardUseIndex)
+        .eq("type", input.legacyType)
+        .maybeSingle()
+
+      if (rewardError) {
+        throw new Error(`Failed to read unique transaction by reward use: ${rewardError.message}`)
+      }
+
+      if (existingByRewardUse) {
+        return existingByRewardUse as TransactionEventRecord
+      }
+    }
+  }
+
+  throw new Error(error?.message ?? "transaction_event_insert_failed")
 }

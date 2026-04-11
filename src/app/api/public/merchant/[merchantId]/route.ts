@@ -1,5 +1,6 @@
 ﻿import { NextResponse } from "next/server"
 
+import { getLandingWorldForProfile, getMerchantProfileFromRaw, normalizeMerchantProfileId } from "@/lib/merchant-profile"
 import { buildSharedUnlockView, getMidpointMode, getRewardLabel, getTargetVisits } from "@/lib/program-layer"
 import { createSupabaseServiceClient } from "@/lib/supabase/service"
 
@@ -12,7 +13,7 @@ export async function GET(_: Request, { params }: { params: { merchantId: string
     const { data: merchant, error } = await supabase
       .from("merchants")
       .select(
-        "id, name, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period"
+        "id, name, cardin_world, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period",
       )
       .eq("id", params.merchantId)
       .single()
@@ -24,6 +25,8 @@ export async function GET(_: Request, { params }: { params: { merchantId: string
     const targetVisits = getTargetVisits(merchant.target_visits)
     const rewardLabel = getRewardLabel(merchant.reward_label)
     const midpointMode = getMidpointMode(merchant.midpoint_mode)
+    const profileId = normalizeMerchantProfileId(merchant.cardin_world)
+    const profile = getMerchantProfileFromRaw(merchant.cardin_world)
     const sharedUnlock = await buildSharedUnlockView(supabase, {
       id: merchant.id,
       midpoint_mode: merchant.midpoint_mode,
@@ -42,7 +45,10 @@ export async function GET(_: Request, { params }: { params: { merchantId: string
       merchant: {
         id: merchant.id,
         businessName: merchant.name,
-        businessType: "Commerce",
+        businessType: profile.businessTypeLabel,
+        profileId,
+        cardinWorld: getLandingWorldForProfile(profileId),
+        promise: profile.promise,
         loyaltyConfig: {
           targetVisits,
           rewardLabel,

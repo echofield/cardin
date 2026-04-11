@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { getSummitOptions, normalizeCardinWorld } from "@/lib/client-parcours-config"
 import type { LandingWorldId } from "@/lib/landing-content"
+import { getMerchantProfile, type MerchantProfileId } from "@/lib/merchant-profile"
 import { Card } from "@/ui"
 
 import { WalletPassPreview } from "@/components/engine/WalletPassPreview"
@@ -73,6 +74,7 @@ type CardApiResponse = {
     id: string
     businessName: string
     businessType: string
+    profileId: MerchantProfileId
     cardinWorld?: string
     sharedUnlock?: SharedUnlockView | null
   } | null
@@ -117,7 +119,7 @@ export function CardPhoneView({
 
   const endpoint = useMemo(
     () => (refType === "code" ? `/api/public/card/code/${encodeURIComponent(cardRef)}` : `/api/public/card/${cardRef}`),
-    [cardRef, refType]
+    [cardRef, refType],
   )
 
   useEffect(() => {
@@ -176,20 +178,20 @@ export function CardPhoneView({
       headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ cardId: data.card.id }),
     }).catch(() => {
-      /* table migration may be pending locally */
+      /* noop */
     })
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- only when card id is known
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data?.card?.id, data?.ok, demo, authHeaders])
 
   useEffect(() => {
     if (demo || !data?.ok || !data.card) return
     const t = setInterval(() => void loadCard(), 4000)
     return () => clearInterval(t)
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- poll while card view is active
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data?.ok, demo, loadCard])
 
   useEffect(() => {
-    if (!data?.card) return
+    if (typeof data?.card?.stamps !== "number") return
     const s = data.card.stamps
     if (lastStampsRef.current !== null && s > lastStampsRef.current) {
       setMerchantValidatedBanner(true)
@@ -200,12 +202,14 @@ export function CardPhoneView({
     lastStampsRef.current = s
   }, [data?.card?.stamps])
 
+  const profile = getMerchantProfile(data?.merchant?.profileId ?? "generic")
+
   const statusLabel = useMemo(() => {
     if (!data?.card) return ""
-    if (data.card.status === "reward_ready") return "Recompense disponible"
-    if (data.card.status === "redeemed") return "Recompense utilisee"
-    return "Carte active"
-  }, [data])
+    if (data.card.status === "reward_ready") return profile.card.status.rewardReady
+    if (data.card.status === "redeemed") return profile.card.status.redeemed
+    return profile.card.status.active
+  }, [data, profile])
 
   const onPickSummit = async (optionId: string) => {
     const cardId = data?.card?.id
@@ -221,14 +225,14 @@ export function CardPhoneView({
       const payload = (await response.json()) as CardApiResponse & { error?: string }
       if (!response.ok || !payload.ok) {
         setSummitPickState("error")
-        setSummitPickMessage(payload.error ?? "Choix impossible pour le moment.")
+        setSummitPickMessage(profile.card.summitPickError)
         return
       }
       setSummitPickState("idle")
       setData(payload)
     } catch {
       setSummitPickState("error")
-      setSummitPickMessage("Réseau indisponible.")
+      setSummitPickMessage(profile.card.summitPickNetworkError)
     }
   }
 
@@ -237,13 +241,13 @@ export function CardPhoneView({
 
     if (!cardId) {
       setInviteState("error")
-      setInviteMessage("Carte introuvable")
+      setInviteMessage(profile.card.inviteCardMissing)
       return
     }
 
     if (!inviteName.trim()) {
       setInviteState("error")
-      setInviteMessage("Nom requis pour inviter")
+      setInviteMessage(profile.card.inviteNameRequired)
       return
     }
 
@@ -259,30 +263,26 @@ export function CardPhoneView({
     const payload = await response.json()
     if (!response.ok || !payload.ok) {
       setInviteState("error")
-      setInviteMessage(payload.error ?? "invite_failed")
+      setInviteMessage(profile.card.inviteError)
       return
     }
 
     setInviteState("success")
-    setInviteMessage(`Invitation creee. Slots restants: ${payload.invitation.remainingSlots}`)
+    setInviteMessage(profile.card.inviteSuccess(payload.invitation.remainingSlots))
     setInviteName("")
     await loadCard()
   }
 
   if (loading) {
-    return <p className="p-6 text-sm">Chargement de votre carte...</p>
+    return <p className="p-6 text-sm">{profile.card.loading}</p>
   }
 
   if (loadError === "card_token_required") {
-    return (
-      <p className="p-6 text-sm text-[#A64040]">
-        Accès à la carte refusé. Ouvrez le lien complet depuis le QR (avec jeton) ou rescanez depuis le lieu.
-      </p>
-    )
+    return <p className="p-6 text-sm text-[#A64040]">{profile.card.invalidAccess}</p>
   }
 
   if (!data?.ok || !data.card || !data.merchant) {
-    return <p className="p-6 text-sm text-[#A64040]">Carte introuvable.</p>
+    return <p className="p-6 text-sm text-[#A64040]">{profile.card.notFound}</p>
   }
 
   const progressDots = Math.max(4, Math.min(data.card.targetVisits, 10))
@@ -290,25 +290,24 @@ export function CardPhoneView({
   const displayCode = data.card.code || formatLegacyCardCode(data.card.id)
   const cardinWorld: LandingWorldId = normalizeCardinWorld(data.merchant.cardinWorld)
   const summitOptions = getSummitOptions(cardinWorld)
-  const showSummitPicker =
-    !demo && data.card.seasonProgress?.summitReached && !data.card.summitReward
+  const showSummitPicker = !demo && data.card.seasonProgress?.summitReached && !data.card.summitReward
 
   return (
     <main className="min-h-screen bg-[#F8F7F2] px-4 py-8 text-[#173A2E] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-xl">
-        <p className="text-xs uppercase tracking-[0.14em] text-[#5D675F]">Votre carte fidelite</p>
+        <p className="text-xs uppercase tracking-[0.14em] text-[#5D675F]">{profile.card.pageEyebrow}</p>
         <h1 className="mt-2 font-serif text-5xl">{data.merchant.businessName}</h1>
         <p className="mt-2 text-sm text-[#556159]">
           {data.card.customerName} · {statusLabel}
         </p>
         <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#173A2E]">
-          Code carte: {displayCode}
-          {demo ? " · mode demo" : ""}
+          {displayCode}
+          {demo ? " · mode démo" : ""}
         </p>
 
         {merchantValidatedBanner ? (
           <div className="mt-4 rounded-2xl border border-[#173A2E]/25 bg-[#EEF3EC] px-4 py-3 text-sm text-[#173A2E]">
-            Votre passage vient d&apos;être validé par le lieu.
+            {profile.card.progressLabel} mise à jour.
           </div>
         ) : null}
 
@@ -317,26 +316,24 @@ export function CardPhoneView({
 
           {data.message ? (
             <Card className="mt-4 p-4">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Signal du moment</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">{profile.card.signalLabel}</p>
               <p className="mt-1 text-lg text-[#173A2E]">{data.message.title}</p>
               <p className="mt-2 text-sm text-[#2A3F35]">{data.message.body}</p>
             </Card>
           ) : null}
 
           <Card className="mt-4 p-4">
-            <p className="text-sm text-[#556159]">Progression actuelle</p>
+            <p className="text-sm text-[#556159]">{profile.card.progressLabel}</p>
             <p className="mt-1 text-xl">
               {data.card.stamps} / {data.card.targetVisits}
             </p>
             <p className="mt-2 text-sm text-[#2A3F35]">{data.card.midpoint.copy}</p>
-            {data.card.statusName ? <p className="mt-2 text-xs uppercase tracking-[0.12em] text-[#355246]">Statut {data.card.statusName}</p> : null}
+            {data.card.statusName ? <p className="mt-2 text-xs uppercase tracking-[0.12em] text-[#355246]">{data.card.statusName}</p> : null}
             {data.card.seasonProgress ? (
               <div className="mt-3 text-xs text-[#355246]">
+                <p>{data.card.seasonProgress.stepLabel}</p>
                 <p>
-                  Etape {data.card.seasonProgress.currentStep} · {data.card.seasonProgress.stepLabel}
-                </p>
-                <p>
-                  Domino {data.card.seasonProgress.branchesUsed}/{data.card.seasonProgress.branchCapacity}
+                  {profile.card.inviteLabel} {data.card.seasonProgress.branchesUsed}/{data.card.seasonProgress.branchCapacity}
                 </p>
               </div>
             ) : null}
@@ -344,21 +341,19 @@ export function CardPhoneView({
 
           {data.card.summitReward ? (
             <Card className="mt-4 p-4">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Avantage activé</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">{profile.card.activeRewardLabel}</p>
               <p className="mt-2 text-lg text-[#173A2E]">{data.card.summitReward.title}</p>
               <p className="mt-1 text-sm text-[#2A3F35]">{data.card.summitReward.description}</p>
               <p className="mt-3 text-sm text-[#556159]">
-                Reste {data.card.summitReward.usageRemaining} utilisation
-                {data.card.summitReward.usageRemaining > 1 ? "s" : ""}
+                Reste {data.card.summitReward.usageRemaining} utilisation{data.card.summitReward.usageRemaining > 1 ? "s" : ""}
               </p>
-              <p className="mt-2 text-xs italic text-[#69736C]">Disponible lors de votre prochain passage (le lieu confirme).</p>
             </Card>
           ) : null}
 
           {showSummitPicker ? (
             <Card className="mt-4 p-4">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Sommet atteint</p>
-              <p className="mt-2 text-sm text-[#2A3F35]">Choisissez l&apos;avantage qui vous correspond.</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">{profile.card.summitLabel}</p>
+              <p className="mt-2 text-sm text-[#2A3F35]">{profile.card.summitSubtitle}</p>
               <div className="mt-4 space-y-2">
                 {summitOptions.map((opt) => (
                   <button
@@ -379,18 +374,18 @@ export function CardPhoneView({
 
           {data.invite ? (
             <Card className="mt-4 p-4">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Domino</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">{profile.card.inviteLabel}</p>
               <p className="mt-1 text-sm text-[#173A2E]">
                 {data.invite.enabled
-                  ? `Vous pouvez inviter (${data.invite.remainingSlots} / ${data.invite.branchCapacity} slots restants).`
-                  : "Invitation verrouillee pour le moment."}
+                  ? profile.card.inviteEnabled(data.invite.remainingSlots, data.invite.branchCapacity)
+                  : profile.card.inviteDisabled}
               </p>
               {data.invite.enabled ? (
                 <div className="mt-3 flex gap-2">
                   <input
                     className="h-10 flex-1 rounded-xl border border-[#D5DBD1] bg-white px-3 text-sm"
                     onChange={(e) => setInviteName(e.target.value)}
-                    placeholder="Nom de la personne invitee"
+                    placeholder={profile.card.invitePlaceholder}
                     value={inviteName}
                   />
                   <button
@@ -399,7 +394,7 @@ export function CardPhoneView({
                     onClick={onInvite}
                     type="button"
                   >
-                    Inviter
+                    {profile.card.inviteAction}
                   </button>
                 </div>
               ) : null}
@@ -411,28 +406,24 @@ export function CardPhoneView({
 
           {sharedUnlock?.enabled ? (
             <Card className="mt-4 p-4">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Deblocage collectif</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">{profile.card.sharedUnlockTitle}</p>
               <p className="mt-1 text-sm text-[#173A2E]">
                 {sharedUnlock.progress} / {sharedUnlock.objective} passages ce mois
               </p>
-              <p className="mt-1 text-xs text-[#5D675F]">Offre debloquee: {sharedUnlock.offer}</p>
-              {sharedUnlock.status === "active" ? <p className="mt-2 text-sm text-[#173A2E]">Deblocage collectif actif.</p> : null}
+              <p className="mt-1 text-xs text-[#5D675F]">{sharedUnlock.offer}</p>
+              {sharedUnlock.status === "active" ? <p className="mt-2 text-sm text-[#173A2E]">{profile.card.sharedUnlockActive}</p> : null}
             </Card>
           ) : null}
 
-          {data.season ? (
-            <p className="mt-4 text-xs text-[#5E6961]">
-              Saison {data.season.number} · sommet {data.season.summitTitle} · {data.season.daysRemaining} jours restants
-            </p>
-          ) : null}
+          {data.season ? <p className="mt-4 text-xs text-[#5E6961]">{profile.card.seasonSummary(data.season.number, data.season.summitTitle, data.season.daysRemaining)}</p> : null}
         </div>
 
         <div className="mt-6 flex items-center justify-between">
           <Link className="text-sm underline" href={`/scan/${data.merchant.id}${demo ? "?demo=1" : ""}`}>
-            Creer une autre carte
+            {profile.card.createAnotherLabel}
           </Link>
           <Link className="text-sm underline" href="/landing">
-            Site Cardin
+            {profile.card.brandLinkLabel}
           </Link>
         </div>
       </div>

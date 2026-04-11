@@ -17,9 +17,6 @@ type Body = {
   optionId?: string
 }
 
-/**
- * Client activates a summit reward choice after reaching the sommet (season progress).
- */
 export async function POST(request: Request, { params }: { params: { cardId: string } }) {
   const cardId = (params.cardId ?? "").trim()
   if (!cardId) {
@@ -43,7 +40,7 @@ export async function POST(request: Request, { params }: { params: { cardId: str
   const writeOk = await requireCardBearerForWrite(request, supabase, cardId)
   if (!writeOk) {
     return NextResponse.json(
-      { ok: false, error: "card_token_required", message: "Authorization: Bearer requis." },
+      { ok: false, error: "card_token_required", message: "Autorisation Bearer requise." },
       { status: 401 },
     )
   }
@@ -70,7 +67,7 @@ export async function POST(request: Request, { params }: { params: { cardId: str
 
   const worldId = normalizeCardinWorld(merchant?.cardin_world)
   const options = getSummitOptions(worldId)
-  const chosen = options.find((o) => o.id === optionId)
+  const chosen = options.find((option) => option.id === optionId)
   if (!chosen) {
     return NextResponse.json({ ok: false, error: "option_not_found" }, { status: 400 })
   }
@@ -86,8 +83,7 @@ export async function POST(request: Request, { params }: { params: { cardId: str
   }
 
   const usage = getSummitUsageInitial(worldId, optionId)
-
-  const { error: updateError } = await supabase
+  const { data: updatedCard, error: updateError } = await supabase
     .from("cards")
     .update({
       summit_reward_option_id: optionId,
@@ -96,9 +92,16 @@ export async function POST(request: Request, { params }: { params: { cardId: str
       summit_reward_usage_remaining: usage,
     })
     .eq("id", card.id)
+    .is("summit_reward_option_id", null)
+    .select("id")
+    .maybeSingle()
 
   if (updateError) {
     return NextResponse.json({ ok: false, error: updateError.message }, { status: 500 })
+  }
+
+  if (!updatedCard) {
+    return NextResponse.json({ ok: false, error: "reward_already_chosen" }, { status: 400 })
   }
 
   const payload = await getPublicCardPayloadById(supabase, card.id)

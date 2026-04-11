@@ -1,9 +1,10 @@
 ﻿import { NextResponse } from "next/server"
 
-import { buildMidpointView, buildSharedUnlockView, getMidpointMode, getRewardLabel, getTargetVisits } from "@/lib/program-layer"
-import { createClientSupabaseServer } from "@/lib/supabase/server"
-import { getActiveSeason, getStepDefinition } from "@/lib/season-progression"
 import { calculateBranchCapacity } from "@/lib/domino-engine"
+import { getLandingWorldForProfile, getMerchantProfileFromRaw, normalizeMerchantProfileId } from "@/lib/merchant-profile"
+import { buildMidpointView, buildSharedUnlockView, getMidpointMode, getRewardLabel, getTargetVisits } from "@/lib/program-layer"
+import { getActiveSeason, getStepDefinition } from "@/lib/season-progression"
+import { createClientSupabaseServer } from "@/lib/supabase/server"
 import { getWinnerPoolMetrics } from "@/lib/winner-selection"
 
 export const dynamic = "force-dynamic"
@@ -29,7 +30,7 @@ export async function GET(request: Request) {
   const { data: merchant, error: merchantError } = await supabase
     .from("merchants")
     .select(
-      "id, name, email, cardin_world, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period, created_at"
+      "id, name, email, cardin_world, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period, created_at",
     )
     .eq("id", merchantId)
     .single()
@@ -38,6 +39,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, error: "merchant_not_found" }, { status: 404 })
   }
 
+  const profileId = normalizeMerchantProfileId(merchant.cardin_world)
+  const profile = getMerchantProfileFromRaw(merchant.cardin_world)
   const targetVisits = getTargetVisits(merchant.target_visits)
   const rewardLabel = getRewardLabel(merchant.reward_label)
   const midpointMode = getMidpointMode(merchant.midpoint_mode)
@@ -85,22 +88,18 @@ export async function GET(request: Request) {
     shared_unlock_last_triggered_period: merchant.shared_unlock_last_triggered_period,
   })
 
-  // Get active season and season metrics
   const activeSeason = await getActiveSeason(supabase, merchantId)
   let seasonMetrics = null
-  let cardSeasonProgress: Map<string, any> = new Map()
+  const cardSeasonProgress: Map<string, any> = new Map()
 
   if (activeSeason) {
-    // Get winner pool metrics
     const winnerMetrics = await getWinnerPoolMetrics(supabase, activeSeason.id)
 
-    // Get step distribution
     const { data: progressRecords } = await supabase
       .from("card_season_progress")
       .select("current_step, card_id, domino_unlocked_at, diamond_unlocked_at, summit_reached_at, branches_used, total_branch_capacity, direct_invitations_activated")
       .eq("season_id", activeSeason.id)
 
-    // Build step distribution
     const stepDistribution = Array.from({ length: 8 }, (_, i) => ({
       step: i + 1,
       count: 0,
@@ -115,12 +114,9 @@ export async function GET(request: Request) {
       if (progress.domino_unlocked_at) dominoUnlockedCount++
       if (progress.diamond_unlocked_at) diamondCount++
       if (progress.summit_reached_at) summitCount++
-
-      // Store progress for card response
       cardSeasonProgress.set(progress.card_id, progress)
     })
 
-    // Get invitation metrics
     const { count: totalInvitations } = await supabase
       .from("card_referrals")
       .select("*", { count: "exact", head: true })
@@ -132,13 +128,9 @@ export async function GET(request: Request) {
       .eq("season_id", activeSeason.id)
       .eq("is_activated", true)
 
-    // Calculate days remaining
     const now = new Date()
     const endsAt = new Date(activeSeason.ends_at)
-    const daysRemaining = Math.max(
-      0,
-      Math.ceil((endsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-    )
+    const daysRemaining = Math.max(0, Math.ceil((endsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
 
     seasonMetrics = {
       seasonId: activeSeason.id,
@@ -152,8 +144,7 @@ export async function GET(request: Request) {
       summitCount,
       totalInvitations: totalInvitations ?? 0,
       activatedInvitations: activatedInvitations ?? 0,
-      activationRate:
-        totalInvitations && totalInvitations > 0 ? (activatedInvitations ?? 0) / totalInvitations : 0,
+      activationRate: totalInvitations && totalInvitations > 0 ? (activatedInvitations ?? 0) / totalInvitations : 0,
       winnerPool: {
         eligibleCount: winnerMetrics.eligibleCount,
         totalWeight: winnerMetrics.totalWeight,
@@ -169,9 +160,10 @@ export async function GET(request: Request) {
     merchant: {
       id: merchant.id,
       businessName: merchant.name,
-      businessType: "Commerce",
+      businessType: profile.businessTypeLabel,
+      profileId,
       city: "France",
-      cardinWorld: merchant.cardin_world ?? "cafe",
+      cardinWorld: getLandingWorldForProfile(profileId),
       loyaltyConfig: {
         targetVisits,
         rewardLabel,

@@ -1,5 +1,6 @@
 ﻿import { NextResponse } from "next/server"
 
+import { getMerchantProfileFromRaw, normalizeMerchantProfileId, getLandingWorldForProfile } from "@/lib/merchant-profile"
 import { buildMidpointView, buildSharedUnlockView, getMidpointMode, getRewardLabel, getTargetVisits } from "@/lib/program-layer"
 import { createClientSupabaseServer } from "@/lib/supabase/server"
 
@@ -33,11 +34,13 @@ export async function GET(_: Request, { params }: { params: { cardId: string } }
   const { data: merchant } = await supabase
     .from("merchants")
     .select(
-      "id, name, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period"
+      "id, name, cardin_world, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period",
     )
     .eq("id", card.merchant_id)
     .single()
 
+  const profileId = normalizeMerchantProfileId(merchant?.cardin_world)
+  const profile = getMerchantProfileFromRaw(merchant?.cardin_world)
   const targetVisits = getTargetVisits(card.target_visits ?? merchant?.target_visits)
   const rewardLabel = getRewardLabel(card.reward_label ?? merchant?.reward_label)
   const midpointMode = getMidpointMode(merchant?.midpoint_mode)
@@ -78,7 +81,9 @@ export async function GET(_: Request, { params }: { params: { cardId: string } }
       ? {
           id: merchant.id,
           businessName: merchant.name,
-          businessType: "Commerce",
+          businessType: profile.businessTypeLabel,
+          profileId,
+          cardinWorld: getLandingWorldForProfile(profileId),
           sharedUnlock,
         }
       : null,

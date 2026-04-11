@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js"
+﻿import type { SupabaseClient } from "@supabase/supabase-js"
 
 import { recomputeCardScoreSnapshot } from "@/lib/cardin-scoring"
 import { checkAndActivateReferral, calculateBranchCapacity } from "@/lib/domino-engine"
@@ -48,10 +48,6 @@ type CardRow = {
   created_at: string
 }
 
-/**
- * Core merchant stamp: increments passage, season progression, transaction event.
- * Caller must enforce auth (card.merchant_id === merchantUserId).
- */
 export async function runMerchantStamp(
   supabase: SupabaseClient,
   params: {
@@ -73,6 +69,7 @@ export async function runMerchantStamp(
     action?: "stamp" | "redeem"
     idempotencyKey?: string | null
     source: MerchantStampSource
+    visitSessionId?: string | null
   },
 ): Promise<RunMerchantStampResult> {
   const action = params.action ?? "stamp"
@@ -146,6 +143,7 @@ export async function runMerchantStamp(
     },
     idempotencyKey: params.idempotencyKey,
     createdBy: merchantUserId,
+    visitSessionId: params.visitSessionId ?? null,
   })
 
   const sharedUnlock =
@@ -211,7 +209,6 @@ export async function runMerchantStamp(
   }
 }
 
-/** 2 hours — merchant cannot validate the same card twice inside this window. */
 export const MERCHANT_VALIDATION_COOLDOWN_MS = 2 * 60 * 60 * 1000
 
 export function isWithinMerchantCooldown(lastValidationAt: string | null | undefined): boolean {

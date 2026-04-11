@@ -26,7 +26,7 @@ export function getTargetVisits(value: number | null | undefined): number {
 
 export function getRewardLabel(value: string | null | undefined): string {
   const trimmed = (value ?? "").trim()
-  return trimmed.length > 0 ? trimmed : "1 recompense offerte"
+  return trimmed.length > 0 ? trimmed : "1 récompense offerte"
 }
 
 export function getMidpointMode(value: string | null | undefined): MidpointMode {
@@ -54,8 +54,8 @@ export function buildMidpointView(params: {
     reachedAt: params.midpointReachedAt,
     copy: reached
       ? params.midpointMode === "recognition_plus_boost"
-        ? "Cap franchi. Avantage de progression applique."
-        : "Cap franchi. Progression confirmee."
+        ? "Cap franchi. Avantage de progression appliqué."
+        : "Cap franchi. Progression confirmée."
       : "Vous avancez.",
   }
 }

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
 
 import { IDEMPOTENCY_SCOPE_CONSUME, getCachedIdempotentResponse, saveIdempotentResponse } from "@/lib/merchant-api-idempotency"
-import { insertTransactionEvent } from "@/lib/transaction-events"
 import { findValidatedSessionForConsume } from "@/lib/visit-session-consume"
 import { createClientSupabaseServer } from "@/lib/supabase/server"
 
@@ -9,15 +8,23 @@ export const dynamic = "force-dynamic"
 
 type Body = {
   cardId?: string
-  /** Prefer the session returned by POST /api/merchant/validate-passage */
   sessionId?: string
   idempotencyKey?: string
 }
 
-/**
- * Merchant redeems one use of the client's active summit reward.
- * Requires a recently validated visit_session for the same card (proves the client was present).
- */
+type ConsumeRpcRow = {
+  usage_remaining: number
+  title: string | null
+  description: string | null
+  option_id: string | null
+  reward_use_index: number
+}
+
+function normalizeRpcRow(data: ConsumeRpcRow[] | ConsumeRpcRow | null): ConsumeRpcRow | null {
+  if (!data) return null
+  return Array.isArray(data) ? data[0] ?? null : data
+}
+
 export async function POST(request: Request) {
   const supabase = createClientSupabaseServer()
   const {
@@ -49,7 +56,6 @@ export async function POST(request: Request) {
   }
 
   const sessionId = (body.sessionId ?? "").trim() || null
-
   const proof = await findValidatedSessionForConsume(supabase, {
     merchantId: user.id,
     cardId,
@@ -61,68 +67,73 @@ export async function POST(request: Request) {
       {
         ok: false,
         error: "no_recent_validated_session",
-        message: "Validez d’abord un passage pour ce client, ou session trop ancienne.",
+        message: "Validez d'abord un passage pour ce client, ou la session est trop ancienne.",
       },
       { status: 400 },
     )
   }
 
-  const { data: card, error: cardError } = await supabase
-    .from("cards")
-    .select(
-      "id, merchant_id, summit_reward_option_id, summit_reward_title, summit_reward_description, summit_reward_usage_remaining",
-    )
-    .eq("id", cardId)
-    .single()
-
-  if (cardError || !card) {
-    return NextResponse.json({ ok: false, error: "card_not_found" }, { status: 404 })
-  }
-
-  if (card.merchant_id !== user.id) {
-    return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 })
-  }
-
-  const remaining = card.summit_reward_usage_remaining
-  if (remaining === null || card.summit_reward_option_id === null) {
-    return NextResponse.json({ ok: false, error: "no_active_reward" }, { status: 400 })
-  }
-
-  if (remaining <= 0) {
-    return NextResponse.json({ ok: false, error: "no_uses_remaining" }, { status: 400 })
-  }
-
-  const next = remaining - 1
-
-  const { error: updateError } = await supabase
-    .from("cards")
-    .update({ summit_reward_usage_remaining: next })
-    .eq("id", card.id)
-
-  if (updateError) {
-    return NextResponse.json({ ok: false, error: updateError.message }, { status: 500 })
-  }
-
   const idempotencyConsume = idem ? `${idem}:consume` : null
-  await insertTransactionEvent(supabase, {
-    cardId: card.id,
-    legacyType: "summit_reward_use",
-    eventType: "summit_reward_use",
-    source: "merchant_consume",
-    metadata: {
-      optionId: card.summit_reward_option_id,
-      usageAfter: next,
-      visitSessionId: proof.id,
-    },
-    createdBy: user.id,
-    idempotencyKey: idempotencyConsume,
+  const { data, error } = await supabase.rpc("consume_summit_reward_atomic", {
+    p_card_id: cardId,
+    p_merchant_id: user.id,
+    p_visit_session_id: proof.id,
+    p_created_by: user.id,
+    p_idempotency_key: idempotencyConsume,
   })
+
+  if (error) {
+    if (error.message.includes("reward_already_consumed_for_session")) {
+      const { data: card } = await supabase
+        .from("cards")
+        .select("summit_reward_title, summit_reward_description, summit_reward_usage_remaining")
+        .eq("id", cardId)
+        .maybeSingle()
+
+      const payload = {
+        ok: true as const,
+        usageRemaining: card?.summit_reward_usage_remaining ?? 0,
+        title: card?.summit_reward_title ?? null,
+        description: card?.summit_reward_description ?? null,
+        visitSessionId: proof.id,
+      }
+
+      if (idem) {
+        await saveIdempotentResponse(supabase, user.id, IDEMPOTENCY_SCOPE_CONSUME, idem, payload)
+      }
+
+      return NextResponse.json(payload)
+    }
+
+    if (error.message.includes("no_active_reward")) {
+      return NextResponse.json({ ok: false, error: "no_active_reward" }, { status: 400 })
+    }
+
+    if (error.message.includes("no_uses_remaining")) {
+      return NextResponse.json({ ok: false, error: "no_uses_remaining" }, { status: 400 })
+    }
+
+    if (error.message.includes("card_not_found")) {
+      return NextResponse.json({ ok: false, error: "card_not_found" }, { status: 404 })
+    }
+
+    if (error.message.includes("forbidden")) {
+      return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 })
+    }
+
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
+  }
+
+  const consumed = normalizeRpcRow(data as ConsumeRpcRow[] | ConsumeRpcRow | null)
+  if (!consumed) {
+    return NextResponse.json({ ok: false, error: "consume_failed" }, { status: 500 })
+  }
 
   const payload = {
     ok: true as const,
-    usageRemaining: next,
-    title: card.summit_reward_title,
-    description: card.summit_reward_description,
+    usageRemaining: consumed.usage_remaining,
+    title: consumed.title,
+    description: consumed.description,
     visitSessionId: proof.id,
   }
 

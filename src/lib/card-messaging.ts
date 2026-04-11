@@ -1,4 +1,4 @@
-export type CardPrimaryMessage = {
+﻿export type CardPrimaryMessage = {
   kind: "collective" | "comeback" | "domino" | "progress" | "summit" | "weak_day"
   title: string
   body: string
@@ -38,7 +38,7 @@ export function buildCardPrimaryMessage(input: BuildCardPrimaryMessageInput): Ca
     return {
       kind: "collective",
       title: "Offre collective active",
-      body: "Le commerce a debloque une offre en ce moment. Passez pendant la fenetre active.",
+      body: "Le commerce a débloqué une offre en ce moment. Passez pendant la fenêtre active.",
     }
   }
 
@@ -69,8 +69,8 @@ export function buildCardPrimaryMessage(input: BuildCardPrimaryMessageInput): Ca
   if (daysSinceVisit !== null && daysSinceVisit >= 3) {
     return {
       kind: "comeback",
-      title: "Revenez bientot",
-      body: `Votre carte n'a pas bouge depuis ${daysSinceVisit} jours. Revenez cette semaine pour relancer la progression.`,
+      title: "Revenez bientôt",
+      body: `Votre carte n'a pas bougé depuis ${daysSinceVisit} jours. Revenez cette semaine pour relancer la progression.`,
     }
   }
 
@@ -87,7 +87,7 @@ export function buildCardPrimaryMessage(input: BuildCardPrimaryMessageInput): Ca
     title: input.statusName ? `Statut ${input.statusName}` : "Carte active",
     body:
       input.directInvitationsActivated > 0
-        ? `Vous avez deja active ${input.directInvitationsActivated} invitation${input.directInvitationsActivated > 1 ? "s" : ""}. Continuez a faire vivre votre carte.`
+        ? `Vous avez déjà activé ${input.directInvitationsActivated} invitation${input.directInvitationsActivated > 1 ? "s" : ""}. Continuez à faire vivre votre carte.`
         : "Chaque passage compte. Gardez votre carte en mouvement pour ouvrir la suite du parcours.",
   }
 }

@@ -1,8 +1,9 @@
-import type { SupabaseClient } from "@supabase/supabase-js"
+﻿import type { SupabaseClient } from "@supabase/supabase-js"
 
 import { normalizeCardinWorld } from "@/lib/client-parcours-config"
 import { buildCardPrimaryMessage } from "@/lib/card-messaging"
 import { canInvite, calculateBranchCapacity } from "@/lib/domino-engine"
+import { getLandingWorldForProfile, getMerchantProfileFromRaw, normalizeMerchantProfileId } from "@/lib/merchant-profile"
 import { buildMidpointView, buildSharedUnlockView, getMidpointMode, getRewardLabel, getTargetVisits, type MidpointMode } from "@/lib/program-layer"
 import { cardinSeasonLaw } from "@/lib/season-law"
 import { getActiveSeason, getCardSeasonProgress, getStepDefinition } from "@/lib/season-progression"
@@ -54,12 +55,14 @@ async function buildPublicCardPayload(supabase: SupabaseClient, card: CardRecord
   const { data: merchantData } = await supabase
     .from("merchants")
     .select(
-      "id, name, cardin_world, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period"
+      "id, name, cardin_world, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period",
     )
     .eq("id", card.merchant_id)
     .single()
 
   const merchant = (merchantData as MerchantRecord | null) ?? null
+  const profileId = normalizeMerchantProfileId(merchant?.cardin_world)
+  const profile = getMerchantProfileFromRaw(merchant?.cardin_world)
   const cardinWorld = normalizeCardinWorld(merchant?.cardin_world)
   const targetVisits = getTargetVisits(card.target_visits ?? merchant?.target_visits)
 
@@ -159,10 +162,11 @@ async function buildPublicCardPayload(supabase: SupabaseClient, card: CardRecord
     .limit(12)
 
   const transactions = (transactionData as TransactionRecord[] | null) ?? []
-  const lastVisitAt = transactions.find((event) => {
-    const kind = event.event_type ?? event.type ?? ""
-    return VISIT_EVENT_TYPES.has(kind)
-  })?.created_at ?? card.created_at
+  const lastVisitAt =
+    transactions.find((event) => {
+      const kind = event.event_type ?? event.type ?? ""
+      return VISIT_EVENT_TYPES.has(kind)
+    })?.created_at ?? card.created_at
 
   const message = buildCardPrimaryMessage({
     currentStep: seasonProgress?.current_step ?? null,
@@ -206,8 +210,9 @@ async function buildPublicCardPayload(supabase: SupabaseClient, card: CardRecord
       ? {
           id: merchant.id,
           businessName: merchant.name,
-          businessType: "Commerce",
-          cardinWorld: cardinWorld,
+          businessType: profile.businessTypeLabel,
+          profileId,
+          cardinWorld: getLandingWorldForProfile(profileId) ?? cardinWorld,
           sharedUnlock,
         }
       : null,

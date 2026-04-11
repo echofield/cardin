@@ -1,4 +1,4 @@
-import type { LandingWorldId } from "@/lib/landing-content"
+﻿import type { LandingWorldId } from "@/lib/landing-content"
 import { cardinSeasonLaw } from "@/lib/season-law"
 
 export type ClientScreenId = "entree" | "progression" | "activation" | "prochaine-etape" | "domino" | "sommet"
@@ -9,7 +9,6 @@ export type ClientScreen = {
   subtitle: string
 }
 
-/** Header line + one emotional line (shown under header). */
 export const CLIENT_PARCOURS_SCREENS: ClientScreen[] = [
   {
     id: "entree",
@@ -24,7 +23,7 @@ export const CLIENT_PARCOURS_SCREENS: ClientScreen[] = [
   {
     id: "activation",
     title: "Sous tension douce",
-    subtitle: "Quelque chose s’accorde.",
+    subtitle: "Quelque chose s'accorde.",
   },
   {
     id: "prochaine-etape",
@@ -60,7 +59,6 @@ export function getExpirationDays(worldId: LandingWorldId): number {
   return Math.round((timing.minDays + timing.maxDays) / 2)
 }
 
-/** Countdown + paired action line — varies by step (not the same “dimanche” everywhere). */
 export type TensionStepKey = "entree" | "progression" | "activation" | "prochaine-etape" | "domino"
 
 export function getTensionPair(
@@ -72,9 +70,9 @@ export function getTensionPair(
 
   const byWorld: Record<LandingWorldId, Record<TensionStepKey, string>> = {
     cafe: {
-      entree: "Tant que l’envie est là, le fil tient.",
+      entree: "Tant que l'envie est là, le fil tient.",
       progression: "Un souffle, puis la suite.",
-      activation: "Sans précipiter — le lieu monte avec vous.",
+      activation: "Sans précipiter, le lieu monte avec vous.",
       "prochaine-etape": "Cette semaine encore : un pas suffit.",
       domino: "La fenêtre reste entrouverte.",
     },
@@ -83,17 +81,17 @@ export function getTensionPair(
       progression: "Le retour fait le rythme.",
       activation: "La table se resserre autour de vous.",
       "prochaine-etape": "Un passage de plus : le fil se tend.",
-      domino: "Tant que l’invitation respire.",
+      domino: "Tant que l'invitation respire.",
     },
     beaute: {
-      entree: "Le temps est large — puis il se fait précis.",
+      entree: "Le temps est large, puis il se fait précis.",
       progression: "Doucement : le lieu vous garde.",
       activation: "Le prochain geste compte double.",
       "prochaine-etape": "Avant la fin du mois : le fil vous tire.",
       domino: "Offrir, sans brusquer.",
     },
     boutique: {
-      entree: "Quand l’envie se précise, revenez.",
+      entree: "Quand l'envie se précise, revenez.",
       progression: "La sélection vous entoure.",
       activation: "Ce qui vous est réservé se rapproche.",
       "prochaine-etape": "Ne laissez pas le fil se couper.",
@@ -118,10 +116,7 @@ export const WORLD_TARGET_VISITS: Record<LandingWorldId, number> = {
   boutique: 6,
 }
 
-export function getScreenForVisits(
-  visits: number,
-  targetVisits: number,
-): number {
+export function getScreenForVisits(visits: number, targetVisits: number): number {
   const { dominoStartStep, summitStep } = cardinSeasonLaw
   const dominoVisit = Math.ceil((dominoStartStep / summitStep) * targetVisits)
 
@@ -133,31 +128,29 @@ export function getScreenForVisits(
   return 3
 }
 
-/** Early “soft” invite — one optional gesture before domino amplification. */
 export const SOFT_INVITE_MAX = 1
 
-/** Subtle “taste” signals — not rewards, just atmosphere (steps 2–4). */
 export type TasteStep = "progression" | "activation" | "prochaine-etape"
 
 export function getTasteSignal(worldId: LandingWorldId, step: TasteStep): { eyebrow: string; line: string } {
   const byWorld: Record<LandingWorldId, Record<TasteStep, { eyebrow: string; line: string }>> = {
     cafe: {
-      progression: { eyebrow: "Note", line: "Une chaleur qui reste — sans promesse affichée." },
+      progression: { eyebrow: "Note", line: "Une chaleur qui reste, sans promesse affichée." },
       activation: { eyebrow: "Arôme", line: "Le lieu vous reconnaît ; le geste suit." },
       "prochaine-etape": { eyebrow: "Fil", line: "Chaque retour resserre ce qui vous attend encore." },
     },
     restaurant: {
       progression: { eyebrow: "Table", line: "Le silence du premier service vous garde une place." },
-      activation: { eyebrow: "Sel", line: "Le rythme du lieu s’accorde au vôtre." },
+      activation: { eyebrow: "Sel", line: "Le rythme du lieu s'accorde au vôtre." },
       "prochaine-etape": { eyebrow: "Suite", line: "Un passage de plus : la carte se fait plus précise." },
     },
     beaute: {
-      progression: { eyebrow: "Peau", line: "Quelque chose s’adoucit — avant la forme." },
+      progression: { eyebrow: "Peau", line: "Quelque chose s'adoucit, avant la forme." },
       activation: { eyebrow: "Rituel", line: "Le soin vous fait entrer dans la durée." },
-      "prochaine-etape": { eyebrow: "Cercle", line: "Vous n’êtes plus à la lisière." },
+      "prochaine-etape": { eyebrow: "Cercle", line: "Vous n'êtes plus à la lisière." },
     },
     boutique: {
-      progression: { eyebrow: "Ligne", line: "Un objet vous fait signe — sans prix affiché ici." },
+      progression: { eyebrow: "Ligne", line: "Un objet vous fait signe, sans prix affiché ici." },
       activation: { eyebrow: "Matière", line: "La sélection se resserre autour de vous." },
       "prochaine-etape": { eyebrow: "Vue", line: "Ce qui vous est réservé se profile." },
     },
@@ -172,11 +165,6 @@ export type SummitOption = {
   whisper: string
 }
 
-/**
- * Three concrete reward directions at the summit.
- * Always: 1 = récurrence (ROI), 2 = impact (plaisir), 3 = statut (image).
- * The client chooses behaviour, not a discount.
- */
 export function getSummitOptions(worldId: LandingWorldId): SummitOption[] {
   const options: Record<LandingWorldId, SummitOption[]> = {
     cafe: [
@@ -187,17 +175,17 @@ export function getSummitOptions(worldId: LandingWorldId): SummitOption[] {
     restaurant: [
       { id: "recurrence", title: "Continuer à venir", description: "1 dessert offert sur vos 3 prochaines tables", whisper: "La table vous attend encore." },
       { id: "impact", title: "Profiter maintenant", description: "-40 % sur une prochaine réservation", whisper: "Un repas qui marque le calendrier." },
-      { id: "statut", title: "Accès privilégié", description: "Accès prioritaire + attention spéciale du chef", whisper: "Ce que la salle ne montre pas à tout le monde." },
+      { id: "statut", title: "Accès privilégié", description: "Accès prioritaire et attention spéciale du chef", whisper: "Ce que la salle ne montre pas à tout le monde." },
     ],
     beaute: [
       { id: "recurrence", title: "Continuer à venir", description: "1 soin offert après 3 rendez-vous", whisper: "Le rythme sculpte dans la durée." },
       { id: "impact", title: "Profiter maintenant", description: "-25 % sur vos 2 prochains rendez-vous", whisper: "Un geste, sans attendre." },
-      { id: "statut", title: "Accès privilégié", description: "Accès prioritaire + créneaux réservés", whisper: "Une fenêtre que le lieu n'ouvre pas à tous." },
+      { id: "statut", title: "Accès privilégié", description: "Accès prioritaire et créneaux réservés", whisper: "Une fenêtre que le lieu n'ouvre pas à tous." },
     ],
     boutique: [
       { id: "recurrence", title: "Continuer à venir", description: "-20 % sur vos 3 prochaines visites", whisper: "La sélection vous accompagne." },
       { id: "impact", title: "Profiter maintenant", description: "-50 € sur votre prochain achat", whisper: "Un objet, une décision." },
-      { id: "statut", title: "Accès privilégié", description: "Accès privé aux nouvelles collections", whisper: "Avant les autres — quand la pièce le permet." },
+      { id: "statut", title: "Accès privilégié", description: "Accès privé aux nouvelles collections", whisper: "Avant les autres, quand la pièce le permet." },
     ],
   }
   return options[worldId]
@@ -209,7 +197,6 @@ export function isValidSummitOptionId(id: string): boolean {
   return SUMMIT_OPTION_IDS.has(id)
 }
 
-/** Maps merchant / demo world string to a valid LandingWorldId. */
 export function normalizeCardinWorld(raw: string | null | undefined): LandingWorldId {
   const v = (raw ?? "cafe").toLowerCase().trim()
   if (v === "restaurant" || v === "beaute" || v === "boutique" || v === "cafe") {
@@ -218,9 +205,6 @@ export function normalizeCardinWorld(raw: string | null | undefined): LandingWor
   return "cafe"
 }
 
-/**
- * Initial usage count when a summit option is activated (operational, not shown to client as "cost").
- */
 export function getSummitUsageInitial(worldId: LandingWorldId, optionId: string): number {
   const key = `${worldId}:${optionId}` as const
   const map: Record<string, number> = {
