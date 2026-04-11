@@ -109,6 +109,9 @@ export function ProjectionView() {
             Projection revenu pour votre {bundle.merchantLabel.toLowerCase()}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-[#5C655E]">{bundle.brandPunchline}</p>
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-[#7A847B]">
+            Simulation basée sur votre activité. Ajustable selon votre réalité.
+          </p>
         </div>
 
         <section className="mx-auto mt-12 max-w-4xl rounded-[32px] border border-[#D7DDD2] bg-[#FDFCF8] px-6 py-8 shadow-[0_24px_60px_-42px_rgba(23,58,46,0.25)] sm:px-8">

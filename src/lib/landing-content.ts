@@ -39,7 +39,7 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
     eyebrow: "Volume et fréquence",
     claim: "+4 k€ à 6 k€ par saison",
     basket: "Panier moyen 5 à 8 €",
-    onboardingLead: "Passage rapide, fréquence élevée, retour client visible très vite.",
+    onboardingLead: "Beaucoup de clients, passages rapides — retour visible tout de suite.",
     proofLine: "Passage → retour client → réseau activé.",
     summitPromise: "1 boisson signature par mois pendant 1 an.",
     baselineRecoveredPerMonth: 1400,
@@ -50,7 +50,7 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
     eyebrow: "Panier moyen élevé",
     claim: "+10 k€ à 15 k€ par saison",
     basket: "Panier moyen 40 à 60 €",
-    onboardingLead: "Table, invitation et retour client à réactiver.",
+    onboardingLead: "Service à table, panier plus élevé — le retour se joue entre deux services.",
     proofLine: "Table → retour client → réseau activé par invitation.",
     summitPromise: "1 repas signature par mois pendant 1 an.",
     baselineRecoveredPerMonth: 3800,
@@ -91,6 +91,6 @@ export const LANDING_SECTOR_CARDS: SectorCard[] = [
   },
   {
     label: "Beauté / Boutique",
-    description: `${LANDING_WORLDS.beaute.claim}. Valeur client élevée, fréquence plus rare, revenu récupéré sur une trajectoire plus sélective.`,
+    description: `${LANDING_WORLDS.beaute.claim}. Valeur client élevée, fréquence plus rare, revenu récupéré sur la durée avec des clients plus sélectifs.`,
   },
 ]

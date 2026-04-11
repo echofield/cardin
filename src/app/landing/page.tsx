@@ -17,7 +17,10 @@ export default function LandingPage() {
               Clients qui reviennent. Réseau activé. Revenu récupéré.
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-[#566159] sm:text-lg">
-              Une carte + une saison = un instrument de retour client qui remet du passage, active le réseau et récupère du revenu dans le lieu.
+              Un système simple pour relancer l’activité et faire revenir vos clients.
+            </p>
+            <p className="mt-3 max-w-2xl text-base leading-7 text-[#566159] sm:text-lg">
+              Cardin transforme le passage en retour, sans complexité.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link className="inline-flex h-12 items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-6 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href="/parcours">

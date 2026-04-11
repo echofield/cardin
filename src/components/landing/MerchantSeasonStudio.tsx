@@ -68,13 +68,14 @@ type ScreenId = "world" | "system" | "summit" | "season" | "checkmate" | "activa
 
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sY5kD4RS66P4Tv7xl9Zm07"
 
-const screens: Array<{ id: ScreenId; label: string; eyebrow: string }> = [
-  { id: "world", label: "Lieu", eyebrow: "Monde marchand" },
-  { id: "system", label: "Système", eyebrow: "Entrée et trajectoire" },
-  { id: "summit", label: "Sommet", eyebrow: "Grand Diamond" },
-  { id: "season", label: "Saison", eyebrow: "Limite et narration" },
-  { id: "checkmate", label: "Bilan", eyebrow: "Revenu, réseau, affluence" },
-  { id: "activate", label: "Activation", eyebrow: "Lancer la saison" },
+/** Merchant-facing step labels (adoption first; see `advancedEyebrow` in optional details). */
+const screens: Array<{ id: ScreenId; label: string; advancedEyebrow: string }> = [
+  { id: "world", label: "Lieu", advancedEyebrow: "Monde marchand" },
+  { id: "system", label: "Clients", advancedEyebrow: "Entrée et trajectoire" },
+  { id: "summit", label: "Passage", advancedEyebrow: "Sommet · Grand Diamond" },
+  { id: "season", label: "Retour", advancedEyebrow: "Saison · limite et narration" },
+  { id: "checkmate", label: "Résultat", advancedEyebrow: "Bilan · revenu et réseau" },
+  { id: "activate", label: "Activation", advancedEyebrow: "Lancer la saison" },
 ]
 
 const seasonModes: Array<{
@@ -442,6 +443,7 @@ export function MerchantSeasonStudio() {
   const [selectedSeason, setSelectedSeason] = useState<SeasonLength>(3)
   const [selectedSummitId, setSelectedSummitId] = useState(worlds[0].defaultSummitId)
   const [screenIndex, setScreenIndex] = useState(0)
+  const [showAdvancedSteps, setShowAdvancedSteps] = useState(false)
 
   const selectedWorld = useMemo(
     () => worlds.find((world) => world.id === selectedWorldId) ?? worlds[0],
@@ -480,12 +482,15 @@ export function MerchantSeasonStudio() {
       <div className="rounded-[2rem] border border-[#DED7CA] bg-[linear-gradient(180deg,#FFFDF8_0%,#F5F1E8_100%)] p-4 shadow-[0_28px_90px_-54px_rgba(21,47,37,0.38)] sm:p-6 lg:p-10">
         <div className="flex flex-col gap-6 border-b border-[#E3DDD0] pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-[#667067]">Simulateur saison</p>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-[#667067]">Simulateur</p>
             <h2 className="mt-3 font-serif text-4xl leading-[1.02] text-[#173328] sm:text-5xl lg:text-6xl">
-              Configurez votre saison. Voyez le revenu récupérable.
+              Voyez le revenu récupérable selon votre lieu.
             </h2>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-[#556159] sm:text-base">
-              Choisissez le lieu, le sommet et la durée. Cardin chiffre le revenu récupérable, le réseau activé et l’affluence générée.
+              Ajustez le type de commerce et la durée : Cardin estime l’impact sur le revenu, le réseau et l’affluence.
+            </p>
+            <p className="mt-2 max-w-2xl text-sm leading-7 text-[#6B756E] sm:text-base">
+              Simulation basée sur votre activité. Ajustable selon votre réalité.
             </p>
           </div>
 
@@ -496,7 +501,40 @@ export function MerchantSeasonStudio() {
           </div>
         </div>
 
-        <div className="mt-6 grid gap-2 sm:grid-cols-6">
+        <div className="mt-8 rounded-[1.5rem] border border-[#E3DDD0] bg-[#FFFCF7] p-5 sm:p-6">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-[#667067]">Comment ça fonctionne</p>
+          <ul className="mt-4 space-y-2.5 text-sm leading-relaxed text-[#2A3F35] sm:text-base">
+            <li>Les clients passent</li>
+            <li>Vous validez</li>
+            <li>Le système crée du retour</li>
+            <li>Les clients reviennent</li>
+            <li>Vous récupérez du revenu</li>
+          </ul>
+          <details className="mt-5 border-t border-[#E8E2D6] pt-4">
+            <summary className="cursor-pointer text-sm font-medium text-[#173A2E] underline-offset-4 hover:underline">
+              Voir la logique complète (saison, sommet, trajectoire)
+            </summary>
+            <p className="mt-3 text-xs leading-relaxed text-[#5B655E]">
+              Cardin structure une <strong className="font-medium text-[#173A2E]">saison</strong> limitée dans le temps, une{" "}
+              <strong className="font-medium text-[#173A2E]">trajectoire</strong> de statut pour le client et un{" "}
+              <strong className="font-medium text-[#173A2E]">sommet</strong> (récompense phare) qui donne une raison claire de revenir. Ce niveau de détail est utile une fois le
+              principe compris.
+            </p>
+          </details>
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Parcours du simulateur</p>
+          <button
+            className="text-xs font-medium text-[#173A2E] underline-offset-4 hover:underline"
+            onClick={() => setShowAdvancedSteps((v) => !v)}
+            type="button"
+          >
+            {showAdvancedSteps ? "Masquer les noms internes" : "Afficher les noms internes"}
+          </button>
+        </div>
+
+        <div className="mt-3 grid gap-2 sm:grid-cols-6">
           {screens.map((screen, index) => {
             const isActive = index === screenIndex
             const isDone = index < screenIndex
@@ -515,7 +553,9 @@ export function MerchantSeasonStudio() {
                 onClick={() => setScreenIndex(index)}
                 type="button"
               >
-                <p className="text-[10px] uppercase tracking-[0.16em] text-[#69736B]">{screen.eyebrow}</p>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-[#69736B]">
+                  {showAdvancedSteps ? screen.advancedEyebrow : `Étape ${index + 1}`}
+                </p>
                 <p className="mt-1 text-sm font-medium text-[#173A2E]">
                   {index + 1}. {screen.label}
                 </p>
@@ -551,7 +591,8 @@ export function MerchantSeasonStudio() {
 
         <div className="mt-6 flex flex-col gap-3 border-t border-[#E3DDD0] pt-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-[#5B655E]">
-            {screens[screenIndex].eyebrow} · {selectedWorld.label} · {selectedSeason} mois
+            {screens[screenIndex].label}
+            {showAdvancedSteps ? ` · ${screens[screenIndex].advancedEyebrow}` : ""} · {selectedWorld.label} · {selectedSeason} mois
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             {canGoBack ?(
@@ -612,7 +653,9 @@ function WorldScreen({ selectedWorld, onSelectWorld, monthlyRecovered }: { selec
 
         <div className="mt-6 rounded-[1.4rem] border border-[#D8DED4] bg-[#FFFEFA] p-5">
           <p className="text-[10px] uppercase tracking-[0.16em] text-[#69736C]">Mécanique</p>
-          <p className="mt-3 text-sm leading-7 text-[#556159]">Le client porte la carte. Le marchand pilote la saison complète : entrée, activation, retour client, réseau et sommet.</p>
+          <p className="mt-3 text-sm leading-7 text-[#556159]">
+            Le client porte la carte. Vous pilotez l’entrée, l’activation et le retour ; le calendrier et la récompense phare se règlent aux étapes suivantes.
+          </p>
         </div>
       </div>
     </div>
@@ -624,9 +667,11 @@ function SystemScreen({ selectedWorld, selectedSummit, activePaths, dominoMultip
     <div className="space-y-8">
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Mécanique Cardin</p>
-          <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Mécanique pour {selectedWorld.label.toLowerCase()}.</h3>
-          <p className="mt-4 max-w-3xl text-sm leading-7 text-[#59635C] sm:text-base">Entrée → activation → retour client → réseau → sommet.</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Vos clients</p>
+          <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Comment {selectedWorld.label.toLowerCase()} accueille et fait revenir.</h3>
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-[#59635C] sm:text-base">
+            Entrée, activation, puis retour : le détail technique (sommet, saison) reste disponible plus bas si besoin.
+          </p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
@@ -688,9 +733,11 @@ function SummitScreen({ selectedWorld, selectedSummit, onSelectSummit, monthlyRe
   return (
     <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
       <div>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Sommet</p>
-        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Choisissez votre sommet.</h3>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">Sommet fort = retour plus fort. Le sommet justifie toute la progression.</p>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Passage · récompense</p>
+        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Ce qui donne envie de revenir.</h3>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">
+          Choisissez l’offre phare (sommet) : elle fixe la tension et le retour.
+        </p>
 
         <div className="mt-6 grid gap-4">
           {selectedWorld.summits.map((summit) => {
@@ -743,9 +790,11 @@ function SeasonScreen({ selectedSeason, onSelectSeason, selectedSeasonMode, sele
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
       <div>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Durée saison</p>
-        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Choisissez la durée.</h3>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">Saison limitée = valeur de la carte. La preuve de saison 1 vend la saison 2.</p>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Retour sur la durée</p>
+        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Combien de temps pour installer le retour.</h3>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">
+          Une fenêtre limitée (saison) crée de la valeur : la première preuve ouvre la suivante.
+        </p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {seasonModes.map((mode) => {

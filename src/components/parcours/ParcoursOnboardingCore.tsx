@@ -92,10 +92,10 @@ const SUMMITS: SummitOption[] = [
 ]
 
 const WORLD_DETAILS: Record<LandingWorldId, string> = {
-  cafe: "Passage rapide, volume eleve.",
-  restaurant: "Experience longue, panier fort.",
-  beaute: "Rendez-vous, relation forte.",
-  boutique: "Passage opportuniste, conversion cle.",
+  cafe: "Beaucoup de clients, passages rapides.",
+  restaurant: "Tables, service plus long, panier plus élevé.",
+  beaute: "Rendez-vous réguliers, confiance et recommandation.",
+  boutique: "Visites plus rares, panier et désir forts.",
 }
 
 const formatEuro = (value: number) =>
@@ -431,7 +431,7 @@ function StepEntry({ worldId, onSelectWorld }: { worldId: LandingWorldId; onSele
     <>
       <StepHeader num="01" label="Entree" />
       <StepTitle>Quel lieu connectez-vous ?</StepTitle>
-      <StepSubtitle>Le systeme s'adapte a votre type d'activite.</StepSubtitle>
+      <StepSubtitle>Le système s’adapte à votre type d’activité.</StepSubtitle>
 
       <div className="space-y-3">
         {LANDING_WORLD_ORDER.map((id, i) => (
@@ -973,6 +973,9 @@ function StepProjection({
           </>
         )}
       </StepSubtitle>
+      <p className="mb-6 text-sm leading-relaxed" style={{ color: "var(--cardin-label)" }}>
+        Simulation basée sur votre activité. Ajustable selon votre réalité.
+      </p>
       {isLite && liteHintLabel ? (
         <motion.p
           animate={{ opacity: reveal ? 1 : 0 }}
