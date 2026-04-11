@@ -13,7 +13,8 @@ export function GoogleSignInButton({ nextPath = "/landing", label = "Se connecte
     <Button
       onClick={async () => {
         const supabase = createClientSupabaseBrowser()
-        const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`
+        const origin = typeof window !== "undefined" ? window.location.origin : ""
+        const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(nextPath)}`
 
         await supabase.auth.signInWithOAuth({
           provider: "google",

@@ -166,16 +166,16 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
 
       if (response.redirected) {
         trackEvent("wallet_button_clicked", { provider, merchantId, mode: "provider_redirect" })
-        window.location.href = response.url
+        if (typeof window !== "undefined") window.location.href = response.url
         return
       }
 
       const payload = (await response.json()) as { fallbackUrl?: string }
       trackEvent("wallet_button_clicked", { provider, merchantId, mode: "fallback" })
 
-      window.location.href = payload.fallbackUrl ?? cardData?.cardUrl ?? "/landing"
+      if (typeof window !== "undefined") window.location.href = payload.fallbackUrl ?? cardData?.cardUrl ?? "/landing"
     } catch {
-      window.location.href = cardData?.cardUrl ?? "/landing"
+      if (typeof window !== "undefined") window.location.href = cardData?.cardUrl ?? "/landing"
     }
   }
 

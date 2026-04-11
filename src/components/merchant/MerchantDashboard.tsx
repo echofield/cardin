@@ -1,5 +1,6 @@
 ﻿"use client"
 
+import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
 import { trackEvent } from "@/lib/analytics"
@@ -181,7 +182,7 @@ export function MerchantDashboard({ merchantId, demo = false }: { merchantId: st
   const onSignOut = async () => {
     const supabase = createClientSupabaseBrowser()
     await supabase.auth.signOut()
-    window.location.href = "/login"
+    if (typeof window !== "undefined") window.location.href = "/login"
   }
 
   if (loading) {
@@ -317,6 +318,18 @@ export function MerchantDashboard({ merchantId, demo = false }: { merchantId: st
               <a className="inline-flex items-center text-sm underline" download={`qr-${merchantId}.png`} href={`/api/merchant/${merchantId}/qr`}>
                 Telecharger QR
               </a>
+            </div>
+            <div className="mt-5 rounded-2xl border border-[#173A2E]/15 bg-[#EEF3EC] p-4">
+              <p className="text-xs uppercase tracking-[0.12em] text-[#355246]">Validation passage</p>
+              <p className="mt-2 text-sm text-[#2A3F35]">
+                Ouvrez cette page sur l&apos;iPad ou le téléphone du staff : un clic valide le passage du client présent.
+              </p>
+              <Link
+                className="mt-3 inline-flex rounded-full border border-[#173A2E] bg-[#173A2E] px-5 py-2.5 text-sm font-medium text-[#FBFAF6]"
+                href={`/merchant/${merchantId}/valider`}
+              >
+                Valider un passage (staff)
+              </Link>
             </div>
           </Card>
 

@@ -1,0 +1,54 @@
+import { NextResponse } from "next/server"
+
+import { createClientSupabaseServer } from "@/lib/supabase/server"
+
+export const dynamic = "force-dynamic"
+
+/**
+ * Latest unvalidated visit session for this merchant (staff sees "client en cours").
+ */
+export async function GET() {
+  const supabase = createClientSupabaseServer()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 })
+  }
+
+  const { data: session, error: sessionError } = await supabase
+    .from("visit_sessions")
+    .select("id, card_id, started_at")
+    .eq("merchant_id", user.id)
+    .is("validated_at", null)
+    .order("started_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (sessionError) {
+    return NextResponse.json({ ok: false, error: sessionError.message }, { status: 500 })
+  }
+
+  if (!session) {
+    return NextResponse.json({ ok: true, pending: null })
+  }
+
+  const { data: card } = await supabase
+    .from("cards")
+    .select("customer_name, stamps, target_visits")
+    .eq("id", session.card_id)
+    .maybeSingle()
+
+  return NextResponse.json({
+    ok: true,
+    pending: {
+      sessionId: session.id,
+      cardId: session.card_id,
+      startedAt: session.started_at,
+      customerName: card?.customer_name ?? "Client",
+      stamps: card?.stamps ?? 0,
+      targetVisits: card?.target_visits ?? 10,
+    },
+  })
+}

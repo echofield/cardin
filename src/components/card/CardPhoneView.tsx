@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { Card } from "@/ui"
 
@@ -97,6 +97,8 @@ export function CardPhoneView({
   const [inviteName, setInviteName] = useState("")
   const [inviteState, setInviteState] = useState<"idle" | "loading" | "error" | "success">("idle")
   const [inviteMessage, setInviteMessage] = useState("")
+  const [merchantValidatedBanner, setMerchantValidatedBanner] = useState(false)
+  const lastStampsRef = useRef<number | null>(null)
 
   const endpoint = useMemo(
     () => (refType === "code" ? `/api/public/card/code/${encodeURIComponent(cardRef)}` : `/api/public/card/${cardRef}`),
@@ -118,6 +120,37 @@ export function CardPhoneView({
   useEffect(() => {
     void loadCard()
   }, [loadCard])
+
+  useEffect(() => {
+    if (demo || !data?.ok || !data.card?.id) return
+    void fetch("/api/public/visit-session/open", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cardId: data.card.id }),
+    }).catch(() => {
+      /* table migration may be pending locally */
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- only when card id is known
+  }, [data?.card?.id, data?.ok, demo])
+
+  useEffect(() => {
+    if (demo || !data?.ok || !data.card) return
+    const t = setInterval(() => void loadCard(), 4000)
+    return () => clearInterval(t)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- poll while card view is active
+  }, [data?.ok, demo, loadCard])
+
+  useEffect(() => {
+    if (!data?.card) return
+    const s = data.card.stamps
+    if (lastStampsRef.current !== null && s > lastStampsRef.current) {
+      setMerchantValidatedBanner(true)
+      const hide = setTimeout(() => setMerchantValidatedBanner(false), 8000)
+      lastStampsRef.current = s
+      return () => clearTimeout(hide)
+    }
+    lastStampsRef.current = s
+  }, [data?.card?.stamps])
 
   const statusLabel = useMemo(() => {
     if (!data?.card) return ""
@@ -181,12 +214,18 @@ export function CardPhoneView({
         <p className="text-xs uppercase tracking-[0.14em] text-[#5D675F]">Votre carte fidelite</p>
         <h1 className="mt-2 font-serif text-5xl">{data.merchant.businessName}</h1>
         <p className="mt-2 text-sm text-[#556159]">
-          {data.card.customerName} Ã‚Â· {statusLabel}
+          {data.card.customerName} · {statusLabel}
         </p>
         <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#173A2E]">
           Code carte: {displayCode}
-          {demo ? " Ã‚Â· mode demo" : ""}
+          {demo ? " · mode demo" : ""}
         </p>
+
+        {merchantValidatedBanner ? (
+          <div className="mt-4 rounded-2xl border border-[#173A2E]/25 bg-[#EEF3EC] px-4 py-3 text-sm text-[#173A2E]">
+            Votre passage vient d&apos;être validé par le lieu.
+          </div>
+        ) : null}
 
         <div className="mt-6 rounded-[2rem] border border-[#CCD4CA] bg-[#FBFAF6] p-4 shadow-[0_30px_70px_-60px_rgba(20,48,38,0.8)]">
           <WalletPassPreview businessLabel={data.merchant.businessName} progressDots={progressDots} rewardLabel={data.card.rewardLabel} />
@@ -209,7 +248,7 @@ export function CardPhoneView({
             {data.card.seasonProgress ? (
               <div className="mt-3 text-xs text-[#355246]">
                 <p>
-                  Etape {data.card.seasonProgress.currentStep} Ã‚Â· {data.card.seasonProgress.stepLabel}
+                  Etape {data.card.seasonProgress.currentStep} · {data.card.seasonProgress.stepLabel}
                 </p>
                 <p>
                   Domino {data.card.seasonProgress.branchesUsed}/{data.card.seasonProgress.branchCapacity}
@@ -263,7 +302,7 @@ export function CardPhoneView({
 
           {data.season ? (
             <p className="mt-4 text-xs text-[#5E6961]">
-              Saison {data.season.number} Ã‚Â· sommet {data.season.summitTitle} Ã‚Â· {data.season.daysRemaining} jours restants
+              Saison {data.season.number} · sommet {data.season.summitTitle} · {data.season.daysRemaining} jours restants
             </p>
           ) : null}
         </div>

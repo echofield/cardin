@@ -9,6 +9,7 @@ import {
   SOFT_INVITE_MAX,
   WORLD_TARGET_VISITS,
   getScreenForVisits,
+  type SummitOption,
 } from "@/lib/client-parcours-config"
 
 import { ScreenEntree } from "@/components/client-parcours/ScreenEntree"
@@ -25,6 +26,7 @@ export function ClientParcoursSimulator() {
   const [visits, setVisits] = useState(0)
   const [sharesUsed, setSharesUsed] = useState(0)
   const [softInviteUsed, setSoftInviteUsed] = useState(0)
+  const [summitChoiceId, setSummitChoiceId] = useState<string | null>(null)
 
   const targetVisits = WORLD_TARGET_VISITS[worldId]
   const world = LANDING_WORLDS[worldId]
@@ -37,6 +39,7 @@ export function ClientParcoursSimulator() {
       setVisits(0)
       setSharesUsed(0)
       setSoftInviteUsed(0)
+      setSummitChoiceId(null)
     } else {
       setVisits((v) => Math.min(v + 1, targetVisits))
     }
@@ -55,6 +58,11 @@ export function ClientParcoursSimulator() {
     setVisits(0)
     setSharesUsed(0)
     setSoftInviteUsed(0)
+    setSummitChoiceId(null)
+  }, [])
+
+  const handleSummitSelect = useCallback((option: SummitOption) => {
+    setSummitChoiceId(option.id)
   }, [])
 
   function renderScreenContent() {
@@ -106,9 +114,11 @@ export function ClientParcoursSimulator() {
       case "sommet":
         return (
           <ScreenSommet
+            worldId={worldId}
             visits={visits}
             targetVisits={targetVisits}
-            summitLabel={world.summitPromise}
+            selectedOptionId={summitChoiceId}
+            onSelectOption={handleSummitSelect}
           />
         )
       default:
@@ -123,10 +133,10 @@ export function ClientParcoursSimulator() {
         <div className="relative mx-auto max-w-xl px-4 pb-8 pt-12 sm:px-6">
           <p className="text-[11px] uppercase tracking-[0.22em] text-[#677168]">Parcours client</p>
           <h1 className="mt-4 font-serif text-4xl leading-[1.06] text-[#163328] sm:text-5xl">
-            Ce que le client vit après le scan
+            Désir par le fil
           </h1>
           <p className="mt-4 max-w-md text-sm leading-7 text-[#566159]">
-            Entrée, activation, retour, propagation, sommet — simulez le parcours complet d&apos;un client.
+            Simulation — aucun paiement, aucune obligation. Sentez la progression.
           </p>
         </div>
       </section>
@@ -162,12 +172,12 @@ export function ClientParcoursSimulator() {
           <div className="flex items-center justify-between rounded-[1.3rem] border border-[#DDE3DA] bg-[#F8FAF6] px-5 py-4">
             <div>
               <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">
-                Votre progression
+                Fil
               </p>
               <p className="mt-1 text-sm text-[#173A2E]">
-                {visits} passage{visits !== 1 ? "s" : ""} validé{visits !== 1 ? "s" : ""}
+                {visits} / {targetVisits}
                 {" · "}
-                Sommet à {targetVisits}
+                le sommet vous attend
               </p>
             </div>
             <div className="rounded-full border border-[#D8DED4] bg-[#FBFCF8] px-3 py-1.5 text-xs uppercase tracking-[0.14em] text-[#173A2E]">

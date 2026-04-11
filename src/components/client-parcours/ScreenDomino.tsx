@@ -20,13 +20,13 @@ export function ScreenDomino({ worldId, visits, targetVisits, sharesUsed, maxSha
       <div className="rounded-[1.6rem] border border-[#D8DED4] bg-[#FFFEFA] p-6">
         <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Propagation</p>
         <p className="mt-3 text-sm italic leading-7 text-[#556159]">
-          Ici le parcours s’amplifie : vous ouvrez la porte à quelqu’un d’autre, avec mesure.
+          Le parcours s’élargit — un geste, une personne.
         </p>
         <h2 className="mt-4 font-serif text-3xl leading-tight text-[#173A2E]">
-          {maxShares - sharesUsed} entrée{maxShares - sharesUsed > 1 ? "s" : ""} à partager
+          {maxShares - sharesUsed} entrée{maxShares - sharesUsed > 1 ? "s" : ""} à tendre
         </h2>
         <p className="mt-3 text-sm leading-7 text-[#556159]">
-          Donnez accès à une personne de votre choix
+          Celui ou celle que vous choisissez
         </p>
       </div>
 

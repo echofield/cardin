@@ -95,3 +95,14 @@ with check (
 create index if not exists idx_cards_merchant_id on public.cards(merchant_id);
 create index if not exists idx_transactions_card_id on public.transactions(card_id);
 create index if not exists idx_transactions_created_at on public.transactions(created_at);
+
+-- Visit sessions (client presence → merchant validation). See migration 005_visit_sessions.sql.
+create table if not exists public.visit_sessions (
+  id uuid primary key default gen_random_uuid(),
+  card_id uuid not null references public.cards(id) on delete cascade,
+  merchant_id uuid not null references public.merchants(id) on delete cascade,
+  started_at timestamptz not null default now(),
+  validated_at timestamptz
+);
+
+alter table public.cards add column if not exists last_merchant_validation_at timestamptz;
