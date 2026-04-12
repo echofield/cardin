@@ -333,6 +333,7 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
                 <StepLecture
                   demo={demo}
                   onNext={goNext}
+                  worldId={worldId}
                 />
               )}
               {step.id === "summit" && (
@@ -490,7 +491,7 @@ function StepEntry({ worldId, onSelectWorld }: { worldId: LandingWorldId; onSele
 /* ═══════════════════════════════════════════════════════════
    STEP 2 — LECTURE
    ═══════════════════════════════════════════════════════════ */
-function StepLecture({ demo, onNext }: { demo: ReturnType<typeof getDemoWorldContent>; onNext: () => void }) {
+function StepLecture({ demo, worldId, onNext }: { demo: ReturnType<typeof getDemoWorldContent>; worldId: LandingWorldId; onNext: () => void }) {
   const [phase, setPhase] = useState(0)
   useEffect(() => {
     const t1 = setTimeout(() => setPhase(1), 600)
@@ -499,14 +500,21 @@ function StepLecture({ demo, onNext }: { demo: ReturnType<typeof getDemoWorldCon
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
   }, [])
 
-  const lostPerSeason = demo.lostRevenuePerMonth * demo.seasonMonths
-  const lostClientsSeason = demo.lostClientsPerMonth * demo.seasonMonths
+  const market = LANDING_WORLDS[worldId]
+  const band = market.seasonRevenueBandEuro
+  /** Même cadrage € que la fin du parcours / landing — pas le volume brut moteur × perte. */
+  const stakeMidSeason = Math.round((band.min + band.max) / 2)
+  const monthlyStakeMid = Math.round(stakeMidSeason / demo.seasonMonths)
+  const equivVisitsMonth = Math.max(1, Math.round(monthlyStakeMid / Math.max(0.01, demo.avgTicket)))
+  const equivVisitsSeason = equivVisitsMonth * demo.seasonMonths
 
   return (
     <>
       <StepHeader num="02" label="Lecture" />
       <StepTitle>Ce que le lieu perd aujourd&apos;hui.</StepTitle>
-      <StepSubtitle>Base sur {demo.monthlyClients} clients/mois et un taux de perte de {demo.inactivePercent}%.</StepSubtitle>
+      <StepSubtitle>
+        Cadrage aligné sur « {market.claim} » · panier indicatif {market.basket} · fuite estimée {demo.inactivePercent}% (ordre de grandeur).
+      </StepSubtitle>
 
       <motion.div
         animate={{ opacity: phase >= 1 ? 1 : 0, y: phase >= 1 ? 0 : 16 }}
@@ -516,16 +524,19 @@ function StepLecture({ demo, onNext }: { demo: ReturnType<typeof getDemoWorldCon
         transition={{ duration: 0.4 }}
       >
         <div style={{ fontSize: "0.65rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "rgba(250,248,242,0.5)", marginBottom: "0.5rem" }}>
-          Clients perdus sur la saison ({demo.seasonMonths} mois)
+          Fuite estimée sur la saison ({demo.seasonMonths} mois)
         </div>
         <div className="font-serif" style={{ fontSize: "clamp(2.5rem, 6vw, 3.5rem)", color: "#FAF8F2", lineHeight: 1, letterSpacing: "-0.03em" }}>
-          ~{lostClientsSeason}
+          ~{equivVisitsSeason}
+        </div>
+        <div style={{ fontSize: "0.72rem", color: "rgba(250,248,242,0.55)", marginTop: "0.35rem", lineHeight: 1.35 }}>
+          Équivalent passages non valorisés (à partir du panier indicatif).
         </div>
         <div style={{ fontSize: "0.8rem", color: "rgba(250,248,242,0.6)", marginTop: "0.5rem" }}>
-          soit {formatEuro(lostPerSeason)} de revenu non capte
+          soit {formatEuro(band.min)} à {formatEuro(band.max)} de revenu non capté
         </div>
         <div style={{ fontSize: "0.65rem", color: "rgba(250,248,242,0.35)", marginTop: "0.25rem" }}>
-          {demo.lostClientsPerMonth}/mois · {formatEuro(demo.lostRevenuePerMonth)}/mois
+          ~{equivVisitsMonth}/mois · ~{formatEuro(monthlyStakeMid)}/mois
         </div>
       </motion.div>
 
