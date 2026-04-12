@@ -6,7 +6,7 @@ import { getSummitPresets } from "@/lib/season-law"
  *
  * - world: marketing sector → `LandingWorldId`, matches `template` on `/engine` for café / restaurant / beauté / boutique.
  * - summit: marketing style `visible | stronger | discreet` → engine `summit` query must be a real preset id from `getSummitPresets(templateId)`.
- * - season: `3 | 6` → `season` query on `/engine` (normalized in EngineFlow).
+ * - season: `3` (mois) → `season` query on `/engine` (normalized in EngineFlow).
  *
  * Optional later: same shape can feed `POST /api/leads` (activityTemplateId, summitId, seasonLength, …) after auth.
  */
@@ -45,7 +45,8 @@ export function resolveEngineSummitId(worldId: LandingWorldId, summitStyle: Parc
 export function buildParcoursEngineHref(params: {
   worldId: LandingWorldId
   summitStyle: ParcoursSummitStyleId
-  seasonMonths: 3 | 6
+  /** Offre actuelle : saison 3 mois uniquement. */
+  seasonMonths: 3
 }): string {
   const template = landingWorldToEngineTemplateId(params.worldId)
   const summit = resolveEngineSummitId(params.worldId, params.summitStyle)

@@ -6,7 +6,7 @@ import type { ParcoursProjectionResult } from "@/lib/demo-content"
 
 type Props = {
   projection: ParcoursProjectionResult
-  seasonMonths: 3 | 6
+  seasonMonths: 3
   reveal: boolean
 }
 

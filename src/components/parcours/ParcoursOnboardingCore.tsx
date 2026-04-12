@@ -27,7 +27,7 @@ import {
  * Mapping contract (Figma / Glow → Cardin-native):
  * - world → LandingWorldId (cafe | bar | restaurant | beaute | boutique)
  * - summit → ParcoursSummitStyleId (visible | stronger | discreet)
- * - season → 3 | 6 (from getDemoWorldContent.seasonMonths)
+ * - season → 3 mois (getDemoWorldContent, aligné moteur)
  * - final CTA → /engine?template=…&summit=…&season=…  (via buildParcoursEngineHref)
  * - (optional later) same payload shape reusable for POST /api/leads
  *
@@ -367,6 +367,7 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
                   projectionFull={projectionFull}
                   seasonMonths={seasonMonths}
                   summitMultiplier={summit.multiplier}
+                  worldId={worldId}
                 />
               )}
               {step.id === "activation" && (
@@ -929,15 +930,17 @@ function StepProjection({
   isLite,
   headerNum = "05",
   liteHintLabel = "",
+  worldId,
 }: {
   demo: ReturnType<typeof getDemoWorldContent>
   projectionFull: ParcoursProjectionResult
-  seasonMonths: 3 | 6
+  seasonMonths: 3
   summitMultiplier: number
   onNext: () => void
   isLite?: boolean
   headerNum?: string
   liteHintLabel?: string
+  worldId: LandingWorldId
 }) {
   const [reveal, setReveal] = useState(false)
   useEffect(() => {
@@ -945,10 +948,15 @@ function StepProjection({
     return () => clearTimeout(t)
   }, [])
 
+  const marketBand = LANDING_WORLDS[worldId].seasonRevenueBandEuro
+  const monthlyBandLow = Math.round(marketBand.min / seasonMonths)
+  const monthlyBandHigh = Math.round(marketBand.max / seasonMonths)
+
   const seasonLayers = projectionFull.layers
-  const animatedNetSeason = useCountUp(projectionFull.netCardinSeason, 1600, reveal)
-  const animatedLow = useCountUp(projectionFull.monthlyLow, 1300, reveal)
-  const animatedHigh = useCountUp(projectionFull.monthlyHigh, 1500, reveal)
+  const animatedBandMin = useCountUp(marketBand.min, 1600, reveal)
+  const animatedBandMax = useCountUp(marketBand.max, 1800, reveal)
+  const animatedMonthlyLow = useCountUp(monthlyBandLow, 1300, reveal)
+  const animatedMonthlyHigh = useCountUp(monthlyBandHigh, 1500, reveal)
 
   const baseLayers = [
     {
@@ -1068,17 +1076,17 @@ function StepProjection({
         transition={{ duration: 0.4, delay: 0.75 }}
       >
         <div style={{ fontSize: "0.65rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "rgba(250,248,242,0.5)", marginBottom: "0.5rem" }}>
-          Revenu net sur la saison ({seasonMonths} mois)
+          Revenu supplémentaire sur la saison ({seasonMonths} mois)
         </div>
-        <div className="font-serif" style={{ fontSize: "clamp(2rem, 5.5vw, 3rem)", color: "#FAF8F2", lineHeight: 1, letterSpacing: "-0.03em" }}>
-          +{animatedNetSeason.toLocaleString("fr-FR")} EUR
+        <div className="font-serif" style={{ fontSize: "clamp(1.65rem, 5vw, 2.75rem)", color: "#FAF8F2", lineHeight: 1.12, letterSpacing: "-0.03em" }}>
+          +{animatedBandMin.toLocaleString("fr-FR")} à +{animatedBandMax.toLocaleString("fr-FR")} €
         </div>
-        <div style={{ fontSize: "0.72rem", color: "rgba(250,248,242,0.55)", marginTop: "0.5rem", lineHeight: 1.45 }}>
-          Projection nette après récompenses et coûts système · panier moyen {formatEuro(demo.avgTicket)}
+        <div style={{ fontSize: "0.72rem", color: "rgba(250,248,242,0.55)", marginTop: "0.55rem", lineHeight: 1.45 }}>
+          Même fourchette que la section « Par type de commerce » · panier indicatif {LANDING_WORLDS[worldId].basket}
         </div>
       </motion.div>
 
-      {/* Secondary: net monthly band */}
+      {/* Secondary: indicative monthly band (from landing range) */}
       <motion.div
         animate={{ opacity: reveal ? 1 : 0, y: reveal ? 0 : 10 }}
         className="mb-3 rounded-xl p-4"
@@ -1087,13 +1095,14 @@ function StepProjection({
         transition={{ duration: 0.4, delay: 0.82 }}
       >
         <div style={{ fontSize: "0.6rem", letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--cardin-label)", marginBottom: "0.35rem" }}>
-          Net mensuel (fourchette)
+          Équivalent mensuel (indicatif)
         </div>
         <div className="font-serif" style={{ fontSize: "1.35rem", color: "var(--cardin-green-primary)", letterSpacing: "-0.02em" }}>
-          +{animatedLow.toLocaleString("fr-FR")}–{animatedHigh.toLocaleString("fr-FR")} EUR
+          +{animatedMonthlyLow.toLocaleString("fr-FR")}–{animatedMonthlyHigh.toLocaleString("fr-FR")} €
         </div>
         <div style={{ fontSize: "0.7rem", color: "var(--cardin-label)", marginTop: "0.35rem" }}>
-          Moyenne nette {projectionFull.monthlyAverage.toLocaleString("fr-FR")} EUR/mois · {projectionFull.monthlyReturns} retours/mois · payback ~{demo.projectedPaybackDays} j · {demo.confidenceLabel}
+          Dérivé de la fourchette saison (÷ {seasonMonths}). Détail moteur : ~{projectionFull.monthlyAverage.toLocaleString("fr-FR")} €/mois net modèle ·{" "}
+          {projectionFull.monthlyReturns} retours/mois · payback ~{demo.projectedPaybackDays} j · {demo.confidenceLabel}
         </div>
       </motion.div>
 
@@ -1115,7 +1124,11 @@ function StepProjection({
         {isLite ? (
           <>
             <MiniStat color="var(--cardin-green-secondary)" label="Porteurs" value={`${seasonLayers.activeCardholders}`} />
-            <MiniStat color="var(--cardin-green-primary)" label="Net saison" value={`${Math.round((projectionFull.netCardinSeason * 0.92) / 1000)}–${Math.round((projectionFull.netCardinSeason * 1.08) / 1000)}k`} />
+            <MiniStat
+              color="var(--cardin-green-primary)"
+              label="Fourchette saison"
+              value={`${Math.round(marketBand.min / 1000)}–${Math.round(marketBand.max / 1000)} k€`}
+            />
           </>
         ) : (
           <>
@@ -1123,8 +1136,8 @@ function StepProjection({
             <MiniStat color="var(--cardin-summit-gold)" label="Sommet" value={`×${summitMultiplier.toLocaleString("fr-FR")}`} />
             <MiniStat
               color="var(--cardin-green-primary)"
-              label="Net saison"
-              value={`${Math.round((projectionFull.netCardinSeason * 0.92) / 1000)}–${Math.round((projectionFull.netCardinSeason * 1.08) / 1000)}k`}
+              label="Fourchette saison"
+              value={`${Math.round(marketBand.min / 1000)}–${Math.round(marketBand.max / 1000)} k€`}
             />
           </>
         )}
@@ -1161,7 +1174,7 @@ function StepActivation({
 }: {
   demo: ReturnType<typeof getDemoWorldContent>
   projectionFull: ParcoursProjectionResult
-  seasonMonths: 3 | 6
+  seasonMonths: 3
   summit: SummitOption
   worldId: LandingWorldId
   engineHref: string
@@ -1260,13 +1273,13 @@ function StepActivation({
         transition={{ duration: 0.4 }}
       >
         <div style={{ fontSize: "0.55rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "rgba(250,248,242,0.5)", marginBottom: "0.6rem" }}>
-          Indicateur modèle ({seasonMonths} mois)
+          Objectif revenu saison ({seasonMonths} mois)
         </div>
-        <div className="font-serif" style={{ fontSize: "clamp(1.75rem, 5vw, 2.75rem)", color: "#FAF8F2", lineHeight: 1, letterSpacing: "-0.03em" }}>
-          +{projectionFull.netCardinSeason.toLocaleString("fr-FR")} €
+        <div className="font-serif" style={{ fontSize: "clamp(1.35rem, 4.5vw, 2.35rem)", color: "#FAF8F2", lineHeight: 1.15, letterSpacing: "-0.03em" }}>
+          {world.claim}
         </div>
         <div style={{ fontSize: "0.7rem", color: "rgba(250,248,242,0.58)", marginTop: "0.65rem", lineHeight: 1.5 }}>
-          Projection nette après récompenses et coûts sur vos paramètres actuels · ~{projectionFull.netCardinMonth.toLocaleString("fr-FR")} € / mois · payback ~{demo.projectedPaybackDays} j
+          Aligné avec « Par type de commerce » sur l&apos;accueil. Modèle interne (démo) : ~{projectionFull.netCardinSeason.toLocaleString("fr-FR")} € net sur la saison · ~{projectionFull.netCardinMonth.toLocaleString("fr-FR")} €/mois · payback ~{demo.projectedPaybackDays} j
         </div>
       </motion.div>
 
@@ -1310,7 +1323,8 @@ function StepActivation({
             { label: "Saison", value: `${seasonMonths} mois` },
             ...(isLite ? [] : [{ label: "Sommet", value: summitLabel }]),
             { label: "Porteurs actifs", value: `${seasonLayers.activeCardholders}` },
-            { label: "Revenu net saison", value: `${projectionFull.netCardinSeason.toLocaleString("fr-FR")} EUR` },
+            { label: "Fourchette marché (saison)", value: world.claim },
+            { label: "Revenu net saison (modèle)", value: `${projectionFull.netCardinSeason.toLocaleString("fr-FR")} EUR` },
             {
               label: "Activation",
               value: isLite

@@ -9,7 +9,8 @@ import { SEASON_FRAME_BY_LANDING } from "@/lib/merchant-season-framing"
 import { Button, Card } from "@/ui"
 
 type WorldId = "cafe" | "restaurant" | "beaute" | "boutique"
-type SeasonLength = 3 | 6
+/** Offre actuelle : une seule saison calibrée (3 mois), alignée landing / moteur. */
+type SeasonLength = 3
 
 type EntryLane = {
   title: string
@@ -102,21 +103,12 @@ const seasonModes: Array<{
 }> = [
   {
     months: 3,
-    title: "Saison courte",
-    description: "Cycle rapide pour prouver le retour client.",
+    title: "Saison Cardin",
+    description: "Cycle standard pour prouver le retour client et lancer la suite.",
     selectiveCards: 50,
     massCards: 200,
-    note: "Format simple, première preuve terrain.",
+    note: "Seule offre saison pour l’instant : 3 mois calibrés avec vous.",
     momentum: "3 mois : activation, retour client, premiers Diamond.",
-  },
-  {
-    months: 6,
-    title: "Saison longue",
-    description: "Plus de temps pour installer le réseau.",
-    selectiveCards: 80,
-    massCards: 280,
-    note: "Format long, réseau plus profond.",
-    momentum: "6 mois : réseau activé, bouche-à-oreille structuré, préparation saison 2.",
   },
 ]
 
@@ -453,7 +445,7 @@ function buildEngineHref(worldId: WorldId, season: SeasonLength, summitId: strin
 
 export function MerchantSeasonStudio() {
   const [selectedWorldId, setSelectedWorldId] = useState<WorldId>("cafe")
-  const [selectedSeason, setSelectedSeason] = useState<SeasonLength>(3)
+  const selectedSeason: SeasonLength = 3
   const [selectedSummitId, setSelectedSummitId] = useState(worlds[0].defaultSummitId)
   const [screenIndex, setScreenIndex] = useState(0)
   const [showAdvancedSteps, setShowAdvancedSteps] = useState(false)
@@ -474,10 +466,8 @@ export function MerchantSeasonStudio() {
 
   const selectedSeasonMode = seasonModes.find((mode) => mode.months === selectedSeason) ?? seasonModes[0]
 
-  const monthlyRecovered = Math.round(
-    selectedWorld.baselineMonthlyRecovered * selectedSummit.monthlyRecoveredBoost * (selectedSeason === 6 ?1.06 : 1)
-  )
-  const activePaths = Math.round(selectedWorld.baselineActivePaths * (selectedSeason === 6 ?1.15 : 1))
+  const monthlyRecovered = Math.round(selectedWorld.baselineMonthlyRecovered * selectedSummit.monthlyRecoveredBoost)
+  const activePaths = Math.round(selectedWorld.baselineActivePaths)
   const trustScore = Math.round(selectedWorld.baselineTrust * selectedSummit.trustLift)
   const dominoMultiplier = (selectedWorld.baselineDominoMultiplier * selectedSummit.dominoBoost).toFixed(1)
   const seasonValue = monthlyRecovered * selectedSeason
@@ -500,7 +490,7 @@ export function MerchantSeasonStudio() {
               Voyez le revenu récupérable selon votre lieu.
             </h2>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-[#556159] sm:text-base">
-              Ajustez le type de commerce et la durée : Cardin estime l’impact sur le revenu, le réseau et l’affluence.
+              Ajustez le type de commerce : Cardin estime l’impact sur le revenu, le réseau et l’affluence (saison 3 mois).
             </p>
             <p className="mt-2 max-w-2xl text-sm leading-7 text-[#6B756E] sm:text-base">
               Simulation basée sur votre activité. Ajustable selon votre réalité.
@@ -590,7 +580,7 @@ export function MerchantSeasonStudio() {
             <SummitScreen monthlyRecovered={monthlyRecovered} onSelectSummit={setSelectedSummitId} selectedSummit={selectedSummit} selectedWorld={selectedWorld} />
           ) : null}
           {screenIndex === 3 ?(
-            <SeasonScreen activePaths={activePaths} monthlyRecovered={monthlyRecovered} onSelectSeason={setSelectedSeason} selectedSeason={selectedSeason} selectedSeasonMode={selectedSeasonMode} selectedSummit={selectedSummit} />
+            <SeasonScreen activePaths={activePaths} monthlyRecovered={monthlyRecovered} selectedSeasonMode={selectedSeasonMode} selectedSummit={selectedSummit} />
           ) : null}
 
           {screenIndex === 4 ?(
@@ -802,32 +792,26 @@ function SummitScreen({ selectedWorld, selectedSummit, onSelectSummit, monthlyRe
   )
 }
 
-function SeasonScreen({ selectedSeason, onSelectSeason, selectedSeasonMode, selectedSummit, monthlyRecovered, activePaths }: { selectedSeason: SeasonLength; onSelectSeason: (season: SeasonLength) => void; selectedSeasonMode: (typeof seasonModes)[number]; selectedSummit: SummitOption; monthlyRecovered: number; activePaths: number }) {
+function SeasonScreen({ selectedSeasonMode, selectedSummit, monthlyRecovered, activePaths }: { selectedSeasonMode: (typeof seasonModes)[number]; selectedSummit: SummitOption; monthlyRecovered: number; activePaths: number }) {
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
       <div>
         <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Retour sur la durée</p>
-        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Combien de temps pour installer le retour.</h3>
+        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Saison unique : 3 mois.</h3>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">
-          Une fenêtre limitée (saison) crée de la valeur : la première preuve ouvre la suivante.
+          Une fenêtre limitée crée de la valeur : la première preuve ouvre la suivante. Cardin se concentre sur cette
+          cadence pour l’instant.
         </p>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          {seasonModes.map((mode) => {
-            const isActive = mode.months === selectedSeason
-            return (
-              <button className={["rounded-[1.45rem] border p-5 text-left transition-all", isActive ?"border-[#173A2E] bg-[linear-gradient(180deg,#EEF3EC_0%,#E8EFE7_100%)] shadow-[0_18px_40px_-34px_rgba(23,58,46,0.55)]" : "border-[#E3DDD0] bg-[#FFFEFA] hover:border-[#B8C4B8] hover:bg-[#FAF8F1]"].join(" ")} key={mode.months} onClick={() => onSelectSeason(mode.months)} type="button">
-                <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">{mode.months} mois</p>
-                <p className="mt-2 font-serif text-3xl text-[#173A2E]">{mode.title}</p>
-                <p className="mt-3 text-sm leading-7 text-[#556159]">{mode.description}</p>
-                <div className="mt-4 space-y-2 text-sm text-[#203B31]">
-                  <p>{mode.selectiveCards} cartes sélectives max</p>
-                  <p>{mode.massCards} cartes diffusion large max</p>
-                </div>
-                <p className="mt-4 text-xs leading-6 text-[#6D776F]">{mode.note}</p>
-              </button>
-            )
-          })}
+        <div className="mt-6 rounded-[1.45rem] border border-[#173A2E] bg-[linear-gradient(180deg,#EEF3EC_0%,#E8EFE7_100%)] p-5 shadow-[0_18px_40px_-34px_rgba(23,58,46,0.55)]">
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">{selectedSeasonMode.months} mois</p>
+          <p className="mt-2 font-serif text-3xl text-[#173A2E]">{selectedSeasonMode.title}</p>
+          <p className="mt-3 text-sm leading-7 text-[#556159]">{selectedSeasonMode.description}</p>
+          <div className="mt-4 space-y-2 text-sm text-[#203B31]">
+            <p>{selectedSeasonMode.selectiveCards} cartes sélectives max</p>
+            <p>{selectedSeasonMode.massCards} cartes diffusion large max</p>
+          </div>
+          <p className="mt-4 text-xs leading-6 text-[#6D776F]">{selectedSeasonMode.note}</p>
         </div>
       </div>
 

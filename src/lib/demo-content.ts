@@ -1,4 +1,5 @@
 import { LANDING_PRICING, LANDING_WORLDS, type LandingWorldId } from "@/lib/landing-content"
+import { getEngineAlignedAssumptions } from "@/lib/engine-aligned-assumptions"
 import { getTemplateById } from "@/lib/merchant-templates"
 import { computeParcoursProjectionFull } from "@/lib/parcours-projection"
 
@@ -11,7 +12,7 @@ export type DemoWorldContent = {
   sampleClientName: string
   summitLabel: string
   targetVisits: number
-  seasonMonths: 3 | 6
+  seasonMonths: 3
   seasonLabel: string
   invitePrompt: string
   returnPrompt: string
@@ -37,11 +38,7 @@ type DemoWorldAssumptions = {
   businessName: string
   businessTypeLabel: string
   sampleClientName: string
-  seasonMonths: 3 | 6
   merchantType: string
-  monthlyClients: number
-  avgTicket: number
-  inactivePercent: number
   invitePrompt: string
   returnPrompt: string
   weakDayPrompt: string
@@ -52,11 +49,7 @@ const DEMO_WORLD_ASSUMPTIONS: Record<LandingWorldId, DemoWorldAssumptions> = {
     businessName: "Café Brûlerie",
     businessTypeLabel: "Café",
     sampleClientName: "Marie L.",
-    seasonMonths: 3,
     merchantType: "cafe",
-    monthlyClients: 420,
-    avgTicket: 6.5,
-    inactivePercent: 28,
     invitePrompt: "1 invitation restante",
     returnPrompt: "Revenez dans 3 jours",
     weakDayPrompt: "Lundi calme",
@@ -65,11 +58,7 @@ const DEMO_WORLD_ASSUMPTIONS: Record<LandingWorldId, DemoWorldAssumptions> = {
     businessName: "Bar Huit",
     businessTypeLabel: "Bar",
     sampleClientName: "Thomas R.",
-    seasonMonths: 3,
     merchantType: "bar",
-    monthlyClients: 280,
-    avgTicket: 14,
-    inactivePercent: 30,
     invitePrompt: "1 invitation restante",
     returnPrompt: "Revenez ce week-end",
     weakDayPrompt: "Mardi plus calme",
@@ -78,11 +67,7 @@ const DEMO_WORLD_ASSUMPTIONS: Record<LandingWorldId, DemoWorldAssumptions> = {
     businessName: "Maison Serein",
     businessTypeLabel: "Restaurant",
     sampleClientName: "Claire M.",
-    seasonMonths: 3,
     merchantType: "restaurant",
-    monthlyClients: 185,
-    avgTicket: 48,
-    inactivePercent: 24,
     invitePrompt: "Invitez une table amie",
     returnPrompt: "Revenez cette semaine",
     weakDayPrompt: "Mardi plus calme",
@@ -91,11 +76,7 @@ const DEMO_WORLD_ASSUMPTIONS: Record<LandingWorldId, DemoWorldAssumptions> = {
     businessName: "Atelier Source",
     businessTypeLabel: "Beauté",
     sampleClientName: "Inès R.",
-    seasonMonths: 3,
     merchantType: "institut-beaute",
-    monthlyClients: 95,
-    avgTicket: 72,
-    inactivePercent: 26,
     invitePrompt: "Transmission ouverte",
     returnPrompt: "Votre prochain soin compte",
     weakDayPrompt: "Jeudi plus souple",
@@ -104,11 +85,7 @@ const DEMO_WORLD_ASSUMPTIONS: Record<LandingWorldId, DemoWorldAssumptions> = {
     businessName: "Maison Tissu",
     businessTypeLabel: "Boutique",
     sampleClientName: "Léa D.",
-    seasonMonths: 3,
     merchantType: "boutique",
-    monthlyClients: 110,
-    avgTicket: 56,
-    inactivePercent: 24,
     invitePrompt: "Une amie à inviter",
     returnPrompt: "Votre prochaine visite débloque la suite",
     weakDayPrompt: "Mercredi plus calme",
@@ -119,24 +96,26 @@ export function getDemoWorldContent(worldId: LandingWorldId): DemoWorldContent {
   const world = LANDING_WORLDS[worldId]
   const assumptions = DEMO_WORLD_ASSUMPTIONS[worldId]
   const template = getTemplateById(assumptions.merchantType)
-  const recoveryPercent = Math.round(template.defaults.calculator_recovery_rate * 100)
+  const aligned = getEngineAlignedAssumptions(assumptions.merchantType)
+  const recoveryPercent = aligned.recoveryPercent
+  const seasonMonths = 3 as const
 
   const engine = computeParcoursProjectionFull(
     {
       merchantType: assumptions.merchantType,
-      monthlyClients: assumptions.monthlyClients,
-      avgTicket: assumptions.avgTicket,
-      inactivePercent: assumptions.inactivePercent,
+      monthlyClients: aligned.monthlyClients,
+      avgTicket: aligned.avgTicket,
+      inactivePercent: aligned.inactivePercent,
       recoveryPercent,
-      seasonMonths: assumptions.seasonMonths,
+      seasonMonths,
     },
     1,
     undefined,
     { lite: false },
   )
 
-  const lostClientsPerMonth = Math.round(assumptions.monthlyClients * (assumptions.inactivePercent / 100))
-  const lostRevenuePerMonth = Math.round(lostClientsPerMonth * assumptions.avgTicket)
+  const lostClientsPerMonth = Math.round(aligned.monthlyClients * (aligned.inactivePercent / 100))
+  const lostRevenuePerMonth = Math.round(lostClientsPerMonth * aligned.avgTicket)
 
   const dailyNet = engine.netCardinMonth / 26
   const projectedPaybackDays =
@@ -148,15 +127,15 @@ export function getDemoWorldContent(worldId: LandingWorldId): DemoWorldContent {
     sampleClientName: assumptions.sampleClientName,
     summitLabel: world.summitPromise,
     targetVisits: template.defaults.target_visits,
-    seasonMonths: assumptions.seasonMonths,
-    seasonLabel: assumptions.seasonMonths === 3 ? "Saison — 3 mois" : "Saison longue — 6 mois",
+    seasonMonths,
+    seasonLabel: "Saison — 3 mois",
     invitePrompt: assumptions.invitePrompt,
     returnPrompt: assumptions.returnPrompt,
     weakDayPrompt: assumptions.weakDayPrompt,
     merchantType: assumptions.merchantType,
-    monthlyClients: assumptions.monthlyClients,
-    avgTicket: assumptions.avgTicket,
-    inactivePercent: assumptions.inactivePercent,
+    monthlyClients: aligned.monthlyClients,
+    avgTicket: aligned.avgTicket,
+    inactivePercent: aligned.inactivePercent,
     recoveryPercent,
     lostClientsPerMonth,
     lostRevenuePerMonth,

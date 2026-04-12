@@ -4,6 +4,8 @@ type LandingWorldContent = {
   label: string
   eyebrow: string
   claim: string
+  /** Même fourchette que `claim` — usage parcours / animations. */
+  seasonRevenueBandEuro: { min: number; max: number }
   basket: string
   onboardingLead: string
   proofLine: string
@@ -46,6 +48,7 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
     label: "Café",
     eyebrow: "Volume et fréquence",
     claim: "+2 000 € à +6 000 € par saison",
+    seasonRevenueBandEuro: { min: 2000, max: 6000 },
     basket: "Panier moyen 5 à 8 €",
     onboardingLead:
       "Moteur de revenu saisonnier : Diamond visible dès le départ, missions sur le parcours, retour et recommandation activés.",
@@ -58,6 +61,7 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
     label: "Bar",
     eyebrow: "Soirée & comptoir",
     claim: "+3 000 € à +8 000 € par saison",
+    seasonRevenueBandEuro: { min: 3000, max: 8000 },
     basket: "Panier moyen 10 à 20 €",
     onboardingLead:
       "Moteur de revenu sur le créneau soir : Diamond visible dès le départ, réseau naturel et créations au comptoir.",
@@ -70,6 +74,7 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
     label: "Restaurant",
     eyebrow: "Panier moyen élevé",
     claim: "+4 000 € à +10 000 € par saison",
+    seasonRevenueBandEuro: { min: 4000, max: 10000 },
     basket: "Panier moyen 40 à 60 €",
     onboardingLead:
       "Objectif de saison ambitieux : Diamond comme horizon, réseau de tables et récurrence entre deux services.",
@@ -82,6 +87,7 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
     label: "Beauté",
     eyebrow: "Valeur et sélection",
     claim: "+4 000 € à +10 000 € par saison",
+    seasonRevenueBandEuro: { min: 4000, max: 10000 },
     basket: "Valeur client élevée",
     onboardingLead:
       "Revenu saisonnier calibré : Diamond comme statut long terme, missions qui structurent la récurrence.",
@@ -94,6 +100,7 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
     label: "Boutique",
     eyebrow: "Désir et statut",
     claim: "+5 000 € à +12 000 € par saison",
+    seasonRevenueBandEuro: { min: 5000, max: 12000 },
     basket: "Valeur client élevée",
     onboardingLead:
       "Saison orientée désir : Diamond comme expérience régulière, upside fort quand le réseau s’active.",
