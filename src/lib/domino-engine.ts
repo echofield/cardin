@@ -1,13 +1,11 @@
-import type { SupabaseClient } from "@supabase/supabase-js"
+﻿import type { SupabaseClient } from "@supabase/supabase-js"
 
+import { hasCardEarnedDiamondRights, maybeLogPropagationCredit, getMerchantProtocolSettings } from "./cardin-protocol-runtime"
 import { recomputeCardScoreSnapshot } from "./cardin-scoring"
 import { cardinSeasonLaw } from "./season-law"
 import type { CardSeasonProgress, Season } from "./season-progression"
 import { getCardSeasonProgress, validateSeasonActive } from "./season-progression"
 import { insertTransactionEvent } from "./transaction-events"
-// ============================================================================
-// TYPES
-// ============================================================================
 
 export type CardReferral = {
   id: string
@@ -39,61 +37,27 @@ export type CanInviteResult = {
   branchCapacity?: number
 }
 
-// ============================================================================
-// BRANCH CAPACITY CALCULATION
-// ============================================================================
-
-/**
- * Calculate branch capacity based on current step and activations
- *
- * Domino (step 5-6): 2 direct slots
- * Diamond (step 7+):  2 direct + 1 per activated child (max 5 total)
- */
-export function calculateBranchCapacity(progress: CardSeasonProgress): number {
-  const { current_step, direct_invitations_activated } = progress
-
-  if (current_step < cardinSeasonLaw.dominoStartStep) {
-    return 0 // Not yet Domino
+export function calculateBranchCapacity(progress: CardSeasonProgress, maxInvites = 2): number {
+  if (progress.current_step < cardinSeasonLaw.dominoStartStep) {
+    return 0
   }
 
-  if (current_step < cardinSeasonLaw.diamondStep) {
-    // Domino level: fixed 2 direct slots
-    return cardinSeasonLaw.directDominoBranches
-  }
-
-  // Diamond level: 2 direct + 1 per activated child
-  const directSlots = cardinSeasonLaw.directDominoBranches
-  const secondRingSlots = direct_invitations_activated * cardinSeasonLaw.secondRingBranches
-
-  // Cap at maxReachPerStrongCard from season law
-  return Math.min(directSlots + secondRingSlots, cardinSeasonLaw.maxReachPerStrongCard)
+  return Math.max(0, maxInvites)
 }
 
-/**
- * Calculate remaining invitation slots
- */
-export function calculateRemainingSlots(progress: CardSeasonProgress): number {
-  const capacity = calculateBranchCapacity(progress)
-  const used = progress.branches_used
-  return Math.max(0, capacity - used)
+export function calculateRemainingSlots(progress: CardSeasonProgress, maxInvites = 2): number {
+  const capacity = calculateBranchCapacity(progress, maxInvites)
+  return Math.max(0, capacity - progress.branches_used)
 }
 
-// ============================================================================
-// INVITATION VALIDATION
-// ============================================================================
-
-/**
- * Check if a card can create invitations
- */
 export async function canInvite(
   supabase: SupabaseClient,
   parentCardId: string,
-  seasonId: string
+  seasonId: string,
 ): Promise<CanInviteResult> {
-  // Get season
   const { data: season, error: seasonError } = await supabase
     .from("seasons")
-    .select("*")
+    .select("id, merchant_id, closed_at")
     .eq("id", seasonId)
     .single()
 
@@ -101,51 +65,44 @@ export async function canInvite(
     return { canInvite: false, reason: "season_not_found" }
   }
 
-  // Check season is active
   if (!validateSeasonActive(season as Season)) {
     return { canInvite: false, reason: "season_closed" }
   }
 
-  // Get parent progress
   const progress = await getCardSeasonProgress(supabase, parentCardId, seasonId)
-
   if (!progress) {
     return { canInvite: false, reason: "progress_not_found" }
   }
 
-  // Check parent has unlocked Domino (step 5+)
   if (progress.current_step < cardinSeasonLaw.dominoStartStep) {
-    return { canInvite: false, reason: "domino_not_unlocked" }
+    return { canInvite: false, reason: "domino_not_unlocked", branchCapacity: 0, remainingSlots: 0 }
   }
 
-  // Check capacity
-  const capacity = calculateBranchCapacity(progress)
-  const remaining = calculateRemainingSlots(progress)
+  const earnedDiamond = await hasCardEarnedDiamondRights(supabase, parentCardId)
+  if (!earnedDiamond) {
+    return { canInvite: false, reason: "diamond_not_earned", branchCapacity: 0, remainingSlots: 0 }
+  }
+
+  const settings = await getMerchantProtocolSettings(supabase, season.merchant_id)
+  const maxInvites = settings?.config.funnel.maxInvites ?? 2
+  const capacity = calculateBranchCapacity(progress, maxInvites)
+  const remaining = calculateRemainingSlots(progress, maxInvites)
 
   if (remaining <= 0) {
-    return { canInvite: false, reason: "branch_limit_reached", branchCapacity: capacity }
+    return { canInvite: false, reason: "branch_limit_reached", branchCapacity: capacity, remainingSlots: 0 }
   }
 
   return { canInvite: true, remainingSlots: remaining, branchCapacity: capacity }
 }
 
-// ============================================================================
-// INVITATION CREATION
-// ============================================================================
-
-/**
- * Create an invitation (child card + referral record)
- */
 export async function createInvitation(
   supabase: SupabaseClient,
   parentCardId: string,
   seasonId: string,
   childCustomerName: string,
-  merchantId: string
+  merchantId: string,
 ): Promise<InvitationResult> {
-  // Validate parent can invite
   const validation = await canInvite(supabase, parentCardId, seasonId)
-
   if (!validation.canInvite) {
     return {
       success: false,
@@ -153,27 +110,11 @@ export async function createInvitation(
     }
   }
 
-  // Get parent progress to determine branch level
   const parentProgress = await getCardSeasonProgress(supabase, parentCardId, seasonId)
   if (!parentProgress) {
     return { success: false, error: "parent_progress_not_found" }
   }
 
-  // Determine branch level (1 = direct from Diamond, 2 = second ring)
-  const branchLevel = 1 // For now, all invitations are direct
-
-  // Create child card
-  const { data: season } = await supabase
-    .from("seasons")
-    .select("merchant_id")
-    .eq("id", seasonId)
-    .single()
-
-  if (!season) {
-    return { success: false, error: "season_not_found" }
-  }
-
-  // Get merchant config for default values
   const { data: merchant } = await supabase
     .from("merchants")
     .select("target_visits, reward_label")
@@ -185,7 +126,7 @@ export async function createInvitation(
     .insert({
       merchant_id: merchantId,
       customer_name: childCustomerName,
-      stamps: 1, // Initial visit
+      stamps: 1,
       target_visits: merchant?.target_visits ?? 10,
       reward_label: merchant?.reward_label ?? "1 recompense offerte",
       current_season_id: seasonId,
@@ -197,42 +138,41 @@ export async function createInvitation(
     return { success: false, error: `Failed to create card: ${cardError?.message}` }
   }
 
-  // Create initial transaction for child card
-  await supabase.from("transactions").insert({
-    card_id: childCard.id,
-    type: "issued",
-    season_id: seasonId,
-    step_reached: 1,
+  await insertTransactionEvent(supabase, {
+    cardId: childCard.id,
+    legacyType: "issued",
+    eventType: "issued",
+    seasonId,
+    stepReached: 1,
+    source: "invite",
+    metadata: { invitedBy: parentCardId },
   })
 
-  // Create card season progress for child
   await supabase.from("card_season_progress").insert({
     card_id: childCard.id,
     season_id: seasonId,
     current_step: 1,
     step_reached_at: new Date().toISOString(),
+    total_branch_capacity: validation.branchCapacity ?? 0,
   })
 
-  // Create referral record
   const { data: referral, error: referralError } = await supabase
     .from("card_referrals")
     .insert({
       season_id: seasonId,
       parent_card_id: parentCardId,
       child_card_id: childCard.id,
-      branch_level: branchLevel,
+      branch_level: 1,
       is_activated: false,
     })
     .select()
     .single()
 
   if (referralError || !referral) {
-    // Rollback card creation if referral fails
     await supabase.from("cards").delete().eq("id", childCard.id)
     return { success: false, error: `Failed to create referral: ${referralError?.message}` }
   }
 
-  // Increment parent's branch usage
   const { error: updateError } = await supabase
     .from("card_season_progress")
     .update({
@@ -247,9 +187,6 @@ export async function createInvitation(
     console.error("Failed to update parent branch usage:", updateError)
   }
 
-  // Calculate new remaining slots
-  const newRemaining = validation.remainingSlots! - 1
-
   return {
     success: true,
     childCard: {
@@ -257,21 +194,14 @@ export async function createInvitation(
       customer_name: childCard.customer_name,
     },
     referral: referral as CardReferral,
-    remainingSlots: newRemaining,
+    remainingSlots: Math.max(0, (validation.remainingSlots ?? 0) - 1),
   }
 }
 
-// ============================================================================
-// ACTIVATION TRACKING
-// ============================================================================
-
-/**
- * Check if a card was invited (is a child in referrals)
- */
 export async function getReferralByChildCard(
   supabase: SupabaseClient,
   childCardId: string,
-  seasonId: string
+  seasonId: string,
 ): Promise<CardReferral | null> {
   const { data, error } = await supabase
     .from("card_referrals")
@@ -287,19 +217,14 @@ export async function getReferralByChildCard(
   return data as CardReferral
 }
 
-/**
- * Activate a referral when child reaches step 2
- * This triggers Domino credit for the parent card
- */
 export async function activateReferral(
   supabase: SupabaseClient,
   referralId: string,
   parentCardId: string,
-  seasonId: string
+  seasonId: string,
 ): Promise<void> {
   const now = new Date().toISOString()
 
-  // Mark referral as activated
   const { error: referralError } = await supabase
     .from("card_referrals")
     .update({
@@ -313,80 +238,66 @@ export async function activateReferral(
     throw new Error(`Failed to activate referral: ${referralError.message}`)
   }
 
-  // Increment parent's activation count
   const parentProgress = await getCardSeasonProgress(supabase, parentCardId, seasonId)
-
   if (!parentProgress) {
     console.error("Parent progress not found for activation")
     return
   }
 
-  const newActivatedCount = parentProgress.direct_invitations_activated + 1
-
-  // Update parent progress
-  const updates: any = {
-    direct_invitations_activated: newActivatedCount,
-    updated_at: now,
-  }
-
-  // If parent is Diamond, recalculate branch capacity
-  if (parentProgress.current_step >= cardinSeasonLaw.diamondStep) {
-    // Update branch capacity calculation
-    const updatedProgress = { ...parentProgress, direct_invitations_activated: newActivatedCount }
-    updates.total_branch_capacity = calculateBranchCapacity(updatedProgress)
-  }
+  const { data: parentCard } = await supabase.from("cards").select("merchant_id").eq("id", parentCardId).maybeSingle()
+  const settings = parentCard ? await getMerchantProtocolSettings(supabase, parentCard.merchant_id) : null
+  const maxInvites = settings?.config.funnel.maxInvites ?? 2
 
   const { error: updateError } = await supabase
     .from("card_season_progress")
-    .update(updates)
+    .update({
+      direct_invitations_activated: parentProgress.direct_invitations_activated + 1,
+      total_branch_capacity: calculateBranchCapacity(parentProgress, maxInvites),
+      updated_at: now,
+    })
     .eq("card_id", parentCardId)
     .eq("season_id", seasonId)
 
   if (updateError) {
     console.error("Failed to update parent activation count:", updateError)
   }
+
+  if (parentCard?.merchant_id) {
+    await maybeLogPropagationCredit(supabase, {
+      merchantId: parentCard.merchant_id,
+      seasonId,
+      parentCardId,
+    })
+
+    try {
+      await recomputeCardScoreSnapshot(supabase, parentCardId, { seasonId })
+    } catch (error) {
+      console.error("Failed to recompute score snapshot after referral activation:", error)
+    }
+  }
 }
 
-/**
- * Check for referral activation on step 2 reach
- * Called from stamp handler when card reaches step 2
- */
 export async function checkAndActivateReferral(
   supabase: SupabaseClient,
   childCardId: string,
   seasonId: string,
-  newStep: number
+  newStep: number,
 ): Promise<void> {
-  // Only activate when reaching step 2
   if (newStep !== 2) {
     return
   }
 
-  // Check if this card was invited
   const referral = await getReferralByChildCard(supabase, childCardId, seasonId)
-
-  if (!referral) {
-    return // Not an invited card
+  if (!referral || referral.is_activated) {
+    return
   }
 
-  if (referral.is_activated) {
-    return // Already activated
-  }
-
-  // Activate the referral
   await activateReferral(supabase, referral.id, referral.parent_card_id, seasonId)
 }
 
-// ============================================================================
-// BRANCH METRICS
-// ============================================================================
-
-/**
- * Get invitation metrics for a season
- */
 export async function getSeasonInvitationMetrics(
   supabase: SupabaseClient,
-  seasonId: string
+  seasonId: string,
 ): Promise<{
   totalInvitations: number
   activatedInvitations: number
@@ -405,11 +316,9 @@ export async function getSeasonInvitationMetrics(
 
   const total = totalCount ?? 0
   const activated = activatedCount ?? 0
-  const rate = total > 0 ? activated / total : 0
-
   return {
     totalInvitations: total,
     activatedInvitations: activated,
-    activationRate: rate,
+    activationRate: total > 0 ? activated / total : 0,
   }
 }

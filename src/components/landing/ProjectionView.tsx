@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -8,6 +8,7 @@ import { WalletPassPreview } from "@/components/engine/WalletPassPreview"
 import { ScenarioCard } from "@/components/landing/ScenarioCard"
 import { trackEvent } from "@/lib/analytics"
 import { formatEuro } from "@/lib/calculator"
+import { getProtocolPreset, mapMerchantTypeToProtocolProfile } from "@/lib/cardin-protocol-v3"
 import { cn } from "@/lib/utils"
 import {
   type AuditSelection,
@@ -16,6 +17,7 @@ import {
   type ProjectionAuditOption,
   type ProjectionScenario,
 } from "@/lib/projection-scenarios"
+import { SEASON_FRAME_BY_PROJECTION_TYPE } from "@/lib/merchant-season-framing"
 import { formatRetentionLine, formatSimulationRhythm, simulateScenario } from "@/lib/simulation"
 import { buttonVariants } from "@/ui/button"
 
@@ -37,8 +39,7 @@ function useCountUp(target: number, duration = 600) {
     }
     raf.current = requestAnimationFrame(step)
     return () => cancelAnimationFrame(raf.current)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [target, duration])
+  }, [target, duration, display])
 
   return display
 }
@@ -76,20 +77,24 @@ export function ProjectionView() {
     })
   }, [audit, bundle, current, typeParam, valid])
 
+  const protocolPreset = useMemo(() => {
+    if (!valid || !typeParam) return null
+    return getProtocolPreset(mapMerchantTypeToProtocolProfile(typeParam))
+  }, [typeParam, valid])
+
+  const seasonFrame = valid && typeParam ? SEASON_FRAME_BY_PROJECTION_TYPE[typeParam] : null
+
   const animLow = useCountUp(simulation?.revenue_low ?? 0)
   const animHigh = useCountUp(simulation?.revenue_high ?? 0)
 
-  const selectProposition = useCallback(
-    (p: ProjectionScenario) => {
-      setActive(p)
-      trackEvent("hero_cta", { source: "projection_proposition", propositionId: p.id })
-    },
-    []
-  )
+  const selectProposition = useCallback((p: ProjectionScenario) => {
+    setActive(p)
+    trackEvent("hero_cta", { source: "projection_proposition", propositionId: p.id })
+  }, [])
 
   const selectFeatured = useCallback(() => setActive(null), [])
 
-  if (!valid || !bundle || !current || !simulation || !audit) {
+  if (!valid || !bundle || !current || !simulation || !audit || !protocolPreset) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#F6F5F0] px-6">
         <p className="font-serif text-2xl text-[#15372B]">Aucun résultat pour ce lien.</p>
@@ -106,16 +111,26 @@ export function ProjectionView() {
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-[11px] uppercase tracking-[0.18em] text-[#93A094]">{bundle.merchantLabel}</p>
           <h1 className="mt-4 font-serif text-4xl leading-[1.05] text-[#15372B] sm:text-5xl">
-            Projection revenu pour votre {bundle.merchantLabel.toLowerCase()}
+            Objectif de saison pour votre {bundle.merchantLabel.toLowerCase()}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-[#5C655E]">{bundle.brandPunchline}</p>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-[#7A847B]">
-            Simulation basée sur votre activité. Ajustable selon votre réalité.
+            Cardin Protocol v5 : Diamond comme horizon dès le départ, missions sur le parcours, récompenses bornées et
+            croissance contrôlée.
           </p>
+          {seasonFrame ? (
+            <div className="mx-auto mt-6 max-w-2xl">
+              <p className="font-serif text-3xl leading-tight text-[#15372B] sm:text-4xl">{seasonFrame.heroBand}</p>
+              <p className="mt-3 text-sm font-medium text-[#2A3F35]">{seasonFrame.calibratedSubline}</p>
+              <p className="mt-2 text-xs text-[#7A847B]">
+                {seasonFrame.floorLabel} · {seasonFrame.upsideLabel}
+              </p>
+            </div>
+          ) : null}
         </div>
 
         <section className="mx-auto mt-12 max-w-4xl rounded-[32px] border border-[#D7DDD2] bg-[#FDFCF8] px-6 py-8 shadow-[0_24px_60px_-42px_rgba(23,58,46,0.25)] sm:px-8">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-[#93A094]">Scenario choisi</p>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[#93A094]">Scénario choisi</p>
           <div className="mt-4 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
             <div>
               <h2 className="font-serif text-3xl text-[#15372B]">{current.title}</h2>
@@ -124,16 +139,16 @@ export function ProjectionView() {
             {active ? (
               <div className="flex items-start justify-start lg:justify-end">
                 <button className="text-sm text-[#173A2E] underline underline-offset-4" onClick={selectFeatured} type="button">
-                  Revenir a la proposition principale
+                  Revenir à la proposition principale
                 </button>
               </div>
             ) : null}
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-3">
-            <DetailBlock label="Ce que Cardin declenche" value={current.summaryLine} />
-            <DetailBlock label="Point de depart" value={current.startingOffer} />
-            <DetailBlock label="Ce que le client ressent" value={current.customerPromise} />
+            <DetailBlock label="Ce que Cardin déclenche" value={current.summaryLine} />
+            <DetailBlock label="Point de départ" value={current.startingOffer} />
+            <DetailBlock label="Ressenti client" value={current.customerPromise} />
           </div>
         </section>
 
@@ -141,9 +156,7 @@ export function ProjectionView() {
           <div className="max-w-2xl">
             <p className="text-[10px] uppercase tracking-[0.18em] text-[#93A094]">Calibrage</p>
             <h2 className="mt-3 font-serif text-3xl text-[#15372B]">Ajustez selon votre commerce</h2>
-            <p className="mt-3 text-sm leading-relaxed text-[#5C655E]">
-              Flux + panier moyen + frequence = projection ajustee.
-            </p>
+            <p className="mt-3 text-sm leading-relaxed text-[#5C655E]">Flux + panier moyen + rythme de retour = projection de saison plus crédible.</p>
           </div>
 
           <div className="mt-8 grid gap-6 lg:grid-cols-3">
@@ -160,26 +173,50 @@ export function ProjectionView() {
           </div>
         </section>
 
-        <section className="mx-auto mt-8 max-w-5xl grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <section className="mx-auto mt-8 grid max-w-5xl gap-6 xl:grid-cols-[0.95fr_1.05fr]">
           <div className="rounded-[32px] border border-[#D7DDD2] bg-[#FDFCF8] px-6 py-8 shadow-[0_24px_60px_-42px_rgba(23,58,46,0.2)] sm:px-8">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-[#93A094]">Moteur Cardin unifié</p>
-            <h2 className="mt-3 font-serif text-3xl text-[#15372B]">Revenu net sur la saison (3 mois)</h2>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[#93A094]">Revenu supplémentaire calibré</p>
+            <h2 className="mt-3 font-serif text-3xl text-[#15372B]">Fourchette saison (cadrage marché)</h2>
             <p className="mt-3 text-sm leading-relaxed text-[#5C655E]">{simulation.rationale}</p>
 
+            {seasonFrame ? (
+              <div className="mt-8 space-y-3 rounded-3xl border border-[#E7EAE4] bg-[#FCFBF7] px-5 py-6">
+                <p className="font-serif text-4xl leading-none text-[#15372B] sm:text-5xl">{seasonFrame.heroBand}</p>
+                <p className="text-base font-medium text-[#2A3F35]">{seasonFrame.calibratedSubline}</p>
+                <p className="text-xs leading-relaxed text-[#6B766D]">
+                  {seasonFrame.floorLabel} · {seasonFrame.upsideLabel}
+                </p>
+              </div>
+            ) : null}
+
             <div className="mt-8 border-t border-[#E7EAE4] pt-6">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-[#9AA396]">Estimation prudente</p>
-              <p className="mt-2 font-serif text-4xl leading-none text-[#15372B] sm:text-5xl">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[#9AA396]">Indicateur modèle (scénario courant)</p>
+              <p className="mt-2 text-xs leading-relaxed text-[#7A847B]">
+                La fourchette large ci-dessus (bande marché) reflète le cadrage saison ; le chiffre ci-dessous est l’estimateur
+                du scénario et des curseurs actuels — plus étroit, utile pour comparer des réglages, pas pour remplacer la
+                bande.
+              </p>
+              <p className="mt-2 font-serif text-2xl leading-none text-[#15372B] sm:text-3xl">
                 +{formatEuro(animLow)}
-                <span className="mx-2 text-[#98A297]">a</span>
+                <span className="mx-2 text-[#98A297]">à</span>
                 +{formatEuro(animHigh)}
               </p>
-              <p className="mt-3 text-xs text-[#7A847B]">Projection nette après récompenses et coûts système (Diamond inclus en Full).</p>
-              <p className="mt-2 text-sm text-[#2A3F35]">Équivalent net mensuel ≈ {formatEuro(simulation.monthly_projection)}</p>
+              <p className="mt-3 text-xs text-[#7A847B]">
+                Estimation nette après récompenses bornées sur le jeu de paramètres actuel — à lire comme contrôle technique,
+                pas comme plafond émotionnel. Budget saison recommandé : {formatEuro(protocolPreset.seasonBudget)}.
+              </p>
+              <p className="mt-2 text-sm text-[#2A3F35]">Équivalent mensuel ≈ {formatEuro(simulation.monthly_projection)}</p>
             </div>
 
             <div className="mt-6 rounded-3xl bg-[#F4F6F1] px-5 py-4">
               <p className="text-sm text-[#2A3F35]">{formatSimulationRhythm(simulation.visits_added)}</p>
               <p className="mt-2 text-xs text-[#7A847B]">{formatRetentionLine(simulation.retention_gain)}</p>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              <DetailBlock label="Budget reward" value={`${formatEuro(protocolPreset.seasonBudget)} / saison`} />
+              <DetailBlock label="Cap Diamond" value={`${Math.round(protocolPreset.maxDiamondRatio * 100)}% des clients actifs`} />
+              <DetailBlock label="Token Diamond" value={`1 toutes les ${protocolPreset.diamond.tokenCycleDays} j si activité + budget`} />
             </div>
 
             <div className="mt-6 border-t border-[#E7EAE4] pt-6">
@@ -204,12 +241,20 @@ export function ProjectionView() {
             />
 
             <div className="mt-5 rounded-[28px] border border-[#D7DDD2] bg-[#FDFCF8] px-6 py-6">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-[#93A094]">Mecanique</p>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[#93A094]">Rituel Cardin</p>
               <div className="mt-4 space-y-3 text-sm text-[#2A3F35]">
-                <p>1. Client scanne → carte ajoutee.</p>
-                <p>2. Progression + offre visibles.</p>
-                <p>3. Relance automatique au bon moment.</p>
+                <p>1. Le client scanne, puis le lieu crée la carte et la session.</p>
+                <p>2. Le staff valide le passage réel.</p>
+                <p>3. La progression avance, l'avantage reste borné par le protocole.</p>
               </div>
+            </div>
+
+            <div className="mt-5 rounded-[28px] border border-[#173A2E]/25 bg-[linear-gradient(180deg,#FBFAF6_0%,#F0F4EC_100%)] px-6 py-6">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#355246]">Diamond</p>
+              <p className="mt-3 text-sm text-[#2A3F35]">
+                Débloquez le Diamond : couche d’attraction visible, expériences régulières et statut — un privilège cadencé
+                et budgété, pas un coupon infini.
+              </p>
             </div>
           </div>
         </section>
@@ -229,7 +274,7 @@ export function ProjectionView() {
             href="/login"
             onClick={() => trackEvent("hero_cta", { source: "projection_cta" })}
           >
-            Mettre en place dans ma boutique
+            Mettre en place dans mon commerce
           </Link>
           <Link className="text-sm text-[#7A847B] underline-offset-4 hover:text-[#15372B] hover:underline" href="/landing">
             Voir d'autres commerces

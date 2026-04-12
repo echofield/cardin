@@ -43,6 +43,12 @@ const MOMENTS: Record<EngineActivityId, CalendarMoment[]> = {
     { month: 8, label: "Rentrée bureau", reason: "Le retour au bureau relance fortement les routines de passage.", scenarioId: "short_challenge", priority: "high" },
     { month: 10, label: "Temps froid", reason: "Une récompense plus désirable fonctionne mieux quand le rituel reprend du poids.", scenarioId: "monthly_gain", priority: "medium" },
   ],
+  bar: [
+    { month: 0, label: "Reprise des soirées", reason: "Janvier réinstalle vite les sorties régulières après les fêtes.", scenarioId: "starting_loop", priority: "medium" },
+    { month: 4, label: "Terrasses et apéros", reason: "Le printemps densifie les créneaux à structurer.", scenarioId: "weekly_rendezvous", priority: "medium" },
+    { month: 6, label: "Été urbain", reason: "La saison porte le réseau et les duos au comptoir.", scenarioId: "short_challenge", priority: "high" },
+    { month: 10, label: "Saison indoor", reason: "Les soirées longues favorisent un moment signature mensuel.", scenarioId: "monthly_gain", priority: "medium" },
+  ],
   restaurant: [
     { month: 1, label: "Saint-Valentin", reason: "Le moment porte naturellement les offres duo et le panier affectif.", scenarioId: "monthly_gain", priority: "high" },
     { month: 4, label: "Milieu de semaine", reason: "Le printemps est utile pour installer un rendez-vous hebdomadaire.", scenarioId: "weekly_rendezvous", priority: "medium" },
@@ -72,6 +78,7 @@ const MOMENTS: Record<EngineActivityId, CalendarMoment[]> = {
 const QUIET_PERIODS: Record<EngineActivityId, string> = {
   boulangerie: "Le creux d'août et les jours de semaine plus plats sont les périodes à protéger.",
   cafe: "Les périodes de bureau ralenti et les matinées moins régulières sont les points de vigilance.",
+  bar: "Les inter-saisons creuses et les soirées irrégulières sont les moments à structurer avec un repère clair.",
   restaurant: "Les services du milieu de semaine et l'été local sont les moments à travailler.",
   coiffeur: "Les longues périodes sans rendez-vous sont le vrai risque à couvrir.",
   "institut-beaute": "Les trous entre deux séances sont le principal risque de perte.",

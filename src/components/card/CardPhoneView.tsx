@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -69,6 +69,32 @@ type CardApiResponse = {
       description: string
       usageRemaining: number
     } | null
+    diamondToken?: {
+      cycleIndex: number
+      expiresAt: string
+      title: string
+      description: string
+    } | null
+    mission?: {
+      id: string
+      type: "group" | "time_shift" | "aov" | "identity"
+      triggerStep: 3 | 4 | 5 | "diamond"
+      roleMin: number
+      title: string
+      copy: string
+      staffHint: string
+      status: "active" | "completed" | "expired"
+      incentiveType: string
+      incentiveTitle: string
+      incentiveCopy: string
+      expiresAt: string
+      requiresVisitValidation: boolean
+      requiresGroupSize: number | null
+      requiresTimeWindow: { label: string; start: string; end: string } | null
+      validationMode: "duo" | "tablee" | "apero" | "fitting"
+      estimatedValueEur: number
+      costEur: number
+    } | null
   }
   merchant?: {
     id: string
@@ -92,6 +118,12 @@ type CardApiResponse = {
     branchCapacity: number
   } | null
   message?: CardPrimaryMessage
+  protocol?: {
+    state: string
+    rewardsPaused: boolean
+    seasonObjective: string
+    diamondLine: string
+  } | null
 }
 
 export function CardPhoneView({
@@ -180,15 +212,13 @@ export function CardPhoneView({
     }).catch(() => {
       /* noop */
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data?.card?.id, data?.ok, demo, authHeaders])
 
   useEffect(() => {
     if (demo || !data?.ok || !data.card) return
     const t = setInterval(() => void loadCard(), 4000)
     return () => clearInterval(t)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data?.ok, demo, loadCard])
+  }, [data?.card, data?.ok, demo, loadCard])
 
   useEffect(() => {
     if (typeof data?.card?.stamps !== "number") return
@@ -201,6 +231,22 @@ export function CardPhoneView({
     }
     lastStampsRef.current = s
   }, [data?.card?.stamps])
+
+  useEffect(() => {
+    const mission = data?.card?.mission
+    const cardId = data?.card?.id
+    if (!mission || !cardId || mission.status !== "active" || typeof window === "undefined") return
+    const key = `cardin:mission:view:${mission.id}`
+    if (sessionStorage.getItem(key)) return
+    sessionStorage.setItem(key, "1")
+    void fetch(`/api/public/card/${cardId}/mission/view`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ missionId: mission.id }),
+    }).catch(() => {
+      /* noop */
+    })
+  }, [authHeaders, data?.card?.id, data?.card?.mission])
 
   const profile = getMerchantProfile(data?.merchant?.profileId ?? "generic")
 
@@ -225,7 +271,7 @@ export function CardPhoneView({
       const payload = (await response.json()) as CardApiResponse & { error?: string }
       if (!response.ok || !payload.ok) {
         setSummitPickState("error")
-        setSummitPickMessage(profile.card.summitPickError)
+        setSummitPickMessage(payload.error === "rewards_paused" ? "Les nouveaux avantages sont temporairement en pause." : profile.card.summitPickError)
         return
       }
       setSummitPickState("idle")
@@ -290,10 +336,31 @@ export function CardPhoneView({
   const displayCode = data.card.code || formatLegacyCardCode(data.card.id)
   const cardinWorld: LandingWorldId = normalizeCardinWorld(data.merchant.cardinWorld)
   const summitOptions = getSummitOptions(cardinWorld)
-  const showSummitPicker = !demo && data.card.seasonProgress?.summitReached && !data.card.summitReward
+  const showSummitPicker = !demo && data.card.seasonProgress?.summitReached && !data.card.summitReward && !data.protocol?.rewardsPaused
+  const mission = data.card.mission
+  const missionStatusLabel = mission
+    ? mission.status === "completed"
+      ? "Mission validée"
+      : mission.status === "expired"
+        ? "Mission expirée"
+        : "Mission active"
+    : null
+  const activeBenefit = data.card.summitReward
+    ? {
+        title: data.card.summitReward.title,
+        description: data.card.summitReward.description,
+        detail: `Reste ${data.card.summitReward.usageRemaining} utilisation${data.card.summitReward.usageRemaining > 1 ? "s" : ""}`,
+      }
+    : data.card.diamondToken
+      ? {
+          title: data.card.diamondToken.title,
+          description: data.card.diamondToken.description,
+          detail: `Actif jusqu'au ${new Date(data.card.diamondToken.expiresAt).toLocaleDateString("fr-FR")}`,
+        }
+      : null
 
   return (
-    <main className="min-h-screen bg-[#F8F7F2] px-4 py-8 text-[#173A2E] sm:px-6 lg:px-8">
+    <main className="min-h-dvh-safe bg-[#F8F7F2] px-4 py-8 pb-[max(2rem,env(safe-area-inset-bottom,0px))] text-[#173A2E] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-xl">
         <p className="text-xs uppercase tracking-[0.14em] text-[#5D675F]">{profile.card.pageEyebrow}</p>
         <h1 className="mt-2 font-serif text-5xl">{data.merchant.businessName}</h1>
@@ -313,6 +380,15 @@ export function CardPhoneView({
 
         <div className="mt-6 rounded-[2rem] border border-[#CCD4CA] bg-[#FBFAF6] p-4 shadow-[0_30px_70px_-60px_rgba(20,48,38,0.8)]">
           <WalletPassPreview businessLabel={data.merchant.businessName} progressDots={progressDots} rewardLabel={data.card.rewardLabel} />
+
+          {data.protocol ? (
+            <Card className="mt-4 p-4">
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Cadre de saison</p>
+              <p className="mt-1 text-sm text-[#173A2E]">{data.protocol.seasonObjective}</p>
+              <p className="mt-2 text-xs text-[#556159]">{data.protocol.diamondLine}</p>
+              {data.protocol.rewardsPaused ? <p className="mt-2 text-sm text-[#A64040]">Les nouveaux avantages sont temporairement en pause. Votre progression continue.</p> : null}
+            </Card>
+          ) : null}
 
           {data.message ? (
             <Card className="mt-4 p-4">
@@ -339,14 +415,23 @@ export function CardPhoneView({
             ) : null}
           </Card>
 
-          {data.card.summitReward ? (
+          {activeBenefit ? (
             <Card className="mt-4 p-4">
               <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">{profile.card.activeRewardLabel}</p>
-              <p className="mt-2 text-lg text-[#173A2E]">{data.card.summitReward.title}</p>
-              <p className="mt-1 text-sm text-[#2A3F35]">{data.card.summitReward.description}</p>
-              <p className="mt-3 text-sm text-[#556159]">
-                Reste {data.card.summitReward.usageRemaining} utilisation{data.card.summitReward.usageRemaining > 1 ? "s" : ""}
-              </p>
+              <p className="mt-2 text-lg text-[#173A2E]">{activeBenefit.title}</p>
+              <p className="mt-1 text-sm text-[#2A3F35]">{activeBenefit.description}</p>
+              <p className="mt-3 text-sm text-[#556159]">{activeBenefit.detail}</p>
+            </Card>
+          ) : null}
+
+          {mission ? (
+            <Card className="mt-4 p-4">
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Mission du moment</p>
+              <p className="mt-2 text-lg text-[#173A2E]">{mission.title}</p>
+              <p className="mt-1 text-sm text-[#2A3F35]">{mission.copy}</p>
+              <p className="mt-3 text-sm text-[#556159]">{missionStatusLabel}</p>
+              <p className="mt-1 text-xs text-[#556159]">Expire le {new Date(mission.expiresAt).toLocaleDateString("fr-FR")}</p>
+              <p className="mt-2 text-xs text-[#355246]">{mission.incentiveCopy}</p>
             </Card>
           ) : null}
 
@@ -378,7 +463,9 @@ export function CardPhoneView({
               <p className="mt-1 text-sm text-[#173A2E]">
                 {data.invite.enabled
                   ? profile.card.inviteEnabled(data.invite.remainingSlots, data.invite.branchCapacity)
-                  : profile.card.inviteDisabled}
+                  : data.invite.reason === "diamond_not_earned"
+                    ? "Le reseau s'active apres un vrai sommet consomme."
+                    : profile.card.inviteDisabled}
               </p>
               {data.invite.enabled ? (
                 <div className="mt-3 flex gap-2">
@@ -430,3 +517,6 @@ export function CardPhoneView({
     </main>
   )
 }
+
+
+

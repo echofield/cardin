@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react"
 
 import { WalletPassPreview } from "@/components/engine/WalletPassPreview"
 import { LANDING_PRICING } from "@/lib/landing-content"
+import { SEASON_FRAME_BY_LANDING } from "@/lib/merchant-season-framing"
 import { Button, Card } from "@/ui"
 
 type WorldId = "cafe" | "restaurant" | "beaute" | "boutique"
@@ -68,6 +69,18 @@ type ScreenId = "world" | "system" | "summit" | "season" | "checkmate" | "activa
 
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sY5kD4RS66P4Tv7xl9Zm07"
 
+function StripePaymentNextSteps() {
+  return (
+    <p className="mt-3 max-w-prose text-xs leading-relaxed text-[#5B655E]">
+      Après le paiement sur Stripe, revenez sur cet onglet ou suivez l&apos;e-mail de confirmation.{" "}
+      <Link className="font-medium text-[#16372C] underline underline-offset-2" href="/apres-paiement">
+        Que faire ensuite
+      </Link>
+      .
+    </p>
+  )
+}
+
 /** Merchant-facing step labels (adoption first; see `advancedEyebrow` in optional details). */
 const screens: Array<{ id: ScreenId; label: string; advancedEyebrow: string }> = [
   { id: "world", label: "Lieu", advancedEyebrow: "Monde marchand" },
@@ -114,7 +127,7 @@ const worlds: WorldDefinition[] = [
     eyebrow: "Volume et fréquence",
     hero: "Café : fréquence élevée, retour rapide.",
     intro: "Panier moyen 5-8 €. Passage quotidien ou hebdomadaire. Le système renforce la fréquence.",
-    baselineMonthlyRecovered: 1400,
+    baselineMonthlyRecovered: 2000,
     baselineActivePaths: 150,
     baselineDominoMultiplier: 1.4,
     baselineTrust: 72,
@@ -165,7 +178,7 @@ const worlds: WorldDefinition[] = [
         title: "Duo du matin",
         promise: "1 duo signature par mois pour le sommet.",
         annualCost: 180,
-        visibilityLabel: "Sommet tres visible",
+        visibilityLabel: "Sommet très visible",
         socialLiftLabel: "réseau renforcé",
         note: "Pousse la venue a deux.",
         monthlyRecoveredBoost: 1.16,
@@ -243,7 +256,7 @@ const worlds: WorldDefinition[] = [
         title: "Table du chef",
         promise: "Table chef réservée une fois par mois.",
         annualCost: 720,
-        visibilityLabel: "Sommet tres visible",
+        visibilityLabel: "Sommet très visible",
         socialLiftLabel: "pousse retours et invitations",
         note: "Rare, raconte, histoire.",
         monthlyRecoveredBoost: 1.18,
@@ -321,7 +334,7 @@ const worlds: WorldDefinition[] = [
         title: "Soin duo",
         promise: "1 privilege duo mensuel pour le sommet.",
         annualCost: 420,
-        visibilityLabel: "Sommet tres visible",
+        visibilityLabel: "Sommet très visible",
         socialLiftLabel: "réseau renforcé",
         note: "Recommandation en rendez-vous réel.",
         monthlyRecoveredBoost: 1.15,
@@ -399,7 +412,7 @@ const worlds: WorldDefinition[] = [
         title: "Drop mensuel",
         promise: "Accès prioritaire pièce réservée chaque mois.",
         annualCost: 800,
-        visibilityLabel: "Sommet tres visible",
+        visibilityLabel: "Sommet très visible",
         socialLiftLabel: "désir et partage",
         note: "Montee clientele sans remise.",
         monthlyRecoveredBoost: 1.14,
@@ -589,27 +602,30 @@ export function MerchantSeasonStudio() {
           ) : null}
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 border-t border-[#E3DDD0] pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-sm text-[#5B655E]">
-            {screens[screenIndex].label}
-            {showAdvancedSteps ? ` · ${screens[screenIndex].advancedEyebrow}` : ""} · {selectedWorld.label} · {selectedSeason} mois
+        <div className="mt-6 space-y-3 border-t border-[#E3DDD0] pt-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm text-[#5B655E]">
+              {screens[screenIndex].label}
+              {showAdvancedSteps ? ` · ${screens[screenIndex].advancedEyebrow}` : ""} · {selectedWorld.label} · {selectedSeason} mois
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              {canGoBack ?(
+                <Button onClick={() => setScreenIndex((value) => Math.max(0, value - 1))} size="md" variant="subtle">
+                  Retour
+                </Button>
+              ) : null}
+              {canGoNext ?(
+                <Button onClick={() => setScreenIndex((value) => Math.min(screens.length - 1, value + 1))} size="md" variant="primary">
+                  Continuer
+                </Button>
+              ) : (
+                <a className="inline-flex h-11 items-center justify-center rounded-full border border-[#1B4332] bg-[#1B4332] px-6 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href={STRIPE_PAYMENT_LINK} rel="noreferrer" target="_blank">
+                  {LANDING_PRICING.activationLabel}
+                </a>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            {canGoBack ?(
-              <Button onClick={() => setScreenIndex((value) => Math.max(0, value - 1))} size="md" variant="subtle">
-                Retour
-              </Button>
-            ) : null}
-            {canGoNext ?(
-              <Button onClick={() => setScreenIndex((value) => Math.min(screens.length - 1, value + 1))} size="md" variant="primary">
-                Continuer
-              </Button>
-            ) : (
-              <a className="inline-flex h-11 items-center justify-center rounded-full border border-[#1B4332] bg-[#1B4332] px-6 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href={STRIPE_PAYMENT_LINK} rel="noreferrer" target="_blank">
-                {LANDING_PRICING.activationLabel}
-              </a>
-            )}
-          </div>
+          {!canGoNext ? <StripePaymentNextSteps /> : null}
         </div>
       </div>
     </div>
@@ -838,12 +854,19 @@ function SeasonScreen({ selectedSeason, onSelectSeason, selectedSeasonMode, sele
 }
 
 function CheckmateScreen({ selectedWorld, selectedSummit, selectedSeason, seasonValue, monthlyRecovered, activePaths, dominoMultiplier, seasonCards, trustScore }: { selectedWorld: WorldDefinition; selectedSummit: SummitOption; selectedSeason: SeasonLength; seasonValue: number; monthlyRecovered: number; activePaths: number; dominoMultiplier: string; seasonCards: { selective: number; mass: number }; trustScore: number }) {
+  const seasonFrame = SEASON_FRAME_BY_LANDING[selectedWorld.id]
+
   return (
     <div className="space-y-8">
       <div>
         <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Récapitulatif</p>
         <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Revenu potentiel sur la saison.</h3>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-[#59635C] sm:text-base">Chiffres basés sur : retour client structuré, réseau activé et affluence générée.</p>
+        <div className="mt-5 max-w-3xl rounded-2xl border border-[#173A2E]/15 bg-[linear-gradient(165deg,#F4F1EA_0%,#E8EDE4_100%)] px-5 py-4">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-[#355246]">Cadrage marché · Diamond au centre</p>
+          <p className="mt-2 font-serif text-2xl text-[#173A2E] sm:text-3xl">{seasonFrame.heroBand}</p>
+          <p className="mt-2 text-sm font-medium text-[#2A3F35]">{seasonFrame.calibratedSubline}</p>
+        </div>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[0.9fr_0.1fr_1fr] xl:items-start">
@@ -908,7 +931,9 @@ function ActivateScreen({ selectedWorld, selectedSummit, selectedSeason, monthly
               <p>{selectedWorld.label}</p>
               <p>{selectedSummit.title}</p>
               <p>{selectedSeason} mois</p>
-              <p>{formatEuro(LANDING_PRICING.activationFee)} d'activation</p>
+              <p>
+                {formatEuro(LANDING_PRICING.activationFee)} pour la saison ({LANDING_PRICING.seasonLengthMonths} mois)
+              </p>
               <p>{LANDING_PRICING.recurringLabel}</p>
             </div>
           </Card>
@@ -956,6 +981,7 @@ function ActivateScreen({ selectedWorld, selectedSummit, selectedSeason, monthly
               Revoir depuis le début
             </Link>
           </div>
+          <StripePaymentNextSteps />
         </Card>
       </div>
     </div>

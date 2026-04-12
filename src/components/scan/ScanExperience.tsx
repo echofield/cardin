@@ -195,7 +195,7 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
 
   if (loadingMerchant) {
     return (
-      <main className="min-h-screen bg-[#F8F7F2] px-4 py-12 text-[#173A2E]">
+      <main className="min-h-dvh-safe bg-[#F8F7F2] px-4 py-12 pb-[max(3rem,env(safe-area-inset-bottom,0px))] text-[#173A2E]">
         <p className="mx-auto max-w-xl text-sm">{profile.scan.loading}</p>
       </main>
     )
@@ -204,7 +204,7 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
   if (merchantError || !merchant) {
     const fallbackProfile = getMerchantProfile("generic")
     return (
-      <main className="min-h-screen bg-[#F8F7F2] px-4 py-12 text-[#173A2E]">
+      <main className="min-h-dvh-safe bg-[#F8F7F2] px-4 py-12 pb-[max(3rem,env(safe-area-inset-bottom,0px))] text-[#173A2E]">
         <Card className="mx-auto max-w-xl p-6">
           <p className="text-sm text-[#A64040]">{merchantError ?? fallbackProfile.scan.notFound}</p>
           <Link className="mt-4 inline-block text-sm underline" href="/landing">
@@ -216,7 +216,7 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
   }
 
   return (
-    <main className="min-h-screen bg-[#F8F7F2] px-4 py-8 text-[#173A2E] sm:px-6 lg:px-8">
+    <main className="min-h-dvh-safe bg-[#F8F7F2] px-4 py-8 pb-[max(2rem,env(safe-area-inset-bottom,0px))] text-[#173A2E] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-2xl space-y-6">
         <header>
           <p className="text-xs uppercase tracking-[0.14em] text-[#5D675F]">{profile.scan.eyebrow}</p>
@@ -255,8 +255,19 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
             <p className="mt-1 text-sm text-[#2A3F35]">Cap intermédiaire à {merchant.loyaltyConfig.midpointThreshold} passages.</p>
 
             <form className="mt-5 space-y-3" onSubmit={onCreateCard}>
-              <Input onChange={(event) => setCustomerName(event.target.value)} placeholder={profile.scan.namePlaceholder} required value={customerName} />
-              <Input onChange={(event) => setCustomerPhone(event.target.value)} placeholder={profile.scan.phonePlaceholder} value={customerPhone} />
+              <Input
+                className="text-base sm:text-sm"
+                onChange={(event) => setCustomerName(event.target.value)}
+                placeholder={profile.scan.namePlaceholder}
+                required
+                value={customerName}
+              />
+              <Input
+                className="text-base sm:text-sm"
+                onChange={(event) => setCustomerPhone(event.target.value)}
+                placeholder={profile.scan.phonePlaceholder}
+                value={customerPhone}
+              />
 
               <Button className="w-full" size="lg" type="submit">
                 {submitting ? profile.scan.submittingLabel : profile.scan.submitLabel}

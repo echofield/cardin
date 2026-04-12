@@ -1,76 +1,16 @@
-/**
- * Single source of truth for Cardin financial projections (parcours, API, demo alignment).
+﻿/**
+ * Protocol-v3-backed projection engine.
  *
- * Gross layers: recovery + frequency + domino (season totals for UI breakdown).
- * Net: grossMonth − reward − diamond − system fee → netCardinMonth, netCardinSeason.
- *
- * Full mode: Diamond cost 49 €/mo. Lite: domino revenue 0, Diamond cost 0.
+ * Keeps the existing projection result shape while switching the math source
+ * to the Cardin economic protocol: margin, bounded rewards, capped Diamond.
  */
 
-import { cardinSeasonLaw } from "@/lib/season-law"
-import {
-  projectFamilyImpact,
-  type ProjectionPresetOverrideMap,
-} from "@/lib/projection-engine"
-
+import { computeProtocolSnapshot, getProtocolPreset, mapMerchantTypeToProtocolProfile } from "@/lib/cardin-protocol-v3"
 import type { MonthCandle, ParcoursProjectionResult, SeasonProjectionLayers } from "@/lib/cardin-projection-types"
 
 export { type ProjectionPresetOverrideMap } from "@/lib/projection-engine"
 
-export const DEFAULT_REWARD_COST_RATE = 0.12
-export const DEFAULT_DIAMOND_COST_MONTH_FULL = 49
 export const DEFAULT_SYSTEM_FEE_MONTH = 0
-
-const FAMILY_EFFECTS = {
-  base: { primaryEffect: "Recuperation", secondaryEffect: "Base", scenarioRole: "base" },
-  freq: { primaryEffect: "Frequence", secondaryEffect: "Relance", scenarioRole: "frequency" },
-} as const
-
-const DOMINO_ACTIVITY_COEFF: Record<string, number> = {
-  cafe: 1.35,
-  restaurant: 1.45,
-  boulangerie: 1.3,
-  coiffeur: 1.25,
-  "institut-beaute": 1.2,
-  boutique: 1.28,
-}
-
-function dominoCoefficient(merchantType: string): number {
-  const id = merchantType.toLowerCase()
-  return DOMINO_ACTIVITY_COEFF[id] ?? 1.25
-}
-
-function dominoSeasonEuro(params: {
-  merchantType: string
-  monthlyClients: number
-  activationRate: number
-  avgTicket: number
-  seasonMonths: 3 | 6
-  summitMultiplier: number
-}): { dominoSeason: number; dominoNewClients: number; activeCardholders: number } {
-  const { merchantType, monthlyClients, activationRate, avgTicket, seasonMonths, summitMultiplier } = params
-  const activeCardholders = Math.round(monthlyClients * activationRate)
-  const coeff = dominoCoefficient(merchantType)
-
-  const reachStep5Rate =
-    0.22 * coeff * (cardinSeasonLaw.dominoStartStep / cardinSeasonLaw.stepCount)
-  const inviteConversion = 0.52
-  const branches = Math.min(cardinSeasonLaw.directDominoBranches, 2)
-
-  const eligible = activeCardholders * reachStep5Rate
-  const dominoNewClients = Math.round(eligible * inviteConversion * branches * 0.5)
-
-  const visitHorizon = Math.max(
-    2,
-    Math.ceil(seasonMonths * (1 - cardinSeasonLaw.dominoStartStep / cardinSeasonLaw.stepCount)),
-  )
-
-  const dominoSeason = Math.round(
-    dominoNewClients * avgTicket * visitHorizon * summitMultiplier * 1.08,
-  )
-
-  return { dominoSeason, dominoNewClients, activeCardholders }
-}
 
 export type CardinProjectionInput = {
   merchantType: string
@@ -86,115 +26,108 @@ export type CardinProjectionInput = {
   systemFeeMonth?: number
 }
 
-/**
- * Builds full parcours projection result: gross layers + net headline fields.
- */
+function clamp(value: number, min: number, max: number): number {
+  if (value < min) return min
+  if (value > max) return max
+  return value
+}
+
+function computeConfidenceLabel(sigmaSeason: number): string {
+  if (sigmaSeason >= 5) return "forte"
+  if (sigmaSeason >= 3) return "solide"
+  if (sigmaSeason >= 2) return "prudente"
+  return "fragile"
+}
+
 export function computeCardinFinancialProjection(
   input: CardinProjectionInput,
-  overrides?: ProjectionPresetOverrideMap,
+  _overrides?: unknown,
 ): ParcoursProjectionResult {
-  const {
-    merchantType,
-    monthlyClients,
-    avgTicket,
-    inactivePercent,
-    baseRecoveryPercent,
-    seasonMonths,
-    summitMultiplier,
-    lite = false,
-    rewardCostRate = DEFAULT_REWARD_COST_RATE,
-    diamondCostMonthFull = DEFAULT_DIAMOND_COST_MONTH_FULL,
-    systemFeeMonth = DEFAULT_SYSTEM_FEE_MONTH,
-  } = input
+  const profileId = mapMerchantTypeToProtocolProfile(input.merchantType)
+  const preset = getProtocolPreset(profileId)
+  const recoveryScale = clamp(input.baseRecoveryPercent / 14, 0.7, 1.4)
+  const inactivityScale = clamp(input.inactivePercent / 25, 0.8, 1.3)
+  const activeUsers = Math.max(12, Math.round(input.monthlyClients * 0.08))
+  const deltaVisitsPerMonth = preset.deltaVisitsPerMonth * recoveryScale * inactivityScale * input.summitMultiplier
 
-  const base = projectFamilyImpact(
-    {
-      merchantType,
-      projectionFamily: "base_return",
-      monthlyClients,
-      avgTicket,
-      inactivePercent,
-      baseRecoveryPercent,
-      ...FAMILY_EFFECTS.base,
+  const config = {
+    ...preset,
+    aov: input.avgTicket,
+    seasonLengthMonths: input.seasonMonths,
+    deltaVisitsPerMonth,
+    diamond: {
+      ...preset.diamond,
+      budget: input.lite ? 0 : preset.diamond.budget,
+      tokenCost: input.lite ? 0 : preset.diamond.tokenCost,
+      tokenRedemptionRate: input.lite ? 0 : preset.diamond.tokenRedemptionRate,
     },
-    overrides,
-  )
-
-  const freq = projectFamilyImpact(
-    {
-      merchantType,
-      projectionFamily: "frequency_push",
-      monthlyClients,
-      avgTicket,
-      inactivePercent,
-      baseRecoveryPercent,
-      ...FAMILY_EFFECTS.freq,
-    },
-    overrides,
-  )
-
-  const monthlyBase = base.monthlyRevenue
-  const monthlyFreqUplift = Math.max(0, freq.monthlyRevenue - base.monthlyRevenue)
-
-  const recoveryMonthlyGross = monthlyBase * summitMultiplier
-  const frequencyMonthlyGross = monthlyFreqUplift * summitMultiplier
-
-  const dominoBlock = dominoSeasonEuro({
-    merchantType,
-    monthlyClients,
-    activationRate: 0.38,
-    avgTicket,
-    seasonMonths,
-    summitMultiplier,
-  })
-
-  const dominoSeasonGross = lite ? 0 : dominoBlock.dominoSeason
-  const dominoNewClients = lite ? 0 : dominoBlock.dominoNewClients
-  const activeCardholders = dominoBlock.activeCardholders
-
-  const dominoMonthlyGross = seasonMonths > 0 ? dominoSeasonGross / seasonMonths : 0
-
-  const grossMonth = recoveryMonthlyGross + frequencyMonthlyGross + dominoMonthlyGross
-  const rewardCostMonth = grossMonth * rewardCostRate
-  const diamondCostMonth = lite ? 0 : diamondCostMonthFull
-  const netCardinMonth = Math.max(0, grossMonth - rewardCostMonth - diamondCostMonth - systemFeeMonth)
-  const netCardinSeason = Math.round(netCardinMonth * seasonMonths)
-
-  const recoverySeasonGross = Math.round(recoveryMonthlyGross * seasonMonths)
-  const frequencySeasonGross = Math.round(frequencyMonthlyGross * seasonMonths)
-
-  const layers: SeasonProjectionLayers = {
-    recovery: recoverySeasonGross,
-    frequency: frequencySeasonGross,
-    domino: dominoSeasonGross,
-    total: recoverySeasonGross + frequencySeasonGross + dominoSeasonGross,
-    activeCardholders,
-    dominoNewClients,
   }
 
-  const monthlyAverage = Math.round(netCardinMonth)
+  const snapshot = computeProtocolSnapshot(
+    config,
+    {
+      activeUsers,
+      rawScans: Math.round(activeUsers / Math.max(config.funnel.activationRate, 0.1)),
+      midpointUsers: Math.round(activeUsers * config.funnel.midpointRate),
+      summitUsers: Math.round(activeUsers * config.funnel.summitRate),
+      diamondUsers: input.lite ? 0 : Math.round(activeUsers * config.funnel.diamondRate),
+      referralsConverted: input.lite ? 0 : Math.round(activeUsers * config.funnel.diamondRate * config.funnel.maxInvites * config.funnel.conversionRate),
+      progressScore: 0.92,
+      costScore: 0.6,
+      propagationScore: input.lite ? 0 : 0.74,
+      engagementRate: 0.82,
+      integrityScore: 0.08,
+      actualRewardCostSeason: 0,
+      actualRewardCostWeek: 0,
+      actualRewardCostDay: 0,
+      actualDiamondCostSeason: 0,
+      actualPropagationCostSeason: 0,
+      inheritedDiamondUsers: 0,
+    },
+    { enabled: true, diamondTokensEnabled: !input.lite, adaptiveHooksEnabled: false },
+    profileId,
+  )
+
+  const layers: SeasonProjectionLayers = {
+    recovery: Math.round(snapshot.projected.GP_direct),
+    frequency: Math.round(snapshot.projected.GP_uplift),
+    domino: input.lite ? 0 : Math.round(snapshot.projected.GP_prop),
+    total: Math.round(snapshot.projected.GP_direct + snapshot.projected.GP_uplift + (input.lite ? 0 : snapshot.projected.GP_prop)),
+    activeCardholders: activeUsers,
+    dominoNewClients: input.lite ? 0 : Math.round(snapshot.projected.N_ref),
+  }
+
+  const rewardCostSeason = input.lite ? snapshot.projected.RC_direct : snapshot.projected.RC_direct + snapshot.projected.RC_prop
+  const diamondCostSeason = input.lite ? 0 : snapshot.projected.RC_diamond_season
+  const rewardCostMonth = Math.round(rewardCostSeason / input.seasonMonths)
+  const diamondCostMonth = Math.round(diamondCostSeason / input.seasonMonths)
+  const systemFeeMonth = input.systemFeeMonth ?? DEFAULT_SYSTEM_FEE_MONTH
+  const grossMonth = Math.round(snapshot.projected.GP_total / input.seasonMonths)
+  const netCardinSeason = Math.max(
+    0,
+    Math.round(snapshot.projected.GP_total - rewardCostSeason - diamondCostSeason - systemFeeMonth * input.seasonMonths),
+  )
+  const netCardinMonth = Math.round(netCardinSeason / input.seasonMonths)
+
+  const monthlyAverage = netCardinMonth
   const monthlyLow = Math.round(netCardinMonth * 0.88)
   const monthlyHigh = Math.round(netCardinMonth * 1.12)
 
   const cumulativeByMonth: number[] = []
   const candles: MonthCandle[] = []
   let prev = 0
-  const totalNetSeason = netCardinSeason
-  for (let m = 1; m <= seasonMonths; m++) {
-    const t = m / seasonMonths
-    const curved = totalNetSeason * Math.pow(t, 1.12)
+  for (let m = 1; m <= input.seasonMonths; m++) {
+    const t = m / input.seasonMonths
+    const curved = netCardinSeason * Math.pow(t, 1.08)
     cumulativeByMonth.push(Math.round(curved))
     const inc = curved - prev
-    const wobble = 0.04
-    const o = inc * (1 - wobble)
-    const c = inc * (1 + wobble)
-    const high = Math.max(o, c) * 1.025
-    const low = Math.min(o, c) * 0.975
+    const o = inc * 0.96
+    const c = inc * 1.04
     candles.push({
       month: m,
       open: Math.round(o),
-      high: Math.round(high),
-      low: Math.round(low),
+      high: Math.round(Math.max(o, c) * 1.02),
+      low: Math.round(Math.min(o, c) * 0.98),
       close: Math.round(c),
     })
     prev = curved
@@ -205,17 +138,17 @@ export function computeCardinFinancialProjection(
     grossMonth,
     rewardCostMonth,
     diamondCostMonth,
-    systemFeeMonth: systemFeeMonth,
-    netCardinMonth: Math.round(netCardinMonth),
+    systemFeeMonth,
+    netCardinMonth,
     netCardinSeason,
-    monthlyReturns: base.monthlyReturns,
-    recoveredClientsMonth: Math.round(base.recoveredClients),
-    confidenceLabel: base.confidenceLabel,
+    monthlyReturns: Math.max(1, Math.round(snapshot.projected.N * config.deltaVisitsPerMonth)),
+    recoveredClientsMonth: Math.max(1, Math.round(snapshot.projected.N_mid / input.seasonMonths)),
+    confidenceLabel: computeConfidenceLabel(snapshot.projected.sigma_season),
     monthlyAverage,
     monthlyLow,
     monthlyHigh,
     cumulativeByMonth,
     candles,
-    merchantType,
+    merchantType: input.merchantType,
   }
 }

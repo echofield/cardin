@@ -15,6 +15,7 @@ import {
   LANDING_WORLDS,
   type LandingWorldId,
 } from "@/lib/landing-content"
+import { SEASON_FRAME_BY_LANDING } from "@/lib/merchant-season-framing"
 import { buildParcoursEngineHref, type ParcoursSummitStyleId } from "@/lib/parcours-contract"
 import {
   isLiteSelectionsComplete,
@@ -24,7 +25,7 @@ import {
 
 /**
  * Mapping contract (Figma / Glow → Cardin-native):
- * - world → LandingWorldId (cafe | restaurant | beaute | boutique)
+ * - world → LandingWorldId (cafe | bar | restaurant | beaute | boutique)
  * - summit → ParcoursSummitStyleId (visible | stronger | discreet)
  * - season → 3 | 6 (from getDemoWorldContent.seasonMonths)
  * - final CTA → /engine?template=…&summit=…&season=…  (via buildParcoursEngineHref)
@@ -69,30 +70,31 @@ function phaseForStep(isLite: boolean, idx: number): number {
 }
 
 const STEPS_FULL: { id: ParcoursStepId; num: string; label: string; cta: string }[] = [
-  { id: "entry", num: "01", label: "Entree", cta: "Continuer" },
-  { id: "lecture", num: "02", label: "Lecture", cta: "Activer la recuperation" },
+  { id: "entry", num: "01", label: "Entrée", cta: "Continuer" },
+  { id: "lecture", num: "02", label: "Lecture", cta: "Activer la récupération" },
   { id: "summit", num: "03", label: "Sommet", cta: "Continuer" },
-  { id: "mechanics", num: "04", label: "Mecanique", cta: "Voir l'impact sur le revenu" },
-  { id: "projection", num: "05", label: "Projection", cta: "Passer a l'activation" },
-  { id: "activation", num: "06", label: "Lancement", cta: "Ajuster le systeme" },
+  { id: "mechanics", num: "04", label: "Mécanique", cta: "Voir l'impact sur le revenu" },
+  { id: "projection", num: "05", label: "Projection", cta: "Passer à l'activation" },
+  { id: "activation", num: "06", label: "Lancement", cta: "Ajuster le système" },
 ]
 
 const STEPS_LITE: { id: ParcoursStepId; num: string; label: string; cta: string }[] = [
-  { id: "entry", num: "01", label: "Entree", cta: "Continuer" },
-  { id: "lecture", num: "02", label: "Lecture", cta: "Activer la recuperation" },
-  { id: "liteScenarios", num: "03", label: "Scenarios", cta: "Voir l'impact" },
-  { id: "projection", num: "04", label: "Projection", cta: "Passer a l'activation" },
-  { id: "activation", num: "05", label: "Lancement", cta: "Ajuster le systeme" },
+  { id: "entry", num: "01", label: "Entrée", cta: "Continuer" },
+  { id: "lecture", num: "02", label: "Lecture", cta: "Activer la récupération" },
+  { id: "liteScenarios", num: "03", label: "Scénarios", cta: "Voir l'impact" },
+  { id: "projection", num: "04", label: "Projection", cta: "Passer à l'activation" },
+  { id: "activation", num: "05", label: "Lancement", cta: "Ajuster le système" },
 ]
 
 const SUMMITS: SummitOption[] = [
-  { id: "visible", label: "Sommet visible", description: "Le client voit sa progression et sait ce qu'il debloque. Objectif clair.", metric: "x1.0", metricLabel: "boost standard", multiplier: 1 },
-  { id: "stronger", label: "Sommet renforce", description: "Recompense amplifiee. Cree de l'attraction et de la conversation autour du lieu.", metric: "x1.25", metricLabel: "boost augmente", multiplier: 1.25 },
-  { id: "discreet", label: "Sommet discret", description: "Reserve aux inities. Effet de surprise a l'arrivee. Pas de promesse affichee.", metric: "x0.85", metricLabel: "boost selectif", multiplier: 0.85 },
+  { id: "visible", label: "Sommet visible", description: "Le client voit sa progression et sait ce qu'il débloque. Objectif clair.", metric: "x1.0", metricLabel: "boost standard", multiplier: 1 },
+  { id: "stronger", label: "Sommet renforcé", description: "Récompense amplifiée. Crée de l'attraction et de la conversation autour du lieu.", metric: "x1.25", metricLabel: "boost augmenté", multiplier: 1.25 },
+  { id: "discreet", label: "Sommet discret", description: "Réservé aux initiés. Effet de surprise à l'arrivée. Pas de promesse affichée.", metric: "x0.85", metricLabel: "boost sélectif", multiplier: 0.85 },
 ]
 
 const WORLD_DETAILS: Record<LandingWorldId, string> = {
   cafe: "Beaucoup de clients, passages rapides.",
+  bar: "Soirée, comptoir, panier plus fort et réseau naturel.",
   restaurant: "Tables, service plus long, panier plus élevé.",
   beaute: "Rendez-vous réguliers, confiance et recommandation.",
   boutique: "Visites plus rares, panier et désir forts.",
@@ -218,11 +220,11 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
     (step.id === "liteScenarios" && !isLiteSelectionsComplete(worldId, liteSelections))
 
   return (
-    <div className={variant === "standalone" ? "min-h-screen" : ""} style={{ backgroundColor: "var(--cardin-bg-cream)" }}>
+    <div className={variant === "standalone" ? "min-h-dvh" : ""} style={{ backgroundColor: "var(--cardin-bg-cream)" }}>
       {/* ─── HEADER ─── */}
       {variant === "standalone" ? (
         <header
-          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-4 md:px-8"
+          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 pb-4 pt-[calc(env(safe-area-inset-top,0px)+1rem)] md:px-8"
           style={{ backgroundColor: "rgba(250,248,242,0.92)", backdropFilter: "blur(12px)" }}
         >
           <div className="flex items-center gap-3">
@@ -299,19 +301,23 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
       {variant === "standalone" && (
         <motion.div
           className="fixed left-0 z-40 h-[1px]"
-          style={{ top: 52, backgroundColor: "var(--cardin-green-primary)" }}
+          style={{ top: "calc(env(safe-area-inset-top, 0px) + 3.25rem)", backgroundColor: "var(--cardin-green-primary)" }}
           animate={{ width: `${((stepIndex + 1) / activeSteps.length) * 100}%` }}
           transition={{ duration: 0.4, ease }}
         />
       )}
 
       {/* ─── CONTENT ─── */}
-      <main className={variant === "standalone" ? "pt-14" : ""}>
+      <main className={variant === "standalone" ? "pt-[calc(3.5rem+env(safe-area-inset-top,0px))]" : ""}>
         <AnimatePresence mode="wait">
           <motion.div
             key={step.id}
             animate={{ opacity: 1, y: 0 }}
-            className={variant === "standalone" ? "flex min-h-[calc(100vh-5rem)] flex-col px-5 md:px-8" : "px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-10"}
+            className={
+              variant === "standalone"
+                ? "flex min-h-[calc(100dvh-5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] flex-col px-5 md:px-8"
+                : "px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-10"
+            }
             exit={{ opacity: 0, y: -20 }}
             initial={{ opacity: 0 }}
             transition={{ duration: 0.4, ease }}
@@ -383,7 +389,7 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
 
       {/* ─── EMBEDDED NAV ─── */}
       {variant === "embedded" && (
-        <div className="flex items-center justify-between gap-4 px-4 pb-6 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-4 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] sm:px-6 lg:px-8">
           <button
             className="inline-flex h-11 items-center gap-2 rounded-full border px-5 text-sm transition disabled:opacity-35"
             disabled={stepIndex === 0}
@@ -391,7 +397,7 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
             style={{ borderColor: "var(--cardin-border)", color: "var(--cardin-body)" }}
             type="button"
           >
-            Precedent
+            Précédent
           </button>
           <button
             className="inline-flex h-11 items-center rounded-full px-6 text-sm transition disabled:opacity-35"
@@ -413,7 +419,7 @@ export function ParcoursOnboardingCore(props: Props) {
     <Suspense
       fallback={
         <div
-          className={props.variant === "standalone" ? "min-h-screen" : undefined}
+          className={props.variant === "standalone" ? "min-h-dvh" : undefined}
           style={{ backgroundColor: "var(--cardin-bg-cream)" }}
         />
       }
@@ -429,7 +435,25 @@ export function ParcoursOnboardingCore(props: Props) {
 function StepEntry({ worldId, onSelectWorld }: { worldId: LandingWorldId; onSelectWorld: (w: LandingWorldId) => void }) {
   return (
     <>
-      <StepHeader num="01" label="Entree" />
+      <StepHeader num="01" label="Entrée" />
+      <div
+        className="mb-6 rounded-2xl border px-5 py-5"
+        style={{
+          borderColor: "rgba(0,61,44,0.2)",
+          background: "linear-gradient(165deg, #F4F1EA 0%, #E8EDE4 100%)",
+        }}
+      >
+        <p style={{ fontSize: "0.6rem", letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "var(--cardin-green-secondary)" }}>
+          Horizon Diamond
+        </p>
+        <p className="mt-3 font-serif" style={{ fontSize: "1.35rem", color: "var(--cardin-green-primary)", lineHeight: 1.2 }}>
+          Débloquez le Diamond
+        </p>
+        <p className="mt-2" style={{ fontSize: "0.82rem", color: "var(--cardin-body)", lineHeight: 1.55 }}>
+          Dès cette entrée, le parcours vise un statut long terme : expériences régulières, missions au milieu du chemin,
+          privilège contrôlé — pas une réduction ponctuelle.
+        </p>
+      </div>
       <StepTitle>Quel lieu connectez-vous ?</StepTitle>
       <StepSubtitle>Le système s’adapte à votre type d’activité.</StepSubtitle>
 
@@ -536,7 +560,7 @@ function StepLecture({ demo, onNext }: { demo: ReturnType<typeof getDemoWorldCon
         transition={{ duration: 0.4 }}
         type="button"
       >
-        Activer la recuperation
+        Activer la récupération
       </motion.button>
     </>
   )
@@ -965,7 +989,7 @@ function StepProjection({
       <StepSubtitle>
         {isLite ? (
           <>
-            Décomposition <strong>brute</strong> (récupération, fréquence) sur {seasonMonths} mois — pas de Domino en Lite. Les grands chiffres sont des <strong>montants nets</strong> après récompenses et coûts système.
+            Décomposition <strong>brute</strong> (récupération, fréquence) sur {seasonMonths} mois — vue centrée sur ces leviers (sans couche Domino sur cet écran). Les grands chiffres sont des <strong>montants nets</strong> après récompenses et coûts système.
           </>
         ) : (
           <>
@@ -1154,7 +1178,8 @@ function StepActivation({
   }, [])
 
   const world = LANDING_WORLDS[worldId]
-  const summitLabel = summit.id === "visible" ? "Visible" : summit.id === "stronger" ? "Renforce" : "Discret"
+  const seasonFrame = SEASON_FRAME_BY_LANDING[worldId]
+  const summitLabel = summit.id === "visible" ? "Visible" : summit.id === "stronger" ? "Renforcé" : "Discret"
   const seasonLayers = projectionFull.layers
 
   return (
@@ -1179,7 +1204,7 @@ function StepActivation({
             transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
           />
         </motion.div>
-        <span style={{ fontSize: "0.7rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--cardin-green-primary)", fontWeight: 600 }}>Systeme actif</span>
+        <span style={{ fontSize: "0.7rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--cardin-green-primary)", fontWeight: 600 }}>Système actif</span>
       </motion.div>
 
       <motion.h1
@@ -1199,7 +1224,7 @@ function StepActivation({
         style={{ color: "var(--cardin-body)", fontSize: "0.95rem", lineHeight: 1.55, maxWidth: "400px" }}
         transition={{ duration: 0.4, delay: 0.15 }}
       >
-        Le systeme est actif. Les premiers retours peuvent commencer.
+        Le système est actif. Les premiers retours peuvent commencer.
         {isLite && liteHintLabel ? (
           <span className="mt-3 block rounded-xl p-3" style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)", fontSize: "0.8rem" }}>
             {liteHintLabel}
@@ -1207,22 +1232,41 @@ function StepActivation({
         ) : null}
       </motion.p>
 
-      {/* Big number */}
+      {/* Season framing + model indicator */}
       <motion.div
         animate={{ opacity: phase >= 2 ? 1 : 0, y: phase >= 2 ? 0 : 16 }}
-        className="mb-2 rounded-2xl p-7 text-center"
+        className="mb-3 rounded-2xl border px-5 py-5 text-left"
+        initial={{ opacity: 0, y: 16 }}
+        style={{ backgroundColor: "var(--cardin-card)", borderColor: "var(--cardin-border)" }}
+        transition={{ duration: 0.4 }}
+      >
+        <div style={{ fontSize: "0.55rem", letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--cardin-label)" }}>Objectif de saison</div>
+        <p className="mt-3 font-serif" style={{ fontSize: "clamp(1.65rem, 5vw, 2.25rem)", color: "var(--cardin-green-primary)", lineHeight: 1.15 }}>
+          {seasonFrame.heroBand}
+        </p>
+        <p className="mt-3 font-medium" style={{ fontSize: "0.9rem", color: "var(--cardin-text)", lineHeight: 1.45 }}>
+          {seasonFrame.calibratedSubline}
+        </p>
+        <p className="mt-3" style={{ fontSize: "0.78rem", color: "var(--cardin-label)", lineHeight: 1.5 }}>
+          {seasonFrame.floorLabel} · {seasonFrame.upsideLabel}
+        </p>
+      </motion.div>
+
+      <motion.div
+        animate={{ opacity: phase >= 2 ? 1 : 0, y: phase >= 2 ? 0 : 16 }}
+        className="mb-2 rounded-2xl p-6 text-center"
         initial={{ opacity: 0, y: 16 }}
         style={{ backgroundColor: "var(--cardin-green-primary)" }}
         transition={{ duration: 0.4 }}
       >
-        <div style={{ fontSize: "0.6rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "rgba(250,248,242,0.45)", marginBottom: "0.75rem" }}>
-          Revenu net sur la saison ({seasonMonths} mois)
+        <div style={{ fontSize: "0.55rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "rgba(250,248,242,0.5)", marginBottom: "0.6rem" }}>
+          Indicateur modèle ({seasonMonths} mois)
         </div>
-        <div className="font-serif" style={{ fontSize: "clamp(2.25rem, 6.5vw, 3.5rem)", color: "#FAF8F2", lineHeight: 1, letterSpacing: "-0.03em" }}>
-          +{projectionFull.netCardinSeason.toLocaleString("fr-FR")} EUR
+        <div className="font-serif" style={{ fontSize: "clamp(1.75rem, 5vw, 2.75rem)", color: "#FAF8F2", lineHeight: 1, letterSpacing: "-0.03em" }}>
+          +{projectionFull.netCardinSeason.toLocaleString("fr-FR")} €
         </div>
-        <div style={{ fontSize: "0.72rem", color: "rgba(250,248,242,0.55)", marginTop: "0.75rem", lineHeight: 1.5 }}>
-          Projection nette après récompenses et coûts système · net mensuel ~{projectionFull.netCardinMonth.toLocaleString("fr-FR")} EUR · payback ~{demo.projectedPaybackDays} j
+        <div style={{ fontSize: "0.7rem", color: "rgba(250,248,242,0.58)", marginTop: "0.65rem", lineHeight: 1.5 }}>
+          Projection nette après récompenses et coûts sur vos paramètres actuels · ~{projectionFull.netCardinMonth.toLocaleString("fr-FR")} € / mois · payback ~{demo.projectedPaybackDays} j
         </div>
       </motion.div>
 
@@ -1234,11 +1278,11 @@ function StepActivation({
         transition={{ duration: 0.4, delay: 0.15 }}
       >
         <div className="rounded-xl px-3 py-2.5" style={{ backgroundColor: "var(--cardin-green-tint)", border: "1px solid rgba(0,61,44,0.1)" }}>
-          <div style={{ fontSize: "0.5rem", letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--cardin-green-primary)", marginBottom: 2 }}>Recuperation</div>
+          <div style={{ fontSize: "0.5rem", letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--cardin-green-primary)", marginBottom: 2 }}>Récupération</div>
           <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--cardin-green-primary)" }}>{formatEuro(seasonLayers.recovery)}</div>
         </div>
         <div className="rounded-xl px-3 py-2.5" style={{ backgroundColor: "var(--cardin-green-tint)", border: "1px solid rgba(0,61,44,0.1)" }}>
-          <div style={{ fontSize: "0.5rem", letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--cardin-green-secondary)", marginBottom: 2 }}>Frequence</div>
+          <div style={{ fontSize: "0.5rem", letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--cardin-green-secondary)", marginBottom: 2 }}>Fréquence</div>
           <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--cardin-green-secondary)" }}>{formatEuro(seasonLayers.frequency)}</div>
         </div>
         {!isLite ? (
@@ -1269,9 +1313,10 @@ function StepActivation({
             { label: "Revenu net saison", value: `${projectionFull.netCardinSeason.toLocaleString("fr-FR")} EUR` },
             {
               label: "Activation",
-              value: isLite ? `${LANDING_PRICING.liteActivationFee} € (Lite)` : `${LANDING_PRICING.activationFee} €`,
+              value: isLite
+                ? `${LANDING_PRICING.liteActivationFee} € · saison ${LANDING_PRICING.seasonLengthMonths} mois`
+                : `${LANDING_PRICING.activationFee} € · saison ${LANDING_PRICING.seasonLengthMonths} mois`,
             },
-            { label: "Recurrant", value: `${LANDING_PRICING.recurringFee} € / mois` },
           ].map((line) => (
             <div className="flex items-center justify-between" key={line.label}>
               <span style={{ fontSize: "0.75rem", color: "var(--cardin-label)" }}>{line.label}</span>
@@ -1293,7 +1338,7 @@ function StepActivation({
           href={engineHref}
           style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2" }}
         >
-          Ajuster le systeme
+          Ajuster le système
         </Link>
         <Link
           className="flex-1 rounded-full py-3.5 text-center text-sm"

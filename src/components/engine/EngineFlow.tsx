@@ -10,6 +10,8 @@ import { getTemplateById, merchantTemplates, type MerchantTemplate } from "@/lib
 import { cardinSeasonLaw, getSummitPreset, normalizeSeasonLength } from "@/lib/season-law"
 import { Button, Card, Input, Slider } from "@/ui"
 
+import { getSeasonFrameForTemplateId } from "@/lib/merchant-season-framing"
+
 import { MerchantTemplateSelector } from "./MerchantTemplateSelector"
 import { WalletPassPreview } from "./WalletPassPreview"
 import { applyObjectiveToAssumptions, buildObjectiveScenario, objectiveHints, normalizeObjectiveId, type MidpointMode } from "./objective-scenarios"
@@ -45,9 +47,9 @@ const midpointOptions: Array<{
 ]
 
 const setupLines = [
-  "QR de scan pret pour la boutique",
-  "Carte Apple Wallet / Google Wallet cote client",
-  "Tableau marchand avec suivi des passages",
+  "QR de scan prêt pour le lieu",
+  "Carte Apple Wallet / Google Wallet côté client",
+  "Tableau marchand : saison, passages et missions",
 ]
 
 const engineSteps = [
@@ -94,7 +96,9 @@ export function EngineFlow({ initialObjectiveId, initialSeasonLength, initialSum
   const seasonNarrative =
     seasonLength === 6
       ? "Cycle long pour laisser monter Diamond, qualifier le Domino et faire naitre un vrai sommet visible."
-      : "Cycle court pour prouver vite le systeme, faire monter les retours et lancer la saison suivante."
+      : "Cycle court pour prouver vite le système, faire monter les retours et lancer la saison suivante."
+
+  const seasonFrame = useMemo(() => getSeasonFrameForTemplateId(selectedTemplate.id), [selectedTemplate.id])
 
   const monthlyProjection = useMemo(
     () =>
@@ -479,12 +483,22 @@ export function EngineFlow({ initialObjectiveId, initialSeasonLength, initialSum
 
               <div className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
                 <div className="space-y-5">
+                  {seasonFrame ? (
+                    <Card className="border-[#173A2E]/25 bg-[linear-gradient(165deg,#F4F1EA_0%,#E8EDE4_100%)] p-6">
+                      <p className="text-xs uppercase tracking-[0.14em] text-[#355246]">Cadrage saison (marché)</p>
+                      <p className="mt-2 font-serif text-3xl text-[#173A2E] sm:text-4xl">{seasonFrame.heroBand}</p>
+                      <p className="mt-2 text-sm font-medium text-[#2A3F35]">{seasonFrame.calibratedSubline}</p>
+                      <p className="mt-2 text-xs text-[#5C655E]">
+                        {seasonFrame.floorLabel} · {seasonFrame.upsideLabel}
+                      </p>
+                    </Card>
+                  ) : null}
                   <Card className="border-[#BBC8BC] bg-[#F2F7EF] p-6">
-                    <p className="text-xs uppercase tracking-[0.14em] text-[#607067]">Projection pour cette version</p>
-                    <p className="mt-2 font-serif text-5xl text-[#173A2E]">+{formatEuro(monthlyProjection.extraRevenue)} / mois</p>
-                    <p className="mt-3 text-base text-[#2E4339]">{Math.round(monthlyProjection.recoveredClients)} clients recuperes / mois</p>
+                    <p className="text-xs uppercase tracking-[0.14em] text-[#607067]">Indicateur modèle (cette version)</p>
+                    <p className="mt-2 font-serif text-4xl text-[#173A2E] sm:text-5xl">+{formatEuro(monthlyProjection.extraRevenue)} / mois</p>
+                    <p className="mt-3 text-base text-[#2E4339]">{Math.round(monthlyProjection.recoveredClients)} clients récupérés / mois</p>
                     <p className="mt-3 text-sm text-[#4F5E55]">{selectedScenario.projectionCaption}</p>
-                    <p className="mt-2 text-sm text-[#4F5E55]">{seasonLabel} - Sommet retenu : {selectedSummit.promise}</p>
+                    <p className="mt-2 text-sm text-[#4F5E55]">{seasonLabel} — Sommet retenu : {selectedSummit.promise}</p>
                   </Card>
 
                   <Card className="p-6">

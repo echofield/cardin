@@ -1,5 +1,12 @@
-import { NextResponse } from "next/server"
+﻿import { NextResponse } from "next/server"
 
+import {
+  assessRewardGrant,
+  buildMerchantProtocolSnapshot,
+  getMerchantProtocolSettings,
+  insertProtocolEvent,
+  logRewardPause,
+} from "@/lib/cardin-protocol-runtime"
 import {
   getSummitOptions,
   getSummitUsageInitial,
@@ -82,6 +89,30 @@ export async function POST(request: Request, { params }: { params: { cardId: str
     return NextResponse.json({ ok: false, error: "summit_not_reached" }, { status: 400 })
   }
 
+  const protocolSettings = await getMerchantProtocolSettings(supabase, card.merchant_id, activeSeason.season_length)
+  const protocolSnapshot = await buildMerchantProtocolSnapshot(supabase, {
+    merchantId: card.merchant_id,
+    season: activeSeason,
+  })
+
+  if (protocolSettings && protocolSnapshot) {
+    const assessment = await assessRewardGrant(protocolSnapshot, {
+      deltaRewardCost: protocolSettings.config.rewardCosts.summit,
+    })
+
+    if (!assessment.allowed) {
+      await logRewardPause(supabase, {
+        merchantId: card.merchant_id,
+        seasonId: activeSeason.id,
+        cardId: card.id,
+        state: protocolSnapshot.state,
+        reason: assessment.blockingReason ?? "summit_guardrail",
+        action: "summit_reward",
+      })
+      return NextResponse.json({ ok: false, error: "rewards_paused" }, { status: 409 })
+    }
+  }
+
   const usage = getSummitUsageInitial(worldId, optionId)
   const { data: updatedCard, error: updateError } = await supabase
     .from("cards")
@@ -102,6 +133,20 @@ export async function POST(request: Request, { params }: { params: { cardId: str
 
   if (!updatedCard) {
     return NextResponse.json({ ok: false, error: "reward_already_chosen" }, { status: 400 })
+  }
+
+  if (protocolSettings) {
+    await insertProtocolEvent(supabase, {
+      merchantId: card.merchant_id,
+      seasonId: activeSeason.id,
+      cardId: card.id,
+      eventType: "summit_reward_granted",
+      costEur: protocolSettings.config.rewardCosts.summit,
+      metadata: {
+        optionId,
+        usage,
+      },
+    })
   }
 
   const payload = await getPublicCardPayloadById(supabase, card.id)

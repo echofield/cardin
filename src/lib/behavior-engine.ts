@@ -1,6 +1,13 @@
 ﻿import { getTemplateById, type MerchantTemplate } from "@/lib/merchant-templates"
 
-export type EngineActivityId = "cafe" | "restaurant" | "boulangerie" | "coiffeur" | "institut-beaute" | "boutique"
+export type EngineActivityId =
+  | "cafe"
+  | "bar"
+  | "restaurant"
+  | "boulangerie"
+  | "coiffeur"
+  | "institut-beaute"
+  | "boutique"
 export type EngineFrequency = "high" | "medium" | "low"
 export type EngineCadence = "short_loops" | "balanced_loops" | "long_cycles"
 export type BehaviorScenarioId = "starting_loop" | "weekly_rendezvous" | "short_challenge" | "monthly_gain"
@@ -101,6 +108,25 @@ const PROFILES: Record<EngineActivityId, ActivityProfile> = {
     challengeBestFor: "Accélérer les passages sur une courte séquence.",
     monthlyBestFor: "Créer un sujet signature autour du comptoir.",
   },
+  bar: {
+    frequency: "high",
+    weeklyAnchor: "Soirée régulière",
+    challenge: "Défi court",
+    reward: "Consigne signature offerte",
+    monthlyEvent: "Gain du mois",
+    invitationLayer: "Puis une invitation ciblée pour faire venir un duo ou un groupe au comptoir.",
+    movementPromise:
+      "La carte rend le retour visible sur la semaine, puis amplifie le réseau quand les bons profils s'activent.",
+    weeklyRecommendation: { title: "Créneau fort", detail: "Installer un rendez-vous attendu sur une soirée à renforcer." },
+    challengeRecommendation: { title: "Défi court", detail: "Créer plusieurs venues sur une courte fenêtre." },
+    challengeUrgentRecommendation: { title: "Défi court", detail: "Réactiver vite les clients qui ont laissé filer l'habitude." },
+    monthlyRecommendation: { title: "Gain mensuel", detail: "Donner une raison de reparler du lieu sans promo permanente." },
+    monthlyPremiumRecommendation: { title: "Gain mensuel", detail: "Mettre en avant une consigne ou une expérience signature." },
+    startingDetail: "Point de départ lisible au comptoir, adapté aux rotations de soirée.",
+    weeklyBestFor: "Densifier un jour ou une plage encore trop calme.",
+    challengeBestFor: "Resserrer le délai entre deux sorties.",
+    monthlyBestFor: "Créer un moment fort identifiable dans le mois.",
+  },
   restaurant: {
     frequency: "medium",
     weeklyAnchor: "Rendez-vous hebdo",
@@ -175,7 +201,15 @@ const PROFILES: Record<EngineActivityId, ActivityProfile> = {
   },
 }
 
-const KNOWN_ACTIVITY_IDS = new Set<EngineActivityId>(["cafe", "restaurant", "boulangerie", "coiffeur", "institut-beaute", "boutique"])
+const KNOWN_ACTIVITY_IDS = new Set<EngineActivityId>([
+  "cafe",
+  "bar",
+  "restaurant",
+  "boulangerie",
+  "coiffeur",
+  "institut-beaute",
+  "boutique",
+])
 
 export function normalizeEngineActivityId(value?: string): EngineActivityId {
   if (value && KNOWN_ACTIVITY_IDS.has(value as EngineActivityId)) {

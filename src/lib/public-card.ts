@@ -2,6 +2,8 @@
 
 import { normalizeCardinWorld } from "@/lib/client-parcours-config"
 import { buildCardPrimaryMessage } from "@/lib/card-messaging"
+import { getMissionForCardDisplay } from "@/lib/cardin-mission-engine"
+import { buildMerchantProtocolSnapshot, getActiveDiamondTokenForCard } from "@/lib/cardin-protocol-runtime"
 import { canInvite, calculateBranchCapacity } from "@/lib/domino-engine"
 import { getLandingWorldForProfile, getMerchantProfileFromRaw, normalizeMerchantProfileId } from "@/lib/merchant-profile"
 import { buildMidpointView, buildSharedUnlockView, getMidpointMode, getRewardLabel, getTargetVisits, type MidpointMode } from "@/lib/program-layer"
@@ -24,6 +26,7 @@ type CardRecord = {
   summit_reward_title: string | null
   summit_reward_description: string | null
   summit_reward_usage_remaining: number | null
+  current_season_id?: string | null
 }
 
 type MerchantRecord = {
@@ -105,6 +108,9 @@ async function buildPublicCardPayload(supabase: SupabaseClient, card: CardRecord
 
   const activeSeason = merchant ? await getActiveSeason(supabase, merchant.id) : null
   const seasonProgress = activeSeason ? await getCardSeasonProgress(supabase, card.id, activeSeason.id) : null
+  const diamondToken = activeSeason ? await getActiveDiamondTokenForCard(supabase, card.id, activeSeason.id) : null
+  const mission = await getMissionForCardDisplay(supabase, card.id)
+  const protocolSnapshot = merchant ? await buildMerchantProtocolSnapshot(supabase, { merchantId: merchant.id, season: activeSeason }) : null
 
   const seasonInfo = activeSeason
     ? {
@@ -205,6 +211,15 @@ async function buildPublicCardPayload(supabase: SupabaseClient, card: CardRecord
           }
         : null,
       summitReward,
+      diamondToken: diamondToken
+        ? {
+            cycleIndex: diamondToken.cycle_index,
+            expiresAt: diamondToken.expires_at,
+            title: "Expérience Diamond",
+            description: `Une experience de cycle reste activable jusqu'au ${new Date(diamondToken.expires_at).toLocaleDateString("fr-FR")}.`,
+          }
+        : null,
+      mission,
     },
     merchant: merchant
       ? {
@@ -219,6 +234,14 @@ async function buildPublicCardPayload(supabase: SupabaseClient, card: CardRecord
     season: seasonInfo,
     invite,
     message,
+    protocol: protocolSnapshot
+      ? {
+          state: protocolSnapshot.state,
+          rewardsPaused: protocolSnapshot.rewardsPaused,
+          seasonObjective: protocolSnapshot.narrative.seasonObjective,
+          diamondLine: protocolSnapshot.narrative.diamondLine,
+        }
+      : null,
   }
 }
 
@@ -226,7 +249,7 @@ export async function getPublicCardPayloadById(supabase: SupabaseClient, cardId:
   const { data, error } = await supabase
     .from("cards")
     .select(
-      "id, merchant_id, customer_name, stamps, target_visits, reward_label, midpoint_reached_at, created_at, card_code, summit_reward_option_id, summit_reward_title, summit_reward_description, summit_reward_usage_remaining",
+      "id, merchant_id, customer_name, stamps, target_visits, reward_label, midpoint_reached_at, created_at, card_code, summit_reward_option_id, summit_reward_title, summit_reward_description, summit_reward_usage_remaining, current_season_id",
     )
     .eq("id", cardId)
     .single()
@@ -242,7 +265,7 @@ export async function getPublicCardPayloadByCode(supabase: SupabaseClient, cardC
   const { data, error } = await supabase
     .from("cards")
     .select(
-      "id, merchant_id, customer_name, stamps, target_visits, reward_label, midpoint_reached_at, created_at, card_code, summit_reward_option_id, summit_reward_title, summit_reward_description, summit_reward_usage_remaining",
+      "id, merchant_id, customer_name, stamps, target_visits, reward_label, midpoint_reached_at, created_at, card_code, summit_reward_option_id, summit_reward_title, summit_reward_description, summit_reward_usage_remaining, current_season_id",
     )
     .eq("card_code", cardCode)
     .single()
@@ -253,3 +276,7 @@ export async function getPublicCardPayloadByCode(supabase: SupabaseClient, cardC
 
   return buildPublicCardPayload(supabase, data as CardRecord)
 }
+
+
+
+

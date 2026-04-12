@@ -1,5 +1,6 @@
 ﻿import { NextResponse } from "next/server"
 
+import { buildMerchantProtocolSnapshot } from "@/lib/cardin-protocol-runtime"
 import { getLandingWorldForProfile, getMerchantProfileFromRaw, normalizeMerchantProfileId } from "@/lib/merchant-profile"
 import { buildSharedUnlockView, getMidpointMode, getRewardLabel, getTargetVisits } from "@/lib/program-layer"
 import { createSupabaseServiceClient } from "@/lib/supabase/service"
@@ -39,6 +40,7 @@ export async function GET(_: Request, { params }: { params: { merchantId: string
       shared_unlock_active_until: merchant.shared_unlock_active_until,
       shared_unlock_last_triggered_period: merchant.shared_unlock_last_triggered_period,
     })
+    const protocolSnapshot = await buildMerchantProtocolSnapshot(supabase, { merchantId: merchant.id })
 
     return NextResponse.json({
       ok: true,
@@ -56,6 +58,14 @@ export async function GET(_: Request, { params }: { params: { merchantId: string
           midpointThreshold: Math.ceil(targetVisits / 2),
         },
         sharedUnlock,
+        protocol: protocolSnapshot
+          ? {
+              state: protocolSnapshot.state,
+              rewardsPaused: protocolSnapshot.rewardsPaused,
+              seasonObjective: protocolSnapshot.narrative.seasonObjective,
+              diamondLine: protocolSnapshot.narrative.diamondLine,
+            }
+          : null,
       },
     })
   } catch (error) {

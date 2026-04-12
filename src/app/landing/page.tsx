@@ -1,6 +1,7 @@
 ﻿import Link from "next/link"
 
 import { LandingOnboardingJourney } from "@/components/landing/LandingOnboardingJourney"
+import { MobileStickyInstallBar } from "@/components/landing/MobileStickyInstallBar"
 import { MerchantSeasonStudio } from "@/components/landing/MerchantSeasonStudio"
 import { PublicFooter } from "@/components/shared/PublicFooter"
 import { LANDING_SECTOR_CARDS } from "@/lib/landing-content"
@@ -14,23 +15,18 @@ export default function LandingPage() {
           <div className="max-w-[60rem]">
             <p className="text-[11px] uppercase tracking-[0.22em] text-[#677168]">Cardin</p>
             <h1 className="mt-4 max-w-5xl font-serif text-[clamp(3rem,9vw,5.4rem)] leading-[1.02] text-[#163328]">
-              Clients qui reviennent. Réseau activé. Revenu récupéré.
+              Moteur de revenu saisonnier. Diamond au centre. Parcours qui compte.
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-[#566159] sm:text-lg">
-              Un système simple pour relancer l’activité et faire revenir vos clients.
+              Débloquez le Diamond comme horizon dès le départ : missions en cours de route, retour, recommandation et
+              moments activés — sans promesse creuse.
             </p>
             <p className="mt-3 max-w-2xl text-base leading-7 text-[#566159] sm:text-lg">
-              Cardin transforme le passage en retour, sans complexité.
+              Objectifs de saison calibrés pour viser une revalorisation nette crédible, pas des gains symboliques.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link className="inline-flex h-12 items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-6 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href="/parcours">
                 Voir le parcours marchand
-              </Link>
-              <Link
-                className="inline-flex h-12 items-center justify-center rounded-full border border-[#B8C4B0] bg-[#EEF3EA] px-6 text-sm font-medium text-[#173A2E] transition hover:border-[#9AAF9E] hover:bg-[#E4EBE1]"
-                href="/parcours?mode=lite"
-              >
-                Parcours Lite
               </Link>
               <Link
                 className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-6 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]"
@@ -56,7 +52,7 @@ export default function LandingPage() {
         <div className="rounded-[1.8rem] border border-[#E3DDD0] bg-[#FFFEFA] p-6 sm:p-8">
           <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Par type de commerce</p>
           <h2 className="mt-3 font-serif text-3xl text-[#173328] sm:text-4xl">Une logique différente selon le lieu.</h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {LANDING_SECTOR_CARDS.map((card) => (
               <div className="rounded-[1.4rem] border border-[#E2DDD1] bg-[#FBF9F3] p-5" key={card.label}>
                 <p className="font-serif text-2xl text-[#173A2E]">{card.label}</p>
@@ -68,6 +64,7 @@ export default function LandingPage() {
       </section>
 
       <PublicFooter />
+      <MobileStickyInstallBar />
     </main>
   )
 }

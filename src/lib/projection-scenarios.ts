@@ -1,4 +1,4 @@
-export type MerchantProjectionType = "cafe" | "restaurant" | "coiffeur" | "beaute" | "boutique"
+export type MerchantProjectionType = "cafe" | "bar" | "restaurant" | "coiffeur" | "beaute" | "boutique"
 
 export type TrafficLevel = "light" | "steady" | "dense"
 export type TicketLevel = "small" | "standard" | "premium"
@@ -84,6 +84,7 @@ export type MerchantIdentityOption = {
 
 export const MERCHANT_IDENTITY_OPTIONS: MerchantIdentityOption[] = [
   { type: "cafe", label: "Café", line: "passage rapide", detail: "habitudes du quotidien" },
+  { type: "bar", label: "Bar", line: "soirée & comptoir", detail: "panier plus fort, réseau naturel" },
   { type: "restaurant", label: "Restaurant", line: "entre deux moments", detail: "services inégaux dans la semaine" },
   { type: "coiffeur", label: "Coiffeur", line: "retour espacé", detail: "cycle à raccourcir" },
   { type: "beaute", label: "Beauté", line: "fréquence fragile", detail: "séances à stabiliser" },
@@ -98,7 +99,8 @@ export const projectionByMerchant: Record<MerchantProjectionType, ProjectionBund
   cafe: {
     merchantLabel: "Café",
     merchantLine: "Passage rapide et habitudes du quotidien.",
-    brandPunchline: "Faire revenir sans promo permanente, en donnant un repère simple.",
+    brandPunchline:
+      "Diamond visible comme destination dès le départ : missions sur le parcours, retour et réseau qui montent vers un privilège maîtrisé.",
     auditBlocks: [
       {
         id: "traffic",
@@ -203,6 +205,118 @@ export const projectionByMerchant: Record<MerchantProjectionType, ProjectionBund
           activeDots: 1,
         },
         impact: { captureRate: 0.06, revisitRate: 0.18, basketLift: 0.05, retentionLift: 0.02, confidenceLow: 0.83, confidenceHigh: 1.16 },
+      }),
+    ],
+  },
+  bar: {
+    merchantLabel: "Bar",
+    merchantLine: "Comptoir, soirée et réseau social — ticket plus haut que le café, fréquence à structurer.",
+    brandPunchline:
+      "Diamond comme horizon dès le premier verre : missions sur le parcours, retour et tables qui montent vers un privilège maîtrisé.",
+    auditBlocks: [
+      {
+        id: "traffic",
+        label: "Affluence",
+        help: "Le niveau réel sur les soirées et créneaux que vous voulez densifier.",
+        options: [
+          { id: "light", label: "Calme", description: "soirées encore irrégulières" },
+          { id: "steady", label: "Régulier", description: "base installée en semaine" },
+          { id: "dense", label: "Dense", description: "forte rotation à capter" },
+        ],
+      },
+      {
+        id: "ticket",
+        label: "Panier",
+        help: "Le ticket moyen le plus fréquent (consos + service).",
+        options: [
+          { id: "small", label: "Essentiel", description: "consommation courte" },
+          { id: "standard", label: "Classique", description: "consos + accompagnement" },
+          { id: "premium", label: "Généreux", description: "ticket plus complet" },
+        ],
+      },
+      {
+        id: "frequency",
+        label: "Retour",
+        help: "La facilité à refaire revenir le même client.",
+        options: [
+          { id: "fragile", label: "À réveiller", description: "clientèle encore peu régulière" },
+          { id: "normal", label: "À structurer", description: "retour présent mais irrégulier" },
+          { id: "strong", label: "Déjà visible", description: "habitués identifiables" },
+        ],
+      },
+    ],
+    featured: createScenario({
+      id: "soiree-reguliere",
+      title: "Soirée régulière",
+      description: "Ancrer un rendez-vous de semaine sans vivre en promotion.",
+      summaryLine: "Faire revenir sur un créneau clair et rendre le bar prévisible.",
+      startingOffer: "5 passages -> 1 consigne signature offerte",
+      customerPromise: "Le client voit un cap atteignable en quelques sorties.",
+      triggerHint: "Rappel doux 4 jours après la dernière venue.",
+      defaultAudit: { traffic: "steady", ticket: "standard", frequency: "normal" },
+      pass: {
+        rewardLabel: "5 passages -> consigne signature",
+        notificationLabel: "Votre prochaine soirée compte",
+        footerLabel: "CARDIN PASS",
+        progressDots: 5,
+        activeDots: 2,
+      },
+      impact: { captureRate: 0.082, revisitRate: 0.22, basketLift: 0.03, retentionLift: 0.028, confidenceLow: 0.84, confidenceHigh: 1.14 },
+    }),
+    options: [
+      createScenario({
+        id: "creneau-faible",
+        title: "Créneau faible -> fort",
+        description: "Redistribuer l'attention vers le jour ou la plage la plus calme.",
+        summaryLine: "Déplacer du trafic existant vers un moment à renforcer.",
+        startingOffer: "Jeudi actif -> 4 passages ce soir-là -> shot maison offert",
+        customerPromise: "Le client comprend un rendez-vous clair, pas une promo floue.",
+        triggerHint: "Annonce 24h avant le créneau cible.",
+        defaultAudit: { traffic: "steady", ticket: "standard", frequency: "fragile" },
+        pass: {
+          rewardLabel: "4 jeudis actifs -> shot offert",
+          notificationLabel: "Demain, votre passage compte double",
+          footerLabel: "CARDIN PASS",
+          progressDots: 4,
+          activeDots: 1,
+        },
+        impact: { captureRate: 0.088, revisitRate: 0.19, basketLift: 0.035, retentionLift: 0.026, confidenceLow: 0.83, confidenceHigh: 1.13 },
+      }),
+      createScenario({
+        id: "defi-court-bar",
+        title: "Défi court",
+        description: "Plusieurs venues sur une courte fenêtre pour accélérer l'habitude.",
+        summaryLine: "Resserrer l'intervalle entre deux sorties avant que l'habitude ne casse.",
+        startingOffer: "3 visites en 14 jours -> tapas offertes",
+        customerPromise: "Le client sent un sprint court, facile à finir.",
+        triggerHint: "Carte active dès le premier scan pour viser les deux semaines.",
+        defaultAudit: { traffic: "dense", ticket: "small", frequency: "fragile" },
+        pass: {
+          rewardLabel: "3 visites en 14 jours",
+          notificationLabel: "Plus qu'une sortie cette quinzaine",
+          footerLabel: "CARDIN PASS",
+          progressDots: 3,
+          activeDots: 1,
+        },
+        impact: { captureRate: 0.072, revisitRate: 0.21, basketLift: 0.02, retentionLift: 0.024, confidenceLow: 0.82, confidenceHigh: 1.12 },
+      }),
+      createScenario({
+        id: "moment-mensuel-bar",
+        title: "Moment mensuel",
+        description: "Installer un temps fort attendu sans banaliser l'image du lieu.",
+        summaryLine: "Créer un rendez-vous mensuel identifiable.",
+        startingOffer: "4 passages dans le mois -> création du mois au bar",
+        customerPromise: "Le client attend un moment, pas seulement une remise.",
+        triggerHint: "Annonce du cap au début du mois.",
+        defaultAudit: { traffic: "light", ticket: "premium", frequency: "normal" },
+        pass: {
+          rewardLabel: "4 passages -> création du mois",
+          notificationLabel: "Votre moment du mois avance",
+          footerLabel: "CARDIN PASS",
+          progressDots: 4,
+          activeDots: 1,
+        },
+        impact: { captureRate: 0.065, revisitRate: 0.17, basketLift: 0.06, retentionLift: 0.021, confidenceLow: 0.83, confidenceHigh: 1.15 },
       }),
     ],
   },
@@ -653,7 +767,14 @@ export const projectionByMerchant: Record<MerchantProjectionType, ProjectionBund
 }
 
 export function isMerchantProjectionType(value: string | null): value is MerchantProjectionType {
-  return value === "cafe" || value === "restaurant" || value === "coiffeur" || value === "beaute" || value === "boutique"
+  return (
+    value === "cafe" ||
+    value === "bar" ||
+    value === "restaurant" ||
+    value === "coiffeur" ||
+    value === "beaute" ||
+    value === "boutique"
+  )
 }
 
 export function getProjectionBundle(type: MerchantProjectionType): ProjectionBundle {

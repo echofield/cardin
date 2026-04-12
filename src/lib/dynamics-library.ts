@@ -317,6 +317,11 @@ const MERCHANT_INTENT_FIRST: Partial<Record<EngineActivityId, Partial<Record<Mer
     fill_gaps: "rendez_vous_hebdo",
     strong_moment: "moment_exceptionnel",
   },
+  bar: {
+    return: "rendez_vous_hebdo",
+    fill_gaps: "jour_mort_jour_fort",
+    strong_moment: "moment_exceptionnel",
+  },
   boulangerie: {
     fill_gaps: "jour_mort_jour_fort",
     return: "point_depart",

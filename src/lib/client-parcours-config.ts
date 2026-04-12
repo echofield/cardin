@@ -49,6 +49,7 @@ export type WorldTiming = {
 
 export const CLIENT_PARCOURS_TIMING: Record<LandingWorldId, WorldTiming> = {
   cafe: { minDays: 2, maxDays: 4 },
+  bar: { minDays: 3, maxDays: 7 },
   restaurant: { minDays: 5, maxDays: 10 },
   beaute: { minDays: 10, maxDays: 20 },
   boutique: { minDays: 7, maxDays: 14 },
@@ -75,6 +76,13 @@ export function getTensionPair(
       activation: "Sans précipiter, le lieu monte avec vous.",
       "prochaine-etape": "Cette semaine encore : un pas suffit.",
       domino: "La fenêtre reste entrouverte.",
+    },
+    bar: {
+      entree: "Quand la soirée vous appelle, le fil vous retient.",
+      progression: "Un créneau clair, puis la suite au comptoir.",
+      activation: "Le lieu monte avec vous, sans précipiter.",
+      "prochaine-etape": "Encore un passage : le bar se fait prévisible.",
+      domino: "La fenêtre du groupe reste ouverte.",
     },
     restaurant: {
       entree: "Glissez un moment dans la semaine.",
@@ -104,6 +112,7 @@ export function getTensionPair(
 
 export const WORLD_MERCHANT_TYPE: Record<LandingWorldId, string> = {
   cafe: "cafe",
+  bar: "bar",
   restaurant: "restaurant",
   beaute: "institut-beaute",
   boutique: "boutique",
@@ -111,6 +120,7 @@ export const WORLD_MERCHANT_TYPE: Record<LandingWorldId, string> = {
 
 export const WORLD_TARGET_VISITS: Record<LandingWorldId, number> = {
   cafe: 10,
+  bar: 8,
   restaurant: 5,
   beaute: 4,
   boutique: 6,
@@ -137,6 +147,11 @@ export function getTasteSignal(worldId: LandingWorldId, step: TasteStep): { eyeb
     cafe: {
       progression: { eyebrow: "Note", line: "Une chaleur qui reste, sans promesse affichée." },
       activation: { eyebrow: "Arôme", line: "Le lieu vous reconnaît ; le geste suit." },
+      "prochaine-etape": { eyebrow: "Fil", line: "Chaque retour resserre ce qui vous attend encore." },
+    },
+    bar: {
+      progression: { eyebrow: "Soir", line: "Un créneau qui se répète, sans bruit inutile." },
+      activation: { eyebrow: "Comptoir", line: "Le lieu vous reconnaît ; le geste suit." },
       "prochaine-etape": { eyebrow: "Fil", line: "Chaque retour resserre ce qui vous attend encore." },
     },
     restaurant: {
@@ -172,6 +187,11 @@ export function getSummitOptions(worldId: LandingWorldId): SummitOption[] {
       { id: "impact", title: "Profiter maintenant", description: "-30 % sur vos 5 prochains passages", whisper: "Un élan, tout de suite." },
       { id: "statut", title: "Accès privilégié", description: "Traitement spécial au comptoir", whisper: "Ce que le lieu réserve à ceux qui restent." },
     ],
+    bar: [
+      { id: "recurrence", title: "Continuer à venir", description: "1 création ou soft offert par semaine pendant 1 mois", whisper: "Le rythme de soirée vous appartient." },
+      { id: "impact", title: "Profiter maintenant", description: "-25 % sur votre prochaine commande au bar", whisper: "Un élan, ce soir." },
+      { id: "statut", title: "Accès privilégié", description: "Accès prioritaire au comptoir et création du mois", whisper: "Ce que le bar réserve aux habitués." },
+    ],
     restaurant: [
       { id: "recurrence", title: "Continuer à venir", description: "1 dessert offert sur vos 3 prochaines tables", whisper: "La table vous attend encore." },
       { id: "impact", title: "Profiter maintenant", description: "-40 % sur une prochaine réservation", whisper: "Un repas qui marque le calendrier." },
@@ -199,7 +219,7 @@ export function isValidSummitOptionId(id: string): boolean {
 
 export function normalizeCardinWorld(raw: string | null | undefined): LandingWorldId {
   const v = (raw ?? "cafe").toLowerCase().trim()
-  if (v === "restaurant" || v === "beaute" || v === "boutique" || v === "cafe") {
+  if (v === "restaurant" || v === "beaute" || v === "boutique" || v === "cafe" || v === "bar") {
     return v as LandingWorldId
   }
   return "cafe"
@@ -211,6 +231,9 @@ export function getSummitUsageInitial(worldId: LandingWorldId, optionId: string)
     "cafe:recurrence": 4,
     "cafe:impact": 5,
     "cafe:statut": 1,
+    "bar:recurrence": 4,
+    "bar:impact": 4,
+    "bar:statut": 1,
     "restaurant:recurrence": 3,
     "restaurant:impact": 1,
     "restaurant:statut": 1,

@@ -17,6 +17,7 @@ export type ParcoursSummitStyleId = "visible" | "stronger" | "discreet"
 /** Engine template id (matches merchant-templates / season-law keys). */
 export function landingWorldToEngineTemplateId(worldId: LandingWorldId): string {
   if (worldId === "beaute") return "institut-beaute"
+  if (worldId === "bar") return "bar"
   return worldId
 }
 

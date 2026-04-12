@@ -310,7 +310,7 @@ export function InstallLeadForm({
     </form>
   ) : (
     <div className="rounded-2xl border border-[#D8DBD2] bg-[#FFFDF8] p-6">
-      <p className="text-sm text-[#556159]">Connexion Google. Activation simple. Aucun outil a apprendre.</p>
+      <p className="text-sm text-[#556159]">Connexion Google. Activation simple. Rien de nouveau à maîtriser pour lancer la saison.</p>
       <div className="mt-4">
         <GoogleSignInButton nextPath="/engine#installation" />
       </div>

@@ -14,7 +14,7 @@ export function SiteHeader() {
   const pathname = usePathname()
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-[#E4E7E0]/80 bg-[#F6F5F0]/95">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-[#E4E7E0]/80 bg-[#F6F5F0]/95 pt-safe">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-6">
         <Link className="flex flex-col leading-none" href="/landing">
           <span className="font-serif text-[1.15rem] font-semibold tracking-[0.06em] text-[#15372B]">CARDIN</span>

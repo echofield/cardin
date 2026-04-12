@@ -7,6 +7,7 @@ import { ProgressionStrip } from "@/components/landing/ProgressionStrip"
 import { AnnualProjectionPanel } from "@/components/engine/AnnualProjectionPanel"
 import { trackEvent } from "@/lib/analytics"
 import { LANDING_PRICING } from "@/lib/landing-content"
+import { getSeasonFrameForTemplateId } from "@/lib/merchant-season-framing"
 import { projectAnnualCardinPlan } from "@/lib/annual-projection-engine"
 import { buildCalendarPlan } from "@/lib/calendar-engine"
 import { type BehaviorPlan } from "@/lib/behavior-engine"
@@ -25,7 +26,7 @@ type LandingCalculatorModuleProps = {
   selectedIntent: MerchantIntent | null
 }
 
-const MONTHLY_PLAN_PRICE = LANDING_PRICING.recurringFee
+const MONTHLY_PLAN_PRICE = LANDING_PRICING.seasonMonthlyEquivalent
 
 export function LandingCalculatorModule({
   ctaHref,
@@ -115,6 +116,8 @@ export function LandingCalculatorModule({
     [avgValue]
   )
 
+  const seasonFrame = useMemo(() => getSeasonFrameForTemplateId(selectedTemplate.id), [selectedTemplate.id])
+
   const equivalentLine = useMemo(() => {
     if (monthlyProjection.monthlyReturns <= 0) return null
     const perDay = monthlyProjection.monthlyReturns / DEFAULT_DAYS_OPEN
@@ -150,7 +153,8 @@ export function LandingCalculatorModule({
         <p className="text-xs uppercase tracking-[0.16em] text-[#5C655E]">Projection Cardin · {entryModeLabel ?? "Commerce"}</p>
         <h2 className="mt-3 font-serif text-3xl leading-tight text-[#16372C] sm:text-4xl">Ce que cela peut réellement ramener</h2>
         <p className="mt-2 max-w-3xl text-sm text-[#5C655E]">
-          Les curseurs estiment votre base. La dynamique choisie oriente l&apos;effet principal — sans promesse irréaliste.
+          Moteur de revenu saisonnier : les curseurs calent votre base ; la dynamique oriente l&apos;effet — indicateur modèle,
+          pas garantie.
         </p>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">
@@ -213,8 +217,18 @@ export function LandingCalculatorModule({
           </div>
 
           <div className="space-y-4">
+            {seasonFrame ? (
+              <div className="rounded-2xl border border-[#173A2E]/20 bg-[linear-gradient(165deg,#F4F1EA_0%,#E8EDE4_100%)] p-5">
+                <p className="text-xs uppercase tracking-[0.14em] text-[#355246]">Cadrage saison (marché)</p>
+                <p className="mt-2 font-serif text-2xl text-[#153428] sm:text-3xl">{seasonFrame.heroBand}</p>
+                <p className="mt-2 text-sm font-medium text-[#2A3F35]">{seasonFrame.calibratedSubline}</p>
+                <p className="mt-2 text-xs text-[#5C655E]">
+                  {seasonFrame.floorLabel} · {seasonFrame.upsideLabel}
+                </p>
+              </div>
+            ) : null}
             <div className="rounded-2xl border border-[#CCD3C9] bg-[#FEFEFA] p-5">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#667068]">Estimation mensuelle</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#667068]">Indicateur modèle (mensuel)</p>
               <p
                 className={[
                   "mt-2 font-serif text-4xl text-[#153428] transition-transform duration-200 sm:text-5xl",
@@ -280,7 +294,7 @@ export function LandingCalculatorModule({
           </div>
         </div>
 
-        <div className="sticky bottom-3 mt-6 flex flex-col gap-3 sm:static sm:flex-row sm:items-center">
+        <div className="sticky bottom-0 z-20 mt-6 flex flex-col gap-3 border-t border-[#E4E7E0]/60 bg-[#FDFCF8]/95 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-3 backdrop-blur sm:static sm:mt-6 sm:border-t-0 sm:bg-transparent sm:pb-0 sm:pt-0 sm:backdrop-blur-none">
           <Link
             className="sm:flex-1"
             href={ctaHref}

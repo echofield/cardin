@@ -1,7 +1,10 @@
-import { NextResponse } from "next/server"
+﻿import { NextResponse } from "next/server"
 
+import { getActiveMissionForCard, maybeAssignIntentMission } from "@/lib/cardin-mission-engine"
+import { getActiveDiamondTokenForCard, issueDiamondTokenIfEligible } from "@/lib/cardin-protocol-runtime"
 import { IDEMPOTENCY_SCOPE_VALIDATE, getCachedIdempotentResponse, saveIdempotentResponse } from "@/lib/merchant-api-idempotency"
 import { isWithinMerchantCooldown, runMerchantStamp } from "@/lib/merchant-stamp-core"
+import { getActiveSeason, getCardSeasonProgress } from "@/lib/season-progression"
 import { createClientSupabaseServer } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
@@ -91,7 +94,11 @@ export async function POST(request: Request) {
 
   if (isWithinMerchantCooldown(card.last_merchant_validation_at)) {
     return NextResponse.json(
-      { ok: false, error: "cooldown_active", message: "Réessayez plus tard : cette carte est encore dans la fenêtre courte entre deux validations." },
+      {
+        ok: false,
+        error: "cooldown_active",
+        message: "Cette carte est encore dans sa fenetre courte entre deux validations.",
+      },
       { status: 429 },
     )
   }
@@ -99,7 +106,7 @@ export async function POST(request: Request) {
   const { data: merchant, error: merchantError } = await supabase
     .from("merchants")
     .select(
-      "id, name, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period",
+      "id, name, cardin_world, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period",
     )
     .eq("id", card.merchant_id)
     .single()
@@ -136,12 +143,72 @@ export async function POST(request: Request) {
       visitSessionId: session.id,
     })
 
+    const activeSeason = await getActiveSeason(supabase, merchant.id)
+    const progress = activeSeason ? await getCardSeasonProgress(supabase, card.id, activeSeason.id) : null
+    const diamond = activeSeason
+      ? await issueDiamondTokenIfEligible(supabase, {
+          merchantId: merchant.id,
+          cardId: card.id,
+          season: activeSeason,
+        })
+      : { issued: false as const }
+
+    const freshCard = await supabase
+      .from("cards")
+      .select(
+        "summit_reward_option_id, summit_reward_title, summit_reward_description, summit_reward_usage_remaining, current_season_id",
+      )
+      .eq("id", card.id)
+      .maybeSingle()
+
+    const summitReward =
+      freshCard.data &&
+      freshCard.data.summit_reward_option_id &&
+      freshCard.data.summit_reward_title &&
+      freshCard.data.summit_reward_description != null &&
+      typeof freshCard.data.summit_reward_usage_remaining === "number"
+        ? {
+            optionId: freshCard.data.summit_reward_option_id,
+            title: freshCard.data.summit_reward_title,
+            description: freshCard.data.summit_reward_description,
+            usageRemaining: freshCard.data.summit_reward_usage_remaining,
+          }
+        : null
+
+    const missionAssignment =
+      activeSeason && progress
+        ? await maybeAssignIntentMission(supabase, {
+            merchantId: merchant.id,
+            merchantWorld: merchant.cardin_world,
+            cardId: card.id,
+            visitSessionId: session.id,
+            season: activeSeason,
+            currentStep: progress.current_step,
+            diamondUnlockedAt: progress.diamond_unlocked_at,
+            hasSummitReward: Boolean(summitReward),
+          })
+        : { assigned: false as const, mission: null }
+
+    const activeMission = missionAssignment.mission ?? (await getActiveMissionForCard(supabase, card.id))
+    const activeDiamondToken = activeSeason ? await getActiveDiamondTokenForCard(supabase, card.id, activeSeason.id) : null
+
     const payload = {
       ok: true as const,
       ...result,
-      message: "Passage validé",
+      message: "Passage valide.",
       sessionId: session.id,
       validatedAt,
+      diamondTokenIssued: diamond.issued,
+      diamondTokenReason: diamond.reason ?? null,
+      summitReward,
+      diamondToken: activeDiamondToken
+        ? {
+            title: "Expérience Diamond",
+            description: `Cycle ${activeDiamondToken.cycle_index} disponible jusqu'au ${new Date(activeDiamondToken.expires_at).toLocaleDateString("fr-FR")}.`,
+            expiresAt: activeDiamondToken.expires_at,
+          }
+        : null,
+      mission: activeMission,
     }
 
     if (idem) {
@@ -150,11 +217,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(payload)
   } catch (error) {
-    await supabase
-      .from("visit_sessions")
-      .update({ validated_at: null })
-      .eq("id", session.id)
-      .eq("validated_at", validatedAt)
+    await supabase.from("visit_sessions").update({ validated_at: null }).eq("id", session.id).eq("validated_at", validatedAt)
 
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "validate_failed" },
@@ -162,3 +225,4 @@ export async function POST(request: Request) {
     )
   }
 }
+

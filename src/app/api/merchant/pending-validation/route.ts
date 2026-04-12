@@ -1,12 +1,11 @@
-import { NextResponse } from "next/server"
+﻿import { NextResponse } from "next/server"
 
+import { getActiveMissionForCard } from "@/lib/cardin-mission-engine"
+import { buildMerchantProtocolSnapshot, getActiveDiamondTokenForCard } from "@/lib/cardin-protocol-runtime"
 import { createClientSupabaseServer } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 
-/**
- * Latest unvalidated visit session for this merchant (staff sees "client en cours").
- */
 export async function GET() {
   const supabase = createClientSupabaseServer()
   const {
@@ -30,14 +29,26 @@ export async function GET() {
     return NextResponse.json({ ok: false, error: sessionError.message }, { status: 500 })
   }
 
+  const protocol = await buildMerchantProtocolSnapshot(supabase, { merchantId: user.id })
+
   if (!session) {
-    return NextResponse.json({ ok: true, pending: null })
+    return NextResponse.json({
+      ok: true,
+      pending: null,
+      protocol: protocol
+        ? {
+            state: protocol.state,
+            rewardsPaused: protocol.rewardsPaused,
+            seasonObjective: protocol.narrative.seasonObjective,
+          }
+        : null,
+    })
   }
 
   const { data: card } = await supabase
     .from("cards")
     .select(
-      "customer_name, stamps, target_visits, summit_reward_option_id, summit_reward_title, summit_reward_description, summit_reward_usage_remaining",
+      "customer_name, stamps, target_visits, current_season_id, summit_reward_option_id, summit_reward_title, summit_reward_description, summit_reward_usage_remaining",
     )
     .eq("id", session.card_id)
     .maybeSingle()
@@ -56,6 +67,9 @@ export async function GET() {
         }
       : null
 
+  const diamondToken = await getActiveDiamondTokenForCard(supabase, session.card_id, card?.current_season_id ?? null)
+  const mission = await getActiveMissionForCard(supabase, session.card_id)
+
   return NextResponse.json({
     ok: true,
     pending: {
@@ -66,6 +80,22 @@ export async function GET() {
       stamps: card?.stamps ?? 0,
       targetVisits: card?.target_visits ?? 10,
       summitReward,
+      diamondToken: diamondToken
+        ? {
+            title: "Expérience Diamond",
+            description: `Cycle ${diamondToken.cycle_index} disponible jusqu'au ${new Date(diamondToken.expires_at).toLocaleDateString("fr-FR")}.`,
+            expiresAt: diamondToken.expires_at,
+          }
+        : null,
+      mission,
     },
+    protocol: protocol
+      ? {
+          state: protocol.state,
+          rewardsPaused: protocol.rewardsPaused,
+          seasonObjective: protocol.narrative.seasonObjective,
+        }
+      : null,
   })
 }
+

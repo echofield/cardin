@@ -1,7 +1,7 @@
 import type { LandingWorldId } from "@/lib/landing-content"
 
 /**
- * Cardin Lite — locked copy for parcours Étape « Vos scénarios ».
+ * Copy verrouillée pour l’étape parcours « Vos scénarios » (parcours simplifié, `?mode=lite`).
  * 4 secteurs × 3 scénarios × 3 types de récompense (exemples inclus).
  */
 
@@ -24,18 +24,18 @@ export const LITE_SCENARIOS_BY_WORLD: Record<LandingWorldId, LiteScenario[]> = {
       id: "cafe_heures_creuses",
       title: "Heures creuses",
       mechanicOneLiner:
-        "Un client scanne pendant vos heures calmes. Il recoit une offre qui n'existe qu'a ce moment.",
+        "Un client scanne pendant vos heures calmes. Il reçoit une offre qui n'existe qu'à ce moment.",
       rewards: [
-        { id: "reduction", label: "Reduction", shortExample: "ex. -40% 2e boisson" },
-        { id: "offre_speciale", label: "Offre speciale", shortExample: "ex. combo pas sur la carte" },
+        { id: "reduction", label: "Réduction", shortExample: "ex. -40 % 2e boisson" },
+        { id: "offre_speciale", label: "Offre spéciale", shortExample: "ex. combo pas sur la carte" },
         { id: "offert", label: "Offert", shortExample: "ex. patisserie offerte pour toute commande" },
       ],
     },
     {
       id: "cafe_premiere_visite",
-      title: "Premiere visite",
+      title: "Première visite",
       mechanicOneLiner:
-        "Quelqu'un scanne pour la premiere fois. Le systeme le detecte et declenche un geste de bienvenue.",
+        "Quelqu'un scanne pour la première fois. Le système le détecte et déclenche un geste de bienvenue.",
       rewards: [
         { id: "reduction", label: "Reduction", shortExample: "ex. -20% aujourd'hui" },
         { id: "offert", label: "Offert", shortExample: "ex. cafe offert, sans condition" },
@@ -51,6 +51,41 @@ export const LITE_SCENARIOS_BY_WORLD: Record<LandingWorldId, LiteScenario[]> = {
         { id: "reduction_croissante", label: "Reduction croissante", shortExample: "ex. -5%, -10%, -15%" },
         { id: "upgrade_croissant", label: "Upgrade croissant", shortExample: "ex. taille superieure, puis supplement offert, puis boisson offerte" },
         { id: "surprise", label: "Surprise", shortExample: "le client ne sait pas ce qu'il debloque — effet de curiosite" },
+      ],
+    },
+  ],
+  bar: [
+    {
+      id: "bar_heures_creuses",
+      title: "Heures creuses",
+      mechanicOneLiner:
+        "Un client scanne pendant un creux de soirée. Il reçoit une offre qui n'existe qu'à ce moment.",
+      rewards: [
+        { id: "reduction", label: "Réduction", shortExample: "ex. -30 % sur la création du soir" },
+        { id: "offre_speciale", label: "Offre spéciale", shortExample: "ex. combo pas sur la carte" },
+        { id: "offert", label: "Offert", shortExample: "ex. soft offert pour toute commande" },
+      ],
+    },
+    {
+      id: "bar_premiere_visite",
+      title: "Première visite",
+      mechanicOneLiner:
+        "Quelqu'un scanne pour la première fois. Le système le détecte et déclenche un geste de bienvenue.",
+      rewards: [
+        { id: "reduction", label: "Réduction", shortExample: "ex. -20 % ce soir" },
+        { id: "offert", label: "Offert", shortExample: "ex. shot offert sans condition" },
+        { id: "cadeau", label: "Cadeau", shortExample: "ex. accords mets + création offerts" },
+      ],
+    },
+    {
+      id: "bar_serie",
+      title: "Série de passages",
+      mechanicOneLiner:
+        "Un client revient 3 fois ce mois. Chaque visite augmente son avantage. S'il s'arrête, ça repart à zéro.",
+      rewards: [
+        { id: "reduction_croissante", label: "Réduction croissante", shortExample: "ex. -5 %, -10 %, -15 %" },
+        { id: "upgrade_croissant", label: "Upgrade croissant", shortExample: "ex. format supérieur, puis supplément offert" },
+        { id: "surprise", label: "Surprise", shortExample: "le client ne sait pas ce qu'il débloque — effet de curiosité" },
       ],
     },
   ],
@@ -85,7 +120,7 @@ export const LITE_SCENARIOS_BY_WORLD: Record<LandingWorldId, LiteScenario[]> = {
       rewards: [
         { id: "offert", label: "Offert", shortExample: "ex. bouteille offerte" },
         { id: "reduction", label: "Reduction", shortExample: "ex. -10% sur l'addition totale" },
-        { id: "experience", label: "Experience", shortExample: "ex. dessert flambe offert a table — moment memorable" },
+        { id: "experience", label: "Expérience", shortExample: "ex. dessert flambé offert à table — moment mémorable" },
       ],
     },
   ],
@@ -105,11 +140,11 @@ export const LITE_SCENARIOS_BY_WORLD: Record<LandingWorldId, LiteScenario[]> = {
       id: "beaute_anniversaire",
       title: "Anniversaire",
       mechanicOneLiner:
-        "C'est la semaine de son anniversaire. Le systeme le sait. Une offre personnelle apparait.",
+        "C'est la semaine de son anniversaire. Le système le sait. Une offre personnelle apparaît.",
       rewards: [
         { id: "reduction", label: "Reduction", shortExample: "ex. -25% sur la prestation du jour" },
         { id: "offert", label: "Offert", shortExample: "ex. brushing offert" },
-        { id: "experience", label: "Experience", shortExample: "ex. prestation VIP — accueil champagne + soin supplementaire" },
+        { id: "experience", label: "Expérience", shortExample: "ex. prestation VIP — accueil champagne + soin supplémentaire" },
       ],
     },
     {
@@ -129,7 +164,7 @@ export const LITE_SCENARIOS_BY_WORLD: Record<LandingWorldId, LiteScenario[]> = {
       id: "boutique_premiere_visite",
       title: "Premiere visite",
       mechanicOneLiner:
-        "Quelqu'un entre pour la premiere fois et scanne. Le systeme detecte un nouveau profil.",
+        "Quelqu'un entre pour la première fois et scanne. Le système détecte un nouveau profil.",
       rewards: [
         { id: "reduction", label: "Reduction", shortExample: "ex. -20% aujourd'hui uniquement" },
         { id: "cadeau", label: "Cadeau", shortExample: "ex. accessoire offert pour tout achat" },
@@ -140,7 +175,7 @@ export const LITE_SCENARIOS_BY_WORLD: Record<LandingWorldId, LiteScenario[]> = {
       id: "boutique_taille",
       title: "Ma taille, maintenant",
       mechanicOneLiner:
-        "Le client entre sa taille. Le systeme montre ce qui est disponible pour lui, avec une offre limitee.",
+        "Le client entre sa taille. Le système montre ce qui est disponible pour lui, avec une offre limitée.",
       rewards: [
         { id: "reduction", label: "Reduction", shortExample: "ex. -15% sur les pieces dans votre taille, 1h" },
         { id: "acces", label: "Acces", shortExample: "ex. 3 pieces selectionnees pour vous, avant les autres" },
@@ -177,7 +212,7 @@ export function liteProjectionHintLabel(worldId: LandingWorldId, selections: Lit
     const r = sc.rewards.find((x) => x.id === rid)
     if (r) labels.push(r.label.toLowerCase())
   }
-  if (labels.length === 0) return "Configuration Lite"
+  if (labels.length === 0) return "Configuration des scénarios"
   const reductionish = labels.filter((l) => l.includes("reduction")).length
   const offertish = labels.filter((l) => l.includes("offert") || l.includes("cadeau")).length
   if (reductionish >= 2) return "Profil plutot reductions — conversion souvent plus directe."

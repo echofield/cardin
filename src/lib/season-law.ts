@@ -50,6 +50,11 @@ const summitPresets: Record<string, SummitPreset[]> = {
     { id: "duo-morning", title: "Duo du matin", promise: "1 duo signature par mois pour la carte la plus haute", annualCost: 180, monthlyRecoveredBoost: 1.16 },
     { id: "hidden-cellar", title: "Privilege cache", promise: "Un privilege reserve au sommet de la saison", annualCost: 140, monthlyRecoveredBoost: 1.08 },
   ],
+  bar: [
+    { id: "signature-monthly", title: "Création du mois", promise: "1 cocktail ou création signature au bar par mois pendant 1 an", annualCost: 180, monthlyRecoveredBoost: 1.08 },
+    { id: "duo-soir", title: "Duo du soir", promise: "1 duo signature par mois pour la carte la plus haute", annualCost: 220, monthlyRecoveredBoost: 1.14 },
+    { id: "hidden-bar", title: "Privilege comptoir", promise: "Un privilege reserve au sommet de la saison", annualCost: 160, monthlyRecoveredBoost: 1.06 },
+  ],
   restaurant: [
     { id: "table-monthly", title: "Table mensuelle", promise: "1 repas signature par mois pendant 1 an", annualCost: 600, monthlyRecoveredBoost: 1 },
     { id: "chef-table", title: "Table du chef", promise: "Une table chef reservee une fois par mois", annualCost: 720, monthlyRecoveredBoost: 1.18 },

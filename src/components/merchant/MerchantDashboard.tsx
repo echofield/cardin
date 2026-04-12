@@ -1,9 +1,8 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
-import { getMerchantProfile, type MerchantProfileId } from "@/lib/merchant-profile"
 import { createClientSupabaseBrowser } from "@/lib/supabase/client"
 import { Button, Card } from "@/ui"
 
@@ -25,13 +24,19 @@ type MidpointView = {
   copy: string
 }
 
+type MissionView = {
+  id: string
+  title: string
+  status: "active" | "completed" | "expired"
+  expiresAt: string
+}
+
 type MerchantApiResponse = {
   ok: boolean
   merchant?: {
     id: string
     businessName: string
     businessType: string
-    profileId: MerchantProfileId
     city: string
     loyaltyConfig: {
       targetVisits: number
@@ -40,12 +45,37 @@ type MerchantApiResponse = {
     }
     sharedUnlock: SharedUnlockView
   }
+  protocol?: {
+    state: string
+    rewardsPaused: boolean
+    diamondPaused: boolean
+    seasonObjective: string
+    marginLine: string
+    diamondLine: string
+    growthLine: string
+    budgets: {
+      season: { current: number; limit: number }
+      week: { current: number; limit: number }
+      day: { current: number; limit: number }
+      diamond: { current: number; limit: number }
+    }
+    projected: {
+      profitIncremental: number
+      grossProfitTotal: number
+      rewardCostTotal: number
+      sigmaSeason: number
+      fieldEnergy: number
+    }
+  } | null
   metrics?: {
     totalCards: number
     rewardReadyCards: number
     totalVisits: number
     repeatClients: number
     midpointReachedCards: number
+    missionActiveCount: number
+    missionCompletedCount: number
+    missionRevenueEstimate: number
     season?: {
       seasonId: string
       seasonNumber: number
@@ -90,6 +120,8 @@ type MerchantApiResponse = {
       branchCapacity: number
       directInvitationsActivated: number
     } | null
+    diamondTokenAvailable?: boolean
+    mission?: MissionView | null
   }>
 }
 
@@ -98,11 +130,10 @@ export function MerchantDashboard({ merchantId, demo = false }: { merchantId: st
   const [data, setData] = useState<MerchantApiResponse | null>(null)
   const [scanUrl, setScanUrl] = useState(`/scan/${merchantId}${demo ? "?demo=1" : ""}`)
   const [seasonAction, setSeasonAction] = useState<"idle" | "loading" | "error" | "success">("idle")
-  const [seasonMessage, setSeasonMessage] = useState<string>("")
+  const [seasonMessage, setSeasonMessage] = useState("")
 
   const loadMerchant = useCallback(async () => {
     setLoading(true)
-
     try {
       const response = await fetch(`/api/merchant/${merchantId}`)
       const payload = (await response.json()) as MerchantApiResponse
@@ -120,17 +151,6 @@ export function MerchantDashboard({ merchantId, demo = false }: { merchantId: st
     }
   }, [merchantId, demo, loadMerchant])
 
-  const profile = getMerchantProfile(data?.merchant?.profileId ?? "generic")
-
-  const midpointLabel = useMemo(() => {
-    const mode = data?.merchant?.loyaltyConfig.midpointMode
-    if (mode === "recognition_plus_boost") {
-      return `${profile.owner.midpointLabel} : reconnaissance + ajustement`
-    }
-
-    return `${profile.owner.midpointLabel} : reconnaissance uniquement`
-  }, [data, profile])
-
   const onStartSeason = async () => {
     setSeasonAction("loading")
     setSeasonMessage("")
@@ -145,7 +165,7 @@ export function MerchantDashboard({ merchantId, demo = false }: { merchantId: st
     }
 
     setSeasonAction("success")
-    setSeasonMessage(`Saison ${payload.season.seasonNumber} lanc�e.`)
+    setSeasonMessage(`Saison ${payload.season.seasonNumber} lancée.`)
     await loadMerchant()
   }
 
@@ -162,12 +182,12 @@ export function MerchantDashboard({ merchantId, demo = false }: { merchantId: st
 
     if (!response.ok || !payload.ok) {
       setSeasonAction("error")
-      setSeasonMessage("Impossible de cl�turer la saison pour le moment.")
+      setSeasonMessage("Impossible de clôturer la saison pour le moment.")
       return
     }
 
     setSeasonAction("success")
-    setSeasonMessage(`Saison ${payload.closedSeason.seasonNumber} cl�tur�e, nouvelle saison ouverte.`)
+    setSeasonMessage(`Saison ${payload.closedSeason.seasonNumber} clôturée, nouvelle saison ouverte.`)
     await loadMerchant()
   }
 
@@ -178,11 +198,11 @@ export function MerchantDashboard({ merchantId, demo = false }: { merchantId: st
   }
 
   if (loading) {
-    return <p className="p-6 text-sm">{profile.owner.loading}</p>
+    return <p className="p-6 text-sm">Chargement…</p>
   }
 
   if (!data?.ok || !data.merchant || !data.metrics) {
-    return <p className="p-6 text-sm text-[#A64040]">{profile.owner.notFound}</p>
+    return <p className="p-6 text-sm text-[#A64040]">Commerce introuvable.</p>
   }
 
   return (
@@ -190,92 +210,109 @@ export function MerchantDashboard({ merchantId, demo = false }: { merchantId: st
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-xs uppercase tracking-[0.14em] text-[#5E6961]">{profile.owner.eyebrow}</p>
+            <p className="text-xs uppercase tracking-[0.14em] text-[#5E6961]">Tableau marchand</p>
             <h1 className="mt-2 font-serif text-5xl">{data.merchant.businessName}</h1>
             <p className="mt-2 text-sm text-[#546057]">
-              {data.merchant.businessType} � {data.merchant.city}
+              {data.merchant.businessType} · {data.merchant.city}
             </p>
-            <p className="mt-2 text-sm text-[#556159]">{profile.owner.subtitle}</p>
+            <p className="mt-2 text-sm text-[#556159]">
+              Moteur de revenu saisonnier : Diamond comme horizon, missions sur le parcours, retour et activation réseau.
+            </p>
           </div>
 
           <Button onClick={onSignOut} variant="subtle">
-            {profile.owner.signOutLabel}
+            Se déconnecter
           </Button>
         </header>
 
-        <Card className="p-5">
-          <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">{profile.owner.summaryTitle}</p>
-          <p className="mt-2 text-sm text-[#173A2E]">
-            {profile.owner.summaryNarrative({
-              totalVisits: data.metrics.totalVisits,
-              repeatClients: data.metrics.repeatClients,
-              rewardReadyCards: data.metrics.rewardReadyCards,
-            })}
-          </p>
-        </Card>
-
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <MetricCard label={profile.owner.metrics.trackedClients} value={data.metrics.totalCards.toString()} />
-          <MetricCard label={profile.owner.metrics.unlockedBenefits} value={data.metrics.rewardReadyCards.toString()} />
-          <MetricCard label={profile.owner.metrics.traffic} value={data.metrics.totalVisits.toString()} />
-          <MetricCard label={profile.owner.metrics.returningClients} value={data.metrics.repeatClients.toString()} />
-          <MetricCard label={profile.owner.metrics.progression} value={data.metrics.midpointReachedCards.toString()} />
+          <MetricCard label="Clients suivis" value={data.metrics.totalCards.toString()} />
+          <MetricCard label="Avantages prêts" value={data.metrics.rewardReadyCards.toString()} />
+          <MetricCard label="Fréquentation" value={data.metrics.totalVisits.toString()} />
+          <MetricCard label="Clients revenus" value={data.metrics.repeatClients.toString()} />
+          <MetricCard label="Progression active" value={data.metrics.midpointReachedCards.toString()} />
         </section>
+
+        <section className="grid gap-4 sm:grid-cols-3">
+          <MetricCard label="Missions actives" value={data.metrics.missionActiveCount.toString()} />
+          <MetricCard label="Missions validées" value={data.metrics.missionCompletedCount.toString()} />
+          <MetricCard label="CA mission estimé" value={formatEuro(data.metrics.missionRevenueEstimate)} />
+        </section>
+
+        {data.protocol ? (
+          <Card className="p-6">
+            <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">Protocole économique</p>
+            <p className="mt-3 text-sm text-[#173A2E]">{data.protocol.seasonObjective}</p>
+            <p className="mt-2 text-sm text-[#556159]">{data.protocol.marginLine}</p>
+            <p className="mt-2 text-sm text-[#556159]">{data.protocol.diamondLine}</p>
+            <p className="mt-2 text-sm text-[#556159]">{data.protocol.growthLine}</p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <BudgetCard label="Saison" current={data.protocol.budgets.season.current} limit={data.protocol.budgets.season.limit} />
+              <BudgetCard label="Semaine" current={data.protocol.budgets.week.current} limit={data.protocol.budgets.week.limit} />
+              <BudgetCard label="Jour" current={data.protocol.budgets.day.current} limit={data.protocol.budgets.day.limit} />
+              <BudgetCard label="Diamond" current={data.protocol.budgets.diamond.current} limit={data.protocol.budgets.diamond.limit} />
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <StatPill label="État" value={data.protocol.state} />
+              <StatPill label="Marge incrémentale (modèle)" value={formatEuro(data.protocol.projected.profitIncremental)} />
+              <StatPill label="Sigma saison" value={data.protocol.projected.sigmaSeason.toFixed(1)} />
+            </div>
+            {data.protocol.rewardsPaused ? (
+              <p className="mt-4 text-sm text-[#A64040]">Les nouveaux avantages sont temporairement en pause. La progression client continue.</p>
+            ) : null}
+          </Card>
+        ) : null}
 
         {data.metrics.season ? (
           <Card className="p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">{profile.owner.seasonTitle}</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">Saison active</p>
               <Button onClick={() => void onCloseSeason(data.metrics!.season!.seasonId)} size="sm" variant="secondary">
-                {profile.owner.seasonCloseAction}
+                Clôturer la saison
               </Button>
             </div>
             <div className="mt-3 grid gap-4 lg:grid-cols-[1fr_1fr]">
               <div className="space-y-2 text-sm text-[#173A2E]">
                 <p>Saison {data.metrics.season.seasonNumber}</p>
                 <p>Sommet : {data.metrics.season.summitTitle}</p>
-                <p>
-                  {profile.owner.seasonDaysRemainingLabel} : {data.metrics.season.daysRemaining}
-                </p>
-                <p>
-                  {profile.owner.seasonEndLabel} : {formatDate(data.metrics.season.endsAt)}
-                </p>
+                <p>Jours restants : {data.metrics.season.daysRemaining}</p>
+                <p>Fin : {formatDate(data.metrics.season.endsAt)}</p>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
-                <StatPill label={profile.owner.seasonMetricLabels.dominoUnlocked} value={data.metrics.season.dominoUnlockedCount} />
-                <StatPill label={profile.owner.seasonMetricLabels.diamond} value={data.metrics.season.diamondCount} />
-                <StatPill label={profile.owner.seasonMetricLabels.summitReached} value={data.metrics.season.summitCount} />
-                <StatPill label={profile.owner.seasonMetricLabels.invitations} value={data.metrics.season.totalInvitations} />
-                <StatPill label={profile.owner.seasonMetricLabels.activatedInvitations} value={data.metrics.season.activatedInvitations} />
-                <StatPill label={profile.owner.seasonMetricLabels.activationRate} value={`${Math.round(data.metrics.season.activationRate * 100)}%`} />
+                <StatPill label="Domino" value={data.metrics.season.dominoUnlockedCount} />
+                <StatPill label="Diamond" value={data.metrics.season.diamondCount} />
+                <StatPill label="Sommet" value={data.metrics.season.summitCount} />
+                <StatPill label="Invitations" value={data.metrics.season.totalInvitations} />
+                <StatPill label="Activées" value={data.metrics.season.activatedInvitations} />
+                <StatPill label="Taux" value={`${Math.round(data.metrics.season.activationRate * 100)}%`} />
               </div>
             </div>
 
-            <div className="mt-4 grid gap-2 sm:grid-cols-4 lg:grid-cols-8">
+            <div className="mt-4 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+              <div className="flex gap-2 sm:grid sm:w-full sm:grid-cols-4 lg:grid-cols-8">
               {data.metrics.season.stepDistribution.map((step) => (
-                <div className="rounded-xl border border-[#D5DBD1] bg-[#FFFEFA] px-3 py-2 text-center" key={step.step}>
-                  <p className="text-[10px] uppercase tracking-[0.12em] text-[#5E6961]">
-                    {profile.owner.seasonMetricLabels.stepLabel} {step.step}
-                  </p>
+                <div className="w-[4.75rem] shrink-0 rounded-xl border border-[#D5DBD1] bg-[#FFFEFA] px-3 py-2 text-center sm:w-auto sm:shrink" key={step.step}>
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-[#5E6961]">Étape {step.step}</p>
                   <p className="mt-1 font-serif text-xl text-[#173A2E]">{step.count}</p>
                 </div>
               ))}
+              </div>
             </div>
 
             <p className="mt-4 text-xs text-[#5E6961]">
-              {profile.owner.winnerPoolLabel} : {data.metrics.season.winnerPool.eligibleCount} �ligibles � poids total {data.metrics.season.winnerPool.totalWeight}
-              {data.metrics.season.winnerPool.hasWinner ? ` � gagnant ${data.metrics.season.winnerPool.winnerId}` : ""}
+              Winner pool : {data.metrics.season.winnerPool.eligibleCount} éligibles · poids total {data.metrics.season.winnerPool.totalWeight}
+              {data.metrics.season.winnerPool.hasWinner ? ` · gagnant ${data.metrics.season.winnerPool.winnerId}` : ""}
             </p>
           </Card>
         ) : (
           <Card className="p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">{profile.owner.seasonTitle}</p>
-                <p className="mt-2 text-sm text-[#173A2E]">{profile.owner.seasonInactive}</p>
+                <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">Saison</p>
+                <p className="mt-2 text-sm text-[#173A2E]">Aucune saison active pour le moment.</p>
               </div>
               <Button onClick={() => void onStartSeason()} size="sm">
-                {profile.owner.seasonStartAction}
+                Lancer la saison
               </Button>
             </div>
           </Card>
@@ -289,16 +326,9 @@ export function MerchantDashboard({ merchantId, demo = false }: { merchantId: st
 
         <section className="grid gap-4 lg:grid-cols-2">
           <Card className="p-6">
-            <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">{profile.owner.qrTitle}</p>
-            <img alt="QR fid�lit�" className="mt-3 w-full rounded-2xl border border-[#D4DBD1] bg-[#FCFCF8] p-3" src={`/api/merchant/${merchantId}/qr`} />
+            <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">QR à afficher</p>
+            <img alt="QR fidélité" className="mt-3 w-full rounded-2xl border border-[#D4DBD1] bg-[#FCFCF8] p-3" src={`/api/merchant/${merchantId}/qr`} />
             <p className="mt-3 break-all text-xs text-[#5E6961]">{scanUrl}</p>
-            {data.metrics.season ? (
-              <div className="mt-3 rounded-2xl border border-[#D5DBD1] bg-[#FFFEFA] p-4">
-                <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">{profile.owner.qrCounterTitle}</p>
-                <p className="mt-2 text-sm text-[#173A2E]">{data.metrics.season.summitTitle}</p>
-                <p className="mt-1 text-xs text-[#5E6961]">{profile.owner.qrCounterBody}</p>
-              </div>
-            ) : null}
             <div className="mt-4 flex gap-3">
               <Button
                 onClick={() => {
@@ -308,52 +338,51 @@ export function MerchantDashboard({ merchantId, demo = false }: { merchantId: st
                   }
 
                   if (typeof window !== "undefined") {
-                    window.prompt(profile.owner.scanLinkPrompt, scanUrl)
+                    window.prompt("Copiez ce lien :", scanUrl)
                   }
                 }}
                 variant="secondary"
               >
-                {profile.owner.qrCopyLabel}
+                Copier le lien de scan
               </Button>
               <a className="inline-flex items-center text-sm underline" download={`qr-${merchantId}.png`} href={`/api/merchant/${merchantId}/qr`}>
-                {profile.owner.qrDownloadLabel}
+                Télécharger le QR
               </a>
             </div>
             <div className="mt-5 rounded-2xl border border-[#173A2E]/15 bg-[#EEF3EC] p-4">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#355246]">{profile.owner.validationTitle}</p>
-              <p className="mt-2 text-sm text-[#2A3F35]">{profile.owner.validationBody}</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#355246]">Rituel équipe</p>
+              <p className="mt-2 text-sm text-[#2A3F35]">Ouvrez cette page sur le téléphone du staff : un clic valide le passage, puis l'avantage ou la mission si besoin.</p>
               <Link className="mt-3 inline-flex rounded-full border border-[#173A2E] bg-[#173A2E] px-5 py-2.5 text-sm font-medium text-[#FBFAF6]" href={`/merchant/${merchantId}/valider`}>
-                {profile.owner.validationAction}
+                Ouvrir la validation staff
               </Link>
             </div>
           </Card>
 
           <Card className="p-6">
-            <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">{profile.owner.settingsTitle}</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">Cadre du parcours</p>
             <p className="mt-3 text-sm text-[#173A2E]">
-              {profile.owner.mainObjectiveLabel} : {data.merchant.loyaltyConfig.targetVisits} passages vers {data.merchant.loyaltyConfig.rewardLabel}
+              Objectif principal : {data.merchant.loyaltyConfig.targetVisits} passages vers {data.merchant.loyaltyConfig.rewardLabel}
             </p>
-            <p className="mt-1 text-sm text-[#5E6961]">{midpointLabel}</p>
+            <p className="mt-1 text-sm text-[#5E6961]">
+              Milieu de parcours : {data.merchant.loyaltyConfig.midpointMode === "recognition_plus_boost" ? "reconnaissance + ajustement" : "reconnaissance uniquement"}
+            </p>
+            <p className="mt-3 text-sm text-[#173A2E]">Missions : une seule active max par client, déclenchée après un vrai passage validé.</p>
 
             {data.merchant.sharedUnlock.enabled ? (
               <div className="mt-4 rounded-2xl border border-[#D5DBD1] bg-[#FFFEFA] p-4">
-                <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">{profile.owner.collectiveUnlockTitle}</p>
+                <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">Déblocage collectif</p>
                 <p className="mt-2 text-sm text-[#173A2E]">Objectif : {data.merchant.sharedUnlock.objective} passages/mois</p>
-                <p className="mt-1 text-sm text-[#173A2E]">Fen�tre active : {data.merchant.sharedUnlock.windowDays} jours</p>
+                <p className="mt-1 text-sm text-[#173A2E]">Fenêtre active : {data.merchant.sharedUnlock.windowDays} jours</p>
                 <p className="mt-1 text-sm text-[#173A2E]">Offre : {data.merchant.sharedUnlock.offer}</p>
-                <p className="mt-2 text-sm text-[#5E6961]">
-                  �0tat : {data.merchant.sharedUnlock.status === "active" ? profile.owner.collectiveUnlockStateActive : profile.owner.collectiveUnlockStateTracking}
-                  {data.merchant.sharedUnlock.activeUntil ? ` jusqu'au ${formatDate(data.merchant.sharedUnlock.activeUntil)}` : ""}
-                </p>
               </div>
             ) : (
-              <p className="mt-4 text-sm text-[#5E6961]">{profile.owner.collectiveUnlockDisabled}</p>
+              <p className="mt-4 text-sm text-[#5E6961]">Déblocage collectif non actif.</p>
             )}
           </Card>
         </section>
 
         <Card className="p-6">
-          <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">{profile.owner.trackedClientsTitle}</p>
+          <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">Clients suivis</p>
           <div className="mt-3 space-y-3">
             {data.cards && data.cards.length > 0 ? (
               data.cards.map((card) => (
@@ -365,31 +394,38 @@ export function MerchantDashboard({ merchantId, demo = false }: { merchantId: st
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-[#173A2E]">{formatCardCode(card.id)}</p>
-                  <p className="mt-1 text-xs text-[#5E6961]">{card.midpoint.reached ? "Cap interm�diaire atteint" : `Cap interm�diaire � ${card.midpoint.threshold} passages`}</p>
-                  <p className="mt-1 text-xs text-[#5E6961]">Derni�re activit� : {formatDate(card.lastVisitAt)}</p>
+                  <p className="mt-1 text-xs text-[#5E6961]">{card.midpoint.reached ? "Cap intermédiaire atteint" : `Cap intermédiaire à ${card.midpoint.threshold} passages`}</p>
+                  <p className="mt-1 text-xs text-[#5E6961]">Dernière activité : {formatDate(card.lastVisitAt)}</p>
 
                   {card.seasonProgress ? (
                     <div className="mt-2 rounded-xl border border-[#D5DBD1] bg-[#F8FAF6] px-3 py-2 text-xs text-[#234438]">
                       <p>
-                        {profile.owner.seasonMetricLabels.stepLabel} {card.seasonProgress.currentStep} � {card.seasonProgress.stepLabel}
+                        Etape {card.seasonProgress.currentStep} · {card.seasonProgress.stepLabel}
                       </p>
                       <p>
-                        {profile.owner.seasonMetricLabels.dominoUnlocked} {card.seasonProgress.branchesUsed}/{card.seasonProgress.branchCapacity} � {profile.owner.seasonMetricLabels.activatedInvitations.toLowerCase()} {card.seasonProgress.directInvitationsActivated}
+                        Invitations {card.seasonProgress.branchesUsed}/{card.seasonProgress.branchCapacity} · activées {card.seasonProgress.directInvitationsActivated}
                       </p>
                       <p>
-                        {profile.owner.seasonMetricLabels.stateLabel} : {card.seasonProgress.diamondUnlocked ? profile.owner.seasonMetricLabels.diamond : "en progression"}
-                        {card.seasonProgress.summitReached ? ` � ${profile.owner.seasonMetricLabels.summitReached.toLowerCase()}` : ""}
+                        État : {card.seasonProgress.diamondUnlocked ? "Diamond" : "en progression"}
+                        {card.seasonProgress.summitReached ? " · sommet atteint" : ""}
+                        {card.diamondTokenAvailable ? " · token Diamond actif" : ""}
                       </p>
                     </div>
                   ) : null}
 
+                  {card.mission ? (
+                    <div className="mt-3 rounded-xl border border-[#D5DBD1] bg-[#F8FAF6] px-3 py-2 text-xs text-[#234438]">
+                      Mission : {card.mission.title} · expire le {formatDate(card.mission.expiresAt)}
+                    </div>
+                  ) : null}
+
                   <div className="mt-3 rounded-xl border border-[#D5DBD1] bg-[#F8FAF6] px-3 py-2 text-xs text-[#355246]">
-                    {profile.owner.validationOnlyHint}
+                    La progression se valide uniquement depuis la page staff.
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-[#5E6961]">{profile.owner.trackedClientsEmpty}</p>
+              <p className="text-sm text-[#5E6961]">Aucun client encore. Lancez le QR en caisse.</p>
             )}
           </div>
         </Card>
@@ -412,6 +448,21 @@ function StatPill({ label, value }: { label: string; value: string | number }) {
     <div className="rounded-xl border border-[#D5DBD1] bg-[#FFFEFA] px-3 py-2">
       <p className="text-[10px] uppercase tracking-[0.12em] text-[#5E6961]">{label}</p>
       <p className="mt-1 font-serif text-xl text-[#173A2E]">{value}</p>
+    </div>
+  )
+}
+
+function BudgetCard({ label, current, limit }: { label: string; current: number; limit: number }) {
+  const ratio = limit > 0 ? Math.min(1, current / limit) : 0
+  return (
+    <div className="rounded-xl border border-[#D5DBD1] bg-[#FFFEFA] px-3 py-3">
+      <p className="text-[10px] uppercase tracking-[0.12em] text-[#5E6961]">{label}</p>
+      <p className="mt-1 text-sm text-[#173A2E]">
+        {formatEuro(current)} / {formatEuro(limit)}
+      </p>
+      <div className="mt-2 h-2 rounded-full bg-[#E3E8E0]">
+        <div className="h-2 rounded-full bg-[#173A2E]" style={{ width: `${Math.max(4, ratio * 100)}%` }} />
+      </div>
     </div>
   )
 }
@@ -443,3 +494,16 @@ function formatDate(value: string | null | undefined): string {
     return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`
   }
 }
+
+function formatEuro(value: number): string {
+  try {
+    return new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "EUR",
+      maximumFractionDigits: 0,
+    }).format(value)
+  } catch {
+    return `${Math.round(value)} EUR`
+  }
+}
+

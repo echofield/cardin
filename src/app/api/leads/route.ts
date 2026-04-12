@@ -1,6 +1,7 @@
 ﻿import { NextResponse } from "next/server"
 
 import { buildBehaviorPlan, normalizeEngineActivityId } from "@/lib/behavior-engine"
+import { getProtocolPreset, mapMerchantTypeToProtocolProfile } from "@/lib/cardin-protocol-v3"
 import { getTemplateById } from "@/lib/merchant-templates"
 import { normalizeSeasonLength } from "@/lib/season-law"
 import { createClientSupabaseServer } from "@/lib/supabase/server"
@@ -46,6 +47,8 @@ export async function POST(request: Request) {
   const entryMode = normalizeEntryMode(payload.entryMode)
   const activityTemplateId = normalizeEngineActivityId(payload.activityTemplateId)
   const templateDefaults = getTemplateById(activityTemplateId).defaults
+  const protocolProfile = mapMerchantTypeToProtocolProfile(activityTemplateId)
+  const protocolConfig = getProtocolPreset(protocolProfile)
 
   const name = (payload.name ?? user.user_metadata?.full_name ?? user.email ?? "Activite").trim()
   const email = user.email ?? ""
@@ -74,12 +77,17 @@ export async function POST(request: Request) {
       midpoint_mode: midpointMode,
       target_visits: targetVisits,
       reward_label: rewardLabel,
+      cardin_world: activityTemplateId,
       shared_unlock_enabled: true,
       shared_unlock_objective: sharedUnlockObjective,
       shared_unlock_window_days: sharedUnlockWindowDays,
       shared_unlock_offer: sharedUnlockOffer,
+      protocol_v3_enabled: true,
+      protocol_diamond_tokens_enabled: true,
+      protocol_adaptive_enabled: false,
+      protocol_v3_config: { ...protocolConfig, seasonLengthMonths: seasonLength },
     },
-    { onConflict: "id" }
+    { onConflict: "id" },
   )
 
   if (error) {
@@ -96,7 +104,7 @@ export async function POST(request: Request) {
       summit_title: summitTitle,
       season_length_months: seasonLength,
     },
-    { onConflict: "merchant_id" }
+    { onConflict: "merchant_id" },
   )
 
   if (intentError) {
@@ -130,6 +138,7 @@ export async function POST(request: Request) {
       objective: sharedUnlockObjective,
       activeWindowDays: sharedUnlockWindowDays,
       unlockedOffer: sharedUnlockOffer,
+      protocolConfig: { ...protocolConfig, seasonLengthMonths: seasonLength },
     },
   })
 }

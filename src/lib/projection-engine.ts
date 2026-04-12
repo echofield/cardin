@@ -49,6 +49,12 @@ export const DEFAULT_PROJECTION_PROFILES: ProjectionProfiles = {
     short_challenge: { revenueWeight: 1.16, returnsWeight: 1.22, primaryEffect: "Séquence de retours rapide", secondaryEffect: "Routine recollée sur quelques jours", scenarioRole: "Accélère le retour" },
     monthly_gain: { revenueWeight: 0.92, returnsWeight: 0.86, primaryEffect: "Sujet signature autour du comptoir", secondaryEffect: "Désir plus fort sans discount", scenarioRole: "Crée un pic d'attention" },
   },
+  bar: {
+    starting_loop: { revenueWeight: 1, returnsWeight: 1, primaryEffect: "Habitude de soirée mieux ancrée", secondaryEffect: "Premier retour rapide au comptoir", scenarioRole: "Installe le premier rythme" },
+    weekly_rendezvous: { revenueWeight: 0.91, returnsWeight: 0.85, primaryEffect: "Créneau de semaine renforcé", secondaryEffect: "Soirée repère plus mémorable", scenarioRole: "Travaille un temps faible" },
+    short_challenge: { revenueWeight: 1.15, returnsWeight: 1.2, primaryEffect: "Séquence de venues rapprochées", secondaryEffect: "Réseau qui s'active sur une courte fenêtre", scenarioRole: "Accélère le retour" },
+    monthly_gain: { revenueWeight: 0.94, returnsWeight: 0.88, primaryEffect: "Sujet signature autour du bar", secondaryEffect: "Désir plus fort sans promo permanente", scenarioRole: "Crée un pic d'attention" },
+  },
   restaurant: {
     starting_loop: { revenueWeight: 1, returnsWeight: 1, primaryEffect: "Retour entre deux repas", secondaryEffect: "Premier cap simple à expliquer", scenarioRole: "Installe le premier rythme" },
     weekly_rendezvous: { revenueWeight: 0.88, returnsWeight: 0.82, primaryEffect: "Service calme mieux rempli", secondaryEffect: "Repère hebdomadaire plus clair", scenarioRole: "Travaille un temps faible" },

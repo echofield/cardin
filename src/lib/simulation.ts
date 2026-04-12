@@ -1,4 +1,4 @@
-import { computeCardinFinancialProjection } from "@/lib/cardin-projection-engine"
+﻿import { computeCardinFinancialProjection } from "@/lib/cardin-projection-engine"
 import { getTemplateById } from "@/lib/merchant-templates"
 import type {
   AuditSelection,
@@ -11,9 +11,9 @@ import type {
 
 const DAYS_OPEN_PER_MONTH = 26
 
-/** Maps projection page merchant ids to engine template ids. */
 function engineMerchantType(mt: MerchantProjectionType): string {
   if (mt === "beaute") return "institut-beaute"
+  if (mt === "bar") return "bar"
   return mt
 }
 
@@ -46,6 +46,11 @@ const MERCHANT_BASELINES: Record<MerchantProjectionType, MerchantBaseModel> = {
     traffic: { light: 55, steady: 95, dense: 145 },
     ticket: { small: 5.5, standard: 8.5, premium: 11.5 },
     frequency: { fragile: 0.8, normal: 1, strong: 1.16 },
+  },
+  bar: {
+    traffic: { light: 42, steady: 78, dense: 120 },
+    ticket: { small: 8, standard: 14, premium: 22 },
+    frequency: { fragile: 0.78, normal: 1, strong: 1.14 },
   },
   restaurant: {
     traffic: { light: 22, steady: 40, dense: 65 },
@@ -149,7 +154,7 @@ export function simulateScenario(input: SimulateScenarioInput): SimulateScenario
       `${TICKET_LABELS[input.audit.ticket]} autour de ${formatCompactEuro(avgTicket)}`,
       `${FREQUENCY_LABELS[input.audit.frequency]} sur le scénario choisi`,
     ],
-    rationale: `Ici, Cardin travaille surtout ${input.scenario.summaryLine.toLowerCase()}`,
+    rationale: `Projection calibrée par marge saisonnière, budget reward borné et Diamond limité pour ${input.scenario.summaryLine.toLowerCase()}`,
   }
 }
 
@@ -162,7 +167,7 @@ function formatCompactEuro(value: number): string {
 }
 
 export function formatSimulationRhythm(visitsAdded: number): string {
-  if (visitsAdded <= 0) return "Projection à ajuster selon votre base clients"
+  if (visitsAdded <= 0) return "Projection à recalibrer selon votre base clients"
 
   const perWeek = visitsAdded / 4.33
   if (perWeek >= 6) return `≈ ${Math.round(perWeek)} retours en plus / semaine`

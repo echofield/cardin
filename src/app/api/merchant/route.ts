@@ -1,5 +1,7 @@
 ﻿import { NextResponse } from "next/server"
 
+import { getActiveMissionForCard, getMerchantMissionMetrics } from "@/lib/cardin-mission-engine"
+import { buildMerchantProtocolSnapshot } from "@/lib/cardin-protocol-runtime"
 import { calculateBranchCapacity } from "@/lib/domino-engine"
 import { getLandingWorldForProfile, getMerchantProfileFromRaw, normalizeMerchantProfileId } from "@/lib/merchant-profile"
 import { buildMidpointView, buildSharedUnlockView, getMidpointMode, getRewardLabel, getTargetVisits } from "@/lib/program-layer"
@@ -89,8 +91,12 @@ export async function GET(request: Request) {
   })
 
   const activeSeason = await getActiveSeason(supabase, merchantId)
+  const protocolSnapshot = await buildMerchantProtocolSnapshot(supabase, { merchantId, season: activeSeason })
+  const missionMetrics = await getMerchantMissionMetrics(supabase, { merchantId, seasonId: activeSeason?.id ?? null })
   let seasonMetrics = null
   const cardSeasonProgress: Map<string, any> = new Map()
+  const activeDiamondTokens: Map<string, number> = new Map()
+  const activeMissions: Map<string, Awaited<ReturnType<typeof getActiveMissionForCard>>> = new Map()
 
   if (activeSeason) {
     const winnerMetrics = await getWinnerPoolMetrics(supabase, activeSeason.id)
@@ -127,6 +133,24 @@ export async function GET(request: Request) {
       .select("*", { count: "exact", head: true })
       .eq("season_id", activeSeason.id)
       .eq("is_activated", true)
+
+    const { data: tokens } = await supabase
+      .from("diamond_experience_tokens")
+      .select("card_id")
+      .eq("season_id", activeSeason.id)
+      .eq("status", "available")
+      .gt("expires_at", new Date().toISOString())
+
+    ;(tokens ?? []).forEach((token) => {
+      activeDiamondTokens.set(token.card_id, (activeDiamondTokens.get(token.card_id) ?? 0) + 1)
+    })
+
+    for (const cardId of cardIds) {
+      const mission = await getActiveMissionForCard(supabase, cardId)
+      if (mission) {
+        activeMissions.set(cardId, mission)
+      }
+    }
 
     const now = new Date()
     const endsAt = new Date(activeSeason.ends_at)
@@ -177,8 +201,47 @@ export async function GET(request: Request) {
       totalVisits: transactions?.length ?? 0,
       repeatClients,
       midpointReachedCards,
+      missionActiveCount: missionMetrics.activeCount,
+      missionCompletedCount: missionMetrics.completedCount,
+      missionRevenueEstimate: missionMetrics.revenueEstimate,
       season: seasonMetrics,
     },
+    protocol: protocolSnapshot
+      ? {
+          state: protocolSnapshot.state,
+          rewardsPaused: protocolSnapshot.rewardsPaused,
+          diamondPaused: protocolSnapshot.diamondPaused,
+          seasonObjective: protocolSnapshot.narrative.seasonObjective,
+          marginLine: protocolSnapshot.narrative.marginLine,
+          diamondLine: protocolSnapshot.narrative.diamondLine,
+          growthLine: protocolSnapshot.narrative.growthLine,
+          budgets: {
+            season: {
+              current: protocolSnapshot.actual.seasonExposure,
+              limit: protocolSnapshot.config.seasonBudget,
+            },
+            week: {
+              current: protocolSnapshot.actual.rewardCostWeek,
+              limit: protocolSnapshot.projected.B_week,
+            },
+            day: {
+              current: protocolSnapshot.actual.rewardCostDay,
+              limit: protocolSnapshot.projected.daily_budget_limit,
+            },
+            diamond: {
+              current: protocolSnapshot.actual.diamondCostSeason,
+              limit: protocolSnapshot.config.diamond.budget,
+            },
+          },
+          projected: {
+            profitIncremental: protocolSnapshot.projected.profitIncremental,
+            grossProfitTotal: protocolSnapshot.projected.GP_total,
+            rewardCostTotal: protocolSnapshot.projected.RC_total,
+            sigmaSeason: protocolSnapshot.projected.sigma_season,
+            fieldEnergy: protocolSnapshot.scores.fieldEnergy,
+          },
+        }
+      : null,
     cards: (cards ?? []).map((card) => {
       const cardTargetVisits = getTargetVisits(card.target_visits ?? targetVisits)
       const cardRewardLabel = getRewardLabel(card.reward_label ?? rewardLabel)
@@ -226,7 +289,11 @@ export async function GET(request: Request) {
         midpoint,
         seasonProgress,
         summitReward,
+        diamondTokenAvailable: (activeDiamondTokens.get(card.id) ?? 0) > 0,
+        mission: activeMissions.get(card.id) ?? null,
       }
     }),
   })
 }
+
+

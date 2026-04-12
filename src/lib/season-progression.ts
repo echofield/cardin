@@ -55,10 +55,10 @@ export type Season = {
 // ============================================================================
 
 export const STEP_DEFINITIONS: StepDefinition[] = [
-  { step: 1, minVisits: 1, label: "Decouverte", unlocks: [] },
+  { step: 1, minVisits: 1, label: "Découverte", unlocks: [] },
   { step: 2, minVisits: 2, label: "Activation", unlocks: ["Card becomes active", "Referral credit triggers"] },
   { step: 3, minVisits: 3, label: "Engagement", unlocks: [] },
-  { step: 4, minVisits: 4, label: "Fidelite", unlocks: [] },
+  { step: 4, minVisits: 4, label: "Fidélité", unlocks: [] },
   { step: 5, minVisits: 5, label: "Domino", unlocks: ["Invitation capability (2 slots)"] },
   { step: 6, minVisits: 6, label: "Ambassadeur", unlocks: [] },
   { step: 7, minVisits: 7, label: "Diamond", unlocks: ["Enhanced branching (dynamic slots)"] },

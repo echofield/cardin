@@ -51,7 +51,7 @@ export function DemoNarrative() {
             <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
               <Panel
                 eyebrow="Pricing"
-                title={`${LANDING_PRICING.activationFee} EUR pour activer.`}
+                title={`${LANDING_PRICING.activationFee} EUR pour la saison (${LANDING_PRICING.seasonLengthMonths} mois).`}
                 body={`${LANDING_PRICING.recurringLabel}. La demo reste alignee avec la vraie formule Cardin.`}
               />
               <Panel
@@ -85,7 +85,7 @@ export function DemoNarrative() {
         return (
           <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
             <div>
-              <Panel eyebrow="Premier contact" title={`${demo.sampleClientName} entre dans le systeme en 10 secondes.`} body="Scan du QR, creation de la carte, ouverture immediate sur telephone. Le commerce comprend ce que le client verra vraiment." />
+              <Panel eyebrow="Premier contact" title={`${demo.sampleClientName} entre dans le système en 10 secondes.`} body="Scan du QR, création de la carte, ouverture immédiate sur téléphone. Le commerce comprend ce que le client verra vraiment." />
               <div className="mt-4 flex flex-wrap gap-2 text-xs uppercase tracking-[0.16em] text-[#617067]">
                 <Tag>Scan QR</Tag>
                 <Tag>Carte active</Tag>
@@ -110,7 +110,7 @@ export function DemoNarrative() {
       case "return":
         return (
           <div className="space-y-5">
-            <Panel eyebrow="Premier retour" title="La carte passe de dormante a active." body="Le systeme commence a faire son travail apres le retour, pas au premier scan. C'est la premiere preuve comportementale." />
+            <Panel eyebrow="Premier retour" title="La carte passe de dormante à active." body="Le système commence à faire son travail après le retour, pas au premier scan. C'est la première preuve comportementale." />
             <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
               <div className="flex justify-center">
                 <DemoWalletCard

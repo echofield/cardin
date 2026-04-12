@@ -13,6 +13,33 @@ type SummitRewardPending = {
   usageRemaining: number
 }
 
+type DiamondRewardPending = {
+  title: string
+  description: string
+  expiresAt: string
+}
+
+type MissionPending = {
+  id: string
+  type: "group" | "time_shift" | "aov" | "identity"
+  triggerStep: 3 | 4 | 5 | "diamond"
+  roleMin: number
+  title: string
+  copy: string
+  staffHint: string
+  status: "active" | "completed" | "expired"
+  incentiveType: string
+  incentiveTitle: string
+  incentiveCopy: string
+  expiresAt: string
+  requiresVisitValidation: boolean
+  requiresGroupSize: number | null
+  requiresTimeWindow: { label: string; start: string; end: string } | null
+  validationMode: "duo" | "tablee" | "apero" | "fitting"
+  estimatedValueEur: number
+  costEur: number
+}
+
 type PendingPayload = {
   ok: boolean
   pending: null | {
@@ -23,7 +50,14 @@ type PendingPayload = {
     stamps: number
     targetVisits: number
     summitReward: SummitRewardPending | null
+    diamondToken: DiamondRewardPending | null
+    mission: MissionPending | null
   }
+  protocol?: {
+    state: string
+    rewardsPaused: boolean
+    seasonObjective: string
+  } | null
 }
 
 type MerchantPayload = {
@@ -38,24 +72,70 @@ type PostValidate = {
   sessionId: string
   customerName: string
   summitReward: SummitRewardPending | null
+  diamondToken: DiamondRewardPending | null
+  mission: MissionPending | null
+}
+
+type ConsumeResponse = {
+  ok?: boolean
+  error?: string
+  usageRemaining?: number
+  title?: string | null
+  description?: string | null
+  rewardType?: "summit" | "diamond" | "mission"
+  mission?: MissionPending | null
+}
+
+type ValidateResponse = {
+  ok?: boolean
+  error?: string
+  sessionId?: string
+  summitReward?: SummitRewardPending | null
+  diamondToken?: DiamondRewardPending | null
+  mission?: MissionPending | null
+}
+
+type MissionValidationState = {
+  groupSize: string
+  sameTicketConfirmed: boolean
+  cardholderPresent: boolean
+  singleBillConfirmed: boolean
+  appointmentConfirmed: boolean
+  inStoreConfirmed: boolean
+  timeWindowConfirmed: boolean
 }
 
 function getStaffStorageKey(merchantId: string) {
   return `cardin:staff:last-validated:${merchantId}`
 }
 
+const DEFAULT_MISSION_VALIDATION: MissionValidationState = {
+  groupSize: "",
+  sameTicketConfirmed: false,
+  cardholderPresent: false,
+  singleBillConfirmed: false,
+  appointmentConfirmed: false,
+  inStoreConfirmed: false,
+  timeWindowConfirmed: false,
+}
+
 export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
   const [pending, setPending] = useState<PendingPayload["pending"]>(null)
+  const [protocol, setProtocol] = useState<PendingPayload["protocol"]>(null)
   const [postValidate, setPostValidate] = useState<PostValidate | null>(null)
   const [profileId, setProfileId] = useState<MerchantProfileId>("generic")
   const [loading, setLoading] = useState(true)
   const [actionState, setActionState] = useState<"idle" | "loading" | "success" | "error">("idle")
   const [consumeState, setConsumeState] = useState<"idle" | "loading" | "success" | "error">("idle")
+  const [missionState, setMissionState] = useState<"idle" | "loading" | "success" | "error">("idle")
   const [message, setMessage] = useState("")
   const [consumeMessage, setConsumeMessage] = useState("")
+  const [missionMessage, setMissionMessage] = useState("")
+  const [missionValidation, setMissionValidation] = useState<MissionValidationState>(DEFAULT_MISSION_VALIDATION)
 
   const validateIdemRef = useRef<string | null>(null)
   const consumeIdemRef = useRef<string | null>(null)
+  const missionIdemRef = useRef<string | null>(null)
   const profile = useMemo(() => getMerchantProfile(profileId), [profileId])
 
   const loadPending = useCallback(async () => {
@@ -64,6 +144,7 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
       const data = (await res.json()) as PendingPayload
       if (data.ok) {
         setPending(data.pending)
+        setProtocol(data.protocol ?? null)
       }
     } finally {
       setLoading(false)
@@ -120,6 +201,11 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
 
   const mapConsumeError = (error?: string) => {
     if (!error) return profile.staff.consumeErrors.fallback
+    if (error === "mission_validation_failed") return "Les conditions de mission doivent être confirmées."
+    if (error === "mission_budget" || error === "season_budget" || error === "missions_paused") {
+      return "Les missions sont temporairement en pause sur ce protocole."
+    }
+    if (error === "no_active_mission") return "Aucune mission active pour ce client."
     return profile.staff.consumeErrors[error as keyof typeof profile.staff.consumeErrors] ?? profile.staff.consumeErrors.fallback
   }
 
@@ -135,7 +221,7 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idempotencyKey: validateIdemRef.current }),
       })
-      const data = (await res.json()) as { ok?: boolean; error?: string; sessionId?: string }
+      const data = (await res.json()) as ValidateResponse
       if (!res.ok || !data.ok) {
         setActionState("error")
         setMessage(mapValidateError(data.error))
@@ -148,10 +234,13 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
           cardId: pending.cardId,
           sessionId: data.sessionId,
           customerName: pending.customerName,
-          summitReward: pending.summitReward,
+          summitReward: data.summitReward ?? pending.summitReward,
+          diamondToken: data.diamondToken ?? pending.diamondToken,
+          mission: data.mission ?? pending.mission,
         })
       }
       validateIdemRef.current = null
+      setMissionValidation(DEFAULT_MISSION_VALIDATION)
       await loadPending()
     } catch {
       setActionState("error")
@@ -178,7 +267,7 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
           idempotencyKey: consumeIdemRef.current,
         }),
       })
-      const data = (await res.json()) as { ok?: boolean; error?: string; usageRemaining?: number }
+      const data = (await res.json()) as ConsumeResponse
       if (!res.ok || !data.ok) {
         setConsumeState("error")
         setConsumeMessage(mapConsumeError(data.error))
@@ -189,8 +278,11 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
       setConsumeMessage(profile.staff.consumeSuccess(data.usageRemaining))
       setPostValidate((prev) => {
         if (!prev) return prev
-        if (typeof data.usageRemaining !== "number" || !prev.summitReward) return null
-        if (data.usageRemaining <= 0) return null
+        if (data.rewardType === "diamond") {
+          return { ...prev, diamondToken: null }
+        }
+        if (typeof data.usageRemaining !== "number" || !prev.summitReward) return prev
+        if (data.usageRemaining <= 0) return { ...prev, summitReward: null }
         return {
           ...prev,
           summitReward: { ...prev.summitReward, usageRemaining: data.usageRemaining },
@@ -203,17 +295,95 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
     }
   }
 
+  const onCompleteMission = async () => {
+    const cardId = postValidate?.cardId ?? pending?.cardId
+    const sessionId = postValidate?.sessionId
+    const mission = postValidate?.mission ?? pending?.mission
+    if (!cardId || !sessionId || !mission) return
+    if (!missionIdemRef.current) {
+      missionIdemRef.current = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `m-${Date.now()}`
+    }
+    setMissionState("loading")
+    setMissionMessage("")
+    try {
+      const res = await fetch("/api/merchant/consume-summit-reward", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cardId,
+          sessionId,
+          missionId: mission.id,
+          missionValidation: {
+            groupSize: missionValidation.groupSize ? Number(missionValidation.groupSize) : null,
+            sameTicketConfirmed: missionValidation.sameTicketConfirmed,
+            cardholderPresent: missionValidation.cardholderPresent,
+            singleBillConfirmed: missionValidation.singleBillConfirmed,
+            appointmentConfirmed: missionValidation.appointmentConfirmed,
+            inStoreConfirmed: missionValidation.inStoreConfirmed,
+            timeWindowConfirmed: missionValidation.timeWindowConfirmed,
+          },
+          idempotencyKey: missionIdemRef.current,
+        }),
+      })
+      const data = (await res.json()) as ConsumeResponse
+      if (!res.ok || !data.ok) {
+        setMissionState("error")
+        setMissionMessage(mapConsumeError(data.error))
+        return
+      }
+      setMissionState("success")
+      missionIdemRef.current = null
+      setMissionMessage(data.description ?? "Mission validée.")
+      setPostValidate((prev) => (prev ? { ...prev, mission: null } : prev))
+      setMissionValidation(DEFAULT_MISSION_VALIDATION)
+      await loadPending()
+    } catch {
+      setMissionState("error")
+      setMissionMessage(profile.staff.consumeErrors.network)
+    }
+  }
+
   const activeSummit = postValidate?.summitReward ?? pending?.summitReward
+  const activeDiamond = postValidate?.diamondToken ?? pending?.diamondToken
+  const activeMission = postValidate?.mission ?? pending?.mission
   const activeCardId = postValidate?.cardId ?? pending?.cardId
-  const canConsume = Boolean(activeSummit && activeSummit.usageRemaining > 0 && activeCardId && actionState !== "loading")
+  const activeReward = activeSummit
+    ? {
+        kind: "summit" as const,
+        title: activeSummit.title,
+        description: activeSummit.description,
+        detail: `Reste ${activeSummit.usageRemaining} utilisation${activeSummit.usageRemaining > 1 ? "s" : ""}`,
+      }
+    : activeDiamond
+      ? {
+          kind: "diamond" as const,
+          title: activeDiamond.title,
+          description: activeDiamond.description,
+          detail: `Actif jusqu'au ${new Date(activeDiamond.expiresAt).toLocaleDateString("fr-FR")}`,
+        }
+      : null
+  const canConsume = Boolean(activeReward && activeCardId && actionState !== "loading")
+  const canCompleteMission = Boolean(activeMission && activeMission.status === "active" && activeCardId && actionState !== "loading")
 
   return (
-    <div className="mx-auto max-w-md space-y-6 px-4 py-10">
+    <div className="mx-auto max-w-md min-h-dvh-safe space-y-6 px-4 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom,0px))]">
       <div>
         <p className="text-[11px] uppercase tracking-[0.2em] text-[#677168]">{profile.staff.eyebrow}</p>
         <h1 className="mt-3 font-serif text-3xl text-[#163328]">{profile.staff.title}</h1>
         <p className="mt-2 text-sm leading-7 text-[#556159]">{profile.staff.subtitle}</p>
       </div>
+
+      {protocol ? (
+        <Card className="p-5">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-[#5E6961]">Cadre de saison</p>
+          <p className="mt-2 text-sm text-[#173A2E]">{protocol.seasonObjective}</p>
+          {protocol.rewardsPaused ? (
+            <p className="mt-3 text-sm text-[#A64040]">Les nouveaux avantages sont temporairement en pause. La progression continue.</p>
+          ) : (
+            <p className="mt-3 text-xs text-[#556159]">Etat protocole : {protocol.state}</p>
+          )}
+        </Card>
+      ) : null}
 
       <Card className="p-6">
         {loading ? (
@@ -229,14 +399,12 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
               {profile.staff.pendingSincePrefix} {new Date(pending.startedAt).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })}
             </p>
 
-            {pending.summitReward ? (
+            {activeReward ? (
               <div className="mt-5 rounded-[1.2rem] border border-[#173A2E]/15 bg-[#F8FAF6] px-4 py-3">
                 <p className="text-[10px] uppercase tracking-[0.14em] text-[#5E6961]">{profile.staff.activeRewardLabel}</p>
-                <p className="mt-1 font-medium text-[#173A2E]">{pending.summitReward.title}</p>
-                <p className="mt-1 text-sm text-[#2A3F35]">{pending.summitReward.description}</p>
-                <p className="mt-2 text-sm text-[#556159]">
-                  Reste {pending.summitReward.usageRemaining} utilisation{pending.summitReward.usageRemaining > 1 ? "s" : ""}
-                </p>
+                <p className="mt-1 font-medium text-[#173A2E]">{activeReward.title}</p>
+                <p className="mt-1 text-sm text-[#2A3F35]">{activeReward.description}</p>
+                <p className="mt-2 text-sm text-[#556159]">{activeReward.detail}</p>
               </div>
             ) : null}
           </div>
@@ -245,14 +413,12 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
             <p className="text-xs uppercase tracking-[0.14em] text-[#5E6961]">{profile.staff.lastValidatedLabel}</p>
             <p className="mt-2 font-serif text-2xl text-[#173A2E]">{postValidate.customerName}</p>
             <p className="mt-2 text-sm text-[#556159]">{profile.staff.lastValidatedBody}</p>
-            {postValidate.summitReward ? (
+            {activeReward ? (
               <div className="mt-5 rounded-[1.2rem] border border-[#173A2E]/15 bg-[#F8FAF6] px-4 py-3">
                 <p className="text-[10px] uppercase tracking-[0.14em] text-[#5E6961]">{profile.staff.activeRewardLabel}</p>
-                <p className="mt-1 font-medium text-[#173A2E]">{postValidate.summitReward.title}</p>
-                <p className="mt-1 text-sm text-[#2A3F35]">{postValidate.summitReward.description}</p>
-                <p className="mt-2 text-sm text-[#556159]">
-                  Reste {postValidate.summitReward.usageRemaining} utilisation{postValidate.summitReward.usageRemaining > 1 ? "s" : ""}
-                </p>
+                <p className="mt-1 font-medium text-[#173A2E]">{activeReward.title}</p>
+                <p className="mt-1 text-sm text-[#2A3F35]">{activeReward.description}</p>
+                <p className="mt-2 text-sm text-[#556159]">{activeReward.detail}</p>
               </div>
             ) : null}
           </div>
@@ -276,6 +442,65 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
         {consumeState === "error" ? <p className="mt-4 text-sm text-[#A64040]">{consumeMessage}</p> : null}
       </Card>
 
+      {activeMission ? (
+        <Card className="p-5">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-[#5E6961]">Mission active</p>
+          <p className="mt-2 font-serif text-2xl text-[#173A2E]">{activeMission.title}</p>
+          <p className="mt-2 text-sm text-[#2A3F35]">{activeMission.copy}</p>
+          <p className="mt-2 text-xs text-[#556159]">{activeMission.staffHint}</p>
+          <p className="mt-2 text-xs text-[#556159]">Expire le {new Date(activeMission.expiresAt).toLocaleDateString("fr-FR")}</p>
+
+          {activeMission.requiresGroupSize ? (
+            <label className="mt-4 block text-sm text-[#173A2E]">
+              Groupe observé
+              <input
+                className="mt-2 h-11 w-full rounded-xl border border-[#D5DBD1] bg-white px-3 text-sm"
+                inputMode="numeric"
+                min={activeMission.requiresGroupSize}
+                onChange={(event) => setMissionValidation((prev) => ({ ...prev, groupSize: event.target.value }))}
+                placeholder={`${activeMission.requiresGroupSize} minimum`}
+                value={missionValidation.groupSize}
+              />
+            </label>
+          ) : null}
+
+          {activeMission.validationMode === "duo" ? (
+            <div className="mt-4 space-y-2 text-sm text-[#173A2E]">
+              <label className="flex items-center gap-2"><input checked={missionValidation.sameTicketConfirmed} onChange={(event) => setMissionValidation((prev) => ({ ...prev, sameTicketConfirmed: event.target.checked }))} type="checkbox" />Même ticket</label>
+              <label className="flex items-center gap-2"><input checked={missionValidation.cardholderPresent} onChange={(event) => setMissionValidation((prev) => ({ ...prev, cardholderPresent: event.target.checked }))} type="checkbox" />Titulaire présent</label>
+            </div>
+          ) : null}
+
+          {activeMission.validationMode === "tablee" ? (
+            <div className="mt-4 space-y-2 text-sm text-[#173A2E]">
+              <label className="flex items-center gap-2"><input checked={missionValidation.singleBillConfirmed} onChange={(event) => setMissionValidation((prev) => ({ ...prev, singleBillConfirmed: event.target.checked }))} type="checkbox" />Addition unique confirmée</label>
+            </div>
+          ) : null}
+
+          {activeMission.validationMode === "apero" ? (
+            <div className="mt-4 space-y-2 text-sm text-[#173A2E]">
+              <label className="flex items-center gap-2"><input checked={missionValidation.timeWindowConfirmed} onChange={(event) => setMissionValidation((prev) => ({ ...prev, timeWindowConfirmed: event.target.checked }))} type="checkbox" />Créneau apéro confirmé</label>
+            </div>
+          ) : null}
+
+          {activeMission.validationMode === "fitting" ? (
+            <div className="mt-4 space-y-2 text-sm text-[#173A2E]">
+              <label className="flex items-center gap-2"><input checked={missionValidation.appointmentConfirmed} onChange={(event) => setMissionValidation((prev) => ({ ...prev, appointmentConfirmed: event.target.checked }))} type="checkbox" />Rendez-vous confirmé</label>
+              <label className="flex items-center gap-2"><input checked={missionValidation.inStoreConfirmed} onChange={(event) => setMissionValidation((prev) => ({ ...prev, inStoreConfirmed: event.target.checked }))} type="checkbox" />Confirmation en boutique</label>
+            </div>
+          ) : null}
+
+          {canCompleteMission ? (
+            <Button className="mt-5 w-full" disabled={missionState === "loading"} onClick={() => void onCompleteMission()} type="button" variant="secondary">
+              {missionState === "loading" ? "Validation mission..." : "Valider la mission"}
+            </Button>
+          ) : null}
+
+          {missionState === "success" ? <p className="mt-4 text-sm text-[#173A2E]">{missionMessage}</p> : null}
+          {missionState === "error" ? <p className="mt-4 text-sm text-[#A64040]">{missionMessage}</p> : null}
+        </Card>
+      ) : null}
+
       <p className="text-center text-xs text-[#69736C]">{profile.staff.cooldownNote}</p>
 
       <div className="flex justify-center gap-4 text-sm">
@@ -289,3 +514,5 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
     </div>
   )
 }
+
+

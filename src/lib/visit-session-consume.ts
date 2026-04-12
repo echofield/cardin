@@ -1,6 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js"
+﻿import type { SupabaseClient } from "@supabase/supabase-js"
 
-/** After a passage validation, reward consumption must tie to that proof within this window. */
 export const VALIDATED_SESSION_FOR_CONSUME_MAX_MS = 2 * 60 * 60 * 1000
 
 export type ValidatedVisitSessionRow = {
@@ -8,15 +7,12 @@ export type ValidatedVisitSessionRow = {
   validated_at: string
 }
 
-/**
- * Finds a visit_session for this merchant+card that was validated recently.
- * If sessionId is passed (from UI after validate), it must match a recent validated row.
- */
 export async function findValidatedSessionForConsume(
   supabase: SupabaseClient,
-  params: { merchantId: string; cardId: string; sessionId?: string | null },
+  params: { merchantId: string; cardId: string; sessionId?: string | null; maxAgeMs?: number },
 ): Promise<ValidatedVisitSessionRow | null> {
   const { merchantId, cardId, sessionId } = params
+  const maxAgeMs = params.maxAgeMs ?? VALIDATED_SESSION_FOR_CONSUME_MAX_MS
 
   const { data: rows, error } = await supabase
     .from("visit_sessions")
@@ -36,7 +32,7 @@ export async function findValidatedSessionForConsume(
     if (!validatedAt) continue
     const t = new Date(validatedAt).getTime()
     if (Number.isNaN(t)) continue
-    if (now - t > VALIDATED_SESSION_FOR_CONSUME_MAX_MS) continue
+    if (now - t > maxAgeMs) continue
 
     if (sessionId) {
       if (row.id === sessionId) {

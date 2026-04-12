@@ -6,8 +6,9 @@ import { useMemo, useState } from "react"
 import { WalletPassPreview } from "@/components/engine/WalletPassPreview"
 import { trackEvent } from "@/lib/analytics"
 import { LANDING_PRICING } from "@/lib/landing-content"
+import { getSeasonFrameForTemplateId } from "@/lib/merchant-season-framing"
 
-type MerchantWorldId = "cafe" | "restaurant" | "boulangerie" | "coiffeur" | "institut-beaute" | "boutique"
+type MerchantWorldId = "cafe" | "bar" | "restaurant" | "boulangerie" | "coiffeur" | "institut-beaute" | "boutique"
 type ObjectiveId = "return" | "domino" | "rare"
 type DominoLevel = "Calme" | "Moyen" | "Fort"
 
@@ -92,6 +93,60 @@ const worlds: MerchantWorld[] = [
         projectionRevenue: 260,
         projectionVolume: 22,
         projectionUnit: "passages",
+        dominoLabel: "Fort",
+        activeDots: 5,
+      },
+    },
+  },
+  {
+    id: "bar",
+    label: "Bar",
+    eyebrow: "Soirée & comptoir",
+    description: "Ticket plus fort que le café, réseau social naturel, Diamond comme horizon de sortie.",
+    hero: "Le bar monte quand le retour devient une habitude de soirée.",
+    concepts: {
+      return: {
+        title: "Diamond Night",
+        hook: "Un statut qui se mérite au comptoir, sur plusieurs venues.",
+        condition: "4 passages actifs dans le mois",
+        effect: "1 consigne signature réservée aux Diamond",
+        rewardLabel: "Diamond Night / consigne signature",
+        statusLabel: "Diamond",
+        notificationLabel: "Votre soirée Diamond vous attend",
+        caption: "Le client voit un cercle de soirée, pas une promo du soir.",
+        projectionRevenue: 280,
+        projectionVolume: 22,
+        projectionUnit: "venues",
+        dominoLabel: "Moyen",
+        activeDots: 4,
+      },
+      domino: {
+        title: "Domino Tournée",
+        hook: "Venir à plusieurs fait monter plus vite.",
+        condition: "1 duo validé au comptoir",
+        effect: "boost direct vers le palier suivant",
+        rewardLabel: "Domino Tournée / boost de progression",
+        statusLabel: "Domino",
+        notificationLabel: "Un +1 peut accélérer votre carte ce soir",
+        caption: "La progression s'accélère quand le groupe circule.",
+        projectionRevenue: 360,
+        projectionVolume: 28,
+        projectionUnit: "venues",
+        dominoLabel: "Fort",
+        activeDots: 5,
+      },
+      rare: {
+        title: "Grand Prix Bar",
+        hook: "Un privilège annuel au-dessus de la carte.",
+        condition: "Cartes Diamond actives sur 6 semaines",
+        effect: "1 consigne signature par mois pendant 1 an",
+        rewardLabel: "Grand Prix Bar / privilège annuel",
+        statusLabel: "Rare",
+        notificationLabel: "Le Grand Prix Bar approche pour les cartes actives",
+        caption: "Une tension rare qui donne envie de suivre sa progression.",
+        projectionRevenue: 320,
+        projectionVolume: 20,
+        projectionUnit: "venues",
         dominoLabel: "Fort",
         activeDots: 5,
       },
@@ -378,6 +433,7 @@ export function InlineCalculator() {
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<ObjectiveId>("return")
 
   const selectedWorld = worlds.find((world) => world.id === selectedWorldId) ?? worlds[0]
+  const seasonFrame = useMemo(() => getSeasonFrameForTemplateId(selectedWorld.id), [selectedWorld.id])
   const selectedObjective = selectedWorld.concepts[selectedObjectiveId]
   const selectedObjectiveMeta = objectives.find((objective) => objective.id === selectedObjectiveId) ?? objectives[0]
   const setupHref = useMemo(() => buildSetupHref(selectedWorld.id, selectedObjectiveId), [selectedObjectiveId, selectedWorld.id])
@@ -457,6 +513,13 @@ export function InlineCalculator() {
           <p className="text-[11px] uppercase tracking-[0.14em] text-[#637067]">{selectedWorld.eyebrow}</p>
           <p className="mt-2 font-serif text-2xl text-[#173A2E]">{selectedWorld.hero}</p>
           <p className="mt-2 max-w-2xl text-sm text-[#4F5A53]">{selectedWorld.description}</p>
+          {seasonFrame ? (
+            <div className="mt-4 rounded-xl border border-[#173A2E]/15 bg-[linear-gradient(165deg,#F4F1EA_0%,#E8EDE4_100%)] px-4 py-3">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-[#355246]">Cadrage saison · même récit que l&apos;onboarding</p>
+              <p className="mt-1 font-serif text-xl text-[#173A2E] sm:text-2xl">{seasonFrame.heroBand}</p>
+              <p className="mt-1 text-xs text-[#556159]">{seasonFrame.calibratedSubline}</p>
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -498,14 +561,14 @@ export function InlineCalculator() {
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="rounded-2xl border border-[#DED9CF] bg-[#FFFEFA] p-4">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Potentiel</p>
-              <p className="mt-2 font-serif text-3xl text-[#173A2E]">+{selectedObjective.projectionRevenue}EUR</p>
-              <p className="mt-1 text-xs text-[#556159]">ordre de grandeur / mois</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Indicateur scénario</p>
+              <p className="mt-2 font-serif text-3xl text-[#173A2E]">+{selectedObjective.projectionRevenue} €</p>
+              <p className="mt-1 text-xs text-[#556159]">ordre de grandeur / mois (modèle)</p>
             </div>
             <div className="rounded-2xl border border-[#DED9CF] bg-[#FFFEFA] p-4">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Projection</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Volume</p>
               <p className="mt-2 font-serif text-3xl text-[#173A2E]">{selectedObjective.projectionVolume}</p>
-              <p className="mt-1 text-xs text-[#556159]">{selectedObjective.projectionUnit} recuperables</p>
+              <p className="mt-1 text-xs text-[#556159]">{selectedObjective.projectionUnit} récupérables</p>
             </div>
             <div className="rounded-2xl border border-[#DED9CF] bg-[#FFFEFA] p-4">
               <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Domino</p>

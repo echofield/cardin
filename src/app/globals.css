@@ -89,12 +89,6 @@
   }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
-
 @keyframes riseIn {
   from {
     opacity: 0;
@@ -107,6 +101,24 @@
 }
 
 @layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /** iOS / notch: use with fixed headers and footers */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .min-h-dvh {
+    min-height: 100dvh;
+  }
+  .min-h-dvh-safe {
+    min-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+
   .animate-rise-in {
     animation: riseIn 360ms cubic-bezier(0.25, 0.1, 0.25, 1);
   }
