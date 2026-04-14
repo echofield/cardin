@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import { useCallback, useMemo, useState } from "react"
@@ -8,6 +8,7 @@ import {
   CLIENT_PARCOURS_SCREENS,
   SOFT_INVITE_MAX,
   WORLD_TARGET_VISITS,
+  getClientParcoursScreen,
   getScreenForVisits,
   type SummitOption,
 } from "@/lib/client-parcours-config"
@@ -31,7 +32,7 @@ export function ClientParcoursSimulator() {
   const targetVisits = WORLD_TARGET_VISITS[worldId]
   const world = LANDING_WORLDS[worldId]
   const screenIndex = useMemo(() => getScreenForVisits(visits, targetVisits), [visits, targetVisits])
-  const screen = CLIENT_PARCOURS_SCREENS[screenIndex]
+  const screen = useMemo(() => getClientParcoursScreen(worldId, screenIndex), [worldId, screenIndex])
   const isSummit = screenIndex === 5
 
   const handleAdvance = useCallback(() => {
@@ -68,57 +69,40 @@ export function ClientParcoursSimulator() {
   function renderScreenContent() {
     switch (screen.id) {
       case "entree":
-        return (
-          <ScreenEntree
-            worldId={worldId}
-            targetVisits={targetVisits}
-          />
-        )
+        return <ScreenEntree targetVisits={targetVisits} worldId={worldId} />
       case "progression":
-        return (
-          <ScreenProgression
-            worldId={worldId}
-            visits={visits}
-            targetVisits={targetVisits}
-          />
-        )
+        return <ScreenProgression targetVisits={targetVisits} visits={visits} worldId={worldId} />
       case "activation":
         return (
           <ScreenActivation
-            worldId={worldId}
-            visits={visits}
-            targetVisits={targetVisits}
-            softInviteUsed={softInviteUsed}
             onSoftInvite={handleSoftInvite}
+            softInviteUsed={softInviteUsed}
+            targetVisits={targetVisits}
+            visits={visits}
+            worldId={worldId}
           />
         )
       case "prochaine-etape":
-        return (
-          <ScreenProchaineEtape
-            worldId={worldId}
-            visits={visits}
-            targetVisits={targetVisits}
-          />
-        )
+        return <ScreenProchaineEtape targetVisits={targetVisits} visits={visits} worldId={worldId} />
       case "domino":
         return (
           <ScreenDomino
-            worldId={worldId}
-            visits={visits}
-            targetVisits={targetVisits}
-            sharesUsed={sharesUsed}
             maxShares={MAX_SHARES}
             onShare={handleShare}
+            sharesUsed={sharesUsed}
+            targetVisits={targetVisits}
+            visits={visits}
+            worldId={worldId}
           />
         )
       case "sommet":
         return (
           <ScreenSommet
-            worldId={worldId}
-            visits={visits}
-            targetVisits={targetVisits}
-            selectedOptionId={summitChoiceId}
             onSelectOption={handleSummitSelect}
+            selectedOptionId={summitChoiceId}
+            targetVisits={targetVisits}
+            visits={visits}
+            worldId={worldId}
           />
         )
       default:
@@ -130,20 +114,19 @@ export function ClientParcoursSimulator() {
     <main className="min-h-screen bg-[#F7F3EA] text-[#18271F]">
       <section className="relative overflow-hidden border-b border-[#E7E2D8]">
         <div className="absolute inset-x-0 top-[-220px] mx-auto h-[380px] w-[380px] rounded-full bg-[#E8EFE6] blur-3xl" />
-        <div className="relative mx-auto max-w-xl px-4 pb-8 pt-12 sm:px-6">
+        <div className="relative mx-auto max-w-3xl px-4 pb-8 pt-12 sm:px-6 lg:px-8">
           <p className="text-[11px] uppercase tracking-[0.22em] text-[#677168]">Parcours client</p>
           <h1 className="mt-4 font-serif text-4xl leading-[1.06] text-[#163328] sm:text-5xl">
-            Désir par le fil
+            Ce que le client comprend, étape par étape.
           </h1>
-          <p className="mt-4 max-w-md text-sm leading-7 text-[#566159]">
-            Simulation — aucun paiement, aucune obligation. Sentez la progression.
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-[#566159]">
+            Simulation simple: une visite, un retour, un déclencheur, une invitation, puis une récompense ou un privilège concret.
           </p>
         </div>
       </section>
 
-      <section className="mx-auto max-w-xl px-4 py-8 sm:px-6">
-        <div className="space-y-6">
-          {/* World picker */}
+      <section className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="space-y-6 md:space-y-8">
           <div>
             <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Lieu</p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -168,16 +151,13 @@ export function ClientParcoursSimulator() {
             </div>
           </div>
 
-          {/* Persistent progress summary */}
           <div className="flex items-center justify-between rounded-[1.3rem] border border-[#DDE3DA] bg-[#F8FAF6] px-5 py-4">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">
-                Fil
-              </p>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Progression</p>
               <p className="mt-1 text-sm text-[#173A2E]">
                 {visits} / {targetVisits}
                 {" · "}
-                le sommet vous attend
+                {isSummit ? "récompense disponible" : "la récompense se rapproche"}
               </p>
             </div>
             <div className="rounded-full border border-[#D8DED4] bg-[#FBFCF8] px-3 py-1.5 text-xs uppercase tracking-[0.14em] text-[#173A2E]">
@@ -185,26 +165,20 @@ export function ClientParcoursSimulator() {
             </div>
           </div>
 
-          {/* Screen header */}
-          <div className="rounded-[1.8rem] border border-[#DED9CF] bg-[linear-gradient(180deg,#FFFEFA_0%,#F4F0E7_100%)] p-6 shadow-[0_26px_80px_-60px_rgba(24,39,31,0.36)]">
+          <div className="rounded-[1.8rem] border border-[#DED9CF] bg-[linear-gradient(180deg,#FFFEFA_0%,#F4F0E7_100%)] p-6 shadow-[0_26px_80px_-60px_rgba(24,39,31,0.36)] md:p-8">
             <div className="flex items-start justify-between border-b border-[#E6E0D5] pb-4">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">
                   Étape {screenIndex + 1} / {CLIENT_PARCOURS_SCREENS.length}
                 </p>
-                <h2 className="mt-2 font-serif text-2xl text-[#173328] sm:text-3xl">
-                  {screen.title}
-                </h2>
+                <h2 className="mt-2 font-serif text-2xl text-[#173328] sm:text-3xl">{screen.title}</h2>
                 <p className="mt-2 text-sm leading-relaxed text-[#556159]">{screen.subtitle}</p>
               </div>
             </div>
 
-            <div className="mt-5">
-              {renderScreenContent()}
-            </div>
+            <div className="mt-5">{renderScreenContent()}</div>
           </div>
 
-          {/* CTA */}
           <button
             className="w-full rounded-full border border-[#173A2E] bg-[#173A2E] px-6 py-4 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]"
             onClick={handleAdvance}
@@ -213,22 +187,13 @@ export function ClientParcoursSimulator() {
             {isSummit ? "Recommencer le parcours" : "Valider un passage"}
           </button>
 
-          {/* Footer */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs text-[#69736C]">
-              Simulation — aucun compte, aucune donnée enregistrée
-            </p>
+            <p className="text-xs text-[#69736C]">Simulation — aucun compte, aucune donnée enregistrée</p>
             <div className="flex gap-3">
-              <Link
-                className="text-xs text-[#173A2E] underline underline-offset-2"
-                href="/landing"
-              >
+              <Link className="text-xs text-[#173A2E] underline underline-offset-2" href="/landing">
                 Retour landing
               </Link>
-              <Link
-                className="text-xs text-[#173A2E] underline underline-offset-2"
-                href="/demo"
-              >
+              <Link className="text-xs text-[#173A2E] underline underline-offset-2" href="/demo">
                 Démo complète
               </Link>
             </div>

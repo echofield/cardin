@@ -374,7 +374,7 @@ export function CardPhoneView({
 
         {merchantValidatedBanner ? (
           <div className="mt-4 rounded-2xl border border-[#173A2E]/25 bg-[#EEF3EC] px-4 py-3 text-sm text-[#173A2E]">
-            {profile.card.progressLabel} mise à jour.
+            Vos passages validés ont été mis à jour.
           </div>
         ) : null}
 
@@ -383,7 +383,7 @@ export function CardPhoneView({
 
           {data.protocol ? (
             <Card className="mt-4 p-4">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Cadre de saison</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Objectif de saison</p>
               <p className="mt-1 text-sm text-[#173A2E]">{data.protocol.seasonObjective}</p>
               <p className="mt-2 text-xs text-[#556159]">{data.protocol.diamondLine}</p>
               {data.protocol.rewardsPaused ? <p className="mt-2 text-sm text-[#A64040]">Les nouveaux avantages sont temporairement en pause. Votre progression continue.</p> : null}
@@ -464,7 +464,7 @@ export function CardPhoneView({
                 {data.invite.enabled
                   ? profile.card.inviteEnabled(data.invite.remainingSlots, data.invite.branchCapacity)
                   : data.invite.reason === "diamond_not_earned"
-                    ? "Le reseau s'active apres un vrai sommet consomme."
+                    ? "L'invitation s'ouvre après une vraie récompense consommée."
                     : profile.card.inviteDisabled}
               </p>
               {data.invite.enabled ? (
@@ -517,6 +517,7 @@ export function CardPhoneView({
     </main>
   )
 }
+
 
 
 

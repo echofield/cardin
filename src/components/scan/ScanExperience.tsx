@@ -250,9 +250,9 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
           <Card className="p-6">
             <p className="text-sm text-[#556159]">{profile.scan.formIntro}</p>
             <p className="mt-3 text-sm text-[#173A2E]">
-              {merchant.loyaltyConfig.targetVisits} passages vers {merchant.loyaltyConfig.rewardLabel}
+              Objectif actuel : {merchant.loyaltyConfig.targetVisits} passages pour débloquer {merchant.loyaltyConfig.rewardLabel}
             </p>
-            <p className="mt-1 text-sm text-[#2A3F35]">Cap intermédiaire à {merchant.loyaltyConfig.midpointThreshold} passages.</p>
+            <p className="mt-1 text-sm text-[#2A3F35]">Premier palier à {merchant.loyaltyConfig.midpointThreshold} passages.</p>
 
             <form className="mt-5 space-y-3" onSubmit={onCreateCard}>
               <Input
@@ -318,3 +318,4 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
     </main>
   )
 }
+

@@ -1,5 +1,7 @@
-import type { LandingWorldId } from "@/lib/landing-content"
-import { getTensionPair } from "@/lib/client-parcours-config"
+﻿import type { LandingWorldId } from "@/lib/landing-content"
+import { getBarEngineCaptionForScreenId, getTensionPair } from "@/lib/client-parcours-config"
+
+import { BarEngineNote } from "@/components/client-parcours/BarEngineNote"
 
 type Props = {
   worldId: LandingWorldId
@@ -14,20 +16,17 @@ export function ScreenDomino({ worldId, visits, targetVisits, sharesUsed, maxSha
   const { expireLine, actionLine } = getTensionPair(worldId, "domino")
   const canShare = sharesUsed < maxShares
   const remaining = Math.max(0, targetVisits - visits)
+  const barCap = worldId === "bar" ? getBarEngineCaptionForScreenId("domino") : null
 
   return (
     <div className="space-y-5">
       <div className="rounded-[1.6rem] border border-[#D8DED4] bg-[#FFFEFA] p-6">
         <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Propagation</p>
-        <p className="mt-3 text-sm italic leading-7 text-[#556159]">
-          Le parcours s’élargit — un geste, une personne.
-        </p>
+        <p className="mt-3 text-sm leading-7 text-[#556159]">Le parcours peut maintenant toucher quelqu'un d'autre.</p>
         <h2 className="mt-4 font-serif text-3xl leading-tight text-[#173A2E]">
-          {maxShares - sharesUsed} entrée{maxShares - sharesUsed > 1 ? "s" : ""} à tendre
+          {maxShares - sharesUsed} invitation{maxShares - sharesUsed > 1 ? "s" : ""} disponible{maxShares - sharesUsed > 1 ? "s" : ""}
         </h2>
-        <p className="mt-3 text-sm leading-7 text-[#556159]">
-          Celui ou celle que vous choisissez
-        </p>
+        <p className="mt-3 text-sm leading-7 text-[#556159]">Vous pouvez faire entrer une ou deux personnes selon les règles du lieu.</p>
       </div>
 
       {canShare ? (
@@ -36,15 +35,15 @@ export function ScreenDomino({ worldId, visits, targetVisits, sharesUsed, maxSha
           onClick={onShare}
           type="button"
         >
-          Donner accès
+          Inviter une personne
         </button>
       ) : (
         <div className="rounded-[1.6rem] border border-[#D8DED4] bg-[#F8FAF6] p-5 text-center">
-          <p className="text-sm text-[#556159]">
-            {maxShares} accès donnés — amplification complète
-          </p>
+          <p className="text-sm text-[#556159]">{maxShares} invitation{maxShares > 1 ? "s" : ""} utilisée{maxShares > 1 ? "s" : ""} — la propagation est complète.</p>
         </div>
       )}
+
+      {barCap ? <BarEngineNote mapping={barCap.mapping} meaning={barCap.meaning} /> : null}
 
       <div className="rounded-[1.6rem] border border-[#D8DED4] bg-[#FFFEFA] p-6">
         <div className="flex gap-1">
@@ -57,9 +56,7 @@ export function ScreenDomino({ worldId, visits, targetVisits, sharesUsed, maxSha
             />
           ))}
         </div>
-        <p className="mt-3 text-sm text-[#556159]">
-          {visits} / {targetVisits} passages · encore {remaining}
-        </p>
+        <p className="mt-3 text-sm text-[#556159]">{visits} / {targetVisits} passages · encore {remaining}</p>
       </div>
 
       <div className="rounded-[1.6rem] border border-[#D8DED4] bg-[#F8FAF6] p-5">

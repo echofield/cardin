@@ -41,6 +41,9 @@ export const LANDING_PRICING = {
   liteStickyLabel: "Activer Cardin — 300 € (saison 3 mois)",
 } as const
 
+/** Paiement activation saison (Stripe Checkout / Payment Link). */
+export const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sY5kD4RS66P4Tv7xl9Zm07" as const
+
 export const LANDING_WORLD_ORDER: LandingWorldId[] = ["cafe", "bar", "restaurant", "beaute", "boutique"]
 
 export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {

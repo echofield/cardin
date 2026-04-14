@@ -4,11 +4,13 @@ import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
 import { WalletPassPreview } from "@/components/engine/WalletPassPreview"
-import { LANDING_PRICING } from "@/lib/landing-content"
+import { LANDING_PRICING, STRIPE_PAYMENT_LINK, type LandingWorldId } from "@/lib/landing-content"
 import { SEASON_FRAME_BY_LANDING } from "@/lib/merchant-season-framing"
+import { landingWorldToEngineTemplateId, type ParcoursSummitStyleId } from "@/lib/parcours-contract"
+import { getProtocolMappingLabel, getSeasonRewardOption, getVerticalExplainerConfig } from "@/lib/vertical-explainer-config"
 import { Button, Card } from "@/ui"
 
-type WorldId = "cafe" | "restaurant" | "beaute" | "boutique"
+type WorldId = LandingWorldId
 /** Offre actuelle : une seule saison calibrée (3 mois), alignée landing / moteur. */
 type SeasonLength = 3
 
@@ -68,8 +70,6 @@ type WorldDefinition = {
 
 type ScreenId = "world" | "system" | "summit" | "season" | "checkmate" | "activate"
 
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sY5kD4RS66P4Tv7xl9Zm07"
-
 function StripePaymentNextSteps() {
   return (
     <p className="mt-3 max-w-prose text-xs leading-relaxed text-[#5B655E]">
@@ -86,8 +86,8 @@ function StripePaymentNextSteps() {
 const screens: Array<{ id: ScreenId; label: string; advancedEyebrow: string }> = [
   { id: "world", label: "Lieu", advancedEyebrow: "Monde marchand" },
   { id: "system", label: "Clients", advancedEyebrow: "Entrée et trajectoire" },
-  { id: "summit", label: "Passage", advancedEyebrow: "Sommet · Grand Diamond" },
-  { id: "season", label: "Retour", advancedEyebrow: "Saison · limite et narration" },
+  { id: "summit", label: "Récompense", advancedEyebrow: "Récompense saison · accès Diamond" },
+  { id: "season", label: "Retour", advancedEyebrow: "Saison · déclencheurs et durée" },
   { id: "checkmate", label: "Résultat", advancedEyebrow: "Bilan · revenu et réseau" },
   { id: "activate", label: "Activation", advancedEyebrow: "Lancer la saison" },
 ]
@@ -126,7 +126,7 @@ const worlds: WorldDefinition[] = [
     adSpend: 500,
     adDuration: "3 jours",
     installPrice: 300,
-    basketLine: "Exemple sommet : 1 boisson signature par mois pendant 1 an.",
+    basketLine: "Exemple récompense : 1 boisson signature par mois pendant 1 an.",
     proofLine: "Passage -> retour client -> réseau activé.",
     defaultSummitId: "signature-monthly",
     walletRewardLabel: "Projection de saison visible",
@@ -150,7 +150,7 @@ const worlds: WorldDefinition[] = [
       { name: "Active", merchantOutcome: "Premier retour visible", socialRadius: "réseau local", heightClass: "h-24" },
       { name: "Ancrée", merchantOutcome: "Le lieu devient un rendez-vous", socialRadius: "réseau local", heightClass: "h-36" },
       { name: "Diamond", merchantOutcome: "Invite 1 à 2 personnes max", socialRadius: "réseau activé", heightClass: "h-48", marker: "domino" },
-      { name: "Grand Diamond", merchantOutcome: "Sommet visible pour tout le lieu", socialRadius: "réseau étendu", heightClass: "h-60", marker: "summit" },
+      { name: "Récompense saison", merchantOutcome: "Récompense affichée pour tout le lieu", socialRadius: "réseau étendu", heightClass: "h-60", marker: "summit" },
     ],
     summits: [
       {
@@ -158,7 +158,7 @@ const worlds: WorldDefinition[] = [
         title: "Signature mensuelle",
         promise: "1 boisson signature par mois pendant 1 an.",
         annualCost: 120,
-        visibilityLabel: "Sommet visible",
+        visibilityLabel: "Récompense affichée",
         socialLiftLabel: "attire sans sur-promettre",
         note: "Simple, lisible, rentable.",
         monthlyRecoveredBoost: 1,
@@ -168,9 +168,9 @@ const worlds: WorldDefinition[] = [
       {
         id: "duo-morning",
         title: "Duo du matin",
-        promise: "1 duo signature par mois pour le sommet.",
+        promise: "1 duo signature par mois pour la récompense.",
         annualCost: 180,
-        visibilityLabel: "Sommet très visible",
+        visibilityLabel: "Récompense amplifiée",
         socialLiftLabel: "réseau renforcé",
         note: "Pousse la venue a deux.",
         monthlyRecoveredBoost: 1.16,
@@ -180,12 +180,90 @@ const worlds: WorldDefinition[] = [
       {
         id: "hidden-cellar",
         title: "Privilege caché",
-        promise: "Privilege non affiche, réservé au sommet.",
+        promise: "Privilege non affiche, réservé à la récompense.",
         annualCost: 140,
-        visibilityLabel: "Sommet discret",
+        visibilityLabel: "Récompense sélective",
         socialLiftLabel: "désir discret",
         note: "Version mystérieuse.",
         monthlyRecoveredBoost: 1.08,
+        dominoBoost: 1.03,
+        trustLift: 1.05,
+      },
+    ],
+  },
+  {
+    id: "bar",
+    label: "Bar",
+    eyebrow: "Soiree & comptoir",
+    hero: "Bar : soiree structuree, retour de creneau.",
+    intro: "Panier moyen 10-20 EUR. Frequence de soiree, reseau naturel, fenetres a activer sans promo ouverte.",
+    baselineMonthlyRecovered: 3000,
+    baselineActivePaths: 120,
+    baselineDominoMultiplier: 1.45,
+    baselineTrust: 73,
+    adSpend: 700,
+    adDuration: "3 jours",
+    installPrice: 400,
+    basketLine: "Exemple Diamond : 1 creation signature au bar par mois pendant 1 an.",
+    proofLine: "Sortie -> retour de soiree -> groupe active.",
+    defaultSummitId: "signature-monthly",
+    walletRewardLabel: "Projection de saison soiree",
+    walletNotification: "Votre acces de soiree evolue avec vos passages.",
+    entry: {
+      selective: {
+        title: "Entree selective",
+        lead: "Le lieu cible ses premiers habitues.",
+        steps: ["60 cartes max", "activation visite 1", "statut evolue visite 2"],
+        outcome: "60 cartes -> 100 a 120 parcours actifs via reseau du comptoir.",
+      },
+      mass: {
+        title: "Entree diffusion large",
+        lead: "QR au comptoir, filtre par retour reel.",
+        steps: ["180 cartes distribuees", "visite 1 = dormante", "visite 2 = activation"],
+        outcome: "Filtre automatique: seuls les vrais retours de soiree activent.",
+      },
+    },
+    tiers: [
+      { name: "Dormante", merchantOutcome: "Le lieu installe une promesse de soiree", socialRadius: "reseau inactif", heightClass: "h-14" },
+      { name: "Active", merchantOutcome: "Le retour de semaine prend forme", socialRadius: "reseau local", heightClass: "h-24" },
+      { name: "Ancree", merchantOutcome: "Le bar devient un rendez-vous", socialRadius: "reseau local", heightClass: "h-36" },
+      { name: "Diamond", merchantOutcome: "Le privilege peut ouvrir un groupe ou un duo", socialRadius: "reseau active", heightClass: "h-48", marker: "domino" },
+      { name: "Couche rare", merchantOutcome: "Les activations choisies rendent la soiree desirable", socialRadius: "reseau etendu", heightClass: "h-60", marker: "summit" },
+    ],
+    summits: [
+      {
+        id: "signature-monthly",
+        title: "Creation du mois",
+        promise: "1 cocktail ou creation signature au bar par mois pendant 1 an.",
+        annualCost: 180,
+        visibilityLabel: "Acces affiche",
+        socialLiftLabel: "privilege de comptoir lisible",
+        note: "Lisible, frequentable, sans promo large.",
+        monthlyRecoveredBoost: 1.08,
+        dominoBoost: 1,
+        trustLift: 1,
+      },
+      {
+        id: "duo-soir",
+        title: "Duo du soir",
+        promise: "1 duo signature par mois pour le niveau Diamond.",
+        annualCost: 220,
+        visibilityLabel: "Fenetre de groupe",
+        socialLiftLabel: "soiree et invitations renforcees",
+        note: "Ouvre un moment a deux ou a plusieurs.",
+        monthlyRecoveredBoost: 1.15,
+        dominoBoost: 1.08,
+        trustLift: 1.07,
+      },
+      {
+        id: "hidden-bar",
+        title: "Privilege comptoir",
+        promise: "Privilege reserve et non affiche pour les meilleurs clients.",
+        annualCost: 160,
+        visibilityLabel: "Selection rare",
+        socialLiftLabel: "tension sociale conservee",
+        note: "Version discrete, tres choisie.",
+        monthlyRecoveredBoost: 1.06,
         dominoBoost: 1.03,
         trustLift: 1.05,
       },
@@ -204,7 +282,7 @@ const worlds: WorldDefinition[] = [
     adSpend: 800,
     adDuration: "3 jours",
     installPrice: 500,
-    basketLine: "Exemple sommet : 1 repas signature par mois pendant 1 an.",
+    basketLine: "Exemple récompense : 1 repas signature par mois pendant 1 an.",
     proofLine: "Table -> retour client -> réseau activé par invitation.",
     defaultSummitId: "table-monthly",
     walletRewardLabel: "Projection de saison table",
@@ -228,7 +306,7 @@ const worlds: WorldDefinition[] = [
       { name: "Active", merchantOutcome: "Retour entre deux repas", socialRadius: "réseau local", heightClass: "h-28" },
       { name: "Ancrée", merchantOutcome: "Le client guette son moment réservé", socialRadius: "réseau local", heightClass: "h-40" },
       { name: "Diamond", merchantOutcome: "Invite 1 à 2 tables dans la saison", socialRadius: "réseau activé", heightClass: "h-52", marker: "domino" },
-      { name: "Grand Diamond", merchantOutcome: "Le sommet rend la table désirable", socialRadius: "réseau étendu", heightClass: "h-64", marker: "summit" },
+      { name: "Récompense saison", merchantOutcome: "La récompense rend la table désirable", socialRadius: "réseau étendu", heightClass: "h-64", marker: "summit" },
     ],
     summits: [
       {
@@ -236,7 +314,7 @@ const worlds: WorldDefinition[] = [
         title: "Table mensuelle",
         promise: "1 repas signature par mois pendant 1 an.",
         annualCost: 600,
-        visibilityLabel: "Sommet visible",
+        visibilityLabel: "Récompense affichée",
         socialLiftLabel: "table méritée",
         note: "Un repas mensuel = ambassadeur 12 mois.",
         monthlyRecoveredBoost: 1,
@@ -248,7 +326,7 @@ const worlds: WorldDefinition[] = [
         title: "Table du chef",
         promise: "Table chef réservée une fois par mois.",
         annualCost: 720,
-        visibilityLabel: "Sommet très visible",
+        visibilityLabel: "Récompense amplifiée",
         socialLiftLabel: "pousse retours et invitations",
         note: "Rare, raconte, histoire.",
         monthlyRecoveredBoost: 1.18,
@@ -258,9 +336,9 @@ const worlds: WorldDefinition[] = [
       {
         id: "secret-menu",
         title: "Menu secret",
-        promise: "Privilege caché réservé au sommet.",
+        promise: "Privilege caché réservé à la récompense.",
         annualCost: 480,
-        visibilityLabel: "Sommet discret",
+        visibilityLabel: "Récompense sélective",
         socialLiftLabel: "désir et mystere",
         note: "Mystere plutot qu'affichage.",
         monthlyRecoveredBoost: 1.07,
@@ -282,7 +360,7 @@ const worlds: WorldDefinition[] = [
     adSpend: 600,
     adDuration: "3 jours",
     installPrice: 300,
-    basketLine: "Exemple sommet : 1 soin signature par mois pendant 1 an.",
+    basketLine: "Exemple récompense : 1 soin signature par mois pendant 1 an.",
     proofLine: "Cycle -> retour client -> réseau activé par recommandation.",
     defaultSummitId: "cut-monthly",
     walletRewardLabel: "Projection de saison cycle",
@@ -306,7 +384,7 @@ const worlds: WorldDefinition[] = [
       { name: "Active", merchantOutcome: "Le prochain rendez-vous se rapproche", socialRadius: "réseau local", heightClass: "h-28" },
       { name: "Ancrée", merchantOutcome: "Le lieu devient son rythme", socialRadius: "réseau local", heightClass: "h-40" },
       { name: "Diamond", merchantOutcome: "Invite 1 à 2 personnes max", socialRadius: "réseau activé", heightClass: "h-52", marker: "domino" },
-      { name: "Grand Diamond", merchantOutcome: "Le sommet stabilise la recommandation", socialRadius: "réseau étendu", heightClass: "h-64", marker: "summit" },
+      { name: "Récompense saison", merchantOutcome: "La récompense stabilise la recommandation", socialRadius: "réseau étendu", heightClass: "h-64", marker: "summit" },
     ],
     summits: [
       {
@@ -314,9 +392,9 @@ const worlds: WorldDefinition[] = [
         title: "Soin mensuel",
         promise: "1 soin signature par mois pendant 1 an.",
         annualCost: 300,
-        visibilityLabel: "Sommet visible",
+        visibilityLabel: "Récompense affichée",
         socialLiftLabel: "statut visible",
-        note: "Sommet classique salon/institut.",
+        note: "Récompense classique salon/institut.",
         monthlyRecoveredBoost: 1,
         dominoBoost: 1,
         trustLift: 1,
@@ -324,9 +402,9 @@ const worlds: WorldDefinition[] = [
       {
         id: "ritual-duo",
         title: "Soin duo",
-        promise: "1 privilege duo mensuel pour le sommet.",
+        promise: "1 privilege duo mensuel pour la récompense.",
         annualCost: 420,
-        visibilityLabel: "Sommet très visible",
+        visibilityLabel: "Récompense amplifiée",
         socialLiftLabel: "réseau renforcé",
         note: "Recommandation en rendez-vous réel.",
         monthlyRecoveredBoost: 1.15,
@@ -336,9 +414,9 @@ const worlds: WorldDefinition[] = [
       {
         id: "private-ritual",
         title: "Accès privé",
-        promise: "Privilege non affiche réservé au sommet.",
+        promise: "Privilege non affiche réservé à la récompense.",
         annualCost: 260,
-        visibilityLabel: "Sommet discret",
+        visibilityLabel: "Récompense sélective",
         socialLiftLabel: "confidence",
         note: "Version silencieuse.",
         monthlyRecoveredBoost: 1.07,
@@ -360,7 +438,7 @@ const worlds: WorldDefinition[] = [
     adSpend: 700,
     adDuration: "3 jours",
     installPrice: 500,
-    basketLine: "Exemple sommet : 100 € collection par mois pendant 1 an.",
+    basketLine: "Exemple récompense : 100 € collection par mois pendant 1 an.",
     proofLine: "Désir → trajectoire client → accès exclusif.",
     defaultSummitId: "collection-credit",
     walletRewardLabel: "Projection de saison collection",
@@ -384,7 +462,7 @@ const worlds: WorldDefinition[] = [
       { name: "Active", merchantOutcome: "Le retour prend forme", socialRadius: "réseau local", heightClass: "h-24" },
       { name: "Ancrée", merchantOutcome: "Le style du lieu devient un repère", socialRadius: "réseau local", heightClass: "h-36" },
       { name: "Diamond", merchantOutcome: "Invite 1 à 2 personnes max", socialRadius: "réseau activé", heightClass: "h-48", marker: "domino" },
-      { name: "Grand Diamond", merchantOutcome: "Le sommet rend la collection désirable", socialRadius: "réseau étendu", heightClass: "h-60", marker: "summit" },
+      { name: "Récompense saison", merchantOutcome: "La récompense rend la collection désirable", socialRadius: "réseau étendu", heightClass: "h-60", marker: "summit" },
     ],
     summits: [
       {
@@ -392,7 +470,7 @@ const worlds: WorldDefinition[] = [
         title: "Credit collection",
         promise: "100 € collection par mois pendant 1 an.",
         annualCost: 1200,
-        visibilityLabel: "Sommet visible",
+        visibilityLabel: "Récompense affichée",
         socialLiftLabel: "désir net clientele",
         note: "Simple, fort a raconter.",
         monthlyRecoveredBoost: 1,
@@ -404,7 +482,7 @@ const worlds: WorldDefinition[] = [
         title: "Drop mensuel",
         promise: "Accès prioritaire pièce réservée chaque mois.",
         annualCost: 800,
-        visibilityLabel: "Sommet très visible",
+        visibilityLabel: "Récompense amplifiée",
         socialLiftLabel: "désir et partage",
         note: "Montee clientele sans remise.",
         monthlyRecoveredBoost: 1.14,
@@ -414,9 +492,9 @@ const worlds: WorldDefinition[] = [
       {
         id: "private-piece",
         title: "Piece cachée",
-        promise: "Pièce ou accès caché réservé au sommet.",
+        promise: "Pièce ou accès caché réservé à la récompense.",
         annualCost: 650,
-        visibilityLabel: "Sommet discret",
+        visibilityLabel: "Récompense sélective",
         socialLiftLabel: "confidence et tension",
         note: "Version silencieuse.",
         monthlyRecoveredBoost: 1.07,
@@ -440,7 +518,14 @@ function formatEuro(value: number) {
 }
 
 function buildEngineHref(worldId: WorldId, season: SeasonLength, summitId: string) {
-  return `/engine?template=${worldId}&season=${season}&summit=${summitId}`
+  return `/engine?template=${landingWorldToEngineTemplateId(worldId)}&season=${season}&summit=${summitId}`
+}
+
+function getSummitStyleId(world: WorldDefinition, summitId: string): ParcoursSummitStyleId {
+  const index = world.summits.findIndex((summit) => summit.id === summitId)
+  if (index === 1) return "stronger"
+  if (index === 2) return "discreet"
+  return "visible"
 }
 
 export function MerchantSeasonStudio() {
@@ -515,13 +600,10 @@ export function MerchantSeasonStudio() {
           </ul>
           <details className="mt-5 border-t border-[#E8E2D6] pt-4">
             <summary className="cursor-pointer text-sm font-medium text-[#173A2E] underline-offset-4 hover:underline">
-              Voir la logique complète (saison, sommet, trajectoire)
+              Voir la logique complète (saison, récompense, trajectoire)
             </summary>
             <p className="mt-3 text-xs leading-relaxed text-[#5B655E]">
-              Cardin structure une <strong className="font-medium text-[#173A2E]">saison</strong> limitée dans le temps, une{" "}
-              <strong className="font-medium text-[#173A2E]">trajectoire</strong> de statut pour le client et un{" "}
-              <strong className="font-medium text-[#173A2E]">sommet</strong> (récompense phare) qui donne une raison claire de revenir. Ce niveau de détail est utile une fois le
-              principe compris.
+              Cardin structure une <strong className="font-medium text-[#173A2E]">saison</strong> limitée, une <strong className="font-medium text-[#173A2E]">récompense majeure</strong> visible et une <strong className="font-medium text-[#173A2E]">couche Diamond</strong> qui filtre l'éligibilité et les privilèges. Ce niveau de détail devient utile une fois le principe compris.
             </p>
           </details>
         </div>
@@ -580,7 +662,7 @@ export function MerchantSeasonStudio() {
             <SummitScreen monthlyRecovered={monthlyRecovered} onSelectSummit={setSelectedSummitId} selectedSummit={selectedSummit} selectedWorld={selectedWorld} />
           ) : null}
           {screenIndex === 3 ?(
-            <SeasonScreen activePaths={activePaths} monthlyRecovered={monthlyRecovered} selectedSeasonMode={selectedSeasonMode} selectedSummit={selectedSummit} />
+            <SeasonScreen activePaths={activePaths} monthlyRecovered={monthlyRecovered} selectedSeasonMode={selectedSeasonMode} selectedSummit={selectedSummit} selectedWorld={selectedWorld} />
           ) : null}
 
           {screenIndex === 4 ?(
@@ -660,7 +742,7 @@ function WorldScreen({ selectedWorld, onSelectWorld, monthlyRecovered }: { selec
         <div className="mt-6 rounded-[1.4rem] border border-[#D8DED4] bg-[#FFFEFA] p-5">
           <p className="text-[10px] uppercase tracking-[0.16em] text-[#69736C]">Mécanique</p>
           <p className="mt-3 text-sm leading-7 text-[#556159]">
-            Le client porte la carte. Vous pilotez l’entrée, l’activation et le retour ; le calendrier et la récompense phare se règlent aux étapes suivantes.
+            Le client voit une vraie récompense de saison, reçoit de petits déclencheurs au bon moment et remonte vers Diamond si le comportement suit.
           </p>
         </div>
       </div>
@@ -669,25 +751,37 @@ function WorldScreen({ selectedWorld, onSelectWorld, monthlyRecovered }: { selec
 }
 
 function SystemScreen({ selectedWorld, selectedSummit, activePaths, dominoMultiplier }: { selectedWorld: WorldDefinition; selectedSummit: SummitOption; activePaths: number; dominoMultiplier: string }) {
+  const explainer = getVerticalExplainerConfig(selectedWorld.id)
+  const rewardCopy = getSeasonRewardOption(selectedWorld.id, selectedSummit.id)
+  const summitMode = explainer.summitModes[getSummitStyleId(selectedWorld, selectedSummit.id)]
+  const roleChart = selectedWorld.tiers.map((tier, index) => {
+    if (index === 0) return tier
+    const role = explainer.roleProgressionSummary.steps[Math.min(index - 1, explainer.roleProgressionSummary.steps.length - 1)]
+    return {
+      ...tier,
+      name: role.label,
+      merchantOutcome: role.meaning,
+      socialRadius: index === selectedWorld.tiers.length - 1 ? explainer.diamondMeaning.title : tier.socialRadius,
+    }
+  })
+
   return (
     <div className="space-y-8">
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <div>
           <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Vos clients</p>
-          <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Comment {selectedWorld.label.toLowerCase()} accueille et fait revenir.</h3>
-          <p className="mt-4 max-w-3xl text-sm leading-7 text-[#59635C] sm:text-base">
-            Entrée, activation, puis retour : le détail technique (sommet, saison) reste disponible plus bas si besoin.
-          </p>
+          <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Ce que le client veut, ce qu'il gagne, ce qui vous rapporte.</h3>
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-[#59635C] sm:text-base">{explainer.merchantExplanationCopy.whatMechanicsDo}</p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-          <MiniMetricCard label="Parcours actifs" value={`${activePaths}`} note="si la saison prend" />
-          <MiniMetricCard label="Réseau" value={`×${dominoMultiplier}`} note="effet domino plafonné" />
-          <MiniMetricCard label="Sommet" value={selectedSummit.visibilityLabel} note="moteur du retour" />
+        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+          <MiniMetricCard label="Parcours actifs" value={String(activePaths)} note="si la saison prend" />
+          <MiniMetricCard label="Réseau" value={"x" + dominoMultiplier} note="propagation plafonnée" />
+          <MiniMetricCard label="Récompense" value={summitMode.badge} note="intensité choisie" />
         </div>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.12fr_0.88fr]">
+      <div className="grid gap-5 lg:grid-cols-[1.12fr_0.88fr]">
         <div className="rounded-[1.5rem] border border-[#E2DDD1] bg-[#FFFDF8] p-5">
           <p className="text-[10px] uppercase tracking-[0.16em] text-[#69736C]">Deux modes d'entrée</p>
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -696,25 +790,34 @@ function SystemScreen({ selectedWorld, selectedSummit, activePaths, dominoMultip
           </div>
         </div>
 
-        <WalletPassPreview activeDots={4} businessLabel={selectedWorld.label} caption="La carte évolue selon le statut." footerLabel="SAISON CARDIN" notificationLabel={selectedWorld.walletNotification} progressDots={6} rewardLabel={selectedWorld.walletRewardLabel} statusLabel="Active" />
+        <WalletPassPreview
+          activeDots={4}
+          businessLabel={selectedWorld.label}
+          caption={explainer.seasonReward.title}
+          footerLabel="SAISON CARDIN"
+          notificationLabel={rewardCopy?.promise ?? selectedSummit.promise}
+          progressDots={6}
+          rewardLabel={rewardCopy?.title ?? selectedSummit.title}
+          statusLabel={explainer.roleProgressionSummary.steps[1]?.label ?? "Active"}
+        />
       </div>
 
       <div className="rounded-[1.5rem] border border-[#E2DDD1] bg-[#FFFDF8] p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.16em] text-[#69736C]">Progression du statut</p>
-            <h4 className="mt-2 font-serif text-3xl text-[#173A2E]">Statut = portée du réseau.</h4>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[#69736C]">Progression des rôles</p>
+            <h4 className="mt-2 font-serif text-3xl text-[#173A2E]">Diamond = comportement reconnu = revenu mieux cadré.</h4>
           </div>
-          <p className="max-w-xl text-sm leading-7 text-[#556159]">La carte monte, le retour augmente, le réseau s'active et le sommet devient visible.</p>
+          <p className="max-w-xl text-sm leading-7 text-[#556159]">{explainer.merchantExplanationCopy.whatDiamondMeans}</p>
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="rounded-[1.35rem] border border-[#E2DDD1] bg-[#FBF9F3] p-5">
             <div className="flex items-end gap-3 overflow-x-auto pb-2">
-              {selectedWorld.tiers.map((tier) => (
+              {roleChart.map((tier) => (
                 <div className="min-w-[88px] flex-1" key={tier.name}>
                   <div className="flex h-64 items-end">
-                    <div className={["w-full rounded-t-[1.3rem] border border-[#CBD6CA] bg-[linear-gradient(180deg,#DDE8DE_0%,#8CB38D_100%)] px-3 py-3 text-left", tier.heightClass, tier.marker === "summit" ?"border-[#C3A553] bg-[linear-gradient(180deg,#F2E8C1_0%,#C3A553_100%)]" : "", tier.marker === "domino" ?"border-[#7EA0C7] bg-[linear-gradient(180deg,#E2ECFA_0%,#80A4D6_100%)]" : ""].join(" ")}>
+                    <div className={["w-full rounded-t-[1.3rem] border border-[#CBD6CA] bg-[linear-gradient(180deg,#DDE8DE_0%,#8CB38D_100%)] px-3 py-3 text-left", tier.heightClass, tier.marker === "summit" ? "border-[#C3A553] bg-[linear-gradient(180deg,#F2E8C1_0%,#C3A553_100%)]" : "", tier.marker === "domino" ? "border-[#7EA0C7] bg-[linear-gradient(180deg,#E2ECFA_0%,#80A4D6_100%)]" : ""].join(" ")}>
                       <p className="text-[10px] uppercase tracking-[0.12em] text-[#163328]">{tier.name}</p>
                     </div>
                   </div>
@@ -725,50 +828,66 @@ function SystemScreen({ selectedWorld, selectedSummit, activePaths, dominoMultip
             </div>
           </div>
 
-          <div className="grid gap-3">
-            <LawCard title="Activation" body="Visite 1 = dormante. Visite 2 = active. Filtre comportemental automatique." />
-            <LawCard title="Réseau" body="Diamond = réseau élargi. Peut inviter 1 à 2 personnes." />
-            <LawCard title="Sommet" body="Grand Diamond = grand prix visible. Donne une raison claire de revenir." />
+          <div className="grid gap-3 sm:grid-cols-2">
+            {explainer.roleProgressionSummary.steps.map((step) => (
+              <Card className="p-4" key={step.label}>
+                <p className="text-[10px] uppercase tracking-[0.14em] text-[#6D776F]">Rôle</p>
+                <p className="mt-2 text-sm font-medium text-[#173A2E]">{step.label}</p>
+                <p className="mt-2 text-sm leading-6 text-[#556159]">{step.meaning}</p>
+              </Card>
+            ))}
           </div>
         </div>
       </div>
     </div>
   )
 }
+
 function SummitScreen({ selectedWorld, selectedSummit, onSelectSummit, monthlyRecovered }: { selectedWorld: WorldDefinition; selectedSummit: SummitOption; onSelectSummit: (summitId: string) => void; monthlyRecovered: number }) {
+  const explainer = getVerticalExplainerConfig(selectedWorld.id)
+  const selectedMode = explainer.summitModes[getSummitStyleId(selectedWorld, selectedSummit.id)]
+  const selectedReward = getSeasonRewardOption(selectedWorld.id, selectedSummit.id)
+
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+    <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
       <div>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Passage · récompense</p>
-        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Ce qui donne envie de revenir.</h3>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">
-          Choisissez l’offre phare (sommet) : elle fixe la tension et le retour.
-        </p>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Récompense de saison + Diamond</p>
+        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">La saison montre le gain majeur. Diamond contrôle l'accès.</h3>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">{explainer.merchantExplanationCopy.rewardVsDiamond}</p>
+
+        <div className="mt-5 rounded-[1.4rem] border border-[#E2DDD1] bg-[#FFFEFA] p-5">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-[#6D776F]">Lecture métier</p>
+          <p className="mt-3 text-sm leading-7 text-[#556159]">{explainer.seasonReward.merchantFraming}</p>
+        </div>
 
         <div className="mt-6 grid gap-4">
           {selectedWorld.summits.map((summit) => {
+            const mode = explainer.summitModes[getSummitStyleId(selectedWorld, summit.id)]
+            const rewardCopy = getSeasonRewardOption(selectedWorld.id, summit.id)
             const isActive = summit.id === selectedSummit.id
             return (
-              <button className={["rounded-[1.45rem] border p-5 text-left transition-all", isActive ?"border-[#173A2E] bg-[linear-gradient(180deg,#EEF3EC_0%,#E8EFE7_100%)] shadow-[0_18px_40px_-34px_rgba(23,58,46,0.55)]" : "border-[#E3DDD0] bg-[#FFFEFA] hover:border-[#B8C4B8] hover:bg-[#FAF8F1]"].join(" ")} key={summit.id} onClick={() => onSelectSummit(summit.id)} type="button">
+              <button className={["rounded-[1.45rem] border p-5 text-left transition-all", isActive ? "border-[#173A2E] bg-[linear-gradient(180deg,#EEF3EC_0%,#E8EFE7_100%)] shadow-[0_18px_40px_-34px_rgba(23,58,46,0.55)]" : "border-[#E3DDD0] bg-[#FFFEFA] hover:border-[#B8C4B8] hover:bg-[#FAF8F1]"].join(" ")} key={summit.id} onClick={() => onSelectSummit(summit.id)} type="button">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">{summit.visibilityLabel}</p>
-                    <p className="mt-2 font-serif text-3xl text-[#173A2E]">{summit.title}</p>
-                    <p className="mt-2 text-sm leading-7 text-[#556159]">{summit.promise}</p>
+                    <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">{mode.badge}</p>
+                    <p className="mt-2 font-serif text-3xl text-[#173A2E]">{rewardCopy?.title ?? summit.title}</p>
+                    <p className="mt-2 text-sm leading-7 text-[#556159]">{rewardCopy?.merchantMeaning ?? mode.title}</p>
                   </div>
                   <div className="rounded-full border border-[#D8DED4] bg-[#FFFEFA] px-4 py-2 text-sm font-medium text-[#173A2E]">{formatEuro(summit.annualCost)} / an</div>
                 </div>
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <div className="rounded-2xl border border-[#D8DED4] bg-[#FBFCF8] p-4">
-                    <p className="text-[10px] uppercase tracking-[0.14em] text-[#6D776F]">Effet social</p>
-                    <p className="mt-2 text-sm text-[#203B31]">{summit.socialLiftLabel}</p>
+                    <p className="text-[10px] uppercase tracking-[0.14em] text-[#6D776F]">Récompense visible</p>
+                    <p className="mt-2 text-sm text-[#203B31]">{rewardCopy?.promise ?? summit.promise}</p>
                   </div>
                   <div className="rounded-2xl border border-[#D8DED4] bg-[#FBFCF8] p-4">
-                    <p className="text-[10px] uppercase tracking-[0.14em] text-[#6D776F]">Narration</p>
-                    <p className="mt-2 text-sm text-[#203B31]">{summit.note}</p>
+                    <p className="text-[10px] uppercase tracking-[0.14em] text-[#6D776F]">Effet de mode</p>
+                    <p className="mt-2 text-sm text-[#203B31]">{mode.summary}</p>
                   </div>
                 </div>
+
+                <p className="mt-4 text-sm leading-7 text-[#556159]">{mode.merchantMeaning}</p>
               </button>
             )
           })}
@@ -776,31 +895,41 @@ function SummitScreen({ selectedWorld, selectedSummit, onSelectSummit, monthlyRe
       </div>
 
       <div className="space-y-4">
-        <WalletPassPreview activeDots={5} businessLabel={selectedWorld.label} caption="Le client voit le sommet approcher." footerLabel="GRAND DIAMOND" notificationLabel={`Sommet : ${selectedSummit.promise}`} progressDots={6} rewardLabel={selectedSummit.promise} statusLabel="Sommet" />
+        <WalletPassPreview activeDots={5} businessLabel={selectedWorld.label} caption={explainer.seasonReward.title} footerLabel="DIAMOND" notificationLabel={selectedReward?.promise ?? selectedSummit.promise} progressDots={6} rewardLabel={selectedReward?.title ?? selectedSummit.title} statusLabel={selectedMode.badge} />
 
         <Card className="p-6">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Impact du sommet</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Impact récompense</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <MiniMetricCard label="Revenu" value={formatEuro(monthlyRecovered)} note="revenu récupérable / mois" />
-            <MiniMetricCard label="Effet" value={selectedSummit.socialLiftLabel} note="réseau activé" />
-            <MiniMetricCard label="Type" value={selectedSummit.visibilityLabel} note="lecture client" />
+            <MiniMetricCard label="Mode" value={selectedMode.badge} note="intensité choisie" />
+            <MiniMetricCard label="Moteur" value={selectedMode.engineEffect} note="effet principal" />
           </div>
-          <p className="mt-4 text-sm leading-7 text-[#556159]">Le sommet donne une raison claire de revenir.</p>
+          <p className="mt-4 text-sm leading-7 text-[#556159]">{explainer.merchantExplanationCopy.revenueConnection}</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {selectedMode.protocolMapping.map((mapping) => (
+              <span className="rounded-full border px-2.5 py-1 text-[11px] text-[#556159]" key={mapping}>
+                {getProtocolMappingLabel(mapping)}
+              </span>
+            ))}
+          </div>
+          <p className="mt-4 text-xs leading-6 text-[#6D776F]">{explainer.merchantExplanationCopy.budgetConstraint}</p>
         </Card>
       </div>
     </div>
   )
 }
 
-function SeasonScreen({ selectedSeasonMode, selectedSummit, monthlyRecovered, activePaths }: { selectedSeasonMode: (typeof seasonModes)[number]; selectedSummit: SummitOption; monthlyRecovered: number; activePaths: number }) {
+function SeasonScreen({ selectedWorld, selectedSeasonMode, selectedSummit, monthlyRecovered, activePaths }: { selectedWorld: WorldDefinition; selectedSeasonMode: (typeof seasonModes)[number]; selectedSummit: SummitOption; monthlyRecovered: number; activePaths: number }) {
+  const explainer = getVerticalExplainerConfig(selectedWorld.id)
+  const selectedReward = getSeasonRewardOption(selectedWorld.id, selectedSummit.id)
+
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
       <div>
         <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Retour sur la durée</p>
-        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Saison unique : 3 mois.</h3>
+        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Une saison courte, des retours concrets.</h3>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">
-          Une fenêtre limitée crée de la valeur : la première preuve ouvre la suivante. Cardin se concentre sur cette
-          cadence pour l’instant.
+          La récompense majeure crée le désir. Les petits déclencheurs gardent la trajectoire vivante. La fenêtre courte rend le tout crédible et défendable.
         </p>
 
         <div className="mt-6 rounded-[1.45rem] border border-[#173A2E] bg-[linear-gradient(180deg,#EEF3EC_0%,#E8EFE7_100%)] p-5 shadow-[0_18px_40px_-34px_rgba(23,58,46,0.55)]">
@@ -811,7 +940,7 @@ function SeasonScreen({ selectedSeasonMode, selectedSummit, monthlyRecovered, ac
             <p>{selectedSeasonMode.selectiveCards} cartes sélectives max</p>
             <p>{selectedSeasonMode.massCards} cartes diffusion large max</p>
           </div>
-          <p className="mt-4 text-xs leading-6 text-[#6D776F]">{selectedSeasonMode.note}</p>
+          <p className="mt-4 text-xs leading-6 text-[#6D776F]">{explainer.merchantExplanationCopy.budgetConstraint}</p>
         </div>
       </div>
 
@@ -819,7 +948,7 @@ function SeasonScreen({ selectedSeasonMode, selectedSummit, monthlyRecovered, ac
         <Card className="p-6">
           <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Projection de saison</p>
           <h4 className="mt-3 font-serif text-3xl text-[#173A2E]">{selectedSeasonMode.momentum}</h4>
-          <p className="mt-3 text-sm leading-7 text-[#556159]">Sommet choisi : <strong className="font-medium text-[#173A2E]">{selectedSummit.promise}</strong></p>
+          <p className="mt-3 text-sm leading-7 text-[#556159]">Récompense choisie : <strong className="font-medium text-[#173A2E]">{selectedReward?.promise ?? selectedSummit.promise}</strong></p>
         </Card>
 
         <div className="grid gap-4 sm:grid-cols-3">
@@ -830,7 +959,7 @@ function SeasonScreen({ selectedSeasonMode, selectedSummit, monthlyRecovered, ac
 
         <Card className="p-6">
           <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Mécanique</p>
-          <p className="mt-3 text-sm leading-7 text-[#556159]">Cartes limitées, progression mesurée, preuve terrain : la saison 2 devient défendable.</p>
+          <p className="mt-3 text-sm leading-7 text-[#556159]">{explainer.merchantExplanationCopy.whatMechanicsDo}</p>
         </Card>
       </div>
     </div>
@@ -839,33 +968,35 @@ function SeasonScreen({ selectedSeasonMode, selectedSummit, monthlyRecovered, ac
 
 function CheckmateScreen({ selectedWorld, selectedSummit, selectedSeason, seasonValue, monthlyRecovered, activePaths, dominoMultiplier, seasonCards, trustScore }: { selectedWorld: WorldDefinition; selectedSummit: SummitOption; selectedSeason: SeasonLength; seasonValue: number; monthlyRecovered: number; activePaths: number; dominoMultiplier: string; seasonCards: { selective: number; mass: number }; trustScore: number }) {
   const seasonFrame = SEASON_FRAME_BY_LANDING[selectedWorld.id]
+  const explainer = getVerticalExplainerConfig(selectedWorld.id)
+  const selectedReward = getSeasonRewardOption(selectedWorld.id, selectedSummit.id)
 
   return (
     <div className="space-y-8">
       <div>
         <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Récapitulatif</p>
         <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Revenu potentiel sur la saison.</h3>
-        <p className="mt-4 max-w-3xl text-sm leading-7 text-[#59635C] sm:text-base">Chiffres basés sur : retour client structuré, réseau activé et affluence générée.</p>
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-[#59635C] sm:text-base">La récompense de saison crée le désir, les petits déclencheurs créent le retour, Diamond augmente la valeur et le modèle reste borné.</p>
         <div className="mt-5 max-w-3xl rounded-2xl border border-[#173A2E]/15 bg-[linear-gradient(165deg,#F4F1EA_0%,#E8EDE4_100%)] px-5 py-4">
-          <p className="text-[10px] uppercase tracking-[0.14em] text-[#355246]">Cadrage marché · Diamond au centre</p>
+          <p className="text-[10px] uppercase tracking-[0.14em] text-[#355246]">Cadrage marché · machine active</p>
           <p className="mt-2 font-serif text-2xl text-[#173A2E] sm:text-3xl">{seasonFrame.heroBand}</p>
           <p className="mt-2 text-sm font-medium text-[#2A3F35]">{seasonFrame.calibratedSubline}</p>
         </div>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[0.9fr_0.1fr_1fr] xl:items-start">
+      <div className="grid gap-5 lg:grid-cols-[0.9fr_0.1fr_1fr] lg:items-start">
         <Card className="border-[#C9B06D] bg-[linear-gradient(180deg,#FBF4DE_0%,#F5E8B9_100%)] p-6">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[#7A641D]">Grand prix Cardin</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#7A641D]">Récompense de saison</p>
           <p className="mt-3 font-serif text-4xl text-[#4B3E12]">{formatEuro(selectedSummit.annualCost)}</p>
-          <p className="mt-2 text-sm text-[#5D5223]">par an : {selectedSummit.promise.toLowerCase()}</p>
+          <p className="mt-2 text-sm text-[#5D5223]">par an : {(selectedReward?.promise ?? selectedSummit.promise).toLowerCase()}</p>
           <div className="mt-6 space-y-3 text-sm leading-7 text-[#5D5223]">
             <p>{selectedSeason} mois de présence.</p>
-            <p>Trajectoire visible pour les autres clients.</p>
-            <p>Grand prix visible dans le lieu.</p>
+            <p>La récompense se voit, Diamond filtre l'accès.</p>
+            <p>Le lieu garde une promesse forte sans promo ouverte.</p>
           </div>
         </Card>
 
-        <div className="hidden h-full items-center justify-center text-sm italic text-[#8B8F86] xl:flex">vs</div>
+        <div className="hidden h-full items-center justify-center text-sm italic text-[#8B8F86] lg:flex">vs</div>
 
         <Card className="p-6">
           <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Publicité classique</p>
@@ -873,8 +1004,8 @@ function CheckmateScreen({ selectedWorld, selectedSummit, selectedSeason, season
           <p className="mt-2 text-sm text-[#556159]">{selectedWorld.adDuration} attention</p>
           <div className="mt-6 space-y-3 text-sm leading-7 text-[#556159]">
             <p>Pas de carte.</p>
-            <p>Pas de réseau activé.</p>
-            <p>Pas de sommet durable.</p>
+            <p>Pas de propagation activée.</p>
+            <p>Pas de raison durable de revenir.</p>
           </div>
         </Card>
       </div>
@@ -893,7 +1024,7 @@ function CheckmateScreen({ selectedWorld, selectedSummit, selectedSeason, season
         <Card className="p-6">
           <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Système</p>
           <p className="mt-3 font-serif text-4xl text-[#173A2E]">{trustScore}%</p>
-          <p className="mt-2 text-sm leading-7 text-[#556159]">Affluence générée. Le lieu redevient visible.</p>
+          <p className="mt-2 text-sm leading-7 text-[#556159]">{explainer.merchantExplanationCopy.revenueConnection}</p>
         </Card>
       </div>
     </div>
@@ -901,19 +1032,22 @@ function CheckmateScreen({ selectedWorld, selectedSummit, selectedSeason, season
 }
 
 function ActivateScreen({ selectedWorld, selectedSummit, selectedSeason, monthlyRecovered, seasonValue, activePaths, engineHref }: { selectedWorld: WorldDefinition; selectedSummit: SummitOption; selectedSeason: SeasonLength; monthlyRecovered: number; seasonValue: number; activePaths: number; engineHref: string }) {
+  const explainer = getVerticalExplainerConfig(selectedWorld.id)
+  const selectedReward = getSeasonRewardOption(selectedWorld.id, selectedSummit.id)
+
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
       <div>
         <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Lancement</p>
         <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Saison prête.</h3>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">Un lieu + un sommet + une durée = un système complet. Le client voit sa carte. Le marchand récupère du retour.</p>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">Un lieu + une récompense de saison + une couche Diamond + une durée = une machine lisible. Le client comprend ce qu'il peut gagner. Le marchand comprend pourquoi il gagne.</p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <Card className="p-6">
             <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Votre formule</p>
             <div className="mt-4 space-y-3 text-sm leading-7 text-[#203B31]">
               <p>{selectedWorld.label}</p>
-              <p>{selectedSummit.title}</p>
+              <p>{selectedReward?.title ?? selectedSummit.title}</p>
               <p>{selectedSeason} mois</p>
               <p>
                 {formatEuro(LANDING_PRICING.activationFee)} pour la saison ({LANDING_PRICING.seasonLengthMonths} mois)
@@ -944,12 +1078,12 @@ function ActivateScreen({ selectedWorld, selectedSummit, selectedSeason, monthly
             <MiniMetricCard label="Parcours" value={`${activePaths}`} note="retours potentiels" />
             <MiniMetricCard label="Total" value={formatEuro(seasonValue)} note="sur saison" />
           </div>
-          <p className="mt-4 text-sm leading-7 text-[#556159]">La saison 2 se vend sur la preuve de la saison 1.</p>
+          <p className="mt-4 text-sm leading-7 text-[#556159]">{explainer.merchantExplanationCopy.revenueConnection}</p>
         </Card>
 
         <Card className="p-6">
           <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Activation</p>
-          <p className="mt-3 text-sm leading-7 text-[#556159]">Paiement puis activation digitale (QR, carte digitale, wallet client) sous 48 h. Cartes imprimées possibles en option plus tard.</p>
+          <p className="mt-3 text-sm leading-7 text-[#556159]">Paiement puis activation digitale sous 48 h. Récompense visible, progression active, budget borné.</p>
           <div className="mt-4 rounded-2xl border border-[#D8DED4] bg-[#FBFCF8] p-4">
             <p className="text-[10px] uppercase tracking-[0.14em] text-[#6D776F]">Délais</p>
             <p className="mt-2 text-sm leading-7 text-[#203B31]">Tableau marchand + carte digitale : 48 h. Support imprimé : sur demande (option).</p>
@@ -1015,6 +1149,13 @@ function LawCard({ title, body }: { title: string; body: string }) {
     </Card>
   )
 }
+
+
+
+
+
+
+
 
 
 

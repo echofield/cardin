@@ -4,7 +4,7 @@ import { LandingOnboardingJourney } from "@/components/landing/LandingOnboarding
 import { MobileStickyInstallBar } from "@/components/landing/MobileStickyInstallBar"
 import { MerchantSeasonStudio } from "@/components/landing/MerchantSeasonStudio"
 import { PublicFooter } from "@/components/shared/PublicFooter"
-import { LANDING_SECTOR_CARDS } from "@/lib/landing-content"
+import { LANDING_PRICING, LANDING_SECTOR_CARDS, STRIPE_PAYMENT_LINK } from "@/lib/landing-content"
 
 export default function LandingPage() {
   return (
@@ -59,6 +59,38 @@ export default function LandingPage() {
                 <p className="mt-3 text-sm leading-7 text-[#556159]">{card.description}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16">
+        <div className="rounded-[1.8rem] border border-[#D7DDD2] bg-[linear-gradient(180deg,#FFFEFA_0%,#F1F5EE_100%)] p-6 shadow-[0_24px_60px_-42px_rgba(23,58,46,0.25)] sm:p-8 lg:p-10">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Fin de presentation</p>
+          <h2 className="mt-3 max-w-3xl font-serif text-3xl text-[#173328] sm:text-4xl">Pret a lancer la saison.</h2>
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-[#556159] sm:text-base">
+            Le client voit un vrai gain. Les petits declencheurs creent le retour. La propagation reste bornee. Si la lecture vous convient, vous pouvez lancer l&apos;activation maintenant.
+          </p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <a
+              className="inline-flex h-12 items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-6 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]"
+              href={STRIPE_PAYMENT_LINK}
+              rel="noreferrer"
+              target="_blank"
+            >
+              {LANDING_PRICING.activationLabel}
+            </a>
+            <Link
+              className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-6 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]"
+              href="/parcours"
+            >
+              Revoir le parcours marchand
+            </Link>
+            <Link
+              className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-6 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]"
+              href="/apres-paiement"
+            >
+              Voir la suite apres paiement
+            </Link>
           </div>
         </div>
       </section>
