@@ -1,4 +1,4 @@
-﻿import Link from "next/link"
+import Link from "next/link"
 
 import { LandingOnboardingJourney } from "@/components/landing/LandingOnboardingJourney"
 import { MobileStickyInstallBar } from "@/components/landing/MobileStickyInstallBar"
@@ -65,32 +65,78 @@ export default function LandingPage() {
 
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16">
         <div className="rounded-[1.8rem] border border-[#D7DDD2] bg-[linear-gradient(180deg,#FFFEFA_0%,#F1F5EE_100%)] p-6 shadow-[0_24px_60px_-42px_rgba(23,58,46,0.25)] sm:p-8 lg:p-10">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Fin de presentation</p>
-          <h2 className="mt-3 max-w-3xl font-serif text-3xl text-[#173328] sm:text-4xl">Pret a lancer la saison.</h2>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Offre Cardin</p>
+          <h2 className="mt-3 max-w-4xl font-serif text-3xl text-[#173328] sm:text-4xl">Une saison claire. Une activation sous 48 h. Un retour lisible sous 30 jours.</h2>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-[#556159] sm:text-base">
-            Le client voit un vrai gain. Les petits declencheurs creent le retour. La propagation reste bornee. Si la lecture vous convient, vous pouvez lancer l&apos;activation maintenant.
+            Vous achetez une première saison de 3 mois : QR de validation, carte digitale, tableau marchand, récompense visible et budget borné. Le client comprend ce qu&apos;il peut gagner. L&apos;équipe sait quoi faire. Le coût reste cadré.
           </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <a
-              className="inline-flex h-12 items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-6 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]"
-              href={STRIPE_PAYMENT_LINK}
-              rel="noreferrer"
-              target="_blank"
-            >
-              {LANDING_PRICING.activationLabel}
-            </a>
-            <Link
-              className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-6 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]"
-              href="/parcours"
-            >
-              Revoir le parcours marchand
-            </Link>
-            <Link
-              className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-6 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]"
-              href="/apres-paiement"
-            >
-              Voir la suite apres paiement
-            </Link>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-[1.4rem] border border-[#E2DDD1] bg-[#FBF9F3] p-5">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Ce que vous achetez</p>
+              <div className="mt-3 space-y-2 text-sm leading-7 text-[#203B31]">
+                <p>{LANDING_PRICING.compactLabel}</p>
+                <p>QR de validation + carte digitale + tableau marchand</p>
+                <p>Première saison calibrée avec vous</p>
+              </div>
+            </div>
+            <div className="rounded-[1.4rem] border border-[#E2DDD1] bg-[#FBF9F3] p-5">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Sous 48 h</p>
+              <div className="mt-3 space-y-2 text-sm leading-7 text-[#203B31]">
+                <p>QR comptoir prêt</p>
+                <p>Tableau marchand actif</p>
+                <p>Carte digitale active</p>
+              </div>
+            </div>
+            <div className="rounded-[1.4rem] border border-[#E2DDD1] bg-[#FBF9F3] p-5">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Sous 30 jours</p>
+              <div className="mt-3 space-y-2 text-sm leading-7 text-[#203B31]">
+                <p>Premiers passages validés</p>
+                <p>Premiers retours lisibles</p>
+                <p>Récompense comprise par les clients réguliers</p>
+              </div>
+            </div>
+            <div className="rounded-[1.4rem] border border-[#E2DDD1] bg-[#FBF9F3] p-5">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Staff en 10 secondes</p>
+              <div className="mt-3 space-y-2 text-sm leading-7 text-[#203B31]">
+                <p>1. Scanner ou ouvrir le panneau</p>
+                <p>2. Valider le passage réel</p>
+                <p>3. Laisser Cardin mettre à jour le parcours</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-[1.4rem] border border-[#D7DDD2] bg-[#FFFEFA] p-5">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Confiance</p>
+            <p className="mt-3 max-w-4xl text-sm leading-7 text-[#203B31]">
+              Coût borné, validation réelle du passage, contrôle simple contre la fraude et surtout aucun discount non contrôlé. La propagation reste cadrée. La récompense reste un actif du lieu, pas une promo qui fuit.
+            </p>
+          </div>
+
+          <div className="mt-8 rounded-[1.4rem] border border-[#D7DDD2] bg-[#FFFEFA] p-5 sm:p-6">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Activation</p>
+            <h3 className="mt-3 font-serif text-2xl text-[#173328] sm:text-3xl">Un seul chemin pour lancer.</h3>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-[#556159] sm:text-base">
+              Payer maintenant. Activer sous 48 h. Valider les passages réels. Lire les premiers retours sous 30 jours. Le reste peut s&apos;ajuster ensuite sans casser le cadre.
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:w-fit">
+              <a
+                className="inline-flex h-12 items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-6 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]"
+                href={STRIPE_PAYMENT_LINK}
+                rel="noreferrer"
+                target="_blank"
+              >
+                Payer 490 € et lancer
+              </a>
+              <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+                <Link className="text-[#173A2E] underline underline-offset-2" href="/parcours">
+                  Revoir le parcours marchand
+                </Link>
+                <Link className="text-[#173A2E] underline underline-offset-2" href="/apres-paiement">
+                  Voir la suite après paiement
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -100,7 +146,3 @@ export default function LandingPage() {
     </main>
   )
 }
-
-
-
-

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Cardin Core Type System (Corrected)
  *
  * Philosophy:
@@ -48,10 +48,10 @@ export type CardRawFacts = {
  * Merchant steers behavior, Cardin decides weights
  */
 export type MerchantStrategyMode =
-  | "frequency"    // Amplifier la frÃ©quentation
-  | "social"       // Amplifier le bouche-Ã -oreille
+  | "frequency"    // Amplifier la fréquentation
+  | "social"       // Amplifier le bouche-à-oreille
   | "weak_time"    // Amplifier les temps faibles
-  | "value"        // Amplifier la montÃ©e en gamme
+  | "value"        // Amplifier la montée en gamme
 
 export type MerchantStrategy = {
   merchantId: string
@@ -117,7 +117,7 @@ export type DerivedCardState = {
   internalTier: InternalTier
 
   // Display information
-  statusDisplayName: string   // e.g., "HabituÃ©", "Cercle", "Diamond Matin"
+  statusDisplayName: string   // e.g., "Habitué", "Cercle", "Diamond Matin"
   visualState: VisualState
 
   // Tension (felt, not counted)
@@ -150,7 +150,7 @@ export type ClientCardView = {
   customerName: string
 
   // Status feeling
-  statusLabel: string         // e.g., "HabituÃ©", "Cercle Soir"
+  statusLabel: string         // e.g., "Habitué", "Cercle Soir"
   visualState: VisualState
 
   // Tension feeling
@@ -162,10 +162,10 @@ export type ClientCardView = {
   dominoActive: boolean
 
   // Grand Diamond hint (if any)
-  grandDiamondLabel?: string | null  // e.g., "Une fenÃªtre rare peut s'ouvrir"
+  grandDiamondLabel?: string | null  // e.g., "Une fenêtre rare peut s'ouvrir"
 
   // Activity
-  lastActivityLabel?: string | null  // e.g., "DerniÃ¨re visite il y a 3 jours"
+  lastActivityLabel?: string | null  // e.g., "Dernière visite il y a 3 jours"
 }
 
 // ==========================================
@@ -211,7 +211,7 @@ export type MerchantStrategyView = {
 export type SectorType = "cafe" | "restaurant" | "local" | "creator" | "boutique"
 
 /**
- * CafÃ© calculator input - natural questions
+ * Café calculator input - natural questions
  */
 export type CafeCalculatorInput = {
   emptyDays: string[]           // ["monday", "tuesday"]
@@ -268,7 +268,7 @@ export type ConcreteProjection = {
   revenueImpactHigh?: number   // Euros (high estimate) - optional for range
   dominoIntensity: "low" | "medium" | "high"
   timeframe: string            // e.g., "saison (3 mois)"
-  concreteMetric: string       // "8 passages supplÃ©mentaires le lundi matin"
+  concreteMetric: string       // "8 passages supplémentaires le lundi matin"
 }
 
 // ==========================================

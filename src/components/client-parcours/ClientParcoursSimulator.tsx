@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import Link from "next/link"
 import { useCallback, useMemo, useState } from "react"
@@ -114,18 +114,18 @@ export function ClientParcoursSimulator() {
     <main className="min-h-screen bg-[#F7F3EA] text-[#18271F]">
       <section className="relative overflow-hidden border-b border-[#E7E2D8]">
         <div className="absolute inset-x-0 top-[-220px] mx-auto h-[380px] w-[380px] rounded-full bg-[#E8EFE6] blur-3xl" />
-        <div className="relative mx-auto max-w-3xl px-4 pb-8 pt-12 sm:px-6 lg:px-8">
+        <div className="relative mx-auto max-w-xl px-4 pb-8 pt-12 sm:px-6 lg:px-8">
           <p className="text-[11px] uppercase tracking-[0.22em] text-[#677168]">Parcours client</p>
           <h1 className="mt-4 font-serif text-4xl leading-[1.06] text-[#163328] sm:text-5xl">
-            Ce que le client comprend, étape par étape.
+            Désir par le fil
           </h1>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-[#566159]">
-            Simulation simple: une visite, un retour, un déclencheur, une invitation, puis une récompense ou un privilège concret.
+          <p className="mt-4 max-w-lg text-sm leading-7 text-[#566159]">
+            Simulation simple: première visite, retour, déclencheur, invitation, puis récompense concrète. Le client voit un parcours fluide; le lieu garde un cadre précis.
           </p>
         </div>
       </section>
 
-      <section className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="space-y-6 md:space-y-8">
           <div>
             <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Lieu</p>
@@ -153,11 +153,11 @@ export function ClientParcoursSimulator() {
 
           <div className="flex items-center justify-between rounded-[1.3rem] border border-[#DDE3DA] bg-[#F8FAF6] px-5 py-4">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Progression</p>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Fil</p>
               <p className="mt-1 text-sm text-[#173A2E]">
                 {visits} / {targetVisits}
                 {" · "}
-                {isSummit ? "récompense disponible" : "la récompense se rapproche"}
+                {isSummit ? "récompense ouverte" : "le sommet vous attend"}
               </p>
             </div>
             <div className="rounded-full border border-[#D8DED4] bg-[#FBFCF8] px-3 py-1.5 text-xs uppercase tracking-[0.14em] text-[#173A2E]">

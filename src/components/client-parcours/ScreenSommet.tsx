@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import type { LandingWorldId } from "@/lib/landing-content"
 import { BAR_ELU_LAYER } from "@/lib/bar-client-parcours"
@@ -22,15 +22,18 @@ export function ScreenSommet({ worldId, visits, targetVisits, selectedOptionId, 
 
   return (
     <div className="space-y-5">
-      <div className="rounded-[1.6rem] border border-[#173A2E]/20 bg-[#173A2E] p-6 text-[#FBFAF6]">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-[#C7D2C6]">Récompense / privilège</p>
+      <div className="rounded-[1.6rem] border border-[#173A2E]/20 bg-[#173A2E] p-6 text-[#FBFAF6] shadow-[0_24px_60px_-46px_rgba(23,58,46,0.7)]">
+        <p className="text-[10px] uppercase tracking-[0.18em] text-[#C7D2C6]">Sommet</p>
+        <p className="mt-3 text-sm italic leading-7 text-[#E4E8E2]">Le lieu peut maintenant ouvrir quelque chose de rare.</p>
         <h2 className="mt-4 font-serif text-3xl leading-tight">
-          {worldId === "bar" ? "Le lieu peut maintenant vous ouvrir un vrai privilège." : "Vous avez atteint le niveau final du parcours."}
+          {worldId === "bar"
+            ? "Un privilège réel peut maintenant s'activer."
+            : "La récompense finale peut maintenant prendre forme."}
         </h2>
         <p className="mt-3 text-sm leading-7 text-[#E4E8E2]">
           {selected
-            ? "Choix enregistré. Le lieu peut maintenant vous activer sur ce mode selon ses règles."
-            : "Choisissez le type de récompense ou de privilège qui vous correspond le mieux."}
+            ? "Votre préférence est enregistrée. Le lieu garde la main sur le bon moment, le bon budget et la bonne fenêtre d'activation."
+            : "Choisissez la forme de récompense ou de privilège qui vous attire le plus. Le cadre reste défini par le lieu."}
         </p>
       </div>
 
@@ -39,19 +42,26 @@ export function ScreenSommet({ worldId, visits, targetVisits, selectedOptionId, 
       {!selected ? (
         <div className="space-y-3">
           <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">
-            {worldId === "bar" ? "Privilèges possibles" : "Choisissez votre récompense"}
+            {worldId === "bar" ? "Privilèges possibles" : "Ce qui peut s'ouvrir"}
           </p>
           {options.map((opt) => (
             <button
-              className="w-full rounded-[1.4rem] border border-[#D8DED4] bg-[#FFFEFA] p-5 text-left transition hover:border-[#173A2E]/40 hover:bg-[#F8FAF6]"
+              className="w-full rounded-[1.45rem] border border-[#D8DED4] bg-[#FFFEFA] p-5 text-left transition hover:border-[#173A2E]/40 hover:bg-[#F8FAF6]"
               key={opt.id}
               onClick={() => onSelectOption(opt)}
               type="button"
             >
-              <p className="font-serif text-xl text-[#173A2E]">{opt.title}</p>
-              <p className="mt-1 text-sm text-[#2A3F35]">{opt.description}</p>
-              {opt.backendInterpretation ? <p className="mt-2 text-[11px] leading-relaxed text-[#69736C]">{opt.backendInterpretation}</p> : null}
-              <p className="mt-2 text-xs italic leading-relaxed text-[#69736C]">{opt.whisper}</p>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-serif text-xl text-[#173A2E]">{opt.title}</p>
+                  <p className="mt-2 text-sm leading-7 text-[#2A3F35]">{opt.description}</p>
+                </div>
+                <span className="rounded-full border border-[#D8DED4] bg-[#FBFCF8] px-3 py-1 text-[10px] uppercase tracking-[0.14em] text-[#556159]">
+                  Choisir
+                </span>
+              </div>
+              {opt.backendInterpretation ? <p className="mt-3 text-[11px] leading-relaxed text-[#69736C]">{opt.backendInterpretation}</p> : null}
+              <p className="mt-3 text-xs italic leading-relaxed text-[#69736C]">{opt.whisper}</p>
             </button>
           ))}
         </div>
@@ -60,11 +70,11 @@ export function ScreenSommet({ worldId, visits, targetVisits, selectedOptionId, 
           <div className="rounded-[1.6rem] border border-[#173A2E]/20 bg-[#EEF3EC] p-6">
             <p className="text-[10px] uppercase tracking-[0.18em] text-[#355246]">Votre choix</p>
             <p className="mt-3 font-serif text-2xl text-[#173A2E]">{selected.title}</p>
-            <p className="mt-2 text-sm text-[#2A3F35]">{selected.description}</p>
+            <p className="mt-2 text-sm leading-7 text-[#2A3F35]">{selected.description}</p>
             {selected.backendInterpretation ? <p className="mt-2 text-[11px] leading-relaxed text-[#556159]">{selected.backendInterpretation}</p> : null}
             <p className="mt-3 text-xs italic leading-relaxed text-[#556159]">{selected.whisper}</p>
             <div className="mt-5 rounded-[1.2rem] border border-[#173A2E]/10 bg-[#FFFEFA] px-5 py-4">
-              <p className="text-sm font-medium text-[#173A2E]">Disponible selon les règles du lieu, le bon créneau et le budget prévu.</p>
+              <p className="text-sm font-medium leading-7 text-[#173A2E]">Le lieu décide de l'activation réelle selon ses règles, le bon créneau et le budget prévu.</p>
             </div>
           </div>
 

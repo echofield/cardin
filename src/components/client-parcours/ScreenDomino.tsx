@@ -1,4 +1,4 @@
-﻿import type { LandingWorldId } from "@/lib/landing-content"
+import type { LandingWorldId } from "@/lib/landing-content"
 import { getBarEngineCaptionForScreenId, getTensionPair } from "@/lib/client-parcours-config"
 
 import { BarEngineNote } from "@/components/client-parcours/BarEngineNote"
@@ -21,8 +21,8 @@ export function ScreenDomino({ worldId, visits, targetVisits, sharesUsed, maxSha
   return (
     <div className="space-y-5">
       <div className="rounded-[1.6rem] border border-[#D8DED4] bg-[#FFFEFA] p-6">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Propagation</p>
-        <p className="mt-3 text-sm leading-7 text-[#556159]">Le parcours peut maintenant toucher quelqu'un d'autre.</p>
+        <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Ouverture</p>
+        <p className="mt-3 text-sm italic leading-7 text-[#556159]">Le parcours s&apos;élargit — un geste, une personne.</p>
         <h2 className="mt-4 font-serif text-3xl leading-tight text-[#173A2E]">
           {maxShares - sharesUsed} invitation{maxShares - sharesUsed > 1 ? "s" : ""} disponible{maxShares - sharesUsed > 1 ? "s" : ""}
         </h2>

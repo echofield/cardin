@@ -1,4 +1,4 @@
-﻿import type { LandingWorldId } from "@/lib/landing-content"
+import type { LandingWorldId } from "@/lib/landing-content"
 import { getBarClientScreens, getBarEngineCaptionForScreenId } from "@/lib/bar-client-parcours"
 import { cardinSeasonLaw } from "@/lib/season-law"
 
@@ -13,33 +13,33 @@ export type ClientScreen = {
 export const CLIENT_PARCOURS_SCREENS: ClientScreen[] = [
   {
     id: "entree",
-    title: "Première visite",
-    subtitle: "Votre carte est active. La progression commence.",
+    title: "Entrée",
+    subtitle: "Vous êtes dans le fil.",
   },
   {
     id: "progression",
-    title: "Retour enclenché",
-    subtitle: "Vous êtes revenu. Le lieu peut maintenant vous reconnaître.",
+    title: "Premier fil",
+    subtitle: "Le lieu vous retient.",
   },
   {
     id: "activation",
-    title: "Premier déclencheur",
-    subtitle: "Un petit avantage peut apparaître avant la récompense finale.",
+    title: "Sous tension douce",
+    subtitle: "Quelque chose s'accorde.",
   },
   {
     id: "prochaine-etape",
-    title: "Encore un passage",
-    subtitle: "Vous vous rapprochez du niveau final.",
+    title: "Plus près",
+    subtitle: "Le parcours vous veut encore.",
   },
   {
     id: "domino",
-    title: "Inviter quelqu'un",
-    subtitle: "Le parcours peut maintenant toucher une autre personne.",
+    title: "Ouverture",
+    subtitle: "Une porte à tendre.",
   },
   {
     id: "sommet",
-    title: "Récompense finale",
-    subtitle: "Choisissez la récompense ou le privilège que vous visez.",
+    title: "Sommet",
+    subtitle: "Choisissez ce qui vous appelle.",
   },
 ]
 

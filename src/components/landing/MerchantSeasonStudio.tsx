@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
@@ -1035,36 +1035,66 @@ function ActivateScreen({ selectedWorld, selectedSummit, selectedSeason, monthly
   const explainer = getVerticalExplainerConfig(selectedWorld.id)
   const selectedReward = getSeasonRewardOption(selectedWorld.id, selectedSummit.id)
 
+  const offerItems = [
+    selectedWorld.label,
+    selectedReward?.title ?? selectedSummit.title,
+    `${selectedSeason} mois`,
+    `${formatEuro(LANDING_PRICING.activationFee)} pour la saison (${LANDING_PRICING.seasonLengthMonths} mois)`,
+    LANDING_PRICING.recurringLabel,
+  ]
+
+  const activationItems = [
+    'QR de comptoir prêt sous 48 h',
+    'Tableau marchand actif sous 48 h',
+    'Carte digitale active sous 48 h',
+    'Première saison calibrée avec vous',
+  ]
+
+  const trustItems = [
+    'Validation réelle du passage avant effet récompense',
+    'Budget borné et coût saison clairement limité',
+    'Pas de discount non contrôlé ni de promo ouverte',
+    'Fraude limitée par QR, code et contrôle staff',
+  ]
+
+  const thirtyDayItems = [
+    'Premiers passages validés par l’équipe',
+    `${activePaths} retours potentiels lisibles dans le tableau`,
+    'Récompense visible et progression comprise par le client',
+    'Premiers Diamond identifiables sans acquisition payante',
+  ]
+
+  const staffItems = [
+    'Ouvrir le panneau marchand ou scanner le QR',
+    'Valider le passage réel',
+    'Laisser Cardin mettre à jour progression et droits',
+  ]
+
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
       <div>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Lancement</p>
-        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Saison prête.</h3>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">Un lieu + une récompense de saison + une couche Diamond + une durée = une machine lisible. Le client comprend ce qu'il peut gagner. Le marchand comprend pourquoi il gagne.</p>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-[#6D776F]">Activation</p>
+        <h3 className="mt-3 font-serif text-4xl leading-tight text-[#173328] sm:text-5xl">Une saison claire, pas un setup flou.</h3>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-[#59635C] sm:text-base">
+          Vous achetez une première saison Cardin : QR de validation, carte digitale, tableau marchand, récompense visible et cadre Diamond. Paiement maintenant, activation digitale sous 48 h, premiers signaux attendus sous 30 jours si l&apos;équipe distribue et valide.
+        </p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <Card className="p-6">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Votre formule</p>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Ce que vous achetez</p>
             <div className="mt-4 space-y-3 text-sm leading-7 text-[#203B31]">
-              <p>{selectedWorld.label}</p>
-              <p>{selectedReward?.title ?? selectedSummit.title}</p>
-              <p>{selectedSeason} mois</p>
-              <p>
-                {formatEuro(LANDING_PRICING.activationFee)} pour la saison ({LANDING_PRICING.seasonLengthMonths} mois)
-              </p>
-              <p>{LANDING_PRICING.recurringLabel}</p>
+              {offerItems.map((item) => (
+                <p key={item}>{item}</p>
+              ))}
             </div>
           </Card>
 
           <Card className="p-6">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Ce qui est inclus</p>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Ce qui s&apos;active sous 48 h</p>
             <div className="mt-4 space-y-3 text-sm leading-7 text-[#203B31]">
-              <p>QR de comptoir prêt sous 48 h</p>
-              <p>Tableau marchand actif sous 48 h</p>
-              <p>Carte digitale active sous 48 h</p>
-              <p>Espace marchand</p>
-              <p>Option premium : cartes imprimées (hors cœur V1)</p>
-              <p>Première saison calibrée avec vous</p>
+              {activationItems.map((item) => (
+                <p key={item}>{item}</p>
+              ))}
             </div>
           </Card>
         </div>
@@ -1081,21 +1111,47 @@ function ActivateScreen({ selectedWorld, selectedSummit, selectedSeason, monthly
           <p className="mt-4 text-sm leading-7 text-[#556159]">{explainer.merchantExplanationCopy.revenueConnection}</p>
         </Card>
 
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card className="p-6">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Confiance</p>
+            <div className="mt-4 space-y-3 text-sm leading-7 text-[#203B31]">
+              {trustItems.map((item) => (
+                <p key={item}>{item}</p>
+              ))}
+            </div>
+          </Card>
+          <Card className="p-6">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Sous 30 jours</p>
+            <div className="mt-4 space-y-3 text-sm leading-7 text-[#203B31]">
+              {thirtyDayItems.map((item) => (
+                <p key={item}>{item}</p>
+              ))}
+            </div>
+          </Card>
+        </div>
+
         <Card className="p-6">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Activation</p>
-          <p className="mt-3 text-sm leading-7 text-[#556159]">Paiement puis activation digitale sous 48 h. Récompense visible, progression active, budget borné.</p>
-          <div className="mt-4 rounded-2xl border border-[#D8DED4] bg-[#FBFCF8] p-4">
-            <p className="text-[10px] uppercase tracking-[0.14em] text-[#6D776F]">Délais</p>
-            <p className="mt-2 text-sm leading-7 text-[#203B31]">Tableau marchand + carte digitale : 48 h. Support imprimé : sur demande (option).</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Ce que le staff fait en 10 secondes</p>
+          <div className="mt-4 space-y-3 text-sm leading-7 text-[#203B31]">
+            {staffItems.map((item, index) => (
+              <p key={item}>{index + 1}. {item}</p>
+            ))}
           </div>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <a className="inline-flex h-12 items-center justify-center rounded-full border border-[#1B4332] bg-[#1B4332] px-8 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href={STRIPE_PAYMENT_LINK} rel="noreferrer" target="_blank">
-              {LANDING_PRICING.activationLabel}
+        </Card>
+
+        <Card className="p-6">
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Passer à l&apos;activation</p>
+          <p className="mt-3 text-sm leading-7 text-[#556159]">Un chemin dominant : payer, attendre 48 h, valider les passages réels, lire les premiers retours. Le reste peut se configurer avant ou après.</p>
+          <div className="mt-6">
+            <a className="inline-flex h-12 w-full items-center justify-center rounded-full border border-[#1B4332] bg-[#1B4332] px-8 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href={STRIPE_PAYMENT_LINK} rel="noreferrer" target="_blank">
+              {`Payer ${formatEuro(LANDING_PRICING.activationFee)} et lancer`}
             </a>
-            <Link className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-8 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]" href={engineHref}>
-              Configurer ensuite dans Cardin
+          </div>
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            <Link className="text-[#173A2E] underline underline-offset-2" href={engineHref}>
+              Ajuster avant paiement
             </Link>
-            <Link className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-8 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]" href="#top">
+            <Link className="text-[#173A2E] underline underline-offset-2" href="#top">
               Revoir depuis le début
             </Link>
           </div>
@@ -1105,7 +1161,6 @@ function ActivateScreen({ selectedWorld, selectedSummit, selectedSeason, monthly
     </div>
   )
 }
-
 function MetricPill({ label, value, sublabel }: { label: string; value: string; sublabel: string }) {
   return (
     <div className="rounded-2xl border border-[#DFDACC] bg-[#FFFEFA] px-4 py-4">
