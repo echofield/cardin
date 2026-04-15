@@ -186,11 +186,14 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
     const liteQ = isLite ? "&lite=1" : ""
     fetch(
       `/api/parcours/projection?world=${encodeURIComponent(worldId)}&summit=${encodeURIComponent(String(summit.multiplier))}${liteQ}`,
-      { signal: ac.signal },
+      { signal: ac.signal, cache: "no-store" },
     )
-      .then((res) => res.json())
-      .then((data: { ok?: boolean; projection?: ParcoursProjectionResult }) => {
-        if (data.ok && data.projection) setServerProjection(data.projection)
+      .then(async (res) => {
+        if (!res.ok) return null
+        return (await res.json()) as { ok?: boolean; projection?: ParcoursProjectionResult }
+      })
+      .then((data) => {
+        if (data?.ok && data.projection) setServerProjection(data.projection)
       })
       .catch(() => {})
     return () => ac.abort()
