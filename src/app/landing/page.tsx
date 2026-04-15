@@ -34,9 +34,9 @@ export default function LandingPage() {
               >
                 Parcours client
               </Link>
-              <a className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-6 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]" href="/demo">
-                Voir la démo complète
-              </a>
+              <Link className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-6 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]" href="/dashboard-demo">
+                Voir votre tableau de bord
+              </Link>
             </div>
           </div>
         </div>
