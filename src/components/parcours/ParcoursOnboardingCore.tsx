@@ -189,13 +189,24 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
       { signal: ac.signal, cache: "no-store" },
     )
       .then(async (res) => {
-        if (!res.ok) return null
-        return (await res.json()) as { ok?: boolean; projection?: ParcoursProjectionResult }
+        if (!res.ok) {
+          console.warn(`[PARCOURS] API returned ${res.status} for world=${worldId}`)
+          return null
+        }
+        return (await res.json()) as { ok?: boolean; projection?: ParcoursProjectionResult; error?: string; message?: string }
       })
       .then((data) => {
-        if (data?.ok && data.projection) setServerProjection(data.projection)
+        if (data?.ok && data.projection) {
+          setServerProjection(data.projection)
+        } else if (data && !data.ok) {
+          console.warn("[PARCOURS] API returned error:", data.error, data.message)
+        }
       })
-      .catch(() => {})
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          console.error("[PARCOURS] Fetch failed:", err.message ?? String(err))
+        }
+      })
     return () => ac.abort()
   }, [worldId, summit.multiplier, isLite])
   const projectionFull = serverProjection ?? localProjection

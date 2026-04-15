@@ -30,61 +30,74 @@ function getProjectionOverrides(merchantType: string) {
  * Optional: activity=cafe → loads projection_presets overrides from DB when available (same as /api/projection-presets).
  */
 export async function GET(request: Request) {
-  const url = new URL(request.url)
-  const world = (url.searchParams.get("world") ?? "cafe") as LandingWorldId
-  const summitMultiplier = parseSummitMultiplier(url.searchParams.get("summit"))
-  const lite =
-    url.searchParams.get("lite") === "1" || url.searchParams.get("lite") === "true"
-
-  if (!WORLDS.includes(world)) {
-    return NextResponse.json({ ok: false, error: "invalid_world" }, { status: 400 })
-  }
-
-  const demo = getDemoWorldContent(world)
-  let source: "database" | "defaults" = "defaults"
-  let overrides = getProjectionOverrides(demo.merchantType).overrides
-
   try {
-    const service = createSupabaseServiceClient()
-    const { data, error } = await service
-      .from("projection_presets")
-      .select("activity_id, scenario_id, revenue_weight, returns_weight, primary_effect, secondary_effect, scenario_role")
-      .eq("is_active", true)
-      .eq("activity_id", demo.merchantType)
+    const url = new URL(request.url)
+    const world = (url.searchParams.get("world") ?? "cafe") as LandingWorldId
+    const summitMultiplier = parseSummitMultiplier(url.searchParams.get("summit"))
+    const lite =
+      url.searchParams.get("lite") === "1" || url.searchParams.get("lite") === "true"
 
-    if (!error && data && data.length > 0) {
-      const rows = data as ProjectionPresetRow[]
-      overrides = buildProjectionOverrideMap(rows)
-      source = "database"
+    if (!WORLDS.includes(world)) {
+      console.error("[PARCOURS_API] Invalid world:", world)
+      return NextResponse.json({ ok: false, error: "invalid_world" }, { status: 400 })
     }
-  } catch {
-    const fallback = getProjectionOverrides(demo.merchantType)
-    overrides = fallback.overrides
-    source = fallback.source
-  }
 
-  const projection = buildParcoursProjection(
-    {
+    const demo = getDemoWorldContent(world)
+    let source: "database" | "defaults" = "defaults"
+    let overrides = getProjectionOverrides(demo.merchantType).overrides
+
+    try {
+      const service = createSupabaseServiceClient()
+      const { data, error } = await service
+        .from("projection_presets")
+        .select("activity_id, scenario_id, revenue_weight, returns_weight, primary_effect, secondary_effect, scenario_role")
+        .eq("is_active", true)
+        .eq("activity_id", demo.merchantType)
+
+      if (error) {
+        console.warn("[PARCOURS_API] Supabase query error, using defaults:", error.message)
+      } else if (data && data.length > 0) {
+        const rows = data as ProjectionPresetRow[]
+        overrides = buildProjectionOverrideMap(rows)
+        source = "database"
+      }
+    } catch (dbErr) {
+      console.warn("[PARCOURS_API] Supabase error, using defaults:", dbErr instanceof Error ? dbErr.message : String(dbErr))
+      const fallback = getProjectionOverrides(demo.merchantType)
+      overrides = fallback.overrides
+      source = fallback.source
+    }
+
+    const projection = buildParcoursProjection(
+      {
+        merchantType: demo.merchantType,
+        monthlyClients: demo.monthlyClients,
+        avgTicket: demo.avgTicket,
+        inactivePercent: demo.inactivePercent,
+        baseRecoveryPercent: demo.recoveryPercent,
+        seasonMonths: demo.seasonMonths,
+        summitMultiplier,
+        lite,
+      },
+      overrides,
+    )
+
+    return NextResponse.json({
+      ok: true,
+      source,
+      world,
       merchantType: demo.merchantType,
-      monthlyClients: demo.monthlyClients,
-      avgTicket: demo.avgTicket,
-      inactivePercent: demo.inactivePercent,
-      baseRecoveryPercent: demo.recoveryPercent,
-      seasonMonths: demo.seasonMonths,
       summitMultiplier,
       lite,
-    },
-    overrides,
-  )
-
-  return NextResponse.json({
-    ok: true,
-    source,
-    world,
-    merchantType: demo.merchantType,
-    summitMultiplier,
-    lite,
-    panierMoyen: demo.avgTicket,
-    projection,
-  })
+      panierMoyen: demo.avgTicket,
+      projection,
+    })
+  } catch (err) {
+    console.error("[PARCOURS_API] Unhandled error:", err instanceof Error ? err.message : String(err))
+    console.error("[PARCOURS_API] Stack:", err instanceof Error ? err.stack : "")
+    return NextResponse.json(
+      { ok: false, error: "internal_error", message: err instanceof Error ? err.message : "Unknown error" },
+      { status: 500 }
+    )
+  }
 }

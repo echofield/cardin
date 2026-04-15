@@ -12,8 +12,8 @@
 export function getSupabaseServiceRoleKey() {
   const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (!serviceRole) {
-    throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY")
+  if (!serviceRole || serviceRole === "SET_THIS_IN_VERCEL") {
+    throw new Error("Missing or invalid SUPABASE_SERVICE_ROLE_KEY (found placeholder)")
   }
 
   return serviceRole
