@@ -17,6 +17,7 @@ import {
   type LandingWorldId,
 } from "@/lib/landing-content"
 import { SEASON_FRAME_BY_LANDING } from "@/lib/merchant-season-framing"
+import { formatEuro } from "@/lib/number-format"
 import { buildParcoursEngineHref, type ParcoursSummitStyleId } from "@/lib/parcours-contract"
 import {
   isLiteSelectionsComplete,
@@ -103,8 +104,6 @@ const WORLD_DETAILS: Record<LandingWorldId, string> = {
   boutique: "Visites plus rares, panier et désir forts.",
 }
 
-const formatEuro = (value: number) =>
-  new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value)
 
 const ease = [0.25, 0.1, 0.25, 1] as const
 

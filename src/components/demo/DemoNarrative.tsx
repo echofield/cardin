@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import Link from "next/link"
 import { useMemo, useState } from "react"
@@ -7,6 +7,7 @@ import { DemoMerchantBoard } from "@/components/demo/DemoMerchantBoard"
 import { DemoWalletCard } from "@/components/demo/DemoWalletCard"
 import { getDemoWorldContent } from "@/lib/demo-content"
 import { LANDING_PRICING, LANDING_WORLD_ORDER, LANDING_WORLDS, type LandingWorldId } from "@/lib/landing-content"
+import { formatEuro } from "@/lib/number-format"
 
 const SCREENS = [
   { id: "setup", act: "Mise en place", title: "Resume de configuration", perspective: "Commercant" },
@@ -18,13 +19,7 @@ const SCREENS = [
   { id: "merchant-proof", act: "Preuve", title: "Tableau marchand", perspective: "Commercant" },
 ] as const
 
-function formatEuro(value: number) {
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(value)
-}
+
 
 export function DemoNarrative() {
   const [worldId, setWorldId] = useState<LandingWorldId>("cafe")

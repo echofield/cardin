@@ -1,4 +1,6 @@
-﻿export const DEFAULT_DAYS_OPEN = 26
+import { formatEuro as formatEuroAmount } from "@/lib/number-format"
+
+export const DEFAULT_DAYS_OPEN = 26
 
 export type CalculatorInputs = {
   clientsPerDay: number
@@ -35,11 +37,7 @@ export function percentToRate(percent: number): number {
 }
 
 export function formatEuro(value: number): string {
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(value)
+  return formatEuroAmount(value)
 }
 
 function clampRate(value: number): number {

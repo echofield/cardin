@@ -1,3 +1,4 @@
+import { formatEuro } from "@/lib/number-format"
 import { Card } from "@/ui"
 
 type DemoMerchantBoardProps = {
@@ -15,13 +16,6 @@ type DemoMerchantBoardProps = {
   cardCode: string
 }
 
-function formatCompactEuro(value: number) {
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(value)
-}
 
 export function DemoMerchantBoard(props: DemoMerchantBoardProps) {
   return (
@@ -40,8 +34,8 @@ export function DemoMerchantBoard(props: DemoMerchantBoardProps) {
       </div>
 
       <div className="grid gap-3 border-b border-[#E5E0D4] px-5 py-5 sm:grid-cols-4 sm:px-6">
-        <Metric label="CA saison" value={formatCompactEuro(props.seasonRevenue)} note="derive de la projection" />
-        <Metric label="CA / mois" value={formatCompactEuro(props.monthlyRevenue)} note="retour structure" />
+        <Metric label="CA saison" value={formatEuro(props.seasonRevenue)} note="derive de la projection" />
+        <Metric label="CA / mois" value={formatEuro(props.monthlyRevenue)} note="retour structure" />
         <Metric label="Retours / mois" value={props.monthlyReturns.toString()} note="clients recuperes" />
         <Metric label="Payback" value={`${props.paybackDays} j`} note={props.confidenceLabel} />
       </div>

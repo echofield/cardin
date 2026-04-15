@@ -1,4 +1,5 @@
-﻿import type { MerchantProfileId } from "@/lib/merchant-profile"
+import { formatEuro } from "@/lib/number-format"
+import type { MerchantProfileId } from "@/lib/merchant-profile"
 
 export type CardinProtocolState =
   | "COLD"
@@ -799,17 +800,6 @@ function getSeasonObjectiveLine(profileId: MerchantProfileId, profitIncremental:
   }
 }
 
-function formatEuro(value: number): string {
-  try {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-      maximumFractionDigits: 0,
-    }).format(value)
-  } catch {
-    return `${Math.round(value)} EUR`
-  }
-}
 
 /** Maps DB `cardin_world` / template id to protocol preset. Bar shares café economics until a dedicated bar preset exists. */
 export function mapMerchantTypeToProtocolProfile(raw: string | null | undefined): MerchantProfileId {

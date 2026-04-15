@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react"
 import { WalletPassPreview } from "@/components/engine/WalletPassPreview"
 import { LANDING_PRICING, STRIPE_PAYMENT_LINK, type LandingWorldId } from "@/lib/landing-content"
 import { SEASON_FRAME_BY_LANDING } from "@/lib/merchant-season-framing"
+import { formatEuro } from "@/lib/number-format"
 import { landingWorldToEngineTemplateId, type ParcoursSummitStyleId } from "@/lib/parcours-contract"
 import { getProtocolMappingLabel, getSeasonRewardOption, getVerticalExplainerConfig } from "@/lib/vertical-explainer-config"
 import { Button, Card } from "@/ui"
@@ -505,17 +506,6 @@ const worlds: WorldDefinition[] = [
   },
 ]
 
-function formatEuro(value: number) {
-  try {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-      maximumFractionDigits: 0,
-    }).format(value)
-  } catch {
-    return `${Math.round(value)} EUR`
-  }
-}
 
 function buildEngineHref(worldId: WorldId, season: SeasonLength, summitId: string) {
   return `/engine?template=${landingWorldToEngineTemplateId(worldId)}&season=${season}&summit=${summitId}`

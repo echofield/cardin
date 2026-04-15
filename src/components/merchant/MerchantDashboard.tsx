@@ -1,7 +1,9 @@
-﻿"use client"
+"use client"
 
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
+
+import { formatEuro } from "@/lib/number-format"
 
 import { createClientSupabaseBrowser } from "@/lib/supabase/client"
 import { Button, Card } from "@/ui"
@@ -495,15 +497,5 @@ function formatDate(value: string | null | undefined): string {
   }
 }
 
-function formatEuro(value: number): string {
-  try {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-      maximumFractionDigits: 0,
-    }).format(value)
-  } catch {
-    return `${Math.round(value)} EUR`
-  }
-}
+
 

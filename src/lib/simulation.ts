@@ -1,5 +1,6 @@
-﻿import { computeCardinFinancialProjection } from "@/lib/cardin-projection-engine"
+import { computeCardinFinancialProjection } from "@/lib/cardin-projection-engine"
 import { getTemplateById } from "@/lib/merchant-templates"
+import { formatEuro } from "@/lib/number-format"
 import type {
   AuditSelection,
   FrequencyLevel,
@@ -159,11 +160,7 @@ export function simulateScenario(input: SimulateScenarioInput): SimulateScenario
 }
 
 function formatCompactEuro(value: number): string {
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: value < 10 ? 1 : 0,
-  }).format(value)
+  return formatEuro(value, { maximumFractionDigits: value < 10 ? 1 : 0 })
 }
 
 export function formatSimulationRhythm(visitsAdded: number): string {
