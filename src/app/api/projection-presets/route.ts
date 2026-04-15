@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 
 import { type BehaviorScenarioId } from "@/lib/behavior-engine"
 import {
@@ -28,20 +28,38 @@ type PresetWritePayload = {
 }
 
 export async function GET(request: Request) {
-  const service = createSupabaseServiceClient()
   const url = new URL(request.url)
   const activityFilter = url.searchParams.get("activity") ?? undefined
+  const fallbackRows = flattenDefaultProjectionProfiles(activityFilter)
 
-  const selectQuery = service
-    .from("projection_presets")
-    .select("activity_id, scenario_id, revenue_weight, returns_weight, primary_effect, secondary_effect, scenario_role")
-    .eq("is_active", true)
+  try {
+    const service = createSupabaseServiceClient()
+    const selectQuery = service
+      .from("projection_presets")
+      .select("activity_id, scenario_id, revenue_weight, returns_weight, primary_effect, secondary_effect, scenario_role")
+      .eq("is_active", true)
 
-  const query = activityFilter ? selectQuery.eq("activity_id", activityFilter) : selectQuery
-  const { data, error } = await query
+    const query = activityFilter ? selectQuery.eq("activity_id", activityFilter) : selectQuery
+    const { data, error } = await query
 
-  if (error || !data || data.length === 0) {
-    const fallbackRows = flattenDefaultProjectionProfiles(activityFilter)
+    if (error || !data || data.length === 0) {
+      return NextResponse.json({
+        ok: true,
+        source: "defaults",
+        overrides: buildProjectionOverrideMap(fallbackRows),
+        rows: fallbackRows,
+      })
+    }
+
+    const rows = data as ProjectionPresetRow[]
+
+    return NextResponse.json({
+      ok: true,
+      source: "database",
+      overrides: buildProjectionOverrideMap(rows),
+      rows,
+    })
+  } catch {
     return NextResponse.json({
       ok: true,
       source: "defaults",
@@ -49,15 +67,6 @@ export async function GET(request: Request) {
       rows: fallbackRows,
     })
   }
-
-  const rows = data as ProjectionPresetRow[]
-
-  return NextResponse.json({
-    ok: true,
-    source: "database",
-    overrides: buildProjectionOverrideMap(rows),
-    rows,
-  })
 }
 
 export async function POST(request: Request) {

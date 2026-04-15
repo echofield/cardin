@@ -34,10 +34,10 @@ function SectorSelector() {
         backgroundColor: 'rgba(250,248,242,0.95)',
         backdropFilter: 'blur(12px)',
         borderBottom: '1px solid rgba(0,0,0,0.05)',
-        padding: '12px 20px',
+        padding: '12px 16px',
       }}
     >
-      <div style={{ maxWidth: '480px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '720px', margin: '0 auto' }}>
         <div
           style={{
             display: 'flex',
@@ -58,7 +58,7 @@ function SectorSelector() {
             >
               Cardin — Démo
             </div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#15372B' }}>Votre tableau de bord</div>
+            <div style={{ fontSize: '0.98rem', fontWeight: 600, color: '#15372B' }}>Vue marchand tablette</div>
           </div>
           <Link
             href="/landing"
@@ -135,7 +135,7 @@ function DashboardContent() {
   return (
     <>
       <SectorSelector />
-      <div style={{ paddingTop: '140px' }}>
+      <div style={{ paddingTop: '156px', paddingBottom: '36px' }}>
         <DashboardHome />
       </div>
     </>

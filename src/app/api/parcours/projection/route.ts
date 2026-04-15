@@ -17,6 +17,14 @@ function parseSummitMultiplier(raw: string | null): number {
   return 1
 }
 
+function getProjectionOverrides(merchantType: string) {
+  const fallbackRows = flattenDefaultProjectionProfiles(merchantType)
+  return {
+    overrides: buildProjectionOverrideMap(fallbackRows),
+    source: "defaults" as const,
+  }
+}
+
 /**
  * GET /api/parcours/projection?world=restaurant&summit=1.25
  * Optional: activity=cafe → loads projection_presets overrides from DB when available (same as /api/projection-presets).
@@ -33,20 +41,26 @@ export async function GET(request: Request) {
   }
 
   const demo = getDemoWorldContent(world)
-  let overrides = undefined
-  const service = createSupabaseServiceClient()
-  const { data, error } = await service
-    .from("projection_presets")
-    .select("activity_id, scenario_id, revenue_weight, returns_weight, primary_effect, secondary_effect, scenario_role")
-    .eq("is_active", true)
-    .eq("activity_id", demo.merchantType)
+  let source: "database" | "defaults" = "defaults"
+  let overrides = getProjectionOverrides(demo.merchantType).overrides
 
-  if (!error && data && data.length > 0) {
-    const rows = data as ProjectionPresetRow[]
-    overrides = buildProjectionOverrideMap(rows)
-  } else {
-    const fallback = flattenDefaultProjectionProfiles(demo.merchantType)
-    overrides = buildProjectionOverrideMap(fallback)
+  try {
+    const service = createSupabaseServiceClient()
+    const { data, error } = await service
+      .from("projection_presets")
+      .select("activity_id, scenario_id, revenue_weight, returns_weight, primary_effect, secondary_effect, scenario_role")
+      .eq("is_active", true)
+      .eq("activity_id", demo.merchantType)
+
+    if (!error && data && data.length > 0) {
+      const rows = data as ProjectionPresetRow[]
+      overrides = buildProjectionOverrideMap(rows)
+      source = "database"
+    }
+  } catch {
+    const fallback = getProjectionOverrides(demo.merchantType)
+    overrides = fallback.overrides
+    source = fallback.source
   }
 
   const projection = buildParcoursProjection(
@@ -65,6 +79,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     ok: true,
+    source,
     world,
     merchantType: demo.merchantType,
     summitMultiplier,
