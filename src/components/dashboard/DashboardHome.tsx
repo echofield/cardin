@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 
 import { useStore } from './store'
@@ -36,6 +37,7 @@ function MetricIcon({ label, tint = '#15372B', bg = 'rgba(21,55,43,0.08)' }: { l
 
 export function DashboardHome() {
   const { business, clients } = useStore()
+  const [validationMode, setValidationMode] = useState<'idle' | 'confirmed'>('idle')
 
   const active = clients.filter(c => c.level !== 'dormant').length
   const nearDiamond = clients.filter(c => c.visits >= 6 && c.visits < 8).length
@@ -48,10 +50,12 @@ export function DashboardHome() {
   const budgetTotal = 490
   const activationsToday = 3
   const dominoInvites = clients.filter(c => c.invitedBy).length
+  const validatedClient = clients.find(c => c.level !== 'dormant') ?? clients[0]
+  const recentValidations = clients.filter(c => c.level !== 'dormant').slice(0, 3)
 
   return (
     <div style={{ padding: '20px', maxWidth: '480px', margin: '0 auto', backgroundColor: '#FAF8F2', minHeight: '100vh' }}>
-      <div style={{ marginBottom: '24px' }}>
+      <div style={{ marginBottom: '16px' }}>
         <div
           style={{
             fontSize: '0.6rem',
@@ -61,7 +65,7 @@ export function DashboardHome() {
             marginBottom: '4px',
           }}
         >
-          Vue d'ensemble
+          Vue marchand
         </div>
         <h1
           style={{
@@ -83,6 +87,37 @@ export function DashboardHome() {
 
       <motion.div
         {...fade(0)}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '8px',
+          marginBottom: '10px',
+        }}
+      >
+        {[
+          '1. Scanner le client',
+          '2. Valider le passage',
+          '3. Lire l’impact',
+        ].map(step => (
+          <div
+            key={step}
+            style={{
+              borderRadius: '12px',
+              padding: '10px 12px',
+              backgroundColor: '#FFFDF8',
+              border: '1px solid rgba(21,55,43,0.08)',
+              fontSize: '0.62rem',
+              lineHeight: 1.5,
+              color: '#556159',
+            }}
+          >
+            {step}
+          </div>
+        ))}
+      </motion.div>
+
+      <motion.div
+        {...fade(1)}
         style={{
           backgroundColor: '#15372B',
           borderRadius: '14px',
@@ -113,7 +148,137 @@ export function DashboardHome() {
       </motion.div>
 
       <motion.div
-        {...fade(1)}
+        {...fade(2)}
+        style={{
+          backgroundColor: '#FFFDF8',
+          borderRadius: '14px',
+          padding: '16px 18px',
+          marginBottom: '10px',
+          border: '1px solid rgba(21,55,43,0.1)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+          <MetricIcon label="QR" />
+          <span style={{ fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#15372B' }}>
+            Validation comptoir
+          </span>
+        </div>
+
+        <button
+          onClick={() => setValidationMode('confirmed')}
+          style={{
+            width: '100%',
+            padding: '18px',
+            borderRadius: '14px',
+            border: '1px solid rgba(21,55,43,0.12)',
+            backgroundColor: '#173A2E',
+            color: '#FAF8F2',
+            cursor: 'pointer',
+            textAlign: 'left',
+          }}
+          type="button"
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div
+              style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '14px',
+                border: '1px solid rgba(250,248,242,0.16)',
+                display: 'grid',
+                placeItems: 'center',
+                backgroundColor: 'rgba(250,248,242,0.04)',
+                fontSize: '0.72rem',
+                letterSpacing: '0.1em',
+              }}
+            >
+              SCAN
+            </div>
+            <div>
+              <div style={{ fontSize: '0.95rem', marginBottom: '4px' }}>Scanner la carte client</div>
+              <div style={{ fontSize: '0.68rem', opacity: 0.6, lineHeight: 1.5 }}>
+                QR ou code manuel. Le passage, la progression et les droits se mettent à jour.
+              </div>
+            </div>
+          </div>
+        </button>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '12px' }}>
+          {[
+            'QR client',
+            `1 ${business.visitWord} validé`,
+            'Impact instantané',
+          ].map(item => (
+            <div
+              key={item}
+              style={{
+                borderRadius: '10px',
+                backgroundColor: 'rgba(21,55,43,0.04)',
+                padding: '10px 12px',
+                fontSize: '0.62rem',
+                color: '#556159',
+                lineHeight: 1.5,
+              }}
+            >
+              {item}
+            </div>
+          ))}
+        </div>
+
+        {validationMode === 'confirmed' ? (
+          <div
+            style={{
+              marginTop: '12px',
+              borderRadius: '12px',
+              backgroundColor: 'rgba(21,55,43,0.05)',
+              border: '1px solid rgba(21,55,43,0.08)',
+              padding: '12px 14px',
+            }}
+          >
+            <div style={{ fontSize: '0.62rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A9389', marginBottom: '6px' }}>
+              Dernière validation
+            </div>
+            <div style={{ fontSize: '0.84rem', color: '#173A2E', marginBottom: '3px' }}>
+              {validatedClient.name} · {business.visitWord} {validatedClient.visits}
+            </div>
+            <div style={{ fontSize: '0.68rem', color: '#556159' }}>
+              Retour confirmé. La progression client et les activations éligibles ont été recalculées.
+            </div>
+          </div>
+        ) : null}
+
+        <div style={{ marginTop: '12px' }}>
+          <div style={{ fontSize: '0.62rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A9389', marginBottom: '8px' }}>
+            Validations récentes
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {recentValidations.map(client => (
+              <div
+                key={client.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 0',
+                  borderBottom: '1px solid rgba(0,0,0,0.05)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <MetricIcon label={client.initials} />
+                  <div>
+                    <div style={{ fontSize: '0.76rem', color: '#173A2E' }}>{client.name}</div>
+                    <div style={{ fontSize: '0.62rem', color: '#8A9389' }}>{client.lastVisit}</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.68rem', color: '#556159' }}>{business.visitWord} {client.visits}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
+      <motion.div
+        {...fade(3)}
         style={{
           backgroundColor: '#FFFDF8',
           borderRadius: '14px',
@@ -160,7 +325,7 @@ export function DashboardHome() {
       </motion.div>
 
       <motion.div
-        {...fade(2)}
+        {...fade(4)}
         style={{
           borderRadius: '14px',
           padding: '20px',
@@ -244,7 +409,7 @@ export function DashboardHome() {
       </motion.div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-        <motion.div {...fade(3)} style={{ backgroundColor: '#FFFDF8', borderRadius: '14px', padding: '14px 16px' }}>
+        <motion.div {...fade(5)} style={{ backgroundColor: '#FFFDF8', borderRadius: '14px', padding: '14px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
             <MetricIcon label="CL" />
             <span style={{ fontSize: '0.55rem', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#8A9389' }}>
@@ -257,7 +422,7 @@ export function DashboardHome() {
           <div style={{ fontSize: '0.6rem', color: '#8A9389', marginTop: '3px' }}>en parcours</div>
         </motion.div>
 
-        <motion.div {...fade(4)} style={{ backgroundColor: '#FFFDF8', borderRadius: '14px', padding: '14px 16px' }}>
+        <motion.div {...fade(6)} style={{ backgroundColor: '#FFFDF8', borderRadius: '14px', padding: '14px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
             <MetricIcon label="RT" />
             <span style={{ fontSize: '0.55rem', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#8A9389' }}>
@@ -271,7 +436,7 @@ export function DashboardHome() {
         </motion.div>
       </div>
 
-      <motion.div {...fade(5)} style={{ backgroundColor: '#FFFDF8', borderRadius: '14px', padding: '16px 18px', marginBottom: '10px' }}>
+      <motion.div {...fade(7)} style={{ backgroundColor: '#FFFDF8', borderRadius: '14px', padding: '16px 18px', marginBottom: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
           <MetricIcon label="MI" />
           <span style={{ fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8A9389' }}>
@@ -321,6 +486,7 @@ export function DashboardHome() {
               {m.icon === 'clock' && 'HR'}
               {m.icon === 'cake' && 'BD'}
               {m.icon === 'users' && 'DO'}
+              {m.icon === 'heart' && 'DU'}
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '0.75rem', color: '#3B4A42' }}>{m.label}</div>
@@ -330,7 +496,7 @@ export function DashboardHome() {
         ))}
       </motion.div>
 
-      <motion.div {...fade(6)} style={{ backgroundColor: '#FFFDF8', borderRadius: '14px', padding: '16px 18px', marginBottom: '10px' }}>
+      <motion.div {...fade(8)} style={{ backgroundColor: '#FFFDF8', borderRadius: '14px', padding: '16px 18px', marginBottom: '10px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <MetricIcon label="BG" tint="#C7A976" bg="rgba(199,169,118,0.1)" />
@@ -356,7 +522,7 @@ export function DashboardHome() {
       </motion.div>
 
       <motion.div
-        {...fade(7)}
+        {...fade(9)}
         style={{
           borderRadius: '14px',
           padding: '14px 18px',
