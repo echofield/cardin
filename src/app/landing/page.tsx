@@ -15,7 +15,7 @@ export default function LandingPage() {
           <div className="max-w-[60rem]">
             <p className="text-[11px] uppercase tracking-[0.22em] text-[#677168]">Cardin</p>
             <h1 className="mt-4 max-w-5xl font-serif text-[clamp(3rem,9vw,5.4rem)] leading-[1.02] text-[#163328]">
-              Moteur de revenu saisonnier. Diamond au centre. Parcours qui compte.
+              Moteur de revenu saisonnier. Un système qui transforme vos clients en retour mesurable.
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-[#566159] sm:text-lg">
               Débloquez le Diamond comme horizon dès le départ : missions en cours de route, retour, recommandation et
