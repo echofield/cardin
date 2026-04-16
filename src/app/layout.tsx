@@ -25,10 +25,50 @@ const body = Manrope({
   display: "swap",
 })
 
+const SITE_URL = process.env.CARDIN_SITE_URL ?? "https://getcardin.com"
+const SITE_NAME = "Cardin"
+const SITE_TITLE = "Cardin — moteur de retour pour commerces et communautés"
+const SITE_DESCRIPTION =
+  "Transformez chaque passage en progression mesurable. QR d'entrée, carte digitale, récompense de saison. Activation sous 48 h, lecture du retour sous 30 jours."
+
 export const metadata: Metadata = {
-  title: "Cardin - Return Engine pour commerces et communautés",
-  description:
-    "Cardin crée des boucles de retour mesurables : QR d'entrée, carte digitale, wallet Apple / Google. Activation digitale rapide.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_TITLE,
+    template: "%s · Cardin",
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    "fidélisation commerce",
+    "carte de fidélité digitale",
+    "moteur de retour",
+    "QR restaurant",
+    "programme de fidélité bar",
+    "retention commerce local",
+  ],
+  authors: [{ name: "Cardin" }],
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

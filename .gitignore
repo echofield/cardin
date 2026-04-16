@@ -40,3 +40,6 @@ Thumbs.db
 # Misc
 *.pem
 tmpclaude-*
+.cursor/
+.next-dev-*.log
+*.log
