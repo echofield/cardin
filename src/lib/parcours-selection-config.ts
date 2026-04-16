@@ -168,21 +168,21 @@ export const MOMENT_OPTIONS: MomentOption[] = [
 // ─── ÉTAPE 4 BLOCKS ───────────────────────────────────────────────────────────
 
 export const ACCESS_OPTIONS: AccessOption[] = [
-  { id: "tous",         label: "Tous les clients",   sub: "Aucun filtre" },
+  { id: "tous",         label: "Tous les clients",   sub: "Tous les passages comptent" },
   { id: "reguliers",    label: "Clients réguliers",  sub: "Déjà venus au moins 2 fois" },
   { id: "selectionnes", label: "Clients choisis",    sub: "Vos meilleurs parcours (top ~10%)" },
 ]
 
 export const TRIGGER_OPTIONS: TriggerOption[] = [
-  { id: "passage",    label: "Passage validé",    sub: "À chaque scan" },
-  { id: "heure",      label: "Heure spécifique",  sub: "Créneaux définis" },
-  { id: "invitation", label: "Invitation client", sub: "Le client amène quelqu'un" },
-  { id: "evenement",  label: "Événement",         sub: "Soirée ou activation" },
+  { id: "passage",    label: "Passage validé",    sub: "Chaque passage validé au comptoir" },
+  { id: "heure",      label: "Heure spécifique",  sub: "À des horaires définis par vous" },
+  { id: "invitation", label: "Invitation client", sub: "Quand le client amène quelqu'un" },
+  { id: "evenement",  label: "Événement",         sub: "Lors d'une soirée ou d'un moment spécial" },
 ]
 
 export const PROPAGATION_OPTIONS: PropagationOption[] = [
-  { id: "individuel", label: "Individuel",  sub: "Pour le client seul" },
-  { id: "duo",        label: "Duo",         sub: "Le client amène 1 personne" },
+  { id: "individuel", label: "Individuel",  sub: "Le client en profite seul" },
+  { id: "duo",        label: "Duo",         sub: "Le client amène une personne" },
   { id: "groupe",     label: "Groupe",      sub: "Plusieurs personnes ensemble" },
 ]
 

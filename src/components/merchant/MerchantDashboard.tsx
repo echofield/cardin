@@ -9,6 +9,7 @@ import { createClientSupabaseBrowser } from "@/lib/supabase/client"
 import { Button, Card } from "@/ui"
 
 import { ConfigurationRecap } from "@/components/merchant/ConfigurationRecap"
+import { RewardRefinementCard, type RewardRefinement } from "@/components/merchant/RewardRefinementCard"
 import { DASHBOARD_VERTICAL_LINE } from "@/lib/dashboard-vertical-line"
 
 type SharedUnlockView = {
@@ -67,6 +68,7 @@ type MerchantApiResponse = {
     }
     sharedUnlock: SharedUnlockView
     parcoursSelections?: ParcoursSelectionsSnapshot | null
+    parcoursRefinement?: RewardRefinement | null
   }
   protocol?: {
     state: string
@@ -408,6 +410,10 @@ export function MerchantDashboard({ merchantId, demo = false }: { merchantId: st
 
         {data.merchant.parcoursSelections ? (
           <ConfigurationRecap selections={data.merchant.parcoursSelections} />
+        ) : null}
+
+        {data.merchant.parcoursSelections ? (
+          <RewardRefinementCard initial={data.merchant.parcoursRefinement ?? null} />
         ) : null}
 
         <Card className="p-6">

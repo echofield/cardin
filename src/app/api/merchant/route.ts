@@ -32,7 +32,7 @@ export async function GET(request: Request) {
   const { data: merchant, error: merchantError } = await supabase
     .from("merchants")
     .select(
-      "id, name, email, cardin_world, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period, parcours_selections, created_at",
+      "id, name, email, cardin_world, midpoint_mode, target_visits, reward_label, shared_unlock_enabled, shared_unlock_objective, shared_unlock_window_days, shared_unlock_offer, shared_unlock_active_until, shared_unlock_last_triggered_period, parcours_selections, parcours_refinement, created_at",
     )
     .eq("id", merchantId)
     .single()
@@ -195,6 +195,7 @@ export async function GET(request: Request) {
       },
       sharedUnlock,
       parcoursSelections: (merchant as { parcours_selections?: unknown }).parcours_selections ?? null,
+      parcoursRefinement: (merchant as { parcours_refinement?: unknown }).parcours_refinement ?? null,
     },
     metrics: {
       totalCards: cards?.length ?? 0,

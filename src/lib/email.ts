@@ -194,7 +194,7 @@ export function formatParcoursRecap(selections: ParcoursSelectionsPayload): { te
 
       <p style="margin:16px 0 6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#1f5a46;">Activation</p>
       <table style="border-collapse:collapse;width:100%;margin:0 0 12px;">
-        ${row("Qui peut accéder", access)}
+        ${row("Qui peut y accéder", access)}
         ${row("Déclencheur", trigger)}
         ${row("Propagation", propagation)}
       </table>

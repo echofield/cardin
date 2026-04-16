@@ -57,7 +57,7 @@ export function ConfigurationRecap({ selections }: Props) {
     { label: "Type de récompense", value: selections.rewardType ? REWARD_TYPE_LABELS[selections.rewardType] : "—" },
     { label: "Visibilité", value: findLabel(INTENSITE_OPTIONS, selections.intensite) },
     { label: "Quand ça se déclenche", value: findLabel(MOMENT_OPTIONS, selections.moment) },
-    { label: "Qui peut accéder", value: findLabel(ACCESS_OPTIONS, selections.accessType) },
+    { label: "Qui peut y accéder", value: findLabel(ACCESS_OPTIONS, selections.accessType) },
     { label: "Propagation", value: findLabel(PROPAGATION_OPTIONS, selections.propagationType) },
   ]
 

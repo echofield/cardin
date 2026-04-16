@@ -1364,9 +1364,9 @@ function StepMechanics({
         Définissez l&apos;accès, le déclencheur et la portée.
       </motion.p>
 
-      {/* Block 1 — Qui peut accéder */}
+      {/* Block 1 — Qui peut y accéder */}
       <div className="mb-6">
-        <BlockLabel label="Qui peut accéder" delay={0.22} />
+        <BlockLabel label="Qui peut y accéder" delay={0.22} />
         <div className="grid grid-cols-3 gap-2">
           {ACCESS_OPTIONS.map((opt, i) => (
             <SelectionCard
@@ -1434,8 +1434,18 @@ function StepMechanics({
       {/* Text recap — two bare SummaryBars, no card wrapper */}
       <div className="mb-6 space-y-2">
         <SummaryBar label="Récompense" line={summaryLine3} variant="dark" />
-        <SummaryBar label="Activation" line={engineLine4} variant="light" />
+        <SummaryBar label="Ce que le système provoque" line={engineLine4} variant="light" />
       </div>
+
+      <motion.p
+        animate={{ opacity: isComplete ? 1 : 0.55 }}
+        className="mb-3 text-center"
+        initial={{ opacity: 0 }}
+        style={{ color: c.body, fontSize: "0.82rem", lineHeight: 1.55 }}
+        transition={{ delay: 0.6, duration: 0.35 }}
+      >
+        Le client gagne une vraie raison de revenir. Vous récupérez un passage réel.
+      </motion.p>
 
       <motion.button
         animate={{
