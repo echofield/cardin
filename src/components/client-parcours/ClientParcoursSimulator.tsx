@@ -19,8 +19,20 @@ import { ScreenActivation } from "@/components/client-parcours/ScreenActivation"
 import { ScreenProchaineEtape } from "@/components/client-parcours/ScreenProchaineEtape"
 import { ScreenDomino } from "@/components/client-parcours/ScreenDomino"
 import { ScreenSommet } from "@/components/client-parcours/ScreenSommet"
+import { ClientQrPanel } from "@/components/client-parcours/ClientQrPanel"
 
 const MAX_SHARES = 2
+
+// Stable demo client ID — generated once per browser session
+function getDemoClientId(): string {
+  if (typeof window === "undefined") return "demo-ssr"
+  const key = "cardin-demo-client-id"
+  const existing = sessionStorage.getItem(key)
+  if (existing) return existing
+  const id = crypto.randomUUID()
+  sessionStorage.setItem(key, id)
+  return id
+}
 
 export function ClientParcoursSimulator() {
   const [worldId, setWorldId] = useState<LandingWorldId>("cafe")
@@ -28,6 +40,8 @@ export function ClientParcoursSimulator() {
   const [sharesUsed, setSharesUsed] = useState(0)
   const [softInviteUsed, setSoftInviteUsed] = useState(0)
   const [summitChoiceId, setSummitChoiceId] = useState<string | null>(null)
+  const [showQr, setShowQr] = useState(false)
+  const [demoClientId] = useState(getDemoClientId)
 
   const targetVisits = WORLD_TARGET_VISITS[worldId]
   const world = LANDING_WORLDS[worldId]
@@ -160,10 +174,24 @@ export function ClientParcoursSimulator() {
                 {isSummit ? "récompense ouverte" : "le sommet vous attend"}
               </p>
             </div>
-            <div className="rounded-full border border-[#D8DED4] bg-[#FBFCF8] px-3 py-1.5 text-xs uppercase tracking-[0.14em] text-[#173A2E]">
-              {world.label}
+            <div className="flex items-center gap-2">
+              <button
+                className="rounded-full border border-[#D8DED4] bg-[#FBFCF8] px-3 py-1.5 text-xs font-medium text-[#173A2E] transition hover:border-[#173A2E] hover:bg-[#EEF3EC]"
+                onClick={() => setShowQr(true)}
+                title="Afficher votre QR de passage"
+                type="button"
+              >
+                Mon QR
+              </button>
+              <div className="rounded-full border border-[#D8DED4] bg-[#FBFCF8] px-3 py-1.5 text-xs uppercase tracking-[0.14em] text-[#173A2E]">
+                {world.label}
+              </div>
             </div>
           </div>
+
+          {showQr && (
+            <ClientQrPanel clientId={demoClientId} onClose={() => setShowQr(false)} />
+          )}
 
           <div className="rounded-[1.8rem] border border-[#DED9CF] bg-[linear-gradient(180deg,#FFFEFA_0%,#F4F0E7_100%)] p-6 shadow-[0_26px_80px_-60px_rgba(24,39,31,0.36)] md:p-8">
             <div className="flex items-start justify-between border-b border-[#E6E0D5] pb-4">
