@@ -940,6 +940,13 @@ function EnginePreview({ worldId, summitId, rewardType, moment, accessType, prop
   // Track opacity: 0.08 when nothing selected, 0.15 otherwise
   const trackOpacity = metrics.hasAnySelection ? 0.15 : 0.08
 
+  // Economic hint — names the pulse signal in plain French. Silent when no selection.
+  const econLine =
+    metrics.pulseColor === "green" ? "retour client stable sur la saison"
+    : metrics.pulseColor === "gold" ? "retour client amplifié"
+    : metrics.pulseColor === "red" ? "récompense très généreuse — surveillez la marge"
+    : ""
+
   return (
     <motion.div
       animate={{ opacity: 1 }}
@@ -1096,6 +1103,23 @@ function EnginePreview({ worldId, summitId, rewardType, moment, accessType, prop
           transition={{ duration: 0.15, ease: "easeOut" }}
         />
       </div>
+
+      {/* Economic hint — one silent line labeling the pulse signal */}
+      <motion.p
+        animate={{ opacity: econLine ? 0.55 : 0 }}
+        initial={{ opacity: 0 }}
+        style={{
+          marginTop: "8px",
+          marginBottom: 0,
+          fontSize: "0.66rem",
+          letterSpacing: "0.02em",
+          color: "var(--cardin-label-light)",
+          lineHeight: 1.3,
+        }}
+        transition={{ duration: 0.15, ease: "easeOut" }}
+      >
+        {econLine || "\u00A0"}
+      </motion.p>
     </motion.div>
   )
 }
@@ -1151,14 +1175,14 @@ function StepSummit({ seasonRewardId, setSeasonRewardId, selectedId, setSelected
       {/* Block 0 — Récompense de saison (grand attractor, top of pyramid) */}
       <div className="mb-8">
         <BlockLabel label="Récompense de saison" delay={0.2} />
-        {/* Diamond rarity line */}
+        {/* Diamond rarity line — dynamic per vertical */}
         <motion.p
           animate={{ opacity: 1 }}
           initial={{ opacity: 0 }}
           style={{ fontSize: "0.68rem", color: "var(--cardin-label-light)", marginBottom: "0.65rem", letterSpacing: "0.01em" }}
           transition={{ delay: 0.24, duration: 0.3 }}
         >
-          accessible aux meilleurs parcours · part limitée des clients actifs
+          {`réservé aux ~${Math.round(DIAMOND_RATE[worldId] * 100)}% de vos meilleurs clients sur la saison`}
         </motion.p>
         <div className="flex flex-col gap-2">
           {seasonOptions.map((opt, i) => (
@@ -1194,9 +1218,9 @@ function StepSummit({ seasonRewardId, setSeasonRewardId, selectedId, setSelected
         </div>
       </div>
 
-      {/* Block 2 — Intensité */}
+      {/* Block 2 — Visibilité */}
       <div className="mb-6">
-        <BlockLabel label="Intensité" delay={0.38} />
+        <BlockLabel label="Visibilité" delay={0.38} />
         <div className="grid grid-cols-3 gap-2">
           {INTENSITE_OPTIONS.map((opt, i) => (
             <SelectionCard
@@ -1212,9 +1236,9 @@ function StepSummit({ seasonRewardId, setSeasonRewardId, selectedId, setSelected
         </div>
       </div>
 
-      {/* Block 3 — Moment */}
+      {/* Block 3 — Quand ça se déclenche */}
       <div className="mb-6">
-        <BlockLabel label="Moment" delay={0.5} />
+        <BlockLabel label="Quand ça se déclenche" delay={0.5} />
         <div className="grid grid-cols-3 gap-2">
           {MOMENT_OPTIONS.map((opt, i) => (
             <SelectionCard

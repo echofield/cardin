@@ -153,24 +153,24 @@ export function getRewardTypesForWorld(worldId: LandingWorldId): Array<RewardTyp
 
 export const INTENSITE_OPTIONS: IntensiteOption[] = [
   { id: "visible",   label: "Visible",  sub: "Tout le monde voit" },
-  { id: "stronger",  label: "Social",   sub: "Incite à venir à plusieurs" },
+  { id: "stronger",  label: "Partagé",  sub: "Incite à venir à plusieurs" },
   { id: "discreet",  label: "Discret",  sub: "Ciblé, contrôlé" },
 ]
 
 // ─── BLOCK 3 — MOMENT ────────────────────────────────────────────────────────
 
 export const MOMENT_OPTIONS: MomentOption[] = [
-  { id: "immediat",  label: "Immédiat",          sub: "Dès le 1er retour" },
-  { id: "apres_x",   label: "Après X passages",  sub: "Dès le 3e passage" },
-  { id: "creneaux",  label: "Créneaux faibles",   sub: "Aux heures calmes" },
+  { id: "immediat",  label: "Immédiat",          sub: "Dès le 1er passage" },
+  { id: "apres_x",   label: "Après X passages",  sub: "Après 3 passages" },
+  { id: "creneaux",  label: "Créneaux faibles",  sub: "Uniquement aux heures creuses" },
 ]
 
 // ─── ÉTAPE 4 BLOCKS ───────────────────────────────────────────────────────────
 
 export const ACCESS_OPTIONS: AccessOption[] = [
-  { id: "tous",         label: "Tous les clients",       sub: "Aucun filtre" },
-  { id: "reguliers",    label: "Clients réguliers",      sub: "Déjà venus au moins 2 fois" },
-  { id: "selectionnes", label: "Clients sélectionnés",   sub: "Profils choisis par le système" },
+  { id: "tous",         label: "Tous les clients",   sub: "Aucun filtre" },
+  { id: "reguliers",    label: "Clients réguliers",  sub: "Déjà venus au moins 2 fois" },
+  { id: "selectionnes", label: "Clients choisis",    sub: "Vos meilleurs parcours (top ~10%)" },
 ]
 
 export const TRIGGER_OPTIONS: TriggerOption[] = [
@@ -199,7 +199,7 @@ const REWARD_SHORT: Record<LandingWorldId, Record<RewardTypeId, string>> = {
 
 const INTENSITE_SHORT: Record<ParcoursSummitStyleId, string> = {
   visible:  "visible par tous",
-  stronger: "amplifié socialement",
+  stronger: "à partager à plusieurs",
   discreet: "discret et ciblé",
 }
 
@@ -212,7 +212,7 @@ const MOMENT_SHORT: Record<MomentId, string> = {
 const ACCESS_NARRATIVE: Record<AccessTypeId, string> = {
   tous:         "ouvert à tous les clients",
   reguliers:    "réservé aux réguliers",
-  selectionnes: "réservé aux profils sélectionnés",
+  selectionnes: "réservé à vos meilleurs clients",
 }
 
 const TRIGGER_NARRATIVE: Record<TriggerTypeId, string> = {
@@ -264,7 +264,7 @@ const MOMENT_PRED: Record<MomentId, string> = {
 const ACCESS_PRED: Record<AccessTypeId, string> = {
   tous:         "tous les clients",
   reguliers:    "les clients réguliers",
-  selectionnes: "certains clients sélectionnés",
+  selectionnes: "vos meilleurs clients",
 }
 
 const TRIGGER_PRED: Record<TriggerTypeId, string> = {
