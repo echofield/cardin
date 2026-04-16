@@ -30,6 +30,7 @@ import {
   buildEngineLine,
   buildSummaryLine,
   computeEngineMetrics,
+  generateNextStep,
   getRewardTypesForWorld,
   ACCESS_OPTIONS,
   DIAMOND_RATE,
@@ -708,11 +709,14 @@ function SelectionCard({ id, label, sub, selected, onSelect, delay = 0, recommen
         </div>
       )}
       <div className="flex items-start gap-2.5">
-        <motion.div
-          animate={{ scale: selected ? 1 : 0.85, backgroundColor: selected ? "var(--cardin-green-primary)" : recommended ? "rgba(0,61,44,0.25)" : "var(--cardin-border)" }}
-          className="mt-0.5 h-2 w-2 shrink-0 rounded-full"
-          transition={{ duration: selected ? 0.15 : 0.1, ease: "easeOut" }}
-        />
+        {/* Diamond indicator — rotated square, border always visible per mockup */}
+        <div style={{
+          width: "9px", height: "9px", flexShrink: 0, marginTop: "4px",
+          transform: "rotate(45deg)",
+          border: selected ? "1.5px solid var(--cardin-green-primary)" : "1.5px solid var(--cardin-border)",
+          backgroundColor: selected ? "var(--cardin-green-primary)" : "transparent",
+          transition: "background-color 150ms ease-out, border-color 150ms ease-out",
+        }} />
         <div className="min-w-0">
           <div style={{ fontSize: "0.88rem", fontWeight: 500, color: "var(--cardin-text)", lineHeight: 1.3 }}>{label}</div>
           <div style={{ fontSize: "0.72rem", color: "var(--cardin-label)", marginTop: "0.2rem", lineHeight: 1.35 }}>{sub}</div>
@@ -728,14 +732,17 @@ function SelectionCard({ id, label, sub, selected, onSelect, delay = 0, recommen
 
 function BlockLabel({ label, delay = 0 }: { label: string; delay?: number }) {
   return (
-    <motion.p
+    <motion.div
       animate={{ opacity: 1 }}
       initial={{ opacity: 0 }}
-      style={{ fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--cardin-label-light)", marginBottom: "0.6rem" }}
+      style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "0.9rem" }}
       transition={{ delay, duration: 0.3 }}
     >
-      {label}
-    </motion.p>
+      <div style={{ width: "2px", height: "14px", background: "var(--cardin-green-primary)", flexShrink: 0, opacity: 0.55 }} />
+      <p style={{ fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--cardin-label-light)", margin: 0 }}>
+        {label}
+      </p>
+    </motion.div>
   )
 }
 
@@ -793,17 +800,16 @@ function SeasonRewardCard({ id, label, sub, selected, onSelect, delay = 0 }: Sea
           position: "relative",
         }}
       >
-        {/* Selection dot */}
+        {/* Diamond indicator — same language as SelectionCard */}
         <div style={{
-          width: "8px",
-          height: "8px",
-          borderRadius: "50%",
+          width: "9px",
+          height: "9px",
           flexShrink: 0,
-          marginTop: "4px",
-          backgroundColor: "var(--cardin-green-primary)",
-          opacity: selected ? 1 : 0.18,
-          transform: selected ? "scale(1)" : "scale(0.85)",
-          transition: "opacity 150ms ease-out, transform 150ms ease-out",
+          marginTop: "5px",
+          transform: "rotate(45deg)",
+          border: selected ? "1.5px solid var(--cardin-green-primary)" : "1.5px solid var(--cardin-border)",
+          backgroundColor: selected ? "var(--cardin-green-primary)" : "transparent",
+          transition: "background-color 150ms ease-out, border-color 150ms ease-out",
         }} />
 
         {/* Text */}
@@ -850,7 +856,7 @@ function SeasonRewardCard({ id, label, sub, selected, onSelect, delay = 0 }: Sea
    SUMMARY BAR — live sentence that crossfades on every selection change
    ───────────────────────────────────────────────────────────────────────────── */
 
-function SummaryBar({ line, label = "Résumé actif" }: { line: string; label?: string }) {
+function SummaryBar({ line, label = "Résumé actif", variant = "dark" }: { line: string; label?: string; variant?: "dark" | "light" }) {
   const [key, setKey] = useState(0)
   const [displayLine, setDisplayLine] = useState(line)
   const prevLineRef = useRef(line)
@@ -863,17 +869,22 @@ function SummaryBar({ line, label = "Résumé actif" }: { line: string; label?: 
     }
   }, [line])
 
+  const isDark = variant === "dark"
+
   return (
     <div
-      className="rounded-xl border"
+      className="rounded-xl"
       style={{
-        backgroundColor: "var(--cardin-card)",
-        borderColor: "var(--cardin-border)",
-        padding: "12px 16px",
-        boxShadow: "0 1px 6px rgba(0,0,0,0.04)",
+        backgroundColor: isDark ? "var(--cardin-green-primary)" : "rgba(0,61,44,0.07)",
+        border: isDark ? "none" : "1px solid rgba(0,61,44,0.1)",
+        padding: "14px 18px",
       }}
     >
-      <div style={{ fontSize: "0.58rem", letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--cardin-label-light)", marginBottom: "0.35rem" }}>
+      <div style={{
+        fontSize: "0.56rem", letterSpacing: "0.22em", textTransform: "uppercase" as const,
+        color: isDark ? "rgba(255,255,255,0.45)" : "var(--cardin-label-light)",
+        marginBottom: "0.5rem",
+      }}>
         {label}
       </div>
       <AnimatePresence mode="wait">
@@ -882,7 +893,14 @@ function SummaryBar({ line, label = "Résumé actif" }: { line: string; label?: 
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           initial={{ opacity: 0 }}
-          style={{ fontSize: "0.82rem", fontWeight: 500, color: "var(--cardin-text)", letterSpacing: "0.01em" }}
+          style={{
+            fontSize: "0.9rem",
+            fontWeight: 400,
+            color: isDark ? "#E8E2D6" : "var(--cardin-text)",
+            letterSpacing: "0.01em",
+            lineHeight: 1.5,
+            fontFamily: "Georgia, serif",
+          }}
           transition={{ duration: 0.12, ease: "easeOut" }}
         >
           {displayLine}
@@ -1219,7 +1237,7 @@ function StepSummit({ seasonRewardId, setSeasonRewardId, selectedId, setSelected
         initial={{ opacity: 0, y: 6 }}
         transition={{ delay: 0.6, duration: 0.35, ease }}
       >
-        <SummaryBar line={summaryLine} />
+        <SummaryBar label="Résumé actif" line={summaryLine} variant="dark" />
       </motion.div>
 
       <motion.button
@@ -1290,7 +1308,7 @@ function StepMechanics({
 }: StepMechanicsProps) {
   const isComplete = !!accessType && !!triggerType && !!propagationType
   const summaryLine3 = buildSummaryLine(worldId, rewardType, selectedId, moment)
-  const engineLine4 = buildEngineLine(accessType, triggerType, propagationType)
+  const engineLine4 = generateNextStep(moment, accessType, triggerType, propagationType)
 
   return (
     <>
@@ -1384,8 +1402,8 @@ function StepMechanics({
 
       {/* Text recap — two bare SummaryBars, no card wrapper */}
       <div className="mb-6 space-y-2">
-        <SummaryBar label="Récompense" line={summaryLine3} />
-        <SummaryBar label="Activation" line={engineLine4} />
+        <SummaryBar label="Récompense" line={summaryLine3} variant="dark" />
+        <SummaryBar label="Activation" line={engineLine4} variant="light" />
       </div>
 
       <motion.button

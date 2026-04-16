@@ -251,6 +251,54 @@ export function buildEngineLine(
   return `${a} · ${t} · ${p}`
 }
 
+// ─── BEHAVIORAL PREDICTION GENERATOR ─────────────────────────────────────────
+// Produces a full sentence describing the next-step behavior for the Activation
+// summary bar. Maps cover all valid ID values (verified against type definitions).
+
+const MOMENT_PRED: Record<MomentId, string> = {
+  immediat: "Dès le prochain passage,",
+  apres_x:  "Au prochain retour utile,",
+  creneaux: "Lors d'un créneau calme,",
+}
+
+const ACCESS_PRED: Record<AccessTypeId, string> = {
+  tous:         "tous les clients",
+  reguliers:    "les clients réguliers",
+  selectionnes: "certains clients sélectionnés",
+}
+
+const TRIGGER_PRED: Record<TriggerTypeId, string> = {
+  passage:    "peuvent activer l'avantage",
+  heure:      "peuvent déclencher l'avantage sur un moment précis",
+  invitation: "peuvent déclencher un accès en venant accompagnés",
+  evenement:  "peuvent déclencher un moment spécial",
+}
+
+const PROPAGATION_PRED: Record<PropagationTypeId, string> = {
+  individuel: "",
+  duo:        " — possibilité de venir à deux",
+  groupe:     " — possibilité de venir à plusieurs",
+}
+
+const CONDITION_PRED: Record<MomentId, string> = {
+  immediat: " — activation immédiate",
+  apres_x:  " — retour nécessaire pour débloquer",
+  creneaux: " — uniquement à certains moments",
+}
+
+export function generateNextStep(
+  moment: MomentId | null,
+  accessType: AccessTypeId | null,
+  triggerType: TriggerTypeId | null,
+  propagationType: PropagationTypeId | null,
+): string {
+  // Fall back to terse format if not all dimensions are set
+  if (!moment || !accessType || !triggerType || !propagationType) {
+    return buildEngineLine(accessType, triggerType, propagationType)
+  }
+  return `${MOMENT_PRED[moment]} ${ACCESS_PRED[accessType]} ${TRIGGER_PRED[triggerType]}${PROPAGATION_PRED[propagationType]}${CONDITION_PRED[moment]}.`
+}
+
 // ─── ENGINE METRICS (for EnginePreview visual) ───────────────────────────────
 
 export type PulseColor = "green" | "gold" | "red" | "none"
