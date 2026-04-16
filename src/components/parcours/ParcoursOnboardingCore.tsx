@@ -1981,28 +1981,42 @@ function StepActivation({
         visible={phase >= 2}
       />
 
-      {/* Stat bar with hierarchy via border-top intensity */}
-      <motion.div
-        animate={{ opacity: phase >= 2 ? 1 : 0, y: phase >= 2 ? 0 : 8 }}
-        className={isLite ? "mt-4 grid grid-cols-2 gap-2" : "mt-4 grid grid-cols-3 gap-2"}
-        initial={{ opacity: 0, y: 8 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-      >
-        <div className="rounded-xl px-3.5 py-3" style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)", borderTop: "2.5px solid var(--cardin-green-primary)" }}>
-          <div style={{ fontSize: "0.55rem", letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--cardin-label-light)", marginBottom: 4 }}>Récupération</div>
-          <div className="font-serif" style={{ fontSize: "1.25rem", color: "var(--cardin-text)", lineHeight: 1 }}>{formatEuro(seasonLayers.recovery)}</div>
-        </div>
-        <div className="rounded-xl px-3.5 py-3" style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)", borderTop: "2.5px solid rgba(0,61,44,0.35)" }}>
-          <div style={{ fontSize: "0.55rem", letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--cardin-label-light)", marginBottom: 4 }}>Fréquence</div>
-          <div className="font-serif" style={{ fontSize: "1.25rem", color: "var(--cardin-text)", lineHeight: 1 }}>{formatEuro(seasonLayers.frequency)}</div>
-        </div>
-        {!isLite ? (
-          <div className="rounded-xl px-3.5 py-3" style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)", borderTop: "2.5px solid rgba(0,61,44,0.14)" }}>
-            <div style={{ fontSize: "0.55rem", letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--cardin-label-light)", marginBottom: 4 }}>Propagation</div>
-            <div className="font-serif" style={{ fontSize: "1.25rem", color: "var(--cardin-text)", lineHeight: 1 }}>{formatEuro(seasonLayers.domino)}</div>
-          </div>
-        ) : null}
-      </motion.div>
+      {/* Stat bar with hierarchy via border-top intensity. Only non-zero layers shown. */}
+      {(() => {
+        const leviers = [
+          { key: "recovery", label: "Récupération", value: seasonLayers.recovery, topBorder: "var(--cardin-green-primary)" },
+          { key: "frequency", label: "Fréquence", value: seasonLayers.frequency, topBorder: "rgba(0,61,44,0.35)" },
+          ...(isLite ? [] : [{ key: "domino", label: "Propagation", value: seasonLayers.domino, topBorder: "rgba(0,61,44,0.14)" }]),
+        ].filter((l) => l.value > 0)
+
+        if (leviers.length === 0) return null
+
+        const gridCols = leviers.length === 3 ? "grid-cols-3" : leviers.length === 2 ? "grid-cols-2" : "grid-cols-1"
+
+        return (
+          <motion.div
+            animate={{ opacity: phase >= 2 ? 1 : 0, y: phase >= 2 ? 0 : 8 }}
+            className={`mt-4 grid gap-2 ${gridCols}`}
+            initial={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            {leviers.map((l) => (
+              <div
+                className="rounded-xl px-3.5 py-3"
+                key={l.key}
+                style={{
+                  backgroundColor: "var(--cardin-card)",
+                  border: "1px solid var(--cardin-border)",
+                  borderTop: `2.5px solid ${l.topBorder}`,
+                }}
+              >
+                <div style={{ fontSize: "0.55rem", letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--cardin-label-light)", marginBottom: 4 }}>{l.label}</div>
+                <div className="font-serif" style={{ fontSize: "1.25rem", color: "var(--cardin-text)", lineHeight: 1 }}>{formatEuro(l.value)}</div>
+              </div>
+            ))}
+          </motion.div>
+        )
+      })()}
 
       <div className="mb-8" />
 
@@ -2051,21 +2065,7 @@ function StepActivation({
         </div>
       </motion.details>
 
-      {/* Merchant identity capture (pre-payment). Gates the Stripe CTA until submitted. */}
-      <MerchantIdentityCapture
-        accessType={accessType}
-        captured={captured}
-        moment={moment}
-        onCaptured={() => setCaptured(true)}
-        phase={phase}
-        propagationType={propagationType}
-        rewardType={rewardType}
-        seasonRewardId={seasonRewardId}
-        summitId={summitId}
-        triggerType={triggerType}
-        worldId={worldId}
-      />
-
+      {/* Primary activation block: direct Stripe payment, always enabled. */}
       <motion.div
         animate={{ opacity: phase >= 3 ? 1 : 0 }}
         className="rounded-2xl border p-5"
@@ -2080,45 +2080,22 @@ function StepActivation({
         <p className="mt-3" style={{ fontSize: "0.85rem", color: "var(--cardin-body)", lineHeight: 1.6, maxWidth: "42rem" }}>
           Payer aujourd&apos;hui. Activation digitale sous 48 h. Validation réelle des passages côté staff. Lecture du retour sous 30 jours sans promo ouverte ni discount non contrôlé.
         </p>
-        {captured ? (
-          <motion.a
-            animate={{ opacity: 1, scale: 1 }}
-            className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full px-6 text-sm font-medium transition hover:brightness-110 sm:w-auto"
-            href={STRIPE_PAYMENT_LINK}
-            initial={{ opacity: 0, scale: 0.98 }}
-            rel="noreferrer"
-            style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2", boxShadow: "0 6px 18px rgba(0,61,44,0.18)" }}
-            target="_blank"
-            transition={{ duration: 0.35, ease: "easeOut" }}
-          >
-            {`Payer ${formatEuro(offerPrice)} et lancer la saison`}
-          </motion.a>
-        ) : (
-          <div
-            aria-disabled
-            className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full px-6 text-sm font-medium sm:w-auto"
-            style={{
-              backgroundColor: "var(--cardin-card-alt)",
-              color: "var(--cardin-label)",
-              border: "1px dashed var(--cardin-border)",
-              cursor: "not-allowed",
-            }}
-          >
-            Précisez votre lieu pour lancer le paiement
-          </div>
-        )}
+        <motion.a
+          animate={{ opacity: 1, scale: 1 }}
+          className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full px-6 text-sm font-medium transition hover:brightness-110 sm:w-auto"
+          href={STRIPE_PAYMENT_LINK}
+          initial={{ opacity: 0, scale: 0.98 }}
+          rel="noreferrer"
+          style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2", boxShadow: "0 6px 18px rgba(0,61,44,0.18)" }}
+          target="_blank"
+          transition={{ duration: 0.35, ease: "easeOut" }}
+        >
+          {`Payer ${formatEuro(offerPrice)} et lancer la saison`}
+        </motion.a>
+        <p className="mt-3" style={{ fontSize: "0.72rem", color: "var(--cardin-label-light)", lineHeight: 1.5 }}>
+          Paiement sécurisé par Stripe. Votre nom, e-mail et téléphone sont collectés à l&apos;étape suivante.
+        </p>
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-          {!captured ? (
-            <a
-              className="underline underline-offset-2"
-              href={STRIPE_PAYMENT_LINK}
-              rel="noreferrer"
-              style={{ color: "var(--cardin-label)", fontSize: "0.78rem" }}
-              target="_blank"
-            >
-              Déjà convaincu · payer directement
-            </a>
-          ) : null}
           <Link className="text-[var(--cardin-green-primary)] underline underline-offset-2" href={engineHref}>
             Ajuster avant paiement
           </Link>
@@ -2132,13 +2109,28 @@ function StepActivation({
           )}
         </div>
       </motion.div>
+
+      {/* Secondary option: send the plan by e-mail first (optional). Collapsed by default. */}
+      <MerchantIdentityCapture
+        accessType={accessType}
+        captured={captured}
+        moment={moment}
+        onCaptured={() => setCaptured(true)}
+        phase={phase}
+        propagationType={propagationType}
+        rewardType={rewardType}
+        seasonRewardId={seasonRewardId}
+        summitId={summitId}
+        triggerType={triggerType}
+        worldId={worldId}
+      />
     </>
   )
 }
 
-// ─── Merchant identity capture (pre-payment) ──────────────────────────────────
-// Collects business name, city, phone, email. Sends the full parcours recap by
-// email and unlocks the Stripe CTA. Designed to feel premium and minimal.
+// ─── Optional: send plan by email (secondary action, post-CTA) ────────────────
+// Collapsed by default. Does NOT gate the Stripe CTA. Useful for merchants who
+// want to think it over, share with a partner, or receive the config before paying.
 
 function MerchantIdentityCapture({
   worldId,
@@ -2165,9 +2157,8 @@ function MerchantIdentityCapture({
   onCaptured: () => void
   phase: number
 }) {
+  const [open, setOpen] = useState(false)
   const [businessName, setBusinessName] = useState("")
-  const [city, setCity] = useState("")
-  const [phone, setPhone] = useState("")
   const [email, setEmail] = useState("")
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle")
   const [fallbackMailto, setFallbackMailto] = useState<string | null>(null)
@@ -2188,10 +2179,8 @@ function MerchantIdentityCapture({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           businessName: businessName.trim(),
-          city: city.trim(),
-          phone: phone.trim(),
           email: email.trim(),
-          request: "Configuration Cardin — lieu précisé avant paiement.",
+          request: "Configuration Cardin — plan envoyé avant paiement (optionnel).",
           parcoursSelections: {
             worldId,
             seasonRewardId,
@@ -2223,22 +2212,16 @@ function MerchantIdentityCapture({
     return (
       <motion.div
         animate={{ opacity: 1, y: 0 }}
-        className="mb-6 rounded-2xl px-5 py-4"
-        initial={{ opacity: 0, y: 6 }}
+        className="mt-4 rounded-xl px-4 py-3"
+        initial={{ opacity: 0, y: 4 }}
         style={{
           backgroundColor: "var(--cardin-green-tint)",
-          border: "1px solid rgba(0,61,44,0.16)",
+          border: "1px solid rgba(0,61,44,0.14)",
         }}
         transition={{ duration: 0.35 }}
       >
-        <p style={{ fontSize: "0.58rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--cardin-green-primary)" }}>
-          Lieu enregistré
-        </p>
-        <p className="mt-1" style={{ fontSize: "0.85rem", color: "var(--cardin-text)", fontWeight: 500 }}>
-          {businessName.trim()}{city.trim() ? ` · ${city.trim()}` : ""}
-        </p>
-        <p className="mt-1" style={{ fontSize: "0.74rem", color: "var(--cardin-body)", lineHeight: 1.5 }}>
-          Votre configuration vient d&apos;être envoyée à {email.trim()}. Le paiement est prêt juste en dessous.
+        <p style={{ fontSize: "0.72rem", color: "var(--cardin-green-primary)", lineHeight: 1.5 }}>
+          Plan envoyé à <strong style={{ fontWeight: 600 }}>{email.trim()}</strong>. Le paiement Stripe reste disponible ci-dessus.
         </p>
       </motion.div>
     )
@@ -2246,93 +2229,99 @@ function MerchantIdentityCapture({
 
   return (
     <motion.div
-      animate={{ opacity: phase >= 3 ? 1 : 0, y: phase >= 3 ? 0 : 8 }}
-      className="mb-6 rounded-2xl p-5"
-      initial={{ opacity: 0, y: 8 }}
-      style={{ border: "1px solid var(--cardin-border)", backgroundColor: "var(--cardin-card)" }}
+      animate={{ opacity: phase >= 3 ? 1 : 0 }}
+      className="mt-4"
+      initial={{ opacity: 0 }}
       transition={{ duration: 0.4, delay: 0.15 }}
     >
-      <p style={{ fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--cardin-label-light)" }}>
-        Avant de lancer
-      </p>
-      <h3 className="mt-2 font-serif" style={{ fontSize: "1.35rem", color: "var(--cardin-green-primary)", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
-        Précisez votre lieu.
-      </h3>
-      <p className="mt-1.5" style={{ fontSize: "0.8rem", color: "var(--cardin-body)", lineHeight: 1.55 }}>
-        Nous envoyons votre configuration par e-mail, puis débloquons le paiement. Rapide, propre, partageable avec votre équipe.
-      </p>
-
-      <form className="mt-4 grid gap-2.5" onSubmit={handleSubmit}>
-        <div className="grid gap-2.5 sm:grid-cols-2">
-          <input
-            aria-label="Nom du lieu"
-            className="rounded-full border px-4 py-2.5 text-sm"
-            onChange={(e) => setBusinessName(e.target.value)}
-            placeholder="Nom du lieu"
-            required
-            style={{ borderColor: "var(--cardin-border)", backgroundColor: "var(--cardin-card-alt)" }}
-            type="text"
-            value={businessName}
-          />
-          <input
-            aria-label="Ville"
-            className="rounded-full border px-4 py-2.5 text-sm"
-            onChange={(e) => setCity(e.target.value)}
-            placeholder="Ville"
-            style={{ borderColor: "var(--cardin-border)", backgroundColor: "var(--cardin-card-alt)" }}
-            type="text"
-            value={city}
-          />
-        </div>
-        <div className="grid gap-2.5 sm:grid-cols-2">
-          <input
-            aria-label="Téléphone"
-            className="rounded-full border px-4 py-2.5 text-sm"
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Téléphone (facultatif)"
-            style={{ borderColor: "var(--cardin-border)", backgroundColor: "var(--cardin-card-alt)" }}
-            type="tel"
-            value={phone}
-          />
-          <input
-            aria-label="E-mail"
-            className="rounded-full border px-4 py-2.5 text-sm"
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="contact@votre-lieu.fr"
-            required
-            style={{ borderColor: "var(--cardin-border)", backgroundColor: "var(--cardin-card-alt)" }}
-            type="email"
-            value={email}
-          />
-        </div>
-        <button
-          className="mt-1 h-11 rounded-full px-5 text-sm font-medium transition hover:brightness-110 disabled:opacity-40"
-          disabled={status === "sending" || !canSubmit}
-          style={{
-            backgroundColor: "var(--cardin-green-primary)",
-            color: "#FAF8F2",
-            boxShadow: canSubmit ? "0 6px 18px rgba(0,61,44,0.18)" : "none",
-          }}
-          type="submit"
+      <button
+        aria-expanded={open}
+        className="flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition hover:bg-[var(--cardin-card-alt)]"
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          borderColor: "var(--cardin-border)",
+          backgroundColor: open ? "var(--cardin-card-alt)" : "transparent",
+        }}
+        type="button"
+      >
+        <span style={{ fontSize: "0.78rem", color: "var(--cardin-body)" }}>
+          Envoyer ce plan par e-mail avant de payer
+        </span>
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          aria-hidden
+          style={{ display: "inline-flex", color: "var(--cardin-label)" }}
+          transition={{ duration: 0.2 }}
         >
-          {status === "sending" ? "Envoi…" : "Envoyer et préparer le paiement"}
-        </button>
-      </form>
+          <svg fill="none" height="12" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="12">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </motion.span>
+      </button>
 
-      {status === "error" && (
-        <p className="mt-3" style={{ fontSize: "0.8rem", color: "var(--cardin-body)" }}>
-          Envoi impossible.{" "}
-          {fallbackMailto ? (
-            <a className="underline" href={fallbackMailto}>
-              Envoyer par votre messagerie
-            </a>
-          ) : (
-            <button className="underline" onClick={() => setStatus("idle")} type="button">
-              Réessayer
-            </button>
-          )}
-        </p>
-      )}
+      <AnimatePresence initial={false}>
+        {open ? (
+          <motion.div
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, height: 0 }}
+            style={{ overflow: "hidden" }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
+          >
+            <div className="mt-2 rounded-xl border p-4" style={{ borderColor: "var(--cardin-border)", backgroundColor: "var(--cardin-card)" }}>
+              <p style={{ fontSize: "0.72rem", color: "var(--cardin-label)", lineHeight: 1.5 }}>
+                Utile pour partager avec votre équipe ou revenir plus tard. Aucun paiement n&apos;est déclenché ici.
+              </p>
+
+              <form className="mt-3 grid gap-2.5 sm:grid-cols-[1fr_1fr_auto]" onSubmit={handleSubmit}>
+                <input
+                  aria-label="Nom du lieu"
+                  className="rounded-full border px-4 py-2.5 text-sm"
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  placeholder="Nom du lieu"
+                  required
+                  style={{ borderColor: "var(--cardin-border)", backgroundColor: "var(--cardin-card-alt)" }}
+                  type="text"
+                  value={businessName}
+                />
+                <input
+                  aria-label="E-mail"
+                  className="rounded-full border px-4 py-2.5 text-sm"
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="contact@votre-lieu.fr"
+                  required
+                  style={{ borderColor: "var(--cardin-border)", backgroundColor: "var(--cardin-card-alt)" }}
+                  type="email"
+                  value={email}
+                />
+                <button
+                  className="h-10 rounded-full px-5 text-sm font-medium transition hover:brightness-110 disabled:opacity-40"
+                  disabled={status === "sending" || !canSubmit}
+                  style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2" }}
+                  type="submit"
+                >
+                  {status === "sending" ? "Envoi…" : "Envoyer"}
+                </button>
+              </form>
+
+              {status === "error" && (
+                <p className="mt-3" style={{ fontSize: "0.74rem", color: "var(--cardin-body)" }}>
+                  Envoi impossible.{" "}
+                  {fallbackMailto ? (
+                    <a className="underline" href={fallbackMailto}>
+                      Envoyer par votre messagerie
+                    </a>
+                  ) : (
+                    <button className="underline" onClick={() => setStatus("idle")} type="button">
+                      Réessayer
+                    </button>
+                  )}
+                </p>
+              )}
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </motion.div>
   )
 }
