@@ -1364,6 +1364,32 @@ function StepMechanics({
         Définissez l&apos;accès, le déclencheur et la portée.
       </motion.p>
 
+      {/* Loop framing — how the system works in one breath */}
+      <motion.div
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-7 rounded-2xl px-4 py-3.5"
+        initial={{ opacity: 0, y: 8 }}
+        style={{
+          backgroundColor: "var(--cardin-card-alt)",
+          border: "1px solid var(--cardin-border)",
+          fontSize: "0.78rem",
+          lineHeight: 1.65,
+          color: c.body,
+        }}
+        transition={{ delay: 0.2, duration: 0.35, ease }}
+      >
+        <p style={{ fontSize: "0.58rem", letterSpacing: "0.14em", textTransform: "uppercase", color: c.labelLight, marginBottom: 6 }}>
+          Le système, en clair
+        </p>
+        <p>
+          Le client revient <span style={{ color: c.label }}>→</span> il débloque un avantage.
+          <br />
+          S&apos;il revient accompagné <span style={{ color: c.label }}>→</span> il peut faire entrer quelqu&apos;un d&apos;autre.
+          <br />
+          <span style={{ color: c.green }}>→ le lieu récupère du passage et active de nouveaux clients.</span>
+        </p>
+      </motion.div>
+
       {/* Block 1 — Qui peut y accéder */}
       <div className="mb-6">
         <BlockLabel label="Qui peut y accéder" delay={0.22} />
@@ -1535,11 +1561,11 @@ function StepProjection({
     },
     {
       key: "domino" as const,
-      label: "Domino",
+      label: "Propagation client",
       description:
         worldId === "bar"
-          ? `${seasonLayers.dominoNewClients} nouveaux clients — propagation / invitations (GP_prop)`
-          : `${seasonLayers.dominoNewClients} nouveaux clients par propagation`,
+          ? `Chaque client peut faire entrer un nouveau client dans le parcours · ~${seasonLayers.dominoNewClients} nouveaux clients (GP_prop)`
+          : `Chaque client peut faire entrer un nouveau client dans le parcours · ~${seasonLayers.dominoNewClients} nouveaux clients`,
       value: seasonLayers.domino,
       color: "var(--cardin-domino-blue)",
       barBg: "rgba(128,164,214,0.2)",
@@ -1564,7 +1590,7 @@ function StepProjection({
           </>
         ) : isLite ? (
           <>
-            Décomposition <strong>brute</strong> (récupération, fréquence) sur {seasonMonths} mois — vue centrée sur ces leviers (sans couche Domino sur cet écran). Les grands chiffres sont des <strong>montants nets</strong> après récompenses et coûts système.
+            Décomposition <strong>brute</strong> (récupération, fréquence) sur {seasonMonths} mois — vue centrée sur ces leviers (sans la couche propagation sur cet écran). Les grands chiffres sont des <strong>montants nets</strong> après récompenses et coûts système.
           </>
         ) : (
           <>
@@ -1609,8 +1635,8 @@ function StepProjection({
                     {layer.label}
                   </span>
                   {"compound" in layer && layer.compound && (
-                    <span style={{ fontSize: "0.55rem", color: "var(--cardin-domino-blue)", letterSpacing: "0.04em" }}>
-                      croissant
+                    <span style={{ fontSize: "0.55rem", color: "var(--cardin-label-light)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                      effet réseau
                     </span>
                   )}
                 </div>
@@ -1669,6 +1695,29 @@ function StepProjection({
         </div>
       </motion.div>
 
+      {/* Concrete visits framing — trust-first, real-world units */}
+      <motion.div
+        animate={{ opacity: reveal ? 1 : 0, y: reveal ? 0 : 10 }}
+        className="mb-3 rounded-xl p-4"
+        initial={{ opacity: 0, y: 10 }}
+        style={{ backgroundColor: "var(--cardin-card-alt)", border: "1px solid var(--cardin-border)" }}
+        transition={{ duration: 0.4, delay: 0.78 }}
+      >
+        <div style={{ fontSize: "0.6rem", letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--cardin-label)", marginBottom: "0.5rem" }}>
+          Concrètement sur la saison
+        </div>
+        <ul style={{ fontSize: "0.88rem", color: "var(--cardin-text)", lineHeight: 1.55, listStyle: "none", padding: 0, margin: 0 }}>
+          <li>
+            <span style={{ color: "var(--cardin-green-primary)", fontWeight: 600 }}>+ {(projectionFull.monthlyReturns * seasonMonths).toLocaleString("fr-FR")}</span> visites récupérées
+          </li>
+          {!isLite && seasonLayers.dominoNewClients > 0 ? (
+            <li style={{ marginTop: 4 }}>
+              <span style={{ color: "var(--cardin-domino-blue)", fontWeight: 600 }}>+ {seasonLayers.dominoNewClients.toLocaleString("fr-FR")}</span> nouveaux clients via invitation
+            </li>
+          ) : null}
+        </ul>
+      </motion.div>
+
       {/* Secondary: indicative monthly band (from landing range) */}
       <motion.div
         animate={{ opacity: reveal ? 1 : 0, y: reveal ? 0 : 10 }}
@@ -1715,7 +1764,7 @@ function StepProjection({
           </>
         ) : (
           <>
-            <MiniStat color="var(--cardin-domino-blue)" label="Domino (brut)" value={formatEuro(seasonLayers.domino)} />
+            <MiniStat color="var(--cardin-domino-blue)" label="Propagation client" value={formatEuro(seasonLayers.domino)} />
             <MiniStat color="var(--cardin-summit-gold)" label="Mode récompense" value={`×${summitMultiplier.toLocaleString("fr-FR")}`} />
             <MiniStat
               color="var(--cardin-green-primary)"
@@ -1961,7 +2010,7 @@ function StepActivation({
         </div>
         {!isLite ? (
           <div className="rounded-xl px-3 py-2.5" style={{ backgroundColor: "var(--cardin-domino-blue-light)", border: "1px solid rgba(128,164,214,0.15)" }}>
-            <div style={{ fontSize: "0.5rem", letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--cardin-domino-blue)", marginBottom: 2 }}>Domino</div>
+            <div style={{ fontSize: "0.5rem", letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--cardin-domino-blue)", marginBottom: 2 }}>Propagation client</div>
             <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--cardin-domino-blue)" }}>{formatEuro(seasonLayers.domino)}</div>
           </div>
         ) : null}

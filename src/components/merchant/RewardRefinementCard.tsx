@@ -123,6 +123,17 @@ export function RewardRefinementCard({ initial }: Props) {
             />
           </label>
 
+          <div className="rounded-[1rem] border border-[#E7E2D6] bg-[#F8F6F0] px-4 py-3">
+            <p className="text-[10px] uppercase tracking-[0.1em] text-[#7B8581]">Exemple</p>
+            <p className="mt-1.5 text-[12.5px] leading-[1.55] text-[#3E4A44]">
+              Le client revient 3 fois <span className="text-[#7B8581]">→</span> débloque un espresso.
+              <br />
+              S&apos;il vient accompagné <span className="text-[#7B8581]">→</span> il peut inviter une personne.
+              <br />
+              <span className="text-[#355246]">→ vous remplissez vos heures calmes et créez du passage.</span>
+            </p>
+          </div>
+
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block">
               <span className="text-xs uppercase tracking-[0.08em] text-[#5F6B62]">Prix public indicatif (€)</span>
