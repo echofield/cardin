@@ -5,42 +5,75 @@ import { FormEvent, useMemo, useState } from "react"
 import { buildContactMailto, CARDIN_CONTACT_EMAIL } from "@/lib/site-contact"
 import { Button, Input } from "@/ui"
 
+type SubmitState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "success" }
+  | { status: "error"; message: string; fallbackMailto?: string }
+
 export function ContactLeadForm() {
   const [formData, setFormData] = useState({
     businessName: "",
     city: "",
     email: "",
-    request: "Recevoir le récapitulatif marchand et être recontacté plus tard.",
+    request: "Receive the merchant recap and contact me later.",
   })
-  const [submitted, setSubmitted] = useState(false)
+  const [state, setState] = useState<SubmitState>({ status: "idle" })
 
-  const mailto = useMemo(() => {
+  const fallbackMailto = useMemo(() => {
     const body = [
       "Bonjour Cardin,",
       "",
-      formData.request.trim() || "Je souhaite être recontacté.",
+      formData.request.trim() || "Please contact me later.",
       "",
       `Nom du lieu : ${formData.businessName.trim()}`,
       `Ville : ${formData.city.trim()}`,
       `E-mail : ${formData.email.trim()}`,
     ].join("\r\n")
 
-    return buildContactMailto("Cardin — demande marchand", body)
+    return buildContactMailto("Cardin - demande marchand", body)
   }, [formData])
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setSubmitted(true)
-    if (typeof window !== "undefined") {
-      window.location.href = mailto
+    setState({ status: "loading" })
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+
+      const payload = (await response.json()) as { ok?: boolean; fallbackMailto?: string }
+
+      if (!response.ok || !payload.ok) {
+        const nextFallback = payload.fallbackMailto || fallbackMailto
+        setState({
+          status: "error",
+          message: "Direct send is not available yet. Use the fallback email link below.",
+          fallbackMailto: nextFallback,
+        })
+        return
+      }
+
+      setState({ status: "success" })
+    } catch {
+      setState({
+        status: "error",
+        message: "Unable to send the request automatically. Use the fallback email link below.",
+        fallbackMailto,
+      })
     }
   }
 
+  const fallbackHref = state.status === "error" ? state.fallbackMailto || fallbackMailto : fallbackMailto
+
   return (
     <div className="rounded-[1.5rem] border border-[#D7DDD2] bg-[#FFFEFA] p-5 sm:p-6">
-      <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Formulaire simple</p>
+      <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Simple contact form</p>
       <p className="mt-3 text-sm leading-7 text-[#556159]">
-        Laisse un contact propre si le commerce ne décide pas immédiatement. Cela ouvre un e-mail prérempli vers {CARDIN_CONTACT_EMAIL}.
+        Leave a clean contact if the merchant does not decide immediately. Cardin will send from {CARDIN_CONTACT_EMAIL} as soon as SMTP is configured.
       </p>
       <form className="mt-5 space-y-3" onSubmit={onSubmit}>
         <Input
@@ -64,22 +97,23 @@ export function ContactLeadForm() {
         <textarea
           className="min-h-[118px] w-full rounded-[1.25rem] border border-[#D8DBD2] bg-[#FFFDF8] px-3 py-3 text-sm text-[#132B22] placeholder:text-[#6A726B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#173A2E]"
           onChange={(event) => setFormData((prev) => ({ ...prev, request: event.target.value }))}
-          placeholder="Exemple : envoyez-moi le récapitulatif marchand et rappelez-moi jeudi matin."
+          placeholder="Exemple : envoyez-moi le recapitulatif marchand et rappelez-moi jeudi matin."
           value={formData.request}
         />
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           <Button size="lg" type="submit">
-            Ouvrir l&apos;e-mail
+            {state.status === "loading" ? "Envoi..." : "Envoyer la demande"}
           </Button>
           <a
             className="inline-flex h-12 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#F5F2EB] px-6 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] hover:bg-[#F1EEE5]"
-            href={mailto}
+            href={fallbackHref}
           >
-            Utiliser le lien direct
+            Utiliser le lien e-mail
           </a>
         </div>
-        <p className="text-xs leading-6 text-[#6A726B]">Si aucune app e-mail ne s&apos;ouvre, écrivez directement à {CARDIN_CONTACT_EMAIL}.</p>
-        {submitted ? <p className="text-xs leading-6 text-[#173A2E]">La demande est prête. Envoie-la puis reprends le lieu au bon moment.</p> : null}
+        {state.status === "success" ? <p className="text-xs leading-6 text-[#173A2E]">Demande envoyee. Cardin peut maintenant reprendre le lieu plus tard proprement.</p> : null}
+        {state.status === "error" ? <p className="text-xs leading-6 text-[#A64040]">{state.message}</p> : null}
+        <p className="text-xs leading-6 text-[#6A726B]">Fallback: si besoin, ecrivez directement a {CARDIN_CONTACT_EMAIL}.</p>
       </form>
     </div>
   )
