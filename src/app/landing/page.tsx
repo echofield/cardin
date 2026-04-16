@@ -26,7 +26,7 @@ export default function LandingPage() {
               Moteur de revenu saisonnier.
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-[#566159] sm:text-lg">
-              Chaque passage entre dans une progression. Les meilleurs parcours montent, débloquent des accès rares et rendent le retour mesurable.
+              Vos clients reviennent. Le retour devient mesurable.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link className="inline-flex h-12 items-center justify-center rounded-full border border-[#173A2E] bg-[#173A2E] px-6 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href="/parcours">
