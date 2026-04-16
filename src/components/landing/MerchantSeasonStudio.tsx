@@ -1133,14 +1133,14 @@ function ActivateScreen({ selectedWorld, selectedSummit, selectedSeason, monthly
           <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Passer à l&apos;activation</p>
           <p className="mt-3 text-sm leading-7 text-[#556159]">Un chemin dominant : payer, attendre 48 h, valider les passages réels, lire les premiers retours. Le reste peut se configurer avant ou après.</p>
           <div className="mt-6">
-            <a className="inline-flex h-12 w-full items-center justify-center rounded-full border border-[#1B4332] bg-[#1B4332] px-8 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href={STRIPE_PAYMENT_LINK} rel="noreferrer" target="_blank">
-              {`Payer ${formatEuro(LANDING_PRICING.activationFee)} et lancer`}
-            </a>
+            <Link className="inline-flex h-12 w-full items-center justify-center rounded-full border border-[#1B4332] bg-[#1B4332] px-8 text-sm font-medium text-[#FBFAF6] shadow-[0_12px_24px_-18px_rgba(27,67,50,0.45)] transition hover:bg-[#24533F]" href={engineHref}>
+              Voir le parcours marchand
+            </Link>
           </div>
           <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
-            <Link className="text-[#173A2E] underline underline-offset-2" href={engineHref}>
-              Ajuster avant paiement
-            </Link>
+            <a className="text-[#173A2E] underline underline-offset-2" href={STRIPE_PAYMENT_LINK} rel="noreferrer" target="_blank">
+              {`Payer ${formatEuro(LANDING_PRICING.activationFee)} et lancer`}
+            </a>
             <Link className="text-[#173A2E] underline underline-offset-2" href="#top">
               Revoir depuis le début
             </Link>

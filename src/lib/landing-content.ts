@@ -115,24 +115,9 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
 }
 
 export const LANDING_SECTOR_CARDS: SectorCard[] = [
-  {
-    label: "Café",
-    description: `${LANDING_WORLDS.cafe.claim}. Fréquence élevée, ${LANDING_WORLDS.cafe.basket}, Diamond comme horizon dès l’entrée.`,
-  },
-  {
-    label: "Bar",
-    description: `${LANDING_WORLDS.bar.claim}. Soirée et panier plus fort, Diamond comme horizon dès l'entrée.`,
-  },
-  {
-    label: "Restaurant",
-    description: `${LANDING_WORLDS.restaurant.claim}. ${LANDING_WORLDS.restaurant.basket}, retour entre deux services, réseau activé par table.`,
-  },
-  {
-    label: "Beauté",
-    description: `${LANDING_WORLDS.beaute.claim}. Soins à forte valeur, récurrence pilotée, missions sur le parcours client.`,
-  },
-  {
-    label: "Boutique",
-    description: `${LANDING_WORLDS.boutique.claim}. Désir et panier, upside réseau jusqu’au haut de la fourchette saisonnière.`,
-  },
+  { label: "Café",       description: "Volume élevé, passages rapides." },
+  { label: "Bar",        description: "Soirée, comptoir, réseau naturel." },
+  { label: "Restaurant", description: "Table et service, panier fort." },
+  { label: "Beauté",     description: "Confiance, régularité, recommandation." },
+  { label: "Boutique",   description: "Désir fort, panier élevé." },
 ]

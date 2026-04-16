@@ -18,7 +18,6 @@ export function SiteHeader() {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-6">
         <Link className="flex flex-col leading-none" href="/landing">
           <span className="font-serif text-[1.15rem] font-semibold tracking-[0.06em] text-[#15372B]">CARDIN</span>
-          <span className="hidden text-[10px] tracking-[0.08em] text-[#8A9389] sm:block">Système de retour client pour commerces physiques</span>
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">
