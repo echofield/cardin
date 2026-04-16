@@ -32,14 +32,17 @@ import {
   computeEngineMetrics,
   getRewardTypesForWorld,
   ACCESS_OPTIONS,
+  DIAMOND_RATE,
   INTENSITE_OPTIONS,
   MOMENT_OPTIONS,
   PROPAGATION_OPTIONS,
+  SEASON_REWARDS,
   TRIGGER_OPTIONS,
   type AccessTypeId,
   type MomentId,
   type PropagationTypeId,
   type RewardTypeId,
+  type SeasonRewardId,
   type TriggerTypeId,
 } from "@/lib/parcours-selection-config"
 
@@ -160,6 +163,7 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
   const skipLitePersistRef = useRef(false)
 
   // Étape 3 selections
+  const [seasonRewardId, setSeasonRewardId] = useState<SeasonRewardId | null>(null)
   const [rewardType, setRewardType] = useState<RewardTypeId | null>(null)
   const [rewardMoment, setRewardMoment] = useState<MomentId | null>(null)
 
@@ -257,7 +261,7 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
   const isLive = stepIndex === activeSteps.length - 1
 
   const embeddedNextDisabled =
-    (step.id === "summit" && (!summitId || !rewardType || !rewardMoment)) ||
+    (step.id === "summit" && (!seasonRewardId || !summitId || !rewardType || !rewardMoment)) ||
     (step.id === "mechanics" && (!accessType || !triggerType || !propagationType)) ||
     (step.id === "liteScenarios" && !isLiteSelectionsComplete(worldId, liteSelections))
 
@@ -381,11 +385,13 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
               {step.id === "summit" && (
                 <StepSummit
                   moment={rewardMoment}
-                  onNext={() => { if (summitId && rewardType && rewardMoment) goNext() }}
+                  onNext={() => { if (seasonRewardId && summitId && rewardType && rewardMoment) goNext() }}
                   rewardType={rewardType}
+                  seasonRewardId={seasonRewardId}
                   selectedId={summitId}
                   setMoment={setRewardMoment}
                   setRewardType={setRewardType}
+                  setSeasonRewardId={setSeasonRewardId}
                   setSelectedId={setSummitId}
                   worldId={worldId}
                 />
@@ -734,6 +740,113 @@ function BlockLabel({ label, delay = 0 }: { label: string; delay?: number }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
+   SEASON REWARD CARD — grand attractor, top of pyramid
+   Slightly taller, green-tinted bg, subtle diamond marker.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+type SeasonRewardCardProps = {
+  id: SeasonRewardId
+  label: string
+  sub: string
+  selected: boolean
+  onSelect: () => void
+  delay?: number
+}
+
+function SeasonRewardCard({ id, label, sub, selected, onSelect, delay = 0 }: SeasonRewardCardProps) {
+  const [hovered, setHovered] = useState(false)
+
+  return (
+    <motion.button
+      animate={{ opacity: 1, y: 0 }}
+      aria-pressed={selected}
+      initial={{ opacity: 0, y: 6 }}
+      key={id}
+      onClick={onSelect}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width: "100%",
+        textAlign: "left",
+        cursor: "pointer",
+        border: "none",
+        background: "none",
+        padding: 0,
+      }}
+      transition={{ delay, duration: 0.3, ease }}
+      type="button"
+    >
+      <div
+        style={{
+          padding: "14px 16px",          // +4px taller than SelectionCard (10px)
+          borderRadius: "10px",
+          border: `${selected ? "1.5px" : "1px"} solid ${selected ? "var(--cardin-green-primary)" : "var(--cardin-border)"}`,
+          backgroundColor: selected
+            ? "rgba(0,61,44,0.06)"        // stronger tint when selected
+            : hovered
+              ? "rgba(0,61,44,0.035)"
+              : "rgba(0,61,44,0.04)",     // persistent green tint (not neutral)
+          transition: "border-color 150ms ease-out, background-color 120ms ease-out",
+          display: "flex",
+          alignItems: "flex-start",
+          gap: "10px",
+          position: "relative",
+        }}
+      >
+        {/* Selection dot */}
+        <div style={{
+          width: "8px",
+          height: "8px",
+          borderRadius: "50%",
+          flexShrink: 0,
+          marginTop: "4px",
+          backgroundColor: "var(--cardin-green-primary)",
+          opacity: selected ? 1 : 0.18,
+          transform: selected ? "scale(1)" : "scale(0.85)",
+          transition: "opacity 150ms ease-out, transform 150ms ease-out",
+        }} />
+
+        {/* Text */}
+        <div style={{ flex: 1 }}>
+          <div style={{
+            fontSize: "0.88rem",
+            fontWeight: 600,
+            color: selected ? "var(--cardin-green-primary)" : "var(--cardin-text)",
+            lineHeight: 1.3,
+            marginBottom: "3px",
+            transition: "color 150ms ease-out",
+          }}>
+            {label}
+          </div>
+          <div style={{
+            fontSize: "0.73rem",
+            color: "var(--cardin-label)",
+            lineHeight: 1.4,
+          }}>
+            {sub}
+          </div>
+        </div>
+
+        {/* Subtle diamond marker — top right */}
+        <div style={{
+          position: "absolute",
+          top: "10px",
+          right: "12px",
+          fontSize: "0.65rem",
+          color: "var(--cardin-summit-gold)",
+          opacity: selected ? 0.55 : 0.2,
+          transition: "opacity 150ms ease-out",
+          lineHeight: 1,
+          userSelect: "none",
+        }}>
+          ◇
+        </div>
+      </div>
+    </motion.button>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
    SUMMARY BAR — live sentence that crossfades on every selection change
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -974,6 +1087,8 @@ function EnginePreview({ worldId, summitId, rewardType, moment, accessType, prop
    ───────────────────────────────────────────────────────────────────────────── */
 
 type StepSummitProps = {
+  seasonRewardId: SeasonRewardId | null
+  setSeasonRewardId: (id: SeasonRewardId) => void
   selectedId: ParcoursSummitStyleId | null
   setSelectedId: (id: ParcoursSummitStyleId) => void
   rewardType: RewardTypeId | null
@@ -984,10 +1099,13 @@ type StepSummitProps = {
   worldId: LandingWorldId
 }
 
-function StepSummit({ selectedId, setSelectedId, rewardType, setRewardType, moment, setMoment, onNext, worldId }: StepSummitProps) {
+function StepSummit({ seasonRewardId, setSeasonRewardId, selectedId, setSelectedId, rewardType, setRewardType, moment, setMoment, onNext, worldId }: StepSummitProps) {
   const rewardTypes = getRewardTypesForWorld(worldId)
-  const isComplete = !!selectedId && !!rewardType && !!moment
+  const isComplete = !!seasonRewardId && !!selectedId && !!rewardType && !!moment
   const summaryLine = buildSummaryLine(worldId, rewardType, selectedId, moment)
+
+  const seasonOptions = SEASON_REWARDS[worldId]
+  const diamondPct = Math.round(DIAMOND_RATE[worldId] * 100)
 
   return (
     <>
@@ -1009,8 +1127,35 @@ function StepSummit({ selectedId, setSelectedId, rewardType, setRewardType, mome
         style={{ color: "var(--cardin-label)", fontSize: "0.88rem", lineHeight: 1.45 }}
         transition={{ delay: 0.18, duration: 0.35 }}
       >
-        Sélectionnez ce que vous activez.
+        Commencez par choisir ce pour quoi vos clients reviendront vraiment.
       </motion.p>
+
+      {/* Block 0 — Récompense de saison (grand attractor, top of pyramid) */}
+      <div className="mb-8">
+        <BlockLabel label="Récompense de saison" delay={0.2} />
+        {/* Diamond rarity line */}
+        <motion.p
+          animate={{ opacity: 1 }}
+          initial={{ opacity: 0 }}
+          style={{ fontSize: "0.68rem", color: "var(--cardin-label-light)", marginBottom: "0.65rem", letterSpacing: "0.01em" }}
+          transition={{ delay: 0.24, duration: 0.3 }}
+        >
+          accessible aux meilleurs parcours · réservé à ~{diamondPct}% des clients
+        </motion.p>
+        <div className="flex flex-col gap-2">
+          {seasonOptions.map((opt, i) => (
+            <SeasonRewardCard
+              key={opt.id}
+              delay={0.26 + i * 0.06}
+              id={opt.id}
+              label={opt.label}
+              onSelect={() => setSeasonRewardId(opt.id)}
+              selected={seasonRewardId === opt.id}
+              sub={opt.sub}
+            />
+          ))}
+        </div>
+      </div>
 
       {/* Block 1 — Type de récompense */}
       <div className="mb-6">

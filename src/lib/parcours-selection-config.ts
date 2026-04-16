@@ -1,6 +1,54 @@
 import type { LandingWorldId } from "@/lib/landing-content"
 import type { ParcoursSummitStyleId } from "@/lib/parcours-contract"
 
+// ─── SEASON REWARD (grand attractor — top of pyramid) ────────────────────────
+
+export type SeasonRewardId = string // "{worldId}_{index}" e.g. "cafe_0"
+
+export type SeasonRewardOption = {
+  id: SeasonRewardId
+  label: string      // bold first line — the prize itself
+  sub: string        // lighter second line — context/rarity
+}
+
+// Diamond eligibility rates from cardin-protocol-v3.ts presets
+// cafe: 0.06, boulangerie: 0.06, salon(→beaute): 0.07, boutique: 0.12, restaurant: 0.08, generic: 0.06
+export const DIAMOND_RATE: Record<LandingWorldId, number> = {
+  cafe:       0.06,
+  bar:        0.06, // maps to generic preset
+  restaurant: 0.08,
+  beaute:     0.07, // maps to salon preset
+  boutique:   0.12,
+}
+
+export const SEASON_REWARDS: Record<LandingWorldId, SeasonRewardOption[]> = {
+  cafe: [
+    { id: "cafe_0", label: "1 café / jour pendant 1 an",          sub: "Un rituel quotidien offert — la récompense qui fidélise pour de vrai" },
+    { id: "cafe_1", label: "1 mois de cafés offerts",              sub: "Un mois de pause à volonté — concret, immédiat, mémorable" },
+    { id: "cafe_2", label: "Invitation privée + accès illimité",   sub: "Une semaine VIP — réservé aux meilleurs parcours" },
+  ],
+  bar: [
+    { id: "bar_0", label: "1 bouteille / semaine — 3 mois",        sub: "Un privilège de régulier — visible, désirable, partageable" },
+    { id: "bar_1", label: "Table réservée + conso offerte",        sub: "Chaque mois pendant une saison — l'expérience au centre" },
+    { id: "bar_2", label: "Soirée privée",                         sub: "Un soir pour eux seuls — invitation exclusive, sur liste" },
+  ],
+  restaurant: [
+    { id: "restaurant_0", label: "1 dîner pour 2 / mois — 6 mois", sub: "Le retour qui a de la valeur — offrir une table, pas une réduction" },
+    { id: "restaurant_1", label: "Menu dégustation offert × 4",    sub: "Quatre fois dans l'année — un rituel gastronomique personnel" },
+    { id: "restaurant_2", label: "Table du chef + accord vins",    sub: "Une seule fois — mais inoubliable. La récompense qui se raconte" },
+  ],
+  beaute: [
+    { id: "beaute_0", label: "Soins illimités — 1 mois",           sub: "Un mois de rituel complet — le privilège de ne pas compter" },
+    { id: "beaute_1", label: "Rituel signature × 6 sur l'année",  sub: "Six séances réparties — un rendez-vous que l'on attend" },
+    { id: "beaute_2", label: "Accès VIP — résultats garantis",     sub: "Programme personnalisé, suivi prioritaire, accès exclusif" },
+  ],
+  boutique: [
+    { id: "boutique_0", label: "Crédit shopping 300€ en 1 an",     sub: "À utiliser sur la collection de leur choix — liberté totale" },
+    { id: "boutique_1", label: "Accès collection privée + 30%",    sub: "Permanent pour la saison — le statut qui se voit et se ressent" },
+    { id: "boutique_2", label: "Styling privé + avant-première",   sub: "Avant tout le monde — une expérience, pas une promo" },
+  ],
+}
+
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
 export type RewardTypeId = "direct" | "progression" | "invitation" | "evenement"
