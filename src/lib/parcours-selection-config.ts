@@ -152,9 +152,9 @@ export function getRewardTypesForWorld(worldId: LandingWorldId): Array<RewardTyp
 // ─── BLOCK 2 — INTENSITÉ ──────────────────────────────────────────────────────
 
 export const INTENSITE_OPTIONS: IntensiteOption[] = [
-  { id: "visible",   label: "Visible",  sub: "Tout le monde voit" },
-  { id: "stronger",  label: "Partagé",  sub: "Incite à venir à plusieurs" },
-  { id: "discreet",  label: "Discret",  sub: "Ciblé, contrôlé" },
+  { id: "visible",   label: "Visible",  sub: "Affiché en salle, tous les clients la voient" },
+  { id: "stronger",  label: "Partagé",  sub: "Incite à venir accompagné" },
+  { id: "discreet",  label: "Discret",  sub: "Réservé aux clients ciblés, non affiché" },
 ]
 
 // ─── BLOCK 3 — MOMENT ────────────────────────────────────────────────────────

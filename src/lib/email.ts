@@ -163,7 +163,7 @@ export function formatParcoursRecap(selections: ParcoursSelectionsPayload): { te
     "Récompense de saison",
     `  → ${season ?? "—"}`,
     "",
-    "Récompense mécanique",
+    "Récompense au quotidien",
     `  → ${selections.summaryLine || [rewardType, intensite, moment].filter(Boolean).join(" · ") || "—"}`,
     "",
     "Activation",
@@ -171,7 +171,7 @@ export function formatParcoursRecap(selections: ParcoursSelectionsPayload): { te
     `  → Déclencheur : ${trigger ?? "—"}`,
     `  → Propagation : ${propagation ?? "—"}`,
     "",
-    "Comportement attendu",
+    "Ce que vos clients vont faire",
     `  → ${selections.nextStepLine || "—"}`,
   ].join("\n")
 
@@ -189,7 +189,7 @@ export function formatParcoursRecap(selections: ParcoursSelectionsPayload): { te
       <p style="margin:16px 0 6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#1f5a46;">Récompense de saison</p>
       <p style="margin:0 0 12px;font-size:15px;color:#163328;">${escapeHtml(season ?? "—")}</p>
 
-      <p style="margin:16px 0 6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#1f5a46;">Récompense mécanique</p>
+      <p style="margin:16px 0 6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#1f5a46;">Récompense au quotidien</p>
       <p style="margin:0 0 12px;font-size:14px;color:#163328;">${escapeHtml(selections.summaryLine || [rewardType, intensite, moment].filter(Boolean).join(" · ") || "—")}</p>
 
       <p style="margin:16px 0 6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#1f5a46;">Activation</p>
@@ -199,7 +199,7 @@ export function formatParcoursRecap(selections: ParcoursSelectionsPayload): { te
         ${row("Propagation", propagation)}
       </table>
 
-      <p style="margin:16px 0 6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#1f5a46;">Comportement attendu</p>
+      <p style="margin:16px 0 6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#1f5a46;">Ce que vos clients vont faire</p>
       <p style="margin:0;font-size:14px;line-height:1.55;color:#163328;">${escapeHtml(selections.nextStepLine || "—")}</p>
     </div>
   `
@@ -280,7 +280,7 @@ export async function sendContactEmails(input: ContactEmailInput) {
   await sendMail({
     to: input.email,
     replyTo: config.contactToEmail,
-    subject: "Cardin - demande bien recue",
+    subject: recap ? "Cardin - votre configuration de saison" : "Cardin - demande bien recue",
     text: merchantText,
     html: merchantHtml,
   })

@@ -96,7 +96,7 @@ const SCREEN_HERO: Record<LandingWorldId, Partial<Record<ClientScreenId, ScreenH
       italic: "Le premier repas est mémorisé.",
     },
     activation: {
-      italic: "La table vous lit — sans vous presser.",
+      italic: "La maison remarque votre fidélité, sans la souligner.",
     },
     "prochaine-etape": {
       italic: "Un dressage particulier vous attend.",
