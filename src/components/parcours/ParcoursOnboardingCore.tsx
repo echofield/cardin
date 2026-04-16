@@ -1384,7 +1384,7 @@ function StepMechanics({
         <p>
           Le client revient <span style={{ color: c.label }}>→</span> il débloque un avantage.
           <br />
-          S&apos;il revient accompagné <span style={{ color: c.label }}>→</span> il peut faire entrer quelqu&apos;un d&apos;autre.
+          S&apos;il revient accompagné <span style={{ color: c.label }}>→</span> la personne invitée entre à son tour dans le parcours.
           <br />
           <span style={{ color: c.green }}>→ le lieu récupère du passage et active de nouveaux clients.</span>
         </p>

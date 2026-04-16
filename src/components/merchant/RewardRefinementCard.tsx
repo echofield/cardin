@@ -128,7 +128,7 @@ export function RewardRefinementCard({ initial }: Props) {
             <p className="mt-1.5 text-[12.5px] leading-[1.55] text-[#3E4A44]">
               Le client revient 3 fois <span className="text-[#7B8581]">→</span> débloque un espresso.
               <br />
-              S&apos;il vient accompagné <span className="text-[#7B8581]">→</span> il peut inviter une personne.
+              S&apos;il vient accompagné <span className="text-[#7B8581]">→</span> la personne invitée entre à son tour dans le parcours.
               <br />
               <span className="text-[#355246]">→ vous remplissez vos heures calmes et créez du passage.</span>
             </p>
