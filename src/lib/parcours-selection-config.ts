@@ -212,10 +212,11 @@ export type EngineMetrics = {
   showTree: boolean
   treeDepth: 1 | 2
   branchAmplified: boolean    // invitation/evenement reward → louder branches
-  nodeScale: number           // 0.85 | 1.0 | 1.15 based on intensité
+  leafOpacityMod: number      // 1.2 (stronger) | 1.0 (default) | 0.65 (discreet) — opacity only, no radius change
   diamondGlow: boolean        // propagation active
   pulseColor: PulseColor
   pulseWidth: number          // 0–1 fraction for bar fill
+  hasAnySelection: boolean    // for track opacity: 0.08 → 0.15
 }
 
 // Bases derived from cardin_protocol_v2.md — normalized to 0–4 display scale
@@ -284,16 +285,19 @@ export function computeEngineMetrics(
 
   const branchAmplified = rewardType === "invitation" || rewardType === "evenement"
 
-  const nodeScale = summitId === "stronger" ? 1.15 : summitId === "discreet" ? 0.85 : 1.0
+  // Opacity-only modifier for propagation tree leaf nodes (plan: no scale/radius changes)
+  const leafOpacityMod = summitId === "stronger" ? 1.2 : summitId === "discreet" ? 0.65 : 1.0
 
   const diamondGlow = showTree
 
+  const hasAnySelection = !!(summitId || accessType || moment || propagationType)
+
   let pulseColor: PulseColor = "none"
-  if (summitId || accessType || moment || propagationType) {
+  if (hasAnySelection) {
     pulseColor = sigma >= 3 ? "green" : sigma >= 2 ? "gold" : "red"
   }
 
   const pulseWidth = clamp(sigma / 4, 0, 1)
 
-  return { sigma, progressionFilled, showTree, treeDepth, branchAmplified, nodeScale, diamondGlow, pulseColor, pulseWidth }
+  return { sigma, progressionFilled, showTree, treeDepth, branchAmplified, leafOpacityMod, diamondGlow, pulseColor, pulseWidth, hasAnySelection }
 }

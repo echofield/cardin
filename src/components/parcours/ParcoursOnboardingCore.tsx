@@ -796,93 +796,73 @@ type EnginePreviewProps = {
 function EnginePreview({ worldId, summitId, rewardType, moment, accessType, propagationType }: EnginePreviewProps) {
   const metrics = computeEngineMetrics(worldId, summitId, moment, rewardType, accessType, propagationType)
 
-  const NODE_COUNT = 6 // V1–V5 + Diamond
+  const NODE_COUNT = 6 // V1–V5 + Diamond (index 5)
   const SVG_H = 40
-  const NODE_R = 4
-  const DIAMOND_R = 5
+  const R = 4    // all regular nodes — plan: r=4, no size variation
+  const R_D = 5  // diamond end node — plan: max r=5
 
-  // Progression line geometry
-  const progWidth = "60%"
-  const treeWidth = "32%"
-
-  // Pulse bar color
   const barColor =
     metrics.pulseColor === "green" ? "var(--cardin-green-primary)"
     : metrics.pulseColor === "gold" ? "var(--cardin-summit-gold)"
-    : metrics.pulseColor === "red" ? "rgba(180,60,60,0.9)"
-    : "transparent"
+    : "rgba(180,60,60,0.55)" // red, opacity per plan
+
+  // Track opacity: 0.08 when nothing selected, 0.15 otherwise
+  const trackOpacity = metrics.hasAnySelection ? 0.15 : 0.08
 
   return (
     <motion.div
       animate={{ opacity: 1 }}
       initial={{ opacity: 0 }}
       style={{
-        background: "rgba(0,61,44,0.02)",
-        borderRadius: "10px",
+        background: "rgba(0,61,44,0.02)", // only structural signal per plan
         padding: "12px 14px 10px",
       }}
       transition={{ delay: 0.55, duration: 0.4, ease }}
     >
-      {/* Row: progression + tree */}
+      {/* SVG row: progression (~60%) + propagation tree (~32%) */}
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
 
-        {/* Progression line */}
-        <div style={{ width: progWidth, flexShrink: 0 }}>
+        {/* 1. Progression line */}
+        <div style={{ width: "60%", flexShrink: 0 }}>
           <svg height={SVG_H} style={{ overflow: "visible", display: "block", width: "100%" }} viewBox={`0 0 200 ${SVG_H}`}>
+            {/* Connector lines */}
             {Array.from({ length: NODE_COUNT - 1 }).map((_, i) => {
               const x1 = (i / (NODE_COUNT - 1)) * 200
               const x2 = ((i + 1) / (NODE_COUNT - 1)) * 200
-              const isFilledSegment =
-                metrics.progressionFilled.includes(i) && metrics.progressionFilled.includes(i + 1)
+              const active = metrics.progressionFilled.includes(i) && metrics.progressionFilled.includes(i + 1)
               return (
                 <line
                   key={`seg-${i}`}
                   stroke="var(--cardin-green-primary)"
-                  strokeOpacity={isFilledSegment ? 0.45 : 0.08}
+                  strokeOpacity={active ? 0.45 : 0.08}
                   strokeWidth={1}
                   style={{ transition: "stroke-opacity 150ms ease-out" }}
-                  x1={x1}
-                  x2={x2}
-                  y1={SVG_H / 2}
-                  y2={SVG_H / 2}
+                  x1={x1} x2={x2} y1={SVG_H / 2} y2={SVG_H / 2}
                 />
               )
             })}
+            {/* Nodes V1–V5 + Diamond */}
             {Array.from({ length: NODE_COUNT }).map((_, i) => {
               const x = (i / (NODE_COUNT - 1)) * 200
               const isDiamond = i === NODE_COUNT - 1
-              const isFilled = metrics.progressionFilled.includes(i)
-              const r = isDiamond ? DIAMOND_R : NODE_R
 
               if (isDiamond) {
-                const glow = metrics.diamondGlow
+                // Plan: circle r=5, gold, opacity 0.2 base → 0.55 when propagation active. No glyph.
                 return (
-                  <g key="diamond" style={{ transition: "opacity 150ms ease-out" }}>
-                    <circle
-                      cx={x}
-                      cy={SVG_H / 2}
-                      fill="var(--cardin-summit-gold)"
-                      opacity={glow ? 0.55 : 0.2}
-                      r={r}
-                      style={{ transition: "opacity 150ms ease-out, r 150ms ease-out" }}
-                    />
-                    {/* diamond symbol inside */}
-                    <text
-                      dominantBaseline="middle"
-                      fill="var(--cardin-summit-gold)"
-                      fontSize="5"
-                      opacity={glow ? 0.7 : 0.25}
-                      style={{ transition: "opacity 150ms ease-out" }}
-                      textAnchor="middle"
-                      x={x}
-                      y={SVG_H / 2}
-                    >
-                      ✦
-                    </text>
-                  </g>
+                  <circle
+                    key="diamond"
+                    cx={x}
+                    cy={SVG_H / 2}
+                    fill="var(--cardin-summit-gold)"
+                    opacity={metrics.diamondGlow ? 0.55 : 0.2}
+                    r={R_D}
+                    style={{ transition: "opacity 150ms ease-out" }}
+                  />
                 )
               }
 
+              // Regular node — r=4 always, opacity only differs (plan: no size variation for unfilled)
+              const isFilled = metrics.progressionFilled.includes(i)
               return (
                 <circle
                   key={`node-${i}`}
@@ -890,33 +870,29 @@ function EnginePreview({ worldId, summitId, rewardType, moment, accessType, prop
                   cy={SVG_H / 2}
                   fill={isFilled ? "var(--cardin-green-primary)" : "var(--cardin-border)"}
                   opacity={isFilled ? 0.65 : 0.12}
-                  r={r * (isFilled ? 1 : 0.75)}
-                  style={{ transition: "opacity 150ms ease-out, r 150ms ease-out, fill 150ms ease-out" }}
+                  r={R}
+                  style={{ transition: "opacity 150ms ease-out, fill 150ms ease-out" }}
                 />
               )
             })}
           </svg>
         </div>
 
-        {/* Propagation tree */}
+        {/* 2. Propagation tree — invisible when individuel/unset */}
         <motion.div
           animate={{ opacity: metrics.showTree ? 1 : 0 }}
-          style={{ width: treeWidth, flexShrink: 0 }}
+          style={{ width: "32%", flexShrink: 0 }}
           transition={{ duration: 0.15, ease: "easeOut" }}
         >
           <svg height={SVG_H} style={{ overflow: "visible", display: "block", width: "100%" }} viewBox="0 0 80 40">
             {/* Root node */}
-            <circle
-              cx={40}
-              cy={8}
-              fill="var(--cardin-green-primary)"
-              opacity={0.35}
-              r={3}
-            />
+            <circle cx={40} cy={8} fill="var(--cardin-green-primary)" opacity={0.35} r={3} />
 
-            {/* Level 1 — always shown when tree is visible */}
-            {([20, 60] as const).map((cx, i) => {
+            {/* Level 1 — 2 children */}
+            {[20, 60].map((cx, i) => {
               const branchOp = metrics.branchAmplified ? 0.35 : 0.12
+              // Plan: leaf opacity × leafOpacityMod, capped at 0.55, opacity only (no radius change)
+              const leafOp = Math.min(0.55, 0.25 * metrics.leafOpacityMod)
               return (
                 <g key={`l1-${i}`}>
                   <line
@@ -928,10 +904,9 @@ function EnginePreview({ worldId, summitId, rewardType, moment, accessType, prop
                     x1={40} x2={cx} y1={8} y2={22}
                   />
                   <circle
-                    cx={cx}
-                    cy={22}
+                    cx={cx} cy={22}
                     fill="var(--cardin-green-primary)"
-                    opacity={0.25 * metrics.nodeScale}
+                    opacity={leafOp}
                     r={3}
                     style={{ transition: "opacity 150ms ease-out" }}
                   />
@@ -939,11 +914,11 @@ function EnginePreview({ worldId, summitId, rewardType, moment, accessType, prop
               )
             })}
 
-            {/* Level 2 — only for "groupe" */}
-            {metrics.treeDepth === 2 && ([10, 30, 50, 70] as const).map((cx, i) => {
+            {/* Level 2 — groupe only (4 grandchildren) */}
+            {metrics.treeDepth === 2 && ([10, 30, 50, 70] as number[]).map((cx, i) => {
               const parentX = i < 2 ? 20 : 60
               const branchOp = metrics.branchAmplified ? 0.25 : 0.08
-              const leafOp = Math.min(0.55, 0.18 * metrics.nodeScale)
+              const leafOp = Math.min(0.55, 0.18 * metrics.leafOpacityMod)
               return (
                 <g key={`l2-${i}`}>
                   <line
@@ -955,11 +930,10 @@ function EnginePreview({ worldId, summitId, rewardType, moment, accessType, prop
                     x1={parentX} x2={cx} y1={22} y2={35}
                   />
                   <circle
-                    cx={cx}
-                    cy={35}
+                    cx={cx} cy={35}
                     fill="var(--cardin-green-primary)"
                     opacity={leafOp}
-                    r={2.5}
+                    r={3}
                     style={{ transition: "opacity 150ms ease-out" }}
                   />
                 </g>
@@ -969,26 +943,25 @@ function EnginePreview({ worldId, summitId, rewardType, moment, accessType, prop
         </motion.div>
       </div>
 
-      {/* Pulse bar */}
+      {/* 3. Economic pulse bar — 2px, full width, no label */}
       <div
         style={{
           position: "relative",
           height: "2px",
           borderRadius: "1px",
           backgroundColor: "var(--cardin-border)",
-          opacity: 0.15,
+          opacity: trackOpacity,
+          transition: "opacity 150ms ease-out",
         }}
       >
         <motion.div
-          animate={{ width: `${metrics.pulseWidth * 100}%`, backgroundColor: barColor, opacity: metrics.pulseColor === "none" ? 0 : 0.55 }}
-          initial={{ width: "0%", opacity: 0 }}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            height: "100%",
-            borderRadius: "1px",
+          animate={{
+            width: `${metrics.pulseColor !== "none" ? metrics.pulseWidth * 100 : 0}%`,
+            backgroundColor: barColor,
+            opacity: metrics.pulseColor === "none" ? 0 : 0.55,
           }}
+          initial={{ width: "0%", opacity: 0 }}
+          style={{ position: "absolute", top: 0, left: 0, height: "100%", borderRadius: "1px" }}
           transition={{ duration: 0.15, ease: "easeOut" }}
         />
       </div>
