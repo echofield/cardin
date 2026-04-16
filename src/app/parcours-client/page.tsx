@@ -5,7 +5,7 @@ import { ClientParcoursSimulator } from "@/components/client-parcours/ClientParc
 function ParcoursClientFallback() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#F7F3EA]">
-      <p className="text-sm text-[#556159]">Chargement du parcours client…</p>
+      <p className="text-sm text-[#556159]">Chargement du parcours client...</p>
     </main>
   )
 }

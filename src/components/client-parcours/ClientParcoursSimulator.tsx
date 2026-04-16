@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { LANDING_WORLDS, LANDING_WORLD_ORDER, type LandingWorldId } from "@/lib/landing-content"
 import {
@@ -13,25 +13,39 @@ import {
   type SummitOption,
 } from "@/lib/client-parcours-config"
 
+import { ClientQrPanel } from "@/components/client-parcours/ClientQrPanel"
+import { ScreenActivation } from "@/components/client-parcours/ScreenActivation"
+import { ScreenDomino } from "@/components/client-parcours/ScreenDomino"
 import { ScreenEntree } from "@/components/client-parcours/ScreenEntree"
 import { ScreenProgression } from "@/components/client-parcours/ScreenProgression"
-import { ScreenActivation } from "@/components/client-parcours/ScreenActivation"
 import { ScreenProchaineEtape } from "@/components/client-parcours/ScreenProchaineEtape"
-import { ScreenDomino } from "@/components/client-parcours/ScreenDomino"
 import { ScreenSommet } from "@/components/client-parcours/ScreenSommet"
-import { ClientQrPanel } from "@/components/client-parcours/ClientQrPanel"
 
 const MAX_SHARES = 2
 
-// Stable demo client ID — generated once per browser session
-function getDemoClientId(): string {
+function createDemoClientId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID()
+  }
+
+  return `demo-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+}
+
+function resolveDemoClientId(): string {
   if (typeof window === "undefined") return "demo-ssr"
+
   const key = "cardin-demo-client-id"
-  const existing = sessionStorage.getItem(key)
-  if (existing) return existing
-  const id = crypto.randomUUID()
-  sessionStorage.setItem(key, id)
-  return id
+
+  try {
+    const existing = window.sessionStorage.getItem(key)
+    if (existing) return existing
+
+    const id = createDemoClientId()
+    window.sessionStorage.setItem(key, id)
+    return id
+  } catch {
+    return createDemoClientId()
+  }
 }
 
 export function ClientParcoursSimulator() {
@@ -41,7 +55,11 @@ export function ClientParcoursSimulator() {
   const [softInviteUsed, setSoftInviteUsed] = useState(0)
   const [summitChoiceId, setSummitChoiceId] = useState<string | null>(null)
   const [showQr, setShowQr] = useState(false)
-  const [demoClientId] = useState(getDemoClientId)
+  const [demoClientId, setDemoClientId] = useState("demo-client")
+
+  useEffect(() => {
+    setDemoClientId(resolveDemoClientId())
+  }, [])
 
   const targetVisits = WORLD_TARGET_VISITS[worldId]
   const world = LANDING_WORLDS[worldId]
@@ -55,9 +73,11 @@ export function ClientParcoursSimulator() {
       setSharesUsed(0)
       setSoftInviteUsed(0)
       setSummitChoiceId(null)
-    } else {
-      setVisits((v) => Math.min(v + 1, targetVisits))
+      setShowQr(false)
+      return
     }
+
+    setVisits((v) => Math.min(v + 1, targetVisits))
   }, [isSummit, targetVisits])
 
   const handleShare = useCallback(() => {
@@ -74,6 +94,7 @@ export function ClientParcoursSimulator() {
     setSharesUsed(0)
     setSoftInviteUsed(0)
     setSummitChoiceId(null)
+    setShowQr(false)
   }, [])
 
   const handleSummitSelect = useCallback((option: SummitOption) => {
@@ -134,7 +155,8 @@ export function ClientParcoursSimulator() {
             Désir par le fil
           </h1>
           <p className="mt-4 max-w-lg text-sm leading-7 text-[#566159]">
-            Simulation simple: première visite, retour, déclencheur, invitation, puis récompense concrète. Le client voit un parcours fluide; le lieu garde un cadre précis.
+            Simulation simple : première visite, retour, déclencheur, invitation, puis récompense concrète.
+            Le client voit un parcours fluide ; le lieu garde un cadre précis.
           </p>
         </div>
       </section>
@@ -189,9 +211,7 @@ export function ClientParcoursSimulator() {
             </div>
           </div>
 
-          {showQr && (
-            <ClientQrPanel clientId={demoClientId} onClose={() => setShowQr(false)} />
-          )}
+          {showQr ? <ClientQrPanel clientId={demoClientId} onClose={() => setShowQr(false)} /> : null}
 
           <div className="rounded-[1.8rem] border border-[#DED9CF] bg-[linear-gradient(180deg,#FFFEFA_0%,#F4F0E7_100%)] p-6 shadow-[0_26px_80px_-60px_rgba(24,39,31,0.36)] md:p-8">
             <div className="flex items-start justify-between border-b border-[#E6E0D5] pb-4">
