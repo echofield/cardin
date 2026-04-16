@@ -25,7 +25,22 @@ import {
   type LiteSelections,
 } from "@/lib/parcours-lite-scenarios"
 import { buildProjectionCalcLines, getProjectionTraceBundle } from "@/lib/projection-traceability"
-import { getPrimaryLeverLabel, getProtocolMappingLabel, getVerticalExplainerConfig } from "@/lib/vertical-explainer-config"
+import { getVerticalExplainerConfig } from "@/lib/vertical-explainer-config"
+import {
+  buildEngineLine,
+  buildSummaryLine,
+  getRewardTypesForWorld,
+  ACCESS_OPTIONS,
+  INTENSITE_OPTIONS,
+  MOMENT_OPTIONS,
+  PROPAGATION_OPTIONS,
+  TRIGGER_OPTIONS,
+  type AccessTypeId,
+  type MomentId,
+  type PropagationTypeId,
+  type RewardTypeId,
+  type TriggerTypeId,
+} from "@/lib/parcours-selection-config"
 
 /**
  * Mapping contract (Figma / Glow → Cardin-native):
@@ -143,6 +158,15 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
   const [liteSelections, setLiteSelections] = useState<LiteSelections>({})
   const skipLitePersistRef = useRef(false)
 
+  // Étape 3 selections
+  const [rewardType, setRewardType] = useState<RewardTypeId | null>(null)
+  const [rewardMoment, setRewardMoment] = useState<MomentId | null>(null)
+
+  // Étape 4 selections
+  const [accessType, setAccessType] = useState<AccessTypeId | null>(null)
+  const [triggerType, setTriggerType] = useState<TriggerTypeId | null>(null)
+  const [propagationType, setPropagationType] = useState<PropagationTypeId | null>(null)
+
   useEffect(() => {
     if (!isLite || typeof window === "undefined") return
     skipLitePersistRef.current = true
@@ -232,7 +256,8 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
   const isLive = stepIndex === activeSteps.length - 1
 
   const embeddedNextDisabled =
-    (step.id === "summit" && !summitId) ||
+    (step.id === "summit" && (!summitId || !rewardType || !rewardMoment)) ||
+    (step.id === "mechanics" && (!accessType || !triggerType || !propagationType)) ||
     (step.id === "liteScenarios" && !isLiteSelectionsComplete(worldId, liteSelections))
 
   return (
@@ -354,17 +379,28 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
               )}
               {step.id === "summit" && (
                 <StepSummit
-                  onNext={() => { if (summitId) goNext() }}
+                  moment={rewardMoment}
+                  onNext={() => { if (summitId && rewardType && rewardMoment) goNext() }}
+                  rewardType={rewardType}
                   selectedId={summitId}
+                  setMoment={setRewardMoment}
+                  setRewardType={setRewardType}
                   setSelectedId={setSummitId}
                   worldId={worldId}
                 />
               )}
               {step.id === "mechanics" && (
                 <StepMechanics
+                  accessType={accessType}
+                  moment={rewardMoment}
                   onNext={goNext}
-                  openIndex={openMechanic}
-                  setOpenIndex={setOpenMechanic}
+                  propagationType={propagationType}
+                  rewardType={rewardType}
+                  selectedId={summitId}
+                  setAccessType={setAccessType}
+                  setPropagationType={setPropagationType}
+                  setTriggerType={setTriggerType}
+                  triggerType={triggerType}
                   worldId={worldId}
                 />
               )}
@@ -596,109 +632,276 @@ function StepLecture({ demo, worldId, onNext }: { demo: ReturnType<typeof getDem
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    STEP 3 — SUMMIT
    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
-function StepSummit({ selectedId, setSelectedId, onNext, worldId }: { selectedId: ParcoursSummitStyleId | null; setSelectedId: (id: ParcoursSummitStyleId) => void; onNext: () => void; worldId: LandingWorldId }) {
-  const world = LANDING_WORLDS[worldId]
-  const explainer = getVerticalExplainerConfig(worldId)
-  const summitModes: ParcoursSummitStyleId[] = ["visible", "stronger", "discreet"]
+/* ─────────────────────────────────────────────────────────────────────────────
+   SELECTION CARD ATOM — shared across Étapes 3 & 4
+   ───────────────────────────────────────────────────────────────────────────── */
+
+type SelectionCardProps = {
+  id: string
+  label: string
+  sub: string
+  selected: boolean
+  onSelect: () => void
+  delay?: number
+  recommended?: boolean
+}
+
+function SelectionCard({ id, label, sub, selected, onSelect, delay = 0, recommended = false }: SelectionCardProps) {
+  const [hovered, setHovered] = useState(false)
+
+  const bg = selected
+    ? "rgba(0,61,44,0.06)"
+    : hovered
+    ? "var(--cardin-card-alt)"
+    : "var(--cardin-card)"
+
+  const border = selected
+    ? "1.5px solid var(--cardin-green-primary)"
+    : hovered
+    ? "1px solid rgba(0,61,44,0.25)"
+    : recommended
+    ? "1px solid rgba(0,61,44,0.18)"
+    : "1px solid var(--cardin-border)"
+
+  return (
+    <motion.button
+      key={id}
+      animate={{ opacity: 1, y: 0 }}
+      className="text-left"
+      initial={{ opacity: 0, y: 8 }}
+      onClick={onSelect}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: bg,
+        border,
+        borderRadius: "12px",
+        padding: "14px 16px",
+        cursor: "pointer",
+        transition: "background 150ms ease-out, border-color 150ms ease-out",
+        position: "relative",
+      }}
+      transition={{ delay, duration: 0.3, ease }}
+      type="button"
+    >
+      {recommended && !selected && (
+        <div
+          style={{
+            position: "absolute",
+            top: "8px",
+            right: "10px",
+            fontSize: "0.5rem",
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            color: "var(--cardin-green-primary)",
+            opacity: 0.5,
+          }}
+        >
+          ✦
+        </div>
+      )}
+      <div className="flex items-start gap-2.5">
+        <motion.div
+          animate={{ scale: selected ? 1 : 0.85, backgroundColor: selected ? "var(--cardin-green-primary)" : recommended ? "rgba(0,61,44,0.25)" : "var(--cardin-border)" }}
+          className="mt-0.5 h-2 w-2 shrink-0 rounded-full"
+          transition={{ duration: selected ? 0.15 : 0.1, ease: "easeOut" }}
+        />
+        <div className="min-w-0">
+          <div style={{ fontSize: "0.88rem", fontWeight: 500, color: "var(--cardin-text)", lineHeight: 1.3 }}>{label}</div>
+          <div style={{ fontSize: "0.72rem", color: "var(--cardin-label)", marginTop: "0.2rem", lineHeight: 1.35 }}>{sub}</div>
+        </div>
+      </div>
+    </motion.button>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   BLOCK LABEL — section header above each selection group
+   ───────────────────────────────────────────────────────────────────────────── */
+
+function BlockLabel({ label, delay = 0 }: { label: string; delay?: number }) {
+  return (
+    <motion.p
+      animate={{ opacity: 1 }}
+      initial={{ opacity: 0 }}
+      style={{ fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--cardin-label-light)", marginBottom: "0.6rem" }}
+      transition={{ delay, duration: 0.3 }}
+    >
+      {label}
+    </motion.p>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SUMMARY BAR — live sentence that crossfades on every selection change
+   ───────────────────────────────────────────────────────────────────────────── */
+
+function SummaryBar({ line, label = "Résumé actif" }: { line: string; label?: string }) {
+  const [key, setKey] = useState(0)
+  const [displayLine, setDisplayLine] = useState(line)
+  const prevLineRef = useRef(line)
+
+  useEffect(() => {
+    if (line !== prevLineRef.current) {
+      prevLineRef.current = line
+      setKey((k) => k + 1)
+      setDisplayLine(line)
+    }
+  }, [line])
+
+  return (
+    <div
+      className="rounded-xl border"
+      style={{
+        backgroundColor: "var(--cardin-card)",
+        borderColor: "var(--cardin-border)",
+        padding: "12px 16px",
+        boxShadow: "0 1px 6px rgba(0,0,0,0.04)",
+      }}
+    >
+      <div style={{ fontSize: "0.58rem", letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--cardin-label-light)", marginBottom: "0.35rem" }}>
+        {label}
+      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={key}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          initial={{ opacity: 0 }}
+          style={{ fontSize: "0.82rem", fontWeight: 500, color: "var(--cardin-text)", letterSpacing: "0.01em" }}
+          transition={{ duration: 0.12, ease: "easeOut" }}
+        >
+          {displayLine}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   STEP 3 — SUMMIT (rebuilt as instrument panel)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+type StepSummitProps = {
+  selectedId: ParcoursSummitStyleId | null
+  setSelectedId: (id: ParcoursSummitStyleId) => void
+  rewardType: RewardTypeId | null
+  setRewardType: (id: RewardTypeId) => void
+  moment: MomentId | null
+  setMoment: (id: MomentId) => void
+  onNext: () => void
+  worldId: LandingWorldId
+}
+
+function StepSummit({ selectedId, setSelectedId, rewardType, setRewardType, moment, setMoment, onNext, worldId }: StepSummitProps) {
+  const rewardTypes = getRewardTypesForWorld(worldId)
+  const isComplete = !!selectedId && !!rewardType && !!moment
+  const summaryLine = buildSummaryLine(worldId, rewardType, selectedId, moment)
 
   return (
     <>
       <StepHeader num="03" label="Récompense" accent="gold" />
-      <StepTitle>La récompense de saison attire. Diamond filtre l'accès.</StepTitle>
-      <StepSubtitle>{explainer.merchantExplanationCopy.rewardVsDiamond}</StepSubtitle>
 
-      <div className="mb-6 grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border p-5" style={{ backgroundColor: "var(--cardin-card)", borderColor: "var(--cardin-border)" }}>
-          <p style={{ fontSize: "0.62rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--cardin-label-light)" }}>Récompense de saison</p>
-          <h3 className="mt-2 font-serif text-2xl" style={{ color: "var(--cardin-green-primary)" }}>{explainer.seasonReward.title}</h3>
-          <p className="mt-3" style={{ fontSize: "0.8rem", color: "var(--cardin-body)", lineHeight: 1.6 }}>{explainer.seasonReward.summary}</p>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            {explainer.seasonReward.examples.map((example) => (
-              <div className="rounded-xl border px-3 py-3" key={example} style={{ borderColor: "var(--cardin-border)", backgroundColor: "var(--cardin-card-alt)", fontSize: "0.72rem", color: "var(--cardin-body)", lineHeight: 1.5 }}>
-                {example}
-              </div>
-            ))}
-          </div>
+      <motion.h1
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-2 font-serif"
+        initial={{ opacity: 0, y: 16 }}
+        style={{ fontSize: "clamp(1.9rem, 4.5vw, 2.9rem)", color: "var(--cardin-green-primary)", letterSpacing: "-0.03em", lineHeight: 1.1 }}
+        transition={{ delay: 0.1, duration: 0.4, ease }}
+      >
+        Configurez votre récompense
+      </motion.h1>
+      <motion.p
+        animate={{ opacity: 1 }}
+        className="mb-8"
+        initial={{ opacity: 0 }}
+        style={{ color: "var(--cardin-label)", fontSize: "0.88rem", lineHeight: 1.45 }}
+        transition={{ delay: 0.18, duration: 0.35 }}
+      >
+        Sélectionnez ce que vous activez.
+      </motion.p>
+
+      {/* Block 1 — Type de récompense */}
+      <div className="mb-6">
+        <BlockLabel label="Type de récompense" delay={0.22} />
+        <div className="grid grid-cols-2 gap-2">
+          {rewardTypes.map((opt, i) => (
+            <SelectionCard
+              key={opt.id}
+              delay={0.25 + i * 0.05}
+              id={opt.id}
+              label={opt.label}
+              onSelect={() => setRewardType(opt.id)}
+              recommended={opt.recommended}
+              selected={rewardType === opt.id}
+              sub={opt.example}
+            />
+          ))}
         </div>
+      </div>
 
-        <div className="rounded-2xl border p-5" style={{ backgroundColor: "var(--cardin-card)", borderColor: "var(--cardin-border)" }}>
-          <p style={{ fontSize: "0.62rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--cardin-label-light)" }}>{explainer.merchantFacingTopLayerLabel}</p>
-          <h3 className="mt-2 font-serif text-2xl" style={{ color: "var(--cardin-green-primary)" }}>{explainer.diamondMeaning.title}</h3>
-          <p className="mt-3" style={{ fontSize: "0.8rem", color: "var(--cardin-body)", lineHeight: 1.6 }}>{explainer.diamondMeaning.summary}</p>
-          <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            {explainer.diamondMeaning.concreteExamples.map((example) => (
-              <div className="rounded-xl border px-3 py-3" key={example} style={{ borderColor: "var(--cardin-border)", backgroundColor: "var(--cardin-card-alt)", fontSize: "0.72rem", color: "var(--cardin-body)", lineHeight: 1.5 }}>
-                {example}
-              </div>
-            ))}
-          </div>
+      {/* Block 2 — Intensité */}
+      <div className="mb-6">
+        <BlockLabel label="Intensité" delay={0.38} />
+        <div className="grid grid-cols-3 gap-2">
+          {INTENSITE_OPTIONS.map((opt, i) => (
+            <SelectionCard
+              key={opt.id}
+              delay={0.4 + i * 0.05}
+              id={opt.id}
+              label={opt.label}
+              onSelect={() => setSelectedId(opt.id)}
+              selected={selectedId === opt.id}
+              sub={opt.sub}
+            />
+          ))}
         </div>
       </div>
 
-      <div className="mb-3 rounded-2xl border p-4" style={{ borderColor: "var(--cardin-border)", backgroundColor: "var(--cardin-card)" }}>
-        <p style={{ fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--cardin-label-light)" }}>Lecture merchant</p>
-        <p className="mt-2" style={{ fontSize: "0.75rem", color: "var(--cardin-body)", lineHeight: 1.6 }}>
-          {explainer.seasonReward.merchantFraming} Pour votre {world.label.toLowerCase()}, {explainer.merchantExplanationCopy.whatDiamondMeans.toLowerCase()}
-        </p>
+      {/* Block 3 — Moment */}
+      <div className="mb-6">
+        <BlockLabel label="Moment" delay={0.5} />
+        <div className="grid grid-cols-3 gap-2">
+          {MOMENT_OPTIONS.map((opt, i) => (
+            <SelectionCard
+              key={opt.id}
+              delay={0.52 + i * 0.05}
+              id={opt.id}
+              label={opt.label}
+              onSelect={() => setMoment(opt.id)}
+              selected={moment === opt.id}
+              sub={opt.sub}
+            />
+          ))}
+        </div>
       </div>
 
-      <div className="mb-10 space-y-3">
-        {summitModes.map((modeId, i) => {
-          const mode = explainer.summitModes[modeId]
-          const isActive = selectedId === mode.id
-          return (
-            <motion.button
-              key={mode.id}
-              animate={{ opacity: 1, x: 0 }}
-              className="w-full rounded-2xl p-5 text-left transition-all"
-              initial={{ opacity: 0, x: -12 }}
-              onClick={() => setSelectedId(mode.id)}
-              style={{
-                backgroundColor: isActive ? "var(--cardin-summit-gold-light)" : "var(--cardin-card)",
-                border: "1.5px solid " + (isActive ? "var(--cardin-summit-gold)" : "var(--cardin-border)"),
-              }}
-              transition={{ delay: 0.2 + i * 0.09, duration: 0.4 }}
-              type="button"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="mb-2 flex items-center gap-2.5">
-                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: isActive ? "var(--cardin-summit-gold)" : "var(--cardin-border)" }} />
-                    <span style={{ fontSize: "0.68rem", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--cardin-label-light)" }}>{mode.badge}</span>
-                  </div>
-                  <p style={{ fontSize: "0.95rem", fontWeight: 500, color: "var(--cardin-text)" }}>{mode.title}</p>
-                  <p className="mt-2" style={{ fontSize: "0.78rem", color: "var(--cardin-body)", lineHeight: 1.55 }}>{mode.summary}</p>
-                  <p className="mt-3" style={{ fontSize: "0.72rem", color: "var(--cardin-label)", lineHeight: 1.5 }}>{mode.merchantMeaning}</p>
-                </div>
-                <div className="shrink-0 rounded-full border px-3 py-1.5" style={{ borderColor: "var(--cardin-border)", backgroundColor: "var(--cardin-card-alt)", fontSize: "0.68rem", color: "var(--cardin-green-primary)" }}>
-                  {mode.engineEffect}
-                </div>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {mode.protocolMapping.map((mapping) => (
-                  <span className="rounded-full border px-2.5 py-1" key={mapping} style={{ borderColor: "var(--cardin-border)", fontSize: "0.62rem", color: "var(--cardin-label)" }}>
-                    {getProtocolMappingLabel(mapping)}
-                  </span>
-                ))}
-              </div>
-            </motion.button>
-          )
-        })}
-      </div>
+      {/* Live summary bar */}
+      <motion.div
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6"
+        initial={{ opacity: 0, y: 6 }}
+        transition={{ delay: 0.6, duration: 0.35, ease }}
+      >
+        <SummaryBar line={summaryLine} />
+      </motion.div>
 
       <motion.button
-        animate={{ opacity: 1 }}
-        className="w-full rounded-full py-4 transition-all"
-        disabled={!selectedId}
+        animate={{
+          opacity: 1,
+          backgroundColor: isComplete ? "var(--cardin-green-primary)" : "var(--cardin-border)",
+        }}
+        className="w-full rounded-full py-4"
+        disabled={!isComplete}
         initial={{ opacity: 0 }}
         onClick={onNext}
         style={{
-          backgroundColor: selectedId ? "var(--cardin-green-primary)" : "var(--cardin-border)",
           color: "#FAF8F2",
           fontSize: "0.95rem",
-          cursor: selectedId ? "pointer" : "not-allowed",
+          cursor: isComplete ? "pointer" : "not-allowed",
+          border: "none",
         }}
-        transition={{ delay: 0.5, duration: 0.4 }}
+        transition={{ opacity: { delay: 0.65, duration: 0.35 }, backgroundColor: { duration: 0.2, ease: "easeOut" } }}
         type="button"
       >
         Continuer
@@ -719,96 +922,158 @@ const c = {
   cream: "var(--cardin-bg-cream)",
   blue: "var(--cardin-domino-blue)",
   blueLight: "rgba(128,164,214,0.12)",
-  blueBorder: "rgba(128,164,214,0.25)",
-  blueDim: "rgba(128,164,214,0.4)",
   gold: "var(--cardin-summit-gold)",
   goldLight: "rgba(163,135,103,0.1)",
-  goldBorder: "rgba(163,135,103,0.25)",
-  goldDim: "rgba(163,135,103,0.45)",
 }
 
-function StepMechanics({ openIndex, setOpenIndex, onNext, worldId }: { openIndex: number | null; setOpenIndex: (v: number | null) => void; onNext: () => void; worldId: LandingWorldId }) {
-  const toggle = (i: number) => setOpenIndex(openIndex === i ? null : i)
-  const explainer = getVerticalExplainerConfig(worldId)
+/* ─────────────────────────────────────────────────────────────────────────────
+   STEP 4 — MECHANICS (rebuilt as instrument panel)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+type StepMechanicsProps = {
+  accessType: AccessTypeId | null
+  setAccessType: (id: AccessTypeId) => void
+  triggerType: TriggerTypeId | null
+  setTriggerType: (id: TriggerTypeId) => void
+  propagationType: PropagationTypeId | null
+  setPropagationType: (id: PropagationTypeId) => void
+  selectedId: ParcoursSummitStyleId | null
+  rewardType: RewardTypeId | null
+  moment: MomentId | null
+  onNext: () => void
+  worldId: LandingWorldId
+}
+
+function StepMechanics({
+  accessType, setAccessType,
+  triggerType, setTriggerType,
+  propagationType, setPropagationType,
+  selectedId, rewardType, moment,
+  onNext,
+  worldId,
+}: StepMechanicsProps) {
+  const isComplete = !!accessType && !!triggerType && !!propagationType
+  const summaryLine3 = buildSummaryLine(worldId, rewardType, selectedId, moment)
+  const engineLine4 = buildEngineLine(accessType, triggerType, propagationType)
 
   return (
     <>
-      <StepHeader num="04" label="Mécanique" />
-      <StepTitle>Comment le client avance et revient.</StepTitle>
-      <StepSubtitle>{explainer.merchantExplanationCopy.whatMechanicsDo}</StepSubtitle>
-      <motion.p animate={{ opacity: 1 }} className="mb-6" initial={{ opacity: 0 }} style={{ color: c.labelLight, fontSize: "0.75rem", lineHeight: 1.6 }} transition={{ delay: 0.2, duration: 0.4 }}>
-        {explainer.merchantExplanationCopy.revenueConnection + " " + explainer.merchantExplanationCopy.budgetConstraint}
+      <StepHeader num="04" label="Activation" />
+
+      <motion.h1
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-2 font-serif"
+        initial={{ opacity: 0, y: 16 }}
+        style={{ fontSize: "clamp(1.9rem, 4.5vw, 2.9rem)", color: c.green, letterSpacing: "-0.03em", lineHeight: 1.1 }}
+        transition={{ delay: 0.1, duration: 0.4, ease }}
+      >
+        Comment ça s&apos;active ?
+      </motion.h1>
+      <motion.p
+        animate={{ opacity: 1 }}
+        className="mb-8"
+        initial={{ opacity: 0 }}
+        style={{ color: c.label, fontSize: "0.88rem", lineHeight: 1.45 }}
+        transition={{ delay: 0.18, duration: 0.35 }}
+      >
+        Définissez l&apos;accès, le déclencheur et la portée.
       </motion.p>
 
-      <div className="mb-6 rounded-2xl border p-4" style={{ borderColor: c.border, backgroundColor: c.card }}>
-        <p style={{ fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", color: c.labelLight }}>Leviers prioritaires</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {explainer.primaryLevers.map((lever) => (
-            <span className="rounded-full border px-3 py-1.5" key={lever} style={{ borderColor: c.border, fontSize: "0.68rem", color: c.body }}>
-              {getPrimaryLeverLabel(lever)}
-            </span>
+      {/* Block 1 — Qui peut accéder */}
+      <div className="mb-6">
+        <BlockLabel label="Qui peut accéder" delay={0.22} />
+        <div className="grid grid-cols-3 gap-2">
+          {ACCESS_OPTIONS.map((opt, i) => (
+            <SelectionCard
+              key={opt.id}
+              delay={0.25 + i * 0.05}
+              id={opt.id}
+              label={opt.label}
+              onSelect={() => setAccessType(opt.id)}
+              selected={accessType === opt.id}
+              sub={opt.sub}
+            />
           ))}
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        {explainer.mechanics.map((mechanic, i) => {
-          const isOpen = openIndex === i
-          const accent = mechanic.tone === "blue" ? c.blue : mechanic.tone === "gold" ? c.gold : c.green
-          const accentSoft = mechanic.tone === "blue" ? c.blueLight : mechanic.tone === "gold" ? c.goldLight : c.cardAlt
-          return (
-            <motion.div key={mechanic.id} animate={{ opacity: 1, y: 0 }} initial={{ opacity: 0, y: 8 }} transition={{ delay: 0.18 + i * 0.05, duration: 0.35 }}>
-              <button
-                onClick={() => toggle(i)}
-                style={{ width: "100%", textAlign: "left", display: "grid", gridTemplateColumns: "24px 1fr auto", alignItems: "center", gap: 14, padding: "13px 16px", border: "1px solid " + accent, borderRadius: isOpen ? "10px 10px 0 0" : "10px", backgroundColor: isOpen ? accentSoft : c.card, cursor: "pointer" }}
-                type="button"
-              >
-                <span style={{ fontSize: 9, fontFamily: "monospace", textAlign: "right", color: accent }}>{String(i + 1).padStart(2, "0")}</span>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 2, color: accent }}>{mechanic.title}</div>
-                  <div style={{ fontSize: 10, color: c.label }}>{mechanic.summary}</div>
-                </div>
-                <span style={{ fontSize: 12, fontFamily: "monospace", color: c.label, transform: isOpen ? "rotate(45deg)" : "none", display: "inline-block", width: 16, textAlign: "center" }}>+</span>
-              </button>
-              <AnimatePresence>
-                {isOpen && (
-                  <motion.div animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} initial={{ height: 0, opacity: 0 }} style={{ overflow: "hidden", border: "1px solid " + accent, borderTop: "none", borderRadius: "0 0 10px 10px", background: c.cream }} transition={{ duration: 0.2, ease }}>
-                    <div style={{ padding: "18px 18px 16px" }}>
-                      <div className="grid gap-4 lg:grid-cols-2">
-                        <div className="rounded-xl border px-4 py-4" style={{ borderColor: c.border, backgroundColor: c.card }}>
-                          <p style={{ fontSize: "0.62rem", letterSpacing: "0.12em", textTransform: "uppercase", color: c.labelLight }}>Ce que le client fait</p>
-                          <p className="mt-2" style={{ fontSize: 12, color: c.body, lineHeight: 1.6 }}>{mechanic.clientAction}</p>
-                        </div>
-                        <div className="rounded-xl border px-4 py-4" style={{ borderColor: c.border, backgroundColor: c.card }}>
-                          <p style={{ fontSize: "0.62rem", letterSpacing: "0.12em", textTransform: "uppercase", color: c.labelLight }}>Ce que le système fait</p>
-                          <p className="mt-2" style={{ fontSize: 12, color: c.body, lineHeight: 1.6 }}>{mechanic.systemAction}</p>
-                        </div>
-                      </div>
-                      <div className="mt-4 rounded-xl border px-4 py-4" style={{ borderColor: c.border, backgroundColor: c.card }}>
-                        <p style={{ fontSize: "0.62rem", letterSpacing: "0.12em", textTransform: "uppercase", color: c.labelLight }}>Pourquoi le business gagne</p>
-                        <p className="mt-2" style={{ fontSize: 12, color: c.body, lineHeight: 1.6 }}>{mechanic.merchantMeaning}</p>
-                      </div>
-                      <div className="mt-4 flex flex-wrap items-center gap-2">
-                        <span className="rounded-full border px-3 py-1.5" style={{ borderColor: c.border, backgroundColor: c.card, fontSize: "0.68rem", color: c.green }}>
-                          {mechanic.engineEffect}
-                        </span>
-                        {mechanic.protocolMapping.map((mapping) => (
-                          <span className="rounded-full border px-2.5 py-1" key={mapping} style={{ borderColor: c.border, fontSize: "0.62rem", color: c.label }}>
-                            {getProtocolMappingLabel(mapping)}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          )
-        })}
+      {/* Block 2 — Déclencheur */}
+      <div className="mb-6">
+        <BlockLabel label="Déclencheur" delay={0.36} />
+        <div className="grid grid-cols-2 gap-2">
+          {TRIGGER_OPTIONS.map((opt, i) => (
+            <SelectionCard
+              key={opt.id}
+              delay={0.38 + i * 0.05}
+              id={opt.id}
+              label={opt.label}
+              onSelect={() => setTriggerType(opt.id)}
+              selected={triggerType === opt.id}
+              sub={opt.sub}
+            />
+          ))}
+        </div>
       </div>
 
-      <motion.button animate={{ opacity: 1 }} className="mt-8 w-full rounded-full py-4" initial={{ opacity: 0 }} onClick={onNext} style={{ backgroundColor: c.green, color: "#FAF8F2", fontSize: "0.95rem" }} transition={{ delay: 0.5, duration: 0.4 }} type="button">
-        Voir l'impact sur le revenu
+      {/* Block 3 — Propagation */}
+      <div className="mb-6">
+        <BlockLabel label="Propagation" delay={0.5} />
+        <div className="grid grid-cols-3 gap-2">
+          {PROPAGATION_OPTIONS.map((opt, i) => (
+            <SelectionCard
+              key={opt.id}
+              delay={0.52 + i * 0.05}
+              id={opt.id}
+              label={opt.label}
+              onSelect={() => setPropagationType(opt.id)}
+              selected={propagationType === opt.id}
+              sub={opt.sub}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Engine preview — aggregates all 6 dimensions from Étapes 3 & 4 */}
+      <motion.div
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6 rounded-xl border"
+        initial={{ opacity: 0, y: 6 }}
+        style={{
+          backgroundColor: c.card,
+          borderColor: c.border,
+          padding: "14px 16px",
+          boxShadow: "0 1px 6px rgba(0,0,0,0.04)",
+        }}
+        transition={{ delay: 0.58, duration: 0.35, ease }}
+      >
+        <div style={{ fontSize: "0.58rem", letterSpacing: "0.14em", textTransform: "uppercase" as const, color: c.labelLight, marginBottom: "0.65rem" }}>
+          Votre système
+        </div>
+        <div className="space-y-2">
+          <SummaryBar label="Récompense" line={summaryLine3} />
+          <SummaryBar label="Activation" line={engineLine4} />
+        </div>
+      </motion.div>
+
+      <motion.button
+        animate={{
+          opacity: 1,
+          backgroundColor: isComplete ? c.green : c.border,
+        }}
+        className="w-full rounded-full py-4"
+        disabled={!isComplete}
+        initial={{ opacity: 0 }}
+        onClick={onNext}
+        style={{
+          color: "#FAF8F2",
+          fontSize: "0.95rem",
+          cursor: isComplete ? "pointer" : "not-allowed",
+          border: "none",
+        }}
+        transition={{ opacity: { delay: 0.65, duration: 0.35 }, backgroundColor: { duration: 0.2, ease: "easeOut" } }}
+        type="button"
+      >
+        Voir l&apos;impact sur le revenu
       </motion.button>
     </>
   )
