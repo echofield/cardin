@@ -1,8 +1,10 @@
 import Link from "next/link"
 
-import { LandingOnboardingJourney } from "@/components/landing/LandingOnboardingJourney"
+import {
+  LandingOnboardingJourneyDynamic,
+  MerchantSeasonStudioDynamic,
+} from "@/components/landing/LandingDynamicSections"
 import { MobileStickyInstallBar } from "@/components/landing/MobileStickyInstallBar"
-import { MerchantSeasonStudio } from "@/components/landing/MerchantSeasonStudio"
 import { PublicFooter } from "@/components/shared/PublicFooter"
 import { LANDING_PRICING, LANDING_SECTOR_CARDS, STRIPE_PAYMENT_LINK } from "@/lib/landing-content"
 import { CARDIN_CONTACT_EMAIL, buildContactMailto } from "@/lib/site-contact"
@@ -44,10 +46,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <LandingOnboardingJourney />
+      <LandingOnboardingJourneyDynamic />
 
       <section className="pt-8 lg:pt-10" id="methode">
-        <MerchantSeasonStudio />
+        <MerchantSeasonStudioDynamic />
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8" id="cas">
@@ -111,7 +113,7 @@ export default function LandingPage() {
           <div className="mt-6 rounded-[1.4rem] border border-[#D7DDD2] bg-[#FFFEFA] p-5">
             <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Confiance</p>
             <p className="mt-3 max-w-4xl text-sm leading-7 text-[#203B31]">
-              Coût borné, validation réelle du passage, contrôle simple contre la fraude et surtout aucun discount non contrôlé. La propagation reste cadrée. La récompense reste un actif du lieu, pas une promo qui fuit.
+              Coût borné, chaque passage est validé par l&apos;équipe avant toute récompense. Aucun discount ouvert, aucune remise libre à saisir. La propagation reste cadrée. La récompense reste un actif du lieu, pas une promo qui fuit.
             </p>
           </div>
 

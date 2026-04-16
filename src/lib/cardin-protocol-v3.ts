@@ -673,7 +673,7 @@ export function computeProtocolSnapshot(
       current: roundCurrency(diamondExposureForBudget),
       limit: config.diamond.budget,
       unit: "eur",
-      message: "L'enveloppe Diamond reste bornee.",
+      message: "L'enveloppe Diamond reste bornée.",
       blocksRewards: true,
     },
     {

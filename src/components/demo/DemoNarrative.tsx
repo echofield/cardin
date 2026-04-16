@@ -47,7 +47,7 @@ export function DemoNarrative() {
               <Panel
                 eyebrow="Pricing"
                 title={`${LANDING_PRICING.activationFee} EUR pour la saison (${LANDING_PRICING.seasonLengthMonths} mois).`}
-                body={`${LANDING_PRICING.recurringLabel}. La demo reste alignee avec la vraie formule Cardin.`}
+                body={`${LANDING_PRICING.recurringLabel}. La démo reste alignée sur la vraie formule Cardin.`}
               />
               <Panel
                 eyebrow="Projection"
@@ -142,7 +142,7 @@ export function DemoNarrative() {
             <Panel eyebrow="Propagation" title="Le parcours montre une seule chaine claire: A invite B, B invite C." body="Pas de complexite visible. Le commercant comprend que l'accomplissement nourrit le grand prix et que la carte devient transmissible." />
             <div className="grid gap-4 sm:grid-cols-3">
               <ChainCard label="Carte A" note="Domino ouvert" />
-              <ChainCard label="Carte B" note="Invitation activee" />
+              <ChainCard label="Carte B" note="Invitation activée" />
               <ChainCard label="Carte C" note="Deuxieme cercle" />
             </div>
             <div className="flex justify-center">

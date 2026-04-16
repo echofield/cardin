@@ -1829,6 +1829,7 @@ function StepActivation({
   propagationType: PropagationTypeId | null
 }) {
   const [phase, setPhase] = useState(0)
+  const [captured, setCaptured] = useState(false)
   useEffect(() => {
     const t1 = setTimeout(() => setPhase(1), 400)
     const t2 = setTimeout(() => setPhase(2), 1200)
@@ -1874,7 +1875,7 @@ function StepActivation({
   const trustItems = [
     "Coût borné sur la saison",
     "Validation réelle du passage avant activation",
-    "Fraude limitée par code, QR et contrôle staff",
+    "Validation staff obligatoire avant chaque récompense",
     "Pas de discount non contrôlé ni d'ouverture massive",
   ]
 
@@ -1965,17 +1966,15 @@ function StepActivation({
         </div>
       </motion.div>
 
-      <motion.div
-        animate={{ opacity: phase >= 2 ? 1 : 0 }}
-        className="mb-6 grid gap-3 md:grid-cols-2"
-        initial={{ opacity: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-      >
-        <ActivationChecklistCard items={launchItems} title="Ce que vous achetez" />
-        <ActivationChecklistCard items={activation48hItems} title="Ce qui s'active sous 48 h" />
-        <ActivationChecklistCard items={success30dItems} title="Ce qui doit être vrai sous 30 jours" />
-        <ActivationChecklistCard items={staffFlowItems} title="Ce que le staff fait en 10 secondes" />
-      </motion.div>
+      <ActivationChecklistRail
+        cards={[
+          { title: "Ce que vous achetez", items: launchItems },
+          { title: "Ce qui s'active sous 48 h", items: activation48hItems },
+          { title: "Ce qui doit être vrai sous 30 jours", items: success30dItems },
+          { title: "Ce que le staff fait en 10 secondes", items: staffFlowItems },
+        ]}
+        visible={phase >= 2}
+      />
 
       <motion.div
         animate={{ opacity: phase >= 2 ? 1 : 0 }}
@@ -2044,6 +2043,21 @@ function StepActivation({
         </div>
       </motion.details>
 
+      {/* Merchant identity capture (pre-payment). Gates the Stripe CTA until submitted. */}
+      <MerchantIdentityCapture
+        accessType={accessType}
+        captured={captured}
+        moment={moment}
+        onCaptured={() => setCaptured(true)}
+        phase={phase}
+        propagationType={propagationType}
+        rewardType={rewardType}
+        seasonRewardId={seasonRewardId}
+        summitId={summitId}
+        triggerType={triggerType}
+        worldId={worldId}
+      />
+
       <motion.div
         animate={{ opacity: phase >= 3 ? 1 : 0 }}
         className="rounded-2xl border p-5"
@@ -2058,15 +2072,33 @@ function StepActivation({
         <p className="mt-3" style={{ fontSize: "0.85rem", color: "var(--cardin-body)", lineHeight: 1.6, maxWidth: "42rem" }}>
           Payer aujourd&apos;hui. Activation digitale sous 48 h. Validation réelle des passages côté staff. Lecture du retour sous 30 jours sans promo ouverte ni discount non contrôlé.
         </p>
-        <a
-          className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full px-6 text-sm font-medium sm:w-auto"
-          href={STRIPE_PAYMENT_LINK}
-          rel="noreferrer"
-          style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2" }}
-          target="_blank"
-        >
-          {`Payer ${formatEuro(offerPrice)} et lancer la saison`}
-        </a>
+        {captured ? (
+          <motion.a
+            animate={{ opacity: 1, scale: 1 }}
+            className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full px-6 text-sm font-medium sm:w-auto"
+            href={STRIPE_PAYMENT_LINK}
+            initial={{ opacity: 0, scale: 0.98 }}
+            rel="noreferrer"
+            style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2" }}
+            target="_blank"
+            transition={{ duration: 0.35, ease: "easeOut" }}
+          >
+            {`Payer ${formatEuro(offerPrice)} et lancer la saison`}
+          </motion.a>
+        ) : (
+          <div
+            aria-disabled
+            className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full px-6 text-sm font-medium sm:w-auto"
+            style={{
+              backgroundColor: "var(--cardin-card-alt)",
+              color: "var(--cardin-label)",
+              border: "1px dashed var(--cardin-border)",
+              cursor: "not-allowed",
+            }}
+          >
+            Précisez votre lieu pour lancer le paiement
+          </div>
+        )}
         <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
           <Link className="text-[var(--cardin-green-primary)] underline underline-offset-2" href={engineHref}>
             Ajuster avant paiement
@@ -2081,25 +2113,15 @@ function StepActivation({
           )}
         </div>
       </motion.div>
-
-      {/* The money button — capture merchant configuration by email */}
-      <ParcoursRecapEmailCard
-        accessType={accessType}
-        moment={moment}
-        propagationType={propagationType}
-        rewardType={rewardType}
-        seasonRewardId={seasonRewardId}
-        summitId={summitId}
-        triggerType={triggerType}
-        worldId={worldId}
-      />
     </>
   )
 }
 
-// ─── Money button: capture merchant configuration by email ────────────────────
+// ─── Merchant identity capture (pre-payment) ──────────────────────────────────
+// Collects business name, city, phone, email. Sends the full parcours recap by
+// email and unlocks the Stripe CTA. Designed to feel premium and minimal.
 
-function ParcoursRecapEmailCard({
+function MerchantIdentityCapture({
   worldId,
   seasonRewardId,
   rewardType,
@@ -2108,6 +2130,9 @@ function ParcoursRecapEmailCard({
   accessType,
   triggerType,
   propagationType,
+  captured,
+  onCaptured,
+  phase,
 }: {
   worldId: LandingWorldId
   seasonRewardId: SeasonRewardId | null
@@ -2117,18 +2142,25 @@ function ParcoursRecapEmailCard({
   accessType: AccessTypeId | null
   triggerType: TriggerTypeId | null
   propagationType: PropagationTypeId | null
+  captured: boolean
+  onCaptured: () => void
+  phase: number
 }) {
-  const [email, setEmail] = useState("")
   const [businessName, setBusinessName] = useState("")
+  const [city, setCity] = useState("")
+  const [phone, setPhone] = useState("")
+  const [email, setEmail] = useState("")
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle")
   const [fallbackMailto, setFallbackMailto] = useState<string | null>(null)
 
   const summaryLine = buildSummaryLine(worldId, rewardType, summitId, moment)
   const nextStepLine = generateNextStep(moment, accessType, triggerType, propagationType)
 
+  const canSubmit = businessName.trim().length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email.trim() || status === "sending") return
+    if (!canSubmit || status === "sending") return
     setStatus("sending")
     setFallbackMailto(null)
     try {
@@ -2136,9 +2168,11 @@ function ParcoursRecapEmailCard({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          businessName: businessName.trim() || "Non précisé",
+          businessName: businessName.trim(),
+          city: city.trim(),
+          phone: phone.trim(),
           email: email.trim(),
-          request: "Configuration Cardin — envoi automatique depuis le simulateur.",
+          request: "Configuration Cardin — lieu précisé avant paiement.",
           parcoursSelections: {
             worldId,
             seasonRewardId,
@@ -2156,6 +2190,7 @@ function ParcoursRecapEmailCard({
       const data = (await res.json()) as { ok: boolean; fallbackMailto?: string }
       if (data.ok) {
         setStatus("sent")
+        onCaptured()
       } else {
         setFallbackMailto(data.fallbackMailto ?? null)
         setStatus("error")
@@ -2165,42 +2200,84 @@ function ParcoursRecapEmailCard({
     }
   }
 
+  if (captured && status === "sent") {
+    return (
+      <motion.div
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6 rounded-2xl px-5 py-4"
+        initial={{ opacity: 0, y: 6 }}
+        style={{
+          backgroundColor: "var(--cardin-green-tint)",
+          border: "1px solid rgba(0,61,44,0.16)",
+        }}
+        transition={{ duration: 0.35 }}
+      >
+        <p style={{ fontSize: "0.58rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--cardin-green-primary)" }}>
+          Lieu enregistré
+        </p>
+        <p className="mt-1" style={{ fontSize: "0.85rem", color: "var(--cardin-text)", fontWeight: 500 }}>
+          {businessName.trim()}{city.trim() ? ` · ${city.trim()}` : ""}
+        </p>
+        <p className="mt-1" style={{ fontSize: "0.74rem", color: "var(--cardin-body)", lineHeight: 1.5 }}>
+          Votre configuration vient d&apos;être envoyée à {email.trim()}. Le paiement est prêt juste en dessous.
+        </p>
+      </motion.div>
+    )
+  }
+
   return (
     <motion.div
-      animate={{ opacity: 1, y: 0 }}
-      className="mt-10 rounded-2xl p-5"
+      animate={{ opacity: phase >= 3 ? 1 : 0, y: phase >= 3 ? 0 : 8 }}
+      className="mb-6 rounded-2xl p-5"
       initial={{ opacity: 0, y: 8 }}
       style={{ border: "1px solid var(--cardin-border)", backgroundColor: "var(--cardin-card)" }}
-      transition={{ duration: 0.4, delay: 0.2 }}
+      transition={{ duration: 0.4, delay: 0.15 }}
     >
       <p style={{ fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--cardin-label-light)" }}>
-        Garder cette configuration
+        Avant de lancer
       </p>
-      <h3 className="mt-2 font-serif" style={{ fontSize: "1.35rem", color: "var(--cardin-green-primary)", letterSpacing: "-0.02em" }}>
-        Recevoir ce plan par email
+      <h3 className="mt-2 font-serif" style={{ fontSize: "1.35rem", color: "var(--cardin-green-primary)", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
+        Précisez votre lieu.
       </h3>
-      <p className="mt-1" style={{ fontSize: "0.82rem", color: "var(--cardin-body)", lineHeight: 1.5 }}>
-        Envoyé immédiatement. Exploitable hors-ligne. Partageable avec votre équipe.
+      <p className="mt-1.5" style={{ fontSize: "0.8rem", color: "var(--cardin-body)", lineHeight: 1.55 }}>
+        Nous envoyons votre configuration par e-mail, puis débloquons le paiement. Rapide, propre, partageable avec votre équipe.
       </p>
 
-      {status === "sent" ? (
-        <p className="mt-4" style={{ fontSize: "0.9rem", color: "var(--cardin-green-primary)" }}>
-          Votre configuration vous a été envoyée.
-        </p>
-      ) : (
-        <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={handleSubmit}>
+      <form className="mt-4 grid gap-2.5" onSubmit={handleSubmit}>
+        <div className="grid gap-2.5 sm:grid-cols-2">
           <input
-            aria-label="Nom du lieu (facultatif)"
-            className="rounded-full border px-4 py-2.5 text-sm sm:w-[38%]"
+            aria-label="Nom du lieu"
+            className="rounded-full border px-4 py-2.5 text-sm"
             onChange={(e) => setBusinessName(e.target.value)}
-            placeholder="Nom du lieu (facultatif)"
+            placeholder="Nom du lieu"
+            required
             style={{ borderColor: "var(--cardin-border)", backgroundColor: "var(--cardin-card-alt)" }}
             type="text"
             value={businessName}
           />
           <input
-            aria-label="Votre email"
-            className="flex-1 rounded-full border px-4 py-2.5 text-sm"
+            aria-label="Ville"
+            className="rounded-full border px-4 py-2.5 text-sm"
+            onChange={(e) => setCity(e.target.value)}
+            placeholder="Ville"
+            style={{ borderColor: "var(--cardin-border)", backgroundColor: "var(--cardin-card-alt)" }}
+            type="text"
+            value={city}
+          />
+        </div>
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          <input
+            aria-label="Téléphone"
+            className="rounded-full border px-4 py-2.5 text-sm"
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Téléphone (facultatif)"
+            style={{ borderColor: "var(--cardin-border)", backgroundColor: "var(--cardin-card-alt)" }}
+            type="tel"
+            value={phone}
+          />
+          <input
+            aria-label="E-mail"
+            className="rounded-full border px-4 py-2.5 text-sm"
             onChange={(e) => setEmail(e.target.value)}
             placeholder="contact@votre-lieu.fr"
             required
@@ -2208,16 +2285,16 @@ function ParcoursRecapEmailCard({
             type="email"
             value={email}
           />
-          <button
-            className="rounded-full px-5 py-2.5 text-sm font-medium transition disabled:opacity-50"
-            disabled={status === "sending" || !email.trim()}
-            style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2" }}
-            type="submit"
-          >
-            {status === "sending" ? "Envoi…" : "Envoyer"}
-          </button>
-        </form>
-      )}
+        </div>
+        <button
+          className="mt-1 h-11 rounded-full px-5 text-sm font-medium transition disabled:opacity-50"
+          disabled={status === "sending" || !canSubmit}
+          style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2" }}
+          type="submit"
+        >
+          {status === "sending" ? "Envoi…" : "Envoyer et préparer le paiement"}
+        </button>
+      </form>
 
       {status === "error" && (
         <p className="mt-3" style={{ fontSize: "0.8rem", color: "var(--cardin-body)" }}>
@@ -2250,6 +2327,90 @@ function ActivationChecklistCard({ title, items }: { title: string; items: strin
         ))}
       </ul>
     </div>
+  )
+}
+
+function ActivationChecklistRail({
+  cards,
+  visible,
+}: {
+  cards: { title: string; items: string[] }[]
+  visible: boolean
+}) {
+  const railRef = useRef<HTMLDivElement | null>(null)
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  useEffect(() => {
+    const rail = railRef.current
+    if (!rail) return
+
+    const onScroll = () => {
+      const slide = Math.round(rail.scrollLeft / Math.max(1, rail.clientWidth * 0.86))
+      setActiveIndex(Math.max(0, Math.min(cards.length - 1, slide)))
+    }
+
+    rail.addEventListener("scroll", onScroll, { passive: true })
+    return () => rail.removeEventListener("scroll", onScroll)
+  }, [cards.length])
+
+  return (
+    <motion.div
+      animate={{ opacity: visible ? 1 : 0 }}
+      className="mb-6"
+      initial={{ opacity: 0 }}
+      transition={{ duration: 0.4, delay: 0.1 }}
+    >
+      {/* Mobile: horizontal snap rail */}
+      <div className="md:hidden">
+        <div
+          className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-4 pb-2"
+          ref={railRef}
+          style={{
+            scrollbarWidth: "none",
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
+          {cards.map((card, i) => (
+            <div
+              className="shrink-0 snap-center"
+              key={card.title}
+              style={{ width: "86%" }}
+            >
+              <motion.div
+                animate={{
+                  scale: activeIndex === i ? 1 : 0.975,
+                  opacity: activeIndex === i ? 1 : 0.8,
+                }}
+                transition={{ duration: 0.28, ease: "easeOut" }}
+              >
+                <ActivationChecklistCard items={card.items} title={card.title} />
+              </motion.div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 flex items-center justify-center gap-1.5">
+          {cards.map((card, i) => (
+            <motion.span
+              animate={{
+                width: activeIndex === i ? 18 : 6,
+                opacity: activeIndex === i ? 1 : 0.45,
+              }}
+              className="block h-1.5 rounded-full"
+              key={card.title}
+              style={{ backgroundColor: "var(--cardin-green-primary)" }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop / tablet: preserved grid */}
+      <div className="hidden gap-3 md:grid md:grid-cols-2">
+        {cards.map((card) => (
+          <ActivationChecklistCard items={card.items} key={card.title} title={card.title} />
+        ))}
+      </div>
+    </motion.div>
   )
 }
 function StepHeader({ num, label, accent }: { num: string; label: string; accent?: "gold" }) {

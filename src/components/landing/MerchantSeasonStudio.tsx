@@ -1044,7 +1044,7 @@ function ActivateScreen({ selectedWorld, selectedSummit, selectedSeason, monthly
     'Validation réelle du passage avant effet récompense',
     'Budget borné et coût saison clairement limité',
     'Pas de discount non contrôlé ni de promo ouverte',
-    'Fraude limitée par QR, code et contrôle staff',
+    'Chaque passage validé par le staff avant récompense',
   ]
 
   const thirtyDayItems = [

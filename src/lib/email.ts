@@ -46,6 +46,7 @@ export type ParcoursSelectionsPayload = {
 type ContactEmailInput = {
   businessName: string
   city?: string
+  phone?: string
   email: string
   request: string
   origin?: string
@@ -210,69 +211,108 @@ export function formatParcoursRecap(selections: ParcoursSelectionsPayload): { te
 export async function sendContactEmails(input: ContactEmailInput) {
   const config = getEmailConfig()
   const siteUrl = getSiteUrl(input.origin)
-  const requestLine = input.request.trim() || "Merchant asked to be contacted later."
-  const cityLine = input.city?.trim() ? input.city.trim() : "Not provided"
+  const requestLine = input.request.trim() || "Le marchand souhaite être recontacté plus tard."
+  const cityLine = input.city?.trim() ? input.city.trim() : "Non précisée"
+  const phoneLine = input.phone?.trim() ? input.phone.trim() : "Non précisé"
 
   const recap = input.parcoursSelections ? formatParcoursRecap(input.parcoursSelections) : null
 
   const internalText = [
-    "New merchant contact request",
+    "Nouveau contact marchand",
     "",
-    `Business: ${input.businessName}`,
-    `City: ${cityLine}`,
-    `Email: ${input.email}`,
+    `Lieu : ${input.businessName}`,
+    `Ville : ${cityLine}`,
+    `Téléphone : ${phoneLine}`,
+    `E-mail : ${input.email}`,
     "",
+    "Demande :",
     requestLine,
     ...(recap ? ["", "─────", "", recap.text] : []),
     "",
-    `Landing: ${siteUrl}/landing`,
+    `Landing : ${siteUrl}/landing`,
   ].join("\n")
 
   const internalHtml = `
-    <h2>New merchant contact request</h2>
-    <p><strong>Business:</strong> ${escapeHtml(input.businessName)}</p>
-    <p><strong>City:</strong> ${escapeHtml(cityLine)}</p>
-    <p><strong>Email:</strong> ${escapeHtml(input.email)}</p>
-    <p><strong>Request:</strong><br />${escapeHtml(requestLine).replace(/\n/g, "<br />")}</p>
+    <h2 style="font-family:Georgia,serif;color:#163328;">Nouveau contact marchand</h2>
+    <p><strong>Lieu :</strong> ${escapeHtml(input.businessName)}</p>
+    <p><strong>Ville :</strong> ${escapeHtml(cityLine)}</p>
+    <p><strong>Téléphone :</strong> ${escapeHtml(phoneLine)}</p>
+    <p><strong>E-mail :</strong> ${escapeHtml(input.email)}</p>
+    <p><strong>Demande :</strong><br />${escapeHtml(requestLine).replace(/\n/g, "<br />")}</p>
     ${recap ? recap.html : ""}
-    <p><strong>Landing:</strong> <a href="${siteUrl}/landing">${siteUrl}/landing</a></p>
+    <p><strong>Landing :</strong> <a href="${siteUrl}/landing">${siteUrl}/landing</a></p>
   `
 
-  const merchantText = [
-    `Bonjour,`,
-    "",
-    recap
-      ? "Voici votre configuration Cardin. Gardez cet email : il contient le plan de votre saison."
-      : "Nous avons bien recu votre demande Cardin.",
-    ...(recap ? ["", recap.text] : []),
-    "",
-    "Prochaine etape:",
-    "- notre equipe revient vers vous avec le recapitulatif marchand,",
-    "- puis nous reprenons le parcours au bon moment.",
-    "",
-    `Si besoin, repondez directement a ${config.contactToEmail}.`,
-    `${siteUrl}/parcours`,
-  ].join("\n")
+  const businessGreeting = input.businessName?.trim()
+    ? `Bonjour ${input.businessName.trim()},`
+    : "Bonjour,"
 
-  const merchantHtml = `
-    <p>Bonjour,</p>
-    <p>${recap
-      ? "Voici votre configuration Cardin. Gardez cet email : il contient le plan de votre saison."
-      : "Nous avons bien recu votre demande Cardin."}</p>
-    ${recap ? recap.html : ""}
-    <p style="margin-top:24px;">Prochaine etape :</p>
-    <ul>
-      <li>notre equipe revient vers vous avec le recapitulatif marchand,</li>
-      <li>puis nous reprenons le parcours au bon moment.</li>
-    </ul>
-    <p>Si besoin, repondez directement a ${escapeHtml(config.contactToEmail)}.</p>
-    <p><a href="${siteUrl}/parcours">Voir le parcours marchand</a></p>
-  `
+  const merchantText = recap
+    ? [
+        businessGreeting,
+        "",
+        "Merci — votre configuration Cardin est enregistrée.",
+        "Vous trouverez ci-dessous le récapitulatif de votre saison : récompense, activation et ce que vos clients vont concrètement faire.",
+        "",
+        recap.text,
+        "",
+        "Prochaine étape :",
+        "— notre équipe revient vers vous pour valider les derniers réglages,",
+        "— puis nous lançons l'activation au rythme qui vous convient.",
+        "",
+        `Une question ou une envie d'ajustement ? Répondez simplement à ce message ou écrivez à ${config.contactToEmail}.`,
+        "",
+        "À très vite,",
+        "L'équipe Cardin",
+        "",
+        `${siteUrl}/parcours`,
+      ].join("\n")
+    : [
+        businessGreeting,
+        "",
+        "Merci — votre demande Cardin est bien reçue.",
+        "Un membre de l'équipe revient vers vous très rapidement avec le récapitulatif marchand et les prochaines étapes.",
+        "",
+        `En attendant, si une question se précise, écrivez-nous directement à ${config.contactToEmail}.`,
+        "",
+        "À très vite,",
+        "L'équipe Cardin",
+        "",
+        `${siteUrl}/parcours`,
+      ].join("\n")
+
+  const merchantHtml = recap
+    ? `
+      <div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;color:#163328;line-height:1.6;">
+        <p>${escapeHtml(businessGreeting)}</p>
+        <p>Merci — votre configuration Cardin est enregistrée.</p>
+        <p style="margin:0 0 12px;">Vous trouverez ci-dessous le récapitulatif de votre saison : récompense, activation, et ce que vos clients vont concrètement faire.</p>
+        ${recap.html}
+        <p style="margin-top:24px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#1f5a46;">Prochaine étape</p>
+        <ul style="margin:8px 0 16px;padding-left:18px;">
+          <li>notre équipe revient vers vous pour valider les derniers réglages,</li>
+          <li>puis nous lançons l'activation au rythme qui vous convient.</li>
+        </ul>
+        <p>Une question ou une envie d'ajustement ? Répondez simplement à ce message ou écrivez à <a href="mailto:${escapeHtml(config.contactToEmail)}" style="color:#1f5a46;">${escapeHtml(config.contactToEmail)}</a>.</p>
+        <p style="margin-top:20px;">À très vite,<br />L'équipe Cardin</p>
+        <p><a href="${siteUrl}/parcours" style="color:#1f5a46;">Revoir le parcours marchand</a></p>
+      </div>
+    `
+    : `
+      <div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;color:#163328;line-height:1.6;">
+        <p>${escapeHtml(businessGreeting)}</p>
+        <p>Merci — votre demande Cardin est bien reçue.</p>
+        <p>Un membre de l'équipe revient vers vous très rapidement avec le récapitulatif marchand et les prochaines étapes.</p>
+        <p>En attendant, si une question se précise, écrivez-nous directement à <a href="mailto:${escapeHtml(config.contactToEmail)}" style="color:#1f5a46;">${escapeHtml(config.contactToEmail)}</a>.</p>
+        <p style="margin-top:20px;">À très vite,<br />L'équipe Cardin</p>
+        <p><a href="${siteUrl}/parcours" style="color:#1f5a46;">Revoir le parcours marchand</a></p>
+      </div>
+    `
 
   await sendMail({
     to: config.contactToEmail,
     replyTo: input.email,
-    subject: `Cardin - nouveau contact marchand - ${input.businessName}`,
+    subject: `Cardin · nouveau contact marchand — ${input.businessName}`,
     text: internalText,
     html: internalHtml,
   })
@@ -280,7 +320,7 @@ export async function sendContactEmails(input: ContactEmailInput) {
   await sendMail({
     to: input.email,
     replyTo: config.contactToEmail,
-    subject: recap ? "Cardin - votre configuration de saison" : "Cardin - demande bien recue",
+    subject: recap ? "Cardin · votre configuration de saison" : "Cardin · votre demande est bien reçue",
     text: merchantText,
     html: merchantHtml,
   })
@@ -288,7 +328,7 @@ export async function sendContactEmails(input: ContactEmailInput) {
 
 function formatCheckoutAmount(amountTotal?: number | null, currency?: string | null): string {
   if (typeof amountTotal !== "number" || !Number.isFinite(amountTotal)) {
-    return "Montant confirme"
+    return "Montant confirmé"
   }
 
   const majorAmount = amountTotal / 100
@@ -304,12 +344,12 @@ export async function sendStripeCheckoutEmails(input: StripeCheckoutEmailInput) 
   const customerName = input.customerName?.trim() || "Client"
 
   const internalText = [
-    "Stripe checkout completed",
+    "Paiement Stripe confirmé",
     "",
-    `Session: ${input.sessionId}`,
-    `Amount: ${amountLine}`,
-    `Customer email: ${customerEmail || "Not provided"}`,
-    `Payment link: ${input.paymentLinkId ?? "Not provided"}`,
+    `Session : ${input.sessionId}`,
+    `Montant : ${amountLine}`,
+    `E-mail client : ${customerEmail || "Non précisé"}`,
+    `Payment link : ${input.paymentLinkId ?? "Non précisé"}`,
     "",
     `${siteUrl}/apres-paiement`,
   ].join("\n")
@@ -317,15 +357,15 @@ export async function sendStripeCheckoutEmails(input: StripeCheckoutEmailInput) 
   await sendMail({
     to: config.contactToEmail,
     replyTo: customerEmail || undefined,
-    subject: `Cardin - paiement Stripe recu - ${customerEmail || input.sessionId}`,
+    subject: `Cardin · paiement Stripe reçu — ${customerEmail || input.sessionId}`,
     text: internalText,
     html: `
-      <h2>Stripe checkout completed</h2>
-      <p><strong>Session:</strong> ${escapeHtml(input.sessionId)}</p>
-      <p><strong>Amount:</strong> ${escapeHtml(amountLine)}</p>
-      <p><strong>Customer email:</strong> ${escapeHtml(customerEmail || "Not provided")}</p>
-      <p><strong>Payment link:</strong> ${escapeHtml(input.paymentLinkId ?? "Not provided")}</p>
-      <p><a href="${siteUrl}/apres-paiement">After payment page</a></p>
+      <h2 style="font-family:Georgia,serif;color:#163328;">Paiement Stripe confirmé</h2>
+      <p><strong>Session :</strong> ${escapeHtml(input.sessionId)}</p>
+      <p><strong>Montant :</strong> ${escapeHtml(amountLine)}</p>
+      <p><strong>E-mail client :</strong> ${escapeHtml(customerEmail || "Non précisé")}</p>
+      <p><strong>Payment link :</strong> ${escapeHtml(input.paymentLinkId ?? "Non précisé")}</p>
+      <p><a href="${siteUrl}/apres-paiement">Page après paiement</a></p>
     `,
   })
 
@@ -336,37 +376,44 @@ export async function sendStripeCheckoutEmails(input: StripeCheckoutEmailInput) 
   const merchantText = [
     `Bonjour ${customerName},`,
     "",
-    `Nous avons bien recu votre paiement Cardin (${amountLine}).`,
+    `Votre paiement Cardin est bien reçu (${amountLine}). Bienvenue dans la saison.`,
     "",
-    "Suite immediate:",
-    "- gardez l'email Stripe de confirmation,",
-    "- revenez sur la page apres paiement,",
-    "- notre equipe vous envoie ensuite le recap d'activation et les prochaines etapes.",
+    "Ce qui se passe maintenant :",
+    "— Stripe vous a envoyé son reçu, c'est votre justificatif officiel,",
+    "— notre équipe prépare le récap d'activation sur mesure pour votre lieu,",
+    "— vous recevrez ensuite les prochaines étapes pour lancer le parcours au bon moment.",
     "",
-    `${siteUrl}/apres-paiement`,
-    `${siteUrl}/parcours`,
+    "Utile à garder sous la main :",
+    `— page après paiement : ${siteUrl}/apres-paiement`,
+    `— votre parcours marchand : ${siteUrl}/parcours`,
     "",
-    `Besoin d'aide: ${config.contactToEmail}`,
+    `Une question ? Écrivez-nous à ${config.contactToEmail} — on répond rapidement.`,
+    "",
+    "À très vite,",
+    "L'équipe Cardin",
   ].join("\n")
 
   const merchantHtml = `
-    <p>Bonjour ${escapeHtml(customerName)},</p>
-    <p>Nous avons bien recu votre paiement Cardin (<strong>${escapeHtml(amountLine)}</strong>).</p>
-    <p>Suite immediate:</p>
-    <ul>
-      <li>gardez l'email Stripe de confirmation,</li>
-      <li>revenez sur la page apres paiement,</li>
-      <li>notre equipe vous envoie ensuite le recap d'activation et les prochaines etapes.</li>
-    </ul>
-    <p><a href="${siteUrl}/apres-paiement">Voir la page apres paiement</a></p>
-    <p><a href="${siteUrl}/parcours">Revoir le parcours marchand</a></p>
-    <p>Besoin d'aide: ${escapeHtml(config.contactToEmail)}</p>
+    <div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;color:#163328;line-height:1.6;">
+      <p>Bonjour ${escapeHtml(customerName)},</p>
+      <p>Votre paiement Cardin est bien reçu (<strong>${escapeHtml(amountLine)}</strong>). Bienvenue dans la saison.</p>
+      <p style="margin-top:20px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#1f5a46;">Ce qui se passe maintenant</p>
+      <ul style="margin:8px 0 16px;padding-left:18px;">
+        <li>Stripe vous a envoyé son reçu, c'est votre justificatif officiel,</li>
+        <li>notre équipe prépare le récap d'activation sur mesure pour votre lieu,</li>
+        <li>vous recevrez ensuite les prochaines étapes pour lancer le parcours au bon moment.</li>
+      </ul>
+      <p style="margin-top:20px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#1f5a46;">À garder sous la main</p>
+      <p style="margin:8px 0;"><a href="${siteUrl}/apres-paiement" style="color:#1f5a46;">Page après paiement</a><br /><a href="${siteUrl}/parcours" style="color:#1f5a46;">Votre parcours marchand</a></p>
+      <p>Une question ? Écrivez-nous à <a href="mailto:${escapeHtml(config.contactToEmail)}" style="color:#1f5a46;">${escapeHtml(config.contactToEmail)}</a> — on répond rapidement.</p>
+      <p style="margin-top:20px;">À très vite,<br />L'équipe Cardin</p>
+    </div>
   `
 
   await sendMail({
     to: customerEmail,
     replyTo: config.contactToEmail,
-    subject: "Cardin - paiement bien recu",
+    subject: "Cardin · paiement bien reçu",
     text: merchantText,
     html: merchantHtml,
   })

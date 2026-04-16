@@ -502,7 +502,7 @@ export function EngineFlow({ initialObjectiveId, initialSeasonLength, initialSum
                   </Card>
 
                   <Card className="p-6">
-                    <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Configuration envoyee</p>
+                    <p className="text-xs uppercase tracking-[0.14em] text-[#69736C]">Configuration envoyée</p>
                     <div className="mt-4 space-y-2 text-sm text-[#203B31]">
                       <p>Scenario : {selectedScenario.label}</p>
                       <p>Activite : {selectedTemplate.label}</p>

@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic"
 type ContactPayload = {
   businessName?: string
   city?: string
+  phone?: string
   email?: string
   request?: string
   parcoursSelections?: ParcoursSelectionsPayload | null
@@ -19,6 +20,7 @@ function buildFallbackBody(
   requestText: string,
   businessName: string,
   city: string,
+  phone: string,
   email: string,
   selections?: ParcoursSelectionsPayload | null,
 ): string {
@@ -38,7 +40,12 @@ function buildFallbackBody(
     )
   }
 
-  lines.push(`Nom du lieu : ${businessName}`, `Ville : ${city}`, `E-mail : ${email}`)
+  lines.push(
+    `Nom du lieu : ${businessName}`,
+    `Ville : ${city || "—"}`,
+    `Téléphone : ${phone || "—"}`,
+    `E-mail : ${email}`,
+  )
   return lines.join("\r\n")
 }
 
@@ -46,13 +53,14 @@ export async function POST(request: Request) {
   const payload = (await request.json()) as ContactPayload
   const businessName = (payload.businessName ?? "").trim()
   const city = (payload.city ?? "").trim()
+  const phone = (payload.phone ?? "").trim()
   const email = (payload.email ?? "").trim()
-  const requestText = (payload.request ?? "").trim() || "Recevoir le recapitulatif marchand et etre recontacte plus tard."
+  const requestText = (payload.request ?? "").trim() || "Recevoir le récapitulatif marchand et être recontacté plus tard."
   const parcoursSelections = payload.parcoursSelections ?? null
 
   const fallbackMailto = buildContactMailto(
-    parcoursSelections ? "Cardin - configuration marchand" : "Cardin - demande marchand",
-    buildFallbackBody(requestText, businessName, city, email, parcoursSelections),
+    parcoursSelections ? "Cardin · configuration marchand" : "Cardin · demande marchand",
+    buildFallbackBody(requestText, businessName, city, phone, email, parcoursSelections),
   )
 
   if (!businessName || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -67,6 +75,7 @@ export async function POST(request: Request) {
     await sendContactEmails({
       businessName,
       city,
+      phone,
       email,
       request: requestText,
       origin: new URL(request.url).origin,
@@ -82,7 +91,13 @@ export async function POST(request: Request) {
         if (user?.id) {
           await supabase
             .from("merchants")
-            .update({ parcours_selections: { ...parcoursSelections, submittedAt: new Date().toISOString() } })
+            .update({
+              parcours_selections: {
+                ...parcoursSelections,
+                submittedAt: new Date().toISOString(),
+                identity: { businessName, city: city || null, phone: phone || null, email },
+              },
+            })
             .eq("id", user.id)
         }
       } catch (dbError) {
