@@ -202,3 +202,98 @@ export function buildEngineLine(
   const p = propagationType ? PROPAGATION_NARRATIVE[propagationType] : "—"
   return `${a} · ${t} · ${p}`
 }
+
+// ─── ENGINE METRICS (for EnginePreview visual) ───────────────────────────────
+
+export type PulseColor = "green" | "gold" | "red" | "none"
+export type EngineMetrics = {
+  sigma: number               // 0–4 clamped display value
+  progressionFilled: number[] // node indices (0–4) that should glow
+  showTree: boolean
+  treeDepth: 1 | 2
+  branchAmplified: boolean    // invitation/evenement reward → louder branches
+  nodeScale: number           // 0.85 | 1.0 | 1.15 based on intensité
+  diamondGlow: boolean        // propagation active
+  pulseColor: PulseColor
+  pulseWidth: number          // 0–1 fraction for bar fill
+}
+
+// Bases derived from cardin_protocol_v2.md — normalized to 0–4 display scale
+const SIGMA_BASE: Record<LandingWorldId, number> = {
+  cafe:       3.2,
+  bar:        2.8,
+  restaurant: 3.0,
+  beaute:     3.5,
+  boutique:   2.5,
+}
+
+const INTENSITE_MOD: Record<ParcoursSummitStyleId, number> = {
+  visible:  1.0,
+  stronger: 0.92,
+  discreet: 1.1,
+}
+
+const ACCESS_MOD: Record<AccessTypeId, number> = {
+  tous:         0.9,
+  reguliers:    1.1,
+  selectionnes: 1.15,
+}
+
+const MOMENT_MOD: Record<MomentId, number> = {
+  immediat: 1.0,
+  apres_x:  1.05,
+  creneaux: 1.1,
+}
+
+const PROP_MOD: Record<PropagationTypeId, number> = {
+  individuel: 1.0,
+  duo:        0.95,
+  groupe:     0.88,
+}
+
+const PROGRESSION_NODES: Record<MomentId, number[]> = {
+  immediat: [0, 1],
+  apres_x:  [2, 3],
+  creneaux: [3, 4],
+}
+
+function clamp(v: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, v))
+}
+
+export function computeEngineMetrics(
+  worldId: LandingWorldId,
+  summitId: ParcoursSummitStyleId | null,
+  moment: MomentId | null,
+  rewardType: RewardTypeId | null,
+  accessType: AccessTypeId | null,
+  propagationType: PropagationTypeId | null,
+): EngineMetrics {
+  const base = SIGMA_BASE[worldId]
+  const i = summitId ? INTENSITE_MOD[summitId] : 1.0
+  const a = accessType ? ACCESS_MOD[accessType] : 1.0
+  const m = moment ? MOMENT_MOD[moment] : 1.0
+  const p = propagationType ? PROP_MOD[propagationType] : 1.0
+
+  const sigma = clamp(base * i * a * m * p, 0, 4)
+
+  const progressionFilled = moment ? PROGRESSION_NODES[moment] : []
+
+  const showTree = propagationType !== null && propagationType !== "individuel"
+  const treeDepth: 1 | 2 = propagationType === "groupe" ? 2 : 1
+
+  const branchAmplified = rewardType === "invitation" || rewardType === "evenement"
+
+  const nodeScale = summitId === "stronger" ? 1.15 : summitId === "discreet" ? 0.85 : 1.0
+
+  const diamondGlow = showTree
+
+  let pulseColor: PulseColor = "none"
+  if (summitId || accessType || moment || propagationType) {
+    pulseColor = sigma >= 3 ? "green" : sigma >= 2 ? "gold" : "red"
+  }
+
+  const pulseWidth = clamp(sigma / 4, 0, 1)
+
+  return { sigma, progressionFilled, showTree, treeDepth, branchAmplified, nodeScale, diamondGlow, pulseColor, pulseWidth }
+}

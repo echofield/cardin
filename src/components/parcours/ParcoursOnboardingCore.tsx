@@ -29,6 +29,7 @@ import { getVerticalExplainerConfig } from "@/lib/vertical-explainer-config"
 import {
   buildEngineLine,
   buildSummaryLine,
+  computeEngineMetrics,
   getRewardTypesForWorld,
   ACCESS_OPTIONS,
   INTENSITE_OPTIONS,
@@ -779,6 +780,223 @@ function SummaryBar({ line, label = "Résumé actif" }: { line: string; label?: 
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
+   ENGINE PREVIEW — silent consequence layer (Step 4, below selections)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+type EnginePreviewProps = {
+  worldId: LandingWorldId
+  summitId: ParcoursSummitStyleId | null
+  rewardType: RewardTypeId | null
+  moment: MomentId | null
+  accessType: AccessTypeId | null
+  triggerType: TriggerTypeId | null
+  propagationType: PropagationTypeId | null
+}
+
+function EnginePreview({ worldId, summitId, rewardType, moment, accessType, propagationType }: EnginePreviewProps) {
+  const metrics = computeEngineMetrics(worldId, summitId, moment, rewardType, accessType, propagationType)
+
+  const NODE_COUNT = 6 // V1–V5 + Diamond
+  const SVG_H = 40
+  const NODE_R = 4
+  const DIAMOND_R = 5
+
+  // Progression line geometry
+  const progWidth = "60%"
+  const treeWidth = "32%"
+
+  // Pulse bar color
+  const barColor =
+    metrics.pulseColor === "green" ? "var(--cardin-green-primary)"
+    : metrics.pulseColor === "gold" ? "var(--cardin-summit-gold)"
+    : metrics.pulseColor === "red" ? "rgba(180,60,60,0.9)"
+    : "transparent"
+
+  return (
+    <motion.div
+      animate={{ opacity: 1 }}
+      initial={{ opacity: 0 }}
+      style={{
+        background: "rgba(0,61,44,0.02)",
+        borderRadius: "10px",
+        padding: "12px 14px 10px",
+      }}
+      transition={{ delay: 0.55, duration: 0.4, ease }}
+    >
+      {/* Row: progression + tree */}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+
+        {/* Progression line */}
+        <div style={{ width: progWidth, flexShrink: 0 }}>
+          <svg height={SVG_H} style={{ overflow: "visible", display: "block", width: "100%" }} viewBox={`0 0 200 ${SVG_H}`}>
+            {Array.from({ length: NODE_COUNT - 1 }).map((_, i) => {
+              const x1 = (i / (NODE_COUNT - 1)) * 200
+              const x2 = ((i + 1) / (NODE_COUNT - 1)) * 200
+              const isFilledSegment =
+                metrics.progressionFilled.includes(i) && metrics.progressionFilled.includes(i + 1)
+              return (
+                <line
+                  key={`seg-${i}`}
+                  stroke="var(--cardin-green-primary)"
+                  strokeOpacity={isFilledSegment ? 0.45 : 0.08}
+                  strokeWidth={1}
+                  style={{ transition: "stroke-opacity 150ms ease-out" }}
+                  x1={x1}
+                  x2={x2}
+                  y1={SVG_H / 2}
+                  y2={SVG_H / 2}
+                />
+              )
+            })}
+            {Array.from({ length: NODE_COUNT }).map((_, i) => {
+              const x = (i / (NODE_COUNT - 1)) * 200
+              const isDiamond = i === NODE_COUNT - 1
+              const isFilled = metrics.progressionFilled.includes(i)
+              const r = isDiamond ? DIAMOND_R : NODE_R
+
+              if (isDiamond) {
+                const glow = metrics.diamondGlow
+                return (
+                  <g key="diamond" style={{ transition: "opacity 150ms ease-out" }}>
+                    <circle
+                      cx={x}
+                      cy={SVG_H / 2}
+                      fill="var(--cardin-summit-gold)"
+                      opacity={glow ? 0.55 : 0.2}
+                      r={r}
+                      style={{ transition: "opacity 150ms ease-out, r 150ms ease-out" }}
+                    />
+                    {/* diamond symbol inside */}
+                    <text
+                      dominantBaseline="middle"
+                      fill="var(--cardin-summit-gold)"
+                      fontSize="5"
+                      opacity={glow ? 0.7 : 0.25}
+                      style={{ transition: "opacity 150ms ease-out" }}
+                      textAnchor="middle"
+                      x={x}
+                      y={SVG_H / 2}
+                    >
+                      ✦
+                    </text>
+                  </g>
+                )
+              }
+
+              return (
+                <circle
+                  key={`node-${i}`}
+                  cx={x}
+                  cy={SVG_H / 2}
+                  fill={isFilled ? "var(--cardin-green-primary)" : "var(--cardin-border)"}
+                  opacity={isFilled ? 0.65 : 0.12}
+                  r={r * (isFilled ? 1 : 0.75)}
+                  style={{ transition: "opacity 150ms ease-out, r 150ms ease-out, fill 150ms ease-out" }}
+                />
+              )
+            })}
+          </svg>
+        </div>
+
+        {/* Propagation tree */}
+        <motion.div
+          animate={{ opacity: metrics.showTree ? 1 : 0 }}
+          style={{ width: treeWidth, flexShrink: 0 }}
+          transition={{ duration: 0.15, ease: "easeOut" }}
+        >
+          <svg height={SVG_H} style={{ overflow: "visible", display: "block", width: "100%" }} viewBox="0 0 80 40">
+            {/* Root node */}
+            <circle
+              cx={40}
+              cy={8}
+              fill="var(--cardin-green-primary)"
+              opacity={0.35}
+              r={3}
+            />
+
+            {/* Level 1 — always shown when tree is visible */}
+            {([20, 60] as const).map((cx, i) => {
+              const branchOp = metrics.branchAmplified ? 0.35 : 0.12
+              return (
+                <g key={`l1-${i}`}>
+                  <line
+                    opacity={branchOp}
+                    stroke="var(--cardin-green-primary)"
+                    strokeDasharray="2 3"
+                    strokeWidth={1}
+                    style={{ transition: "opacity 150ms ease-out" }}
+                    x1={40} x2={cx} y1={8} y2={22}
+                  />
+                  <circle
+                    cx={cx}
+                    cy={22}
+                    fill="var(--cardin-green-primary)"
+                    opacity={0.25 * metrics.nodeScale}
+                    r={3}
+                    style={{ transition: "opacity 150ms ease-out" }}
+                  />
+                </g>
+              )
+            })}
+
+            {/* Level 2 — only for "groupe" */}
+            {metrics.treeDepth === 2 && ([10, 30, 50, 70] as const).map((cx, i) => {
+              const parentX = i < 2 ? 20 : 60
+              const branchOp = metrics.branchAmplified ? 0.25 : 0.08
+              const leafOp = Math.min(0.55, 0.18 * metrics.nodeScale)
+              return (
+                <g key={`l2-${i}`}>
+                  <line
+                    opacity={branchOp}
+                    stroke="var(--cardin-green-primary)"
+                    strokeDasharray="2 3"
+                    strokeWidth={1}
+                    style={{ transition: "opacity 150ms ease-out" }}
+                    x1={parentX} x2={cx} y1={22} y2={35}
+                  />
+                  <circle
+                    cx={cx}
+                    cy={35}
+                    fill="var(--cardin-green-primary)"
+                    opacity={leafOp}
+                    r={2.5}
+                    style={{ transition: "opacity 150ms ease-out" }}
+                  />
+                </g>
+              )
+            })}
+          </svg>
+        </motion.div>
+      </div>
+
+      {/* Pulse bar */}
+      <div
+        style={{
+          position: "relative",
+          height: "2px",
+          borderRadius: "1px",
+          backgroundColor: "var(--cardin-border)",
+          opacity: 0.15,
+        }}
+      >
+        <motion.div
+          animate={{ width: `${metrics.pulseWidth * 100}%`, backgroundColor: barColor, opacity: metrics.pulseColor === "none" ? 0 : 0.55 }}
+          initial={{ width: "0%", opacity: 0 }}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            height: "100%",
+            borderRadius: "1px",
+          }}
+          transition={{ duration: 0.15, ease: "easeOut" }}
+        />
+      </div>
+    </motion.div>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
    STEP 3 — SUMMIT (rebuilt as instrument panel)
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -1033,27 +1251,24 @@ function StepMechanics({
         </div>
       </div>
 
-      {/* Engine preview — aggregates all 6 dimensions from Étapes 3 & 4 */}
-      <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-6 rounded-xl border"
-        initial={{ opacity: 0, y: 6 }}
-        style={{
-          backgroundColor: c.card,
-          borderColor: c.border,
-          padding: "14px 16px",
-          boxShadow: "0 1px 6px rgba(0,0,0,0.04)",
-        }}
-        transition={{ delay: 0.58, duration: 0.35, ease }}
-      >
-        <div style={{ fontSize: "0.58rem", letterSpacing: "0.14em", textTransform: "uppercase" as const, color: c.labelLight, marginBottom: "0.65rem" }}>
-          Votre système
-        </div>
-        <div className="space-y-2">
-          <SummaryBar label="Récompense" line={summaryLine3} />
-          <SummaryBar label="Activation" line={engineLine4} />
-        </div>
-      </motion.div>
+      {/* EnginePreview — silent consequence layer */}
+      <div className="mb-4">
+        <EnginePreview
+          accessType={accessType}
+          moment={moment}
+          propagationType={propagationType}
+          rewardType={rewardType}
+          summitId={selectedId}
+          triggerType={triggerType}
+          worldId={worldId}
+        />
+      </div>
+
+      {/* Text recap — two bare SummaryBars, no card wrapper */}
+      <div className="mb-6 space-y-2">
+        <SummaryBar label="Récompense" line={summaryLine3} />
+        <SummaryBar label="Activation" line={engineLine4} />
+      </div>
 
       <motion.button
         animate={{
