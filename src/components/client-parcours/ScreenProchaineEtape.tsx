@@ -1,5 +1,5 @@
 import type { LandingWorldId } from "@/lib/landing-content"
-import { getBarEngineCaptionForScreenId, getTasteSignal, getTensionPair } from "@/lib/client-parcours-config"
+import { getBarEngineCaptionForScreenId, getScreenHero, getTasteSignal, getTensionPair } from "@/lib/client-parcours-config"
 
 import { BarEngineNote } from "@/components/client-parcours/BarEngineNote"
 
@@ -14,12 +14,13 @@ export function ScreenProchaineEtape({ worldId, visits, targetVisits }: Props) {
   const taste = getTasteSignal(worldId, "prochaine-etape")
   const remaining = Math.max(0, targetVisits - visits)
   const barCap = worldId === "bar" ? getBarEngineCaptionForScreenId("prochaine-etape") : null
+  const hero = getScreenHero(worldId, "prochaine-etape")
 
   return (
     <div className="space-y-5">
       <div className="rounded-[1.6rem] border border-[#D8DED4] bg-[#FFFEFA] p-6">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Plus près</p>
-        <p className="mt-3 text-sm italic leading-7 text-[#556159]">Le parcours vous veut encore.</p>
+        <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">{hero?.eyebrow ?? "Plus près"}</p>
+        <p className="mt-3 text-sm italic leading-7 text-[#556159]">{hero?.italic ?? "Le parcours vous veut encore."}</p>
         <h2 className="mt-4 font-serif text-3xl leading-tight text-[#173A2E]">La récompense se rapproche.</h2>
         <p className="mt-3 text-sm leading-7 text-[#556159]">Encore {remaining} passage{remaining > 1 ? "s" : ""} utile{remaining > 1 ? "s" : ""} pour débloquer le niveau final.</p>
       </div>

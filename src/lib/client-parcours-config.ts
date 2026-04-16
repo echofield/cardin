@@ -52,6 +52,109 @@ export function getClientParcoursScreen(worldId: LandingWorldId, screenIndex: nu
   return CLIENT_PARCOURS_SCREENS[screenIndex]
 }
 
+// ─── PER-VERTICAL HERO COPY ──────────────────────────────────────────────────
+// Overrides for the top card on each client screen. Only eyebrow + italic
+// subtitle are overridden per vertical — title/body often interpolate dynamic
+// counts and remain centralised in the Screen components. Bar keeps its own
+// fully-specific path via getBarClientScreens() + BAR_ELU_LAYER.
+// Missing entries fall back to the generic copy already hardcoded in the
+// Screen component, so this is additive-only.
+
+export type ScreenHero = {
+  eyebrow?: string
+  italic?: string
+  title?: string
+  body?: string
+}
+
+const SCREEN_HERO: Record<LandingWorldId, Partial<Record<ClientScreenId, ScreenHero>>> = {
+  cafe: {
+    entree: {
+      italic: "Sans friction — le comptoir vous reconnaît.",
+    },
+    progression: {
+      italic: "Un café compte. Deux cafés tiennent un fil.",
+    },
+    activation: {
+      italic: "Le lieu vous sert, puis vous retient.",
+    },
+    "prochaine-etape": {
+      italic: "Votre café approche d'un autre niveau.",
+    },
+    domino: {
+      italic: "Invitez quelqu'un à votre café du matin.",
+    },
+    sommet: {
+      italic: "Un café rare peut maintenant s'activer.",
+    },
+  },
+  restaurant: {
+    entree: {
+      italic: "Sans carte ni geste — la maison vous enregistre.",
+    },
+    progression: {
+      italic: "Le premier repas est mémorisé.",
+    },
+    activation: {
+      italic: "La table vous lit — sans vous presser.",
+    },
+    "prochaine-etape": {
+      italic: "Un dressage particulier vous attend.",
+    },
+    domino: {
+      italic: "Ouvrez une table à une personne proche.",
+    },
+    sommet: {
+      italic: "La maison peut ouvrir une table rare.",
+    },
+  },
+  beaute: {
+    entree: {
+      italic: "Sans friction — le salon retient votre premier passage.",
+    },
+    progression: {
+      italic: "Le geste vous retient — le rituel commence.",
+    },
+    activation: {
+      italic: "Le salon vous lit — un soin plus fin devient possible.",
+    },
+    "prochaine-etape": {
+      italic: "Un soin signature se rapproche.",
+    },
+    domino: {
+      italic: "Offrez une place à une personne que vous aimez.",
+    },
+    sommet: {
+      italic: "Un soin d'exception peut maintenant s'ouvrir.",
+    },
+  },
+  boutique: {
+    entree: {
+      italic: "Sans carte — la boutique enregistre votre venue.",
+    },
+    progression: {
+      italic: "Votre première visite tient un fil.",
+    },
+    activation: {
+      italic: "La boutique vous lit — un accès discret devient possible.",
+    },
+    "prochaine-etape": {
+      italic: "Une pièce plus rare se rapproche.",
+    },
+    domino: {
+      italic: "Faites entrer une personne proche avant l'ouverture large.",
+    },
+    sommet: {
+      italic: "Une pièce ou un accès privé peut maintenant s'ouvrir.",
+    },
+  },
+  bar: {},
+}
+
+export function getScreenHero(worldId: LandingWorldId, screenId: ClientScreenId): ScreenHero | null {
+  return SCREEN_HERO[worldId]?.[screenId] ?? null
+}
+
 export { getBarEngineCaptionForScreenId }
 
 export type WorldTiming = {

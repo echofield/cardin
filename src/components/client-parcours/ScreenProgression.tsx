@@ -1,5 +1,5 @@
 import type { LandingWorldId } from "@/lib/landing-content"
-import { getBarEngineCaptionForScreenId, getTasteSignal, getTensionPair } from "@/lib/client-parcours-config"
+import { getBarEngineCaptionForScreenId, getScreenHero, getTasteSignal, getTensionPair } from "@/lib/client-parcours-config"
 
 import { BarEngineNote } from "@/components/client-parcours/BarEngineNote"
 
@@ -14,12 +14,13 @@ export function ScreenProgression({ worldId, visits, targetVisits }: Props) {
   const taste = getTasteSignal(worldId, "progression")
   const remaining = Math.max(0, targetVisits - visits)
   const barCap = worldId === "bar" ? getBarEngineCaptionForScreenId("progression") : null
+  const hero = getScreenHero(worldId, "progression")
 
   return (
     <div className="space-y-5">
       <div className="rounded-[1.6rem] border border-[#D8DED4] bg-[#FFFEFA] p-6">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">Premier fil</p>
-        <p className="mt-3 text-sm italic leading-7 text-[#556159]">Le premier geste vous retient.</p>
+        <p className="text-[10px] uppercase tracking-[0.18em] text-[#69736C]">{hero?.eyebrow ?? "Premier fil"}</p>
+        <p className="mt-3 text-sm italic leading-7 text-[#556159]">{hero?.italic ?? "Le premier geste vous retient."}</p>
         <h2 className="mt-4 font-serif text-3xl leading-tight text-[#173A2E]">
           {visits} passage{visits > 1 ? "s" : ""} validé{visits > 1 ? "s" : ""}
         </h2>

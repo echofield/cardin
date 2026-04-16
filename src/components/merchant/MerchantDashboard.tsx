@@ -8,6 +8,9 @@ import { formatEuro } from "@/lib/number-format"
 import { createClientSupabaseBrowser } from "@/lib/supabase/client"
 import { Button, Card } from "@/ui"
 
+import { ConfigurationRecap } from "@/components/merchant/ConfigurationRecap"
+import { DASHBOARD_VERTICAL_LINE } from "@/lib/dashboard-vertical-line"
+
 type SharedUnlockView = {
   enabled: boolean
   objective: number
@@ -33,6 +36,22 @@ type MissionView = {
   expiresAt: string
 }
 
+type LandingWorldIdLite = "cafe" | "bar" | "restaurant" | "beaute" | "boutique"
+
+type ParcoursSelectionsSnapshot = {
+  worldId: LandingWorldIdLite
+  seasonRewardId: string | null
+  rewardType: "direct" | "progression" | "invitation" | "evenement" | null
+  intensite: "visible" | "stronger" | "discreet" | null
+  moment: "immediat" | "apres_x" | "creneaux" | null
+  accessType: "tous" | "reguliers" | "selectionnes" | null
+  triggerType: "passage" | "heure" | "invitation" | "evenement" | null
+  propagationType: "individuel" | "duo" | "groupe" | null
+  summaryLine?: string
+  nextStepLine?: string
+  submittedAt?: string
+}
+
 type MerchantApiResponse = {
   ok: boolean
   merchant?: {
@@ -40,12 +59,14 @@ type MerchantApiResponse = {
     businessName: string
     businessType: string
     city: string
+    cardinWorld?: LandingWorldIdLite
     loyaltyConfig: {
       targetVisits: number
       rewardLabel: string
       midpointMode: "recognition_only" | "recognition_plus_boost"
     }
     sharedUnlock: SharedUnlockView
+    parcoursSelections?: ParcoursSelectionsSnapshot | null
   }
   protocol?: {
     state: string
@@ -218,7 +239,9 @@ export function MerchantDashboard({ merchantId, demo = false }: { merchantId: st
               {data.merchant.businessType} · {data.merchant.city}
             </p>
             <p className="mt-2 text-sm text-[#556159]">
-              Moteur de revenu saisonnier : Diamond comme horizon, missions sur le parcours, retour et activation réseau.
+              {data.merchant.cardinWorld && DASHBOARD_VERTICAL_LINE[data.merchant.cardinWorld]
+                ? DASHBOARD_VERTICAL_LINE[data.merchant.cardinWorld]
+                : "Moteur de revenu saisonnier : Diamond comme horizon, missions sur le parcours, retour et activation réseau."}
             </p>
           </div>
 
@@ -382,6 +405,10 @@ export function MerchantDashboard({ merchantId, demo = false }: { merchantId: st
             )}
           </Card>
         </section>
+
+        {data.merchant.parcoursSelections ? (
+          <ConfigurationRecap selections={data.merchant.parcoursSelections} />
+        ) : null}
 
         <Card className="p-6">
           <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">Clients suivis</p>

@@ -1,5 +1,5 @@
 import type { LandingWorldId } from "@/lib/landing-content"
-import { SOFT_INVITE_MAX, getBarEngineCaptionForScreenId, getTasteSignal, getTensionPair } from "@/lib/client-parcours-config"
+import { SOFT_INVITE_MAX, getBarEngineCaptionForScreenId, getScreenHero, getTasteSignal, getTensionPair } from "@/lib/client-parcours-config"
 
 import { BarEngineNote } from "@/components/client-parcours/BarEngineNote"
 
@@ -22,12 +22,13 @@ export function ScreenActivation({
   const taste = getTasteSignal(worldId, "activation")
   const canSoftInvite = softInviteUsed < SOFT_INVITE_MAX
   const barCap = worldId === "bar" ? getBarEngineCaptionForScreenId("activation") : null
+  const hero = getScreenHero(worldId, "activation")
 
   return (
     <div className="space-y-5">
       <div className="rounded-[1.6rem] border border-[#173A2E]/20 bg-[#EEF3EC] p-6">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-[#355246]">Sous tension douce</p>
-        <p className="mt-3 text-sm italic leading-7 text-[#355246]">Le lieu vous lit — sans vous presser.</p>
+        <p className="text-[10px] uppercase tracking-[0.18em] text-[#355246]">{hero?.eyebrow ?? "Sous tension douce"}</p>
+        <p className="mt-3 text-sm italic leading-7 text-[#355246]">{hero?.italic ?? "Le lieu vous lit — sans vous presser."}</p>
         <h2 className="mt-4 font-serif text-3xl leading-tight text-[#173A2E]">Un avantage peut apparaître.</h2>
         <p className="mt-3 text-sm leading-7 text-[#2A3F35]">Ce n&apos;est pas encore la récompense finale. C&apos;est un premier geste pour vous faire revenir.</p>
       </div>

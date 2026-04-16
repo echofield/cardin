@@ -2,7 +2,7 @@
 
 import type { LandingWorldId } from "@/lib/landing-content"
 import { BAR_ELU_LAYER } from "@/lib/bar-client-parcours"
-import { getBarEngineCaptionForScreenId, getSummitOptions, type SummitOption } from "@/lib/client-parcours-config"
+import { getBarEngineCaptionForScreenId, getScreenHero, getSummitOptions, type SummitOption } from "@/lib/client-parcours-config"
 
 import { BarEngineNote } from "@/components/client-parcours/BarEngineNote"
 
@@ -19,12 +19,13 @@ export function ScreenSommet({ worldId, visits, targetVisits, selectedOptionId, 
   const selected = options.find((o) => o.id === selectedOptionId) ?? null
   const barCap = worldId === "bar" ? getBarEngineCaptionForScreenId("sommet") : null
   const showElu = worldId === "bar" && BAR_ELU_LAYER.enabled
+  const hero = getScreenHero(worldId, "sommet")
 
   return (
     <div className="space-y-5">
       <div className="rounded-[1.6rem] border border-[#173A2E]/20 bg-[#173A2E] p-6 text-[#FBFAF6] shadow-[0_24px_60px_-46px_rgba(23,58,46,0.7)]">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-[#C7D2C6]">Sommet</p>
-        <p className="mt-3 text-sm italic leading-7 text-[#E4E8E2]">Le lieu peut maintenant ouvrir quelque chose de rare.</p>
+        <p className="text-[10px] uppercase tracking-[0.18em] text-[#C7D2C6]">{hero?.eyebrow ?? "Sommet"}</p>
+        <p className="mt-3 text-sm italic leading-7 text-[#E4E8E2]">{hero?.italic ?? "Le lieu peut maintenant ouvrir quelque chose de rare."}</p>
         <h2 className="mt-4 font-serif text-3xl leading-tight">
           {worldId === "bar"
             ? "Un privilège réel peut maintenant s'activer."

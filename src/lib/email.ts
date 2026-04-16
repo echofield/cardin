@@ -1,6 +1,23 @@
 import nodemailer from "nodemailer"
 
+import type { LandingWorldId } from "@/lib/landing-content"
+import { LANDING_WORLDS } from "@/lib/landing-content"
 import { formatDecimal } from "@/lib/number-format"
+import {
+  ACCESS_OPTIONS,
+  INTENSITE_OPTIONS,
+  MOMENT_OPTIONS,
+  PROPAGATION_OPTIONS,
+  SEASON_REWARDS,
+  TRIGGER_OPTIONS,
+  type AccessTypeId,
+  type MomentId,
+  type PropagationTypeId,
+  type RewardTypeId,
+  type SeasonRewardId,
+  type TriggerTypeId,
+} from "@/lib/parcours-selection-config"
+import type { ParcoursSummitStyleId } from "@/lib/parcours-contract"
 import { CARDIN_CONTACT_EMAIL } from "@/lib/site-contact"
 
 type EmailConfig = {
@@ -13,12 +30,26 @@ type EmailConfig = {
   contactToEmail: string
 }
 
+export type ParcoursSelectionsPayload = {
+  worldId: LandingWorldId
+  seasonRewardId: SeasonRewardId | null
+  rewardType: RewardTypeId | null
+  intensite: ParcoursSummitStyleId | null
+  moment: MomentId | null
+  accessType: AccessTypeId | null
+  triggerType: TriggerTypeId | null
+  propagationType: PropagationTypeId | null
+  summaryLine: string
+  nextStepLine: string
+}
+
 type ContactEmailInput = {
   businessName: string
   city?: string
   email: string
   request: string
   origin?: string
+  parcoursSelections?: ParcoursSelectionsPayload | null
 }
 
 type StripeCheckoutEmailInput = {
@@ -93,11 +124,96 @@ async function sendMail(options: nodemailer.SendMailOptions) {
   })
 }
 
+// ─── Parcours recap formatter ────────────────────────────────────────────────
+// Renders the merchant's Step 3/4 configuration as a sales-ready recap block,
+// in both plain text (for email body) and HTML (for email body).
+
+function lookupLabel<T extends { id: string; label: string }>(list: readonly T[], id: string | null): string | null {
+  if (!id) return null
+  return list.find((o) => o.id === id)?.label ?? null
+}
+
+function lookupSeasonReward(worldId: LandingWorldId, id: SeasonRewardId | null): string | null {
+  if (!id) return null
+  return SEASON_REWARDS[worldId]?.find((o) => o.id === id)?.label ?? null
+}
+
+export function formatParcoursRecap(selections: ParcoursSelectionsPayload): { text: string; html: string } {
+  const world = LANDING_WORLDS[selections.worldId]
+  const season = lookupSeasonReward(selections.worldId, selections.seasonRewardId)
+  const rewardType = lookupLabel(
+    [
+      { id: "direct", label: "Direct" },
+      { id: "progression", label: "Progression" },
+      { id: "invitation", label: "Invitation" },
+      { id: "evenement", label: "Événement" },
+    ] as const,
+    selections.rewardType,
+  )
+  const intensite = lookupLabel(INTENSITE_OPTIONS, selections.intensite)
+  const moment = lookupLabel(MOMENT_OPTIONS, selections.moment)
+  const access = lookupLabel(ACCESS_OPTIONS, selections.accessType)
+  const trigger = lookupLabel(TRIGGER_OPTIONS, selections.triggerType)
+  const propagation = lookupLabel(PROPAGATION_OPTIONS, selections.propagationType)
+
+  const text = [
+    "Configuration Cardin",
+    `Vertical : ${world?.label ?? selections.worldId}`,
+    "",
+    "Récompense de saison",
+    `  → ${season ?? "—"}`,
+    "",
+    "Récompense mécanique",
+    `  → ${selections.summaryLine || [rewardType, intensite, moment].filter(Boolean).join(" · ") || "—"}`,
+    "",
+    "Activation",
+    `  → Qui : ${access ?? "—"}`,
+    `  → Déclencheur : ${trigger ?? "—"}`,
+    `  → Propagation : ${propagation ?? "—"}`,
+    "",
+    "Comportement attendu",
+    `  → ${selections.nextStepLine || "—"}`,
+  ].join("\n")
+
+  const row = (label: string, value: string | null) => `
+    <tr>
+      <td style="padding:4px 12px 4px 0;color:#6b766d;font-size:13px;vertical-align:top;width:180px;">${escapeHtml(label)}</td>
+      <td style="padding:4px 0;color:#163328;font-size:14px;">${escapeHtml(value ?? "—")}</td>
+    </tr>`
+
+  const html = `
+    <div style="margin-top:28px;padding:20px 22px;border:1px solid #DED9CF;border-radius:16px;background:#FBFAF6;">
+      <p style="margin:0 0 4px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#6b766d;">Configuration Cardin</p>
+      <p style="margin:0 0 16px;font-family:Georgia,serif;font-size:20px;color:#163328;">${escapeHtml(world?.label ?? selections.worldId)}</p>
+
+      <p style="margin:16px 0 6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#1f5a46;">Récompense de saison</p>
+      <p style="margin:0 0 12px;font-size:15px;color:#163328;">${escapeHtml(season ?? "—")}</p>
+
+      <p style="margin:16px 0 6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#1f5a46;">Récompense mécanique</p>
+      <p style="margin:0 0 12px;font-size:14px;color:#163328;">${escapeHtml(selections.summaryLine || [rewardType, intensite, moment].filter(Boolean).join(" · ") || "—")}</p>
+
+      <p style="margin:16px 0 6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#1f5a46;">Activation</p>
+      <table style="border-collapse:collapse;width:100%;margin:0 0 12px;">
+        ${row("Qui peut accéder", access)}
+        ${row("Déclencheur", trigger)}
+        ${row("Propagation", propagation)}
+      </table>
+
+      <p style="margin:16px 0 6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#1f5a46;">Comportement attendu</p>
+      <p style="margin:0;font-size:14px;line-height:1.55;color:#163328;">${escapeHtml(selections.nextStepLine || "—")}</p>
+    </div>
+  `
+
+  return { text, html }
+}
+
 export async function sendContactEmails(input: ContactEmailInput) {
   const config = getEmailConfig()
   const siteUrl = getSiteUrl(input.origin)
   const requestLine = input.request.trim() || "Merchant asked to be contacted later."
   const cityLine = input.city?.trim() ? input.city.trim() : "Not provided"
+
+  const recap = input.parcoursSelections ? formatParcoursRecap(input.parcoursSelections) : null
 
   const internalText = [
     "New merchant contact request",
@@ -107,6 +223,7 @@ export async function sendContactEmails(input: ContactEmailInput) {
     `Email: ${input.email}`,
     "",
     requestLine,
+    ...(recap ? ["", "─────", "", recap.text] : []),
     "",
     `Landing: ${siteUrl}/landing`,
   ].join("\n")
@@ -117,16 +234,20 @@ export async function sendContactEmails(input: ContactEmailInput) {
     <p><strong>City:</strong> ${escapeHtml(cityLine)}</p>
     <p><strong>Email:</strong> ${escapeHtml(input.email)}</p>
     <p><strong>Request:</strong><br />${escapeHtml(requestLine).replace(/\n/g, "<br />")}</p>
+    ${recap ? recap.html : ""}
     <p><strong>Landing:</strong> <a href="${siteUrl}/landing">${siteUrl}/landing</a></p>
   `
 
   const merchantText = [
     `Bonjour,`,
     "",
-    "Nous avons bien recu votre demande Cardin.",
+    recap
+      ? "Voici votre configuration Cardin. Gardez cet email : il contient le plan de votre saison."
+      : "Nous avons bien recu votre demande Cardin.",
+    ...(recap ? ["", recap.text] : []),
     "",
     "Prochaine etape:",
-    "- nous vous recontactons avec le recapitulatif marchand,",
+    "- notre equipe revient vers vous avec le recapitulatif marchand,",
     "- puis nous reprenons le parcours au bon moment.",
     "",
     `Si besoin, repondez directement a ${config.contactToEmail}.`,
@@ -135,10 +256,13 @@ export async function sendContactEmails(input: ContactEmailInput) {
 
   const merchantHtml = `
     <p>Bonjour,</p>
-    <p>Nous avons bien recu votre demande Cardin.</p>
-    <p>Prochaine etape:</p>
+    <p>${recap
+      ? "Voici votre configuration Cardin. Gardez cet email : il contient le plan de votre saison."
+      : "Nous avons bien recu votre demande Cardin."}</p>
+    ${recap ? recap.html : ""}
+    <p style="margin-top:24px;">Prochaine etape :</p>
     <ul>
-      <li>nous vous recontactons avec le recapitulatif marchand,</li>
+      <li>notre equipe revient vers vous avec le recapitulatif marchand,</li>
       <li>puis nous reprenons le parcours au bon moment.</li>
     </ul>
     <p>Si besoin, repondez directement a ${escapeHtml(config.contactToEmail)}.</p>

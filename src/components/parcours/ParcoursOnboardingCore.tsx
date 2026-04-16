@@ -435,13 +435,20 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
               )}
               {step.id === "activation" && (
                 <StepActivation
+                  accessType={accessType}
                   demo={demo}
                   engineHref={engineHref}
                   isLite={isLite}
                   liteHintLabel={liteHint}
+                  moment={rewardMoment}
                   projectionFull={projectionFull}
+                  propagationType={propagationType}
+                  rewardType={rewardType}
                   seasonMonths={seasonMonths}
+                  seasonRewardId={seasonRewardId}
                   summit={summit}
+                  summitId={summitId}
+                  triggerType={triggerType}
                   variant={variant}
                   worldId={worldId}
                 />
@@ -1737,6 +1744,13 @@ function StepActivation({
   variant,
   isLite,
   liteHintLabel = "",
+  seasonRewardId,
+  rewardType,
+  summitId,
+  moment,
+  accessType,
+  triggerType,
+  propagationType,
 }: {
   demo: ReturnType<typeof getDemoWorldContent>
   projectionFull: ParcoursProjectionResult
@@ -1747,6 +1761,13 @@ function StepActivation({
   variant: ParcoursOnboardingVariant
   isLite?: boolean
   liteHintLabel?: string
+  seasonRewardId: SeasonRewardId | null
+  rewardType: RewardTypeId | null
+  summitId: ParcoursSummitStyleId | null
+  moment: MomentId | null
+  accessType: AccessTypeId | null
+  triggerType: TriggerTypeId | null
+  propagationType: PropagationTypeId | null
 }) {
   const [phase, setPhase] = useState(0)
   useEffect(() => {
@@ -2001,7 +2022,159 @@ function StepActivation({
           )}
         </div>
       </motion.div>
+
+      {/* The money button — capture merchant configuration by email */}
+      <ParcoursRecapEmailCard
+        accessType={accessType}
+        moment={moment}
+        propagationType={propagationType}
+        rewardType={rewardType}
+        seasonRewardId={seasonRewardId}
+        summitId={summitId}
+        triggerType={triggerType}
+        worldId={worldId}
+      />
     </>
+  )
+}
+
+// ─── Money button: capture merchant configuration by email ────────────────────
+
+function ParcoursRecapEmailCard({
+  worldId,
+  seasonRewardId,
+  rewardType,
+  summitId,
+  moment,
+  accessType,
+  triggerType,
+  propagationType,
+}: {
+  worldId: LandingWorldId
+  seasonRewardId: SeasonRewardId | null
+  rewardType: RewardTypeId | null
+  summitId: ParcoursSummitStyleId | null
+  moment: MomentId | null
+  accessType: AccessTypeId | null
+  triggerType: TriggerTypeId | null
+  propagationType: PropagationTypeId | null
+}) {
+  const [email, setEmail] = useState("")
+  const [businessName, setBusinessName] = useState("")
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle")
+  const [fallbackMailto, setFallbackMailto] = useState<string | null>(null)
+
+  const summaryLine = buildSummaryLine(worldId, rewardType, summitId, moment)
+  const nextStepLine = generateNextStep(moment, accessType, triggerType, propagationType)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email.trim() || status === "sending") return
+    setStatus("sending")
+    setFallbackMailto(null)
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessName: businessName.trim() || "Non précisé",
+          email: email.trim(),
+          request: "Configuration Cardin — envoi automatique depuis le simulateur.",
+          parcoursSelections: {
+            worldId,
+            seasonRewardId,
+            rewardType,
+            intensite: summitId,
+            moment,
+            accessType,
+            triggerType,
+            propagationType,
+            summaryLine,
+            nextStepLine,
+          },
+        }),
+      })
+      const data = (await res.json()) as { ok: boolean; fallbackMailto?: string }
+      if (data.ok) {
+        setStatus("sent")
+      } else {
+        setFallbackMailto(data.fallbackMailto ?? null)
+        setStatus("error")
+      }
+    } catch {
+      setStatus("error")
+    }
+  }
+
+  return (
+    <motion.div
+      animate={{ opacity: 1, y: 0 }}
+      className="mt-10 rounded-2xl p-5"
+      initial={{ opacity: 0, y: 8 }}
+      style={{ border: "1px solid var(--cardin-border)", backgroundColor: "var(--cardin-card)" }}
+      transition={{ duration: 0.4, delay: 0.2 }}
+    >
+      <p style={{ fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--cardin-label-light)" }}>
+        Garder cette configuration
+      </p>
+      <h3 className="mt-2 font-serif" style={{ fontSize: "1.35rem", color: "var(--cardin-green-primary)", letterSpacing: "-0.02em" }}>
+        Recevoir ce plan par email
+      </h3>
+      <p className="mt-1" style={{ fontSize: "0.82rem", color: "var(--cardin-body)", lineHeight: 1.5 }}>
+        Envoyé immédiatement. Exploitable hors-ligne. Partageable avec votre équipe.
+      </p>
+
+      {status === "sent" ? (
+        <p className="mt-4" style={{ fontSize: "0.9rem", color: "var(--cardin-green-primary)" }}>
+          Votre configuration vous a été envoyée.
+        </p>
+      ) : (
+        <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={handleSubmit}>
+          <input
+            aria-label="Nom du lieu (facultatif)"
+            className="rounded-full border px-4 py-2.5 text-sm sm:w-[38%]"
+            onChange={(e) => setBusinessName(e.target.value)}
+            placeholder="Nom du lieu (facultatif)"
+            style={{ borderColor: "var(--cardin-border)", backgroundColor: "var(--cardin-card-alt)" }}
+            type="text"
+            value={businessName}
+          />
+          <input
+            aria-label="Votre email"
+            className="flex-1 rounded-full border px-4 py-2.5 text-sm"
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="contact@votre-lieu.fr"
+            required
+            style={{ borderColor: "var(--cardin-border)", backgroundColor: "var(--cardin-card-alt)" }}
+            type="email"
+            value={email}
+          />
+          <button
+            className="rounded-full px-5 py-2.5 text-sm font-medium transition disabled:opacity-50"
+            disabled={status === "sending" || !email.trim()}
+            style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2" }}
+            type="submit"
+          >
+            {status === "sending" ? "Envoi…" : "Envoyer"}
+          </button>
+        </form>
+      )}
+
+      {status === "error" && (
+        <p className="mt-3" style={{ fontSize: "0.8rem", color: "var(--cardin-body)" }}>
+          Envoi impossible.{" "}
+          {fallbackMailto ? (
+            <a className="underline" href={fallbackMailto}>
+              Envoyer par votre messagerie
+            </a>
+          ) : (
+            <button className="underline" onClick={() => setStatus("idle")} type="button">
+              Réessayer
+            </button>
+          )}
+        </p>
+      )}
+    </motion.div>
   )
 }
 
