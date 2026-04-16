@@ -1929,52 +1929,82 @@ function StepActivation({
         ) : null}
       </motion.p>
 
+      {/* Hero: season goal (left) + isolated payback box (right) */}
       <motion.div
         animate={{ opacity: phase >= 2 ? 1 : 0, y: phase >= 2 ? 0 : 16 }}
-        className="mb-3 rounded-2xl border px-5 py-5 text-left"
-        initial={{ opacity: 0, y: 16 }}
-        style={{ backgroundColor: "var(--cardin-card)", borderColor: "var(--cardin-border)" }}
-        transition={{ duration: 0.4 }}
-      >
-        <div style={{ fontSize: "0.55rem", letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--cardin-label)" }}>Objectif de saison</div>
-        <p className="mt-3 font-serif" style={{ fontSize: "clamp(1.65rem, 5vw, 2.25rem)", color: "var(--cardin-green-primary)", lineHeight: 1.15 }}>
-          {seasonFrame.heroBand}
-        </p>
-        <p className="mt-3 font-medium" style={{ fontSize: "0.9rem", color: "var(--cardin-text)", lineHeight: 1.45 }}>
-          {seasonFrame.calibratedSubline}
-        </p>
-        <p className="mt-3" style={{ fontSize: "0.78rem", color: "var(--cardin-label)", lineHeight: 1.5 }}>
-          {seasonFrame.floorLabel} · {seasonFrame.upsideLabel}
-        </p>
-      </motion.div>
-
-      <motion.div
-        animate={{ opacity: phase >= 2 ? 1 : 0, y: phase >= 2 ? 0 : 16 }}
-        className="mb-8 rounded-2xl p-6 text-center"
+        className="mb-6 rounded-2xl p-6 sm:p-7"
         initial={{ opacity: 0, y: 16 }}
         style={{ backgroundColor: "var(--cardin-green-primary)" }}
         transition={{ duration: 0.4 }}
       >
-        <div style={{ fontSize: "0.55rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "rgba(250,248,242,0.5)", marginBottom: "0.6rem" }}>
-          Objectif revenu saison ({seasonMonths} mois)
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+          <div className="min-w-0">
+            <div style={{ fontSize: "0.55rem", letterSpacing: "0.2em", textTransform: "uppercase" as const, color: "rgba(250,248,242,0.45)", marginBottom: "0.65rem" }}>
+              Objectif revenu saison ({seasonMonths} mois)
+            </div>
+            <div className="font-serif" style={{ fontSize: "clamp(1.55rem, 5vw, 2.4rem)", color: "#FAF8F2", lineHeight: 1.1, letterSpacing: "-0.02em" }}>
+              {world.claim}
+            </div>
+            <div style={{ fontSize: "0.78rem", color: "rgba(250,248,242,0.75)", marginTop: "0.75rem", lineHeight: 1.5 }}>
+              {seasonFrame.calibratedSubline}
+            </div>
+          </div>
+          <div
+            className="shrink-0 rounded-xl px-4 py-3 text-center sm:text-right"
+            style={{ backgroundColor: "rgba(232,226,214,0.1)", border: "1px solid rgba(232,226,214,0.18)", minWidth: "110px" }}
+          >
+            <div className="font-serif" style={{ fontSize: "1.6rem", lineHeight: 1, color: "#E8E2D6", fontWeight: 600 }}>
+              ~{demo.projectedPaybackDays} j
+            </div>
+            <div style={{ fontSize: "0.58rem", letterSpacing: "0.12em", color: "rgba(232,226,214,0.55)", marginTop: "0.35rem", textTransform: "uppercase" as const }}>
+              Payback
+            </div>
+          </div>
         </div>
-        <div className="font-serif" style={{ fontSize: "clamp(1.35rem, 4.5vw, 2.35rem)", color: "#FAF8F2", lineHeight: 1.15, letterSpacing: "-0.03em" }}>
-          {world.claim}
-        </div>
-        <div style={{ fontSize: "0.7rem", color: "rgba(250,248,242,0.58)", marginTop: "0.65rem", lineHeight: 1.5 }}>
-          Aligné avec « Par type de commerce » sur l&apos;accueil. Modèle interne (démo) : ~{projectionFull.netCardinSeason.toLocaleString("fr-FR")} € net sur la saison · ~{projectionFull.netCardinMonth.toLocaleString("fr-FR")} €/mois · payback ~{demo.projectedPaybackDays} j
+        <div className="mt-4 border-t pt-3" style={{ borderColor: "rgba(232,226,214,0.14)" }}>
+          <p style={{ fontSize: "0.68rem", color: "rgba(232,226,214,0.6)", lineHeight: 1.5 }}>
+            Modèle interne : ~{projectionFull.netCardinSeason.toLocaleString("fr-FR")} € net sur la saison · ~{projectionFull.netCardinMonth.toLocaleString("fr-FR")} €/mois · {seasonFrame.floorLabel}
+          </p>
         </div>
       </motion.div>
 
+      {/* Timeline strip: Aujourd'hui → 48h → 30j → 3 mois */}
+      <ActivationTimelineStrip visible={phase >= 2} />
+
       <ActivationChecklistRail
         cards={[
-          { title: "Ce que vous achetez", items: launchItems },
-          { title: "Ce qui s'active sous 48 h", items: activation48hItems },
-          { title: "Ce qui doit être vrai sous 30 jours", items: success30dItems },
-          { title: "Ce que le staff fait en 10 secondes", items: staffFlowItems },
+          { title: "Ce que vous achetez", icon: `${offerPrice}€`, tone: "promise", items: launchItems, pill: `${offerPrice} € · une saison` },
+          { title: "Ce qui s'active sous 48 h", icon: "48h", tone: "immediate", items: activation48hItems },
+          { title: "Ce qui doit être vrai sous 30 j", icon: "J30", tone: "thirty", items: success30dItems },
+          { title: "Ce que le staff fait en 10 s", icon: "10s", tone: "staff", items: staffFlowItems, pill: "10 secondes · pas plus" },
         ]}
         visible={phase >= 2}
       />
+
+      {/* Stat bar with hierarchy via border-top intensity */}
+      <motion.div
+        animate={{ opacity: phase >= 2 ? 1 : 0, y: phase >= 2 ? 0 : 8 }}
+        className={isLite ? "mt-4 grid grid-cols-2 gap-2" : "mt-4 grid grid-cols-3 gap-2"}
+        initial={{ opacity: 0, y: 8 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+      >
+        <div className="rounded-xl px-3.5 py-3" style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)", borderTop: "2.5px solid var(--cardin-green-primary)" }}>
+          <div style={{ fontSize: "0.55rem", letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--cardin-label-light)", marginBottom: 4 }}>Récupération</div>
+          <div className="font-serif" style={{ fontSize: "1.25rem", color: "var(--cardin-text)", lineHeight: 1 }}>{formatEuro(seasonLayers.recovery)}</div>
+        </div>
+        <div className="rounded-xl px-3.5 py-3" style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)", borderTop: "2.5px solid rgba(0,61,44,0.35)" }}>
+          <div style={{ fontSize: "0.55rem", letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--cardin-label-light)", marginBottom: 4 }}>Fréquence</div>
+          <div className="font-serif" style={{ fontSize: "1.25rem", color: "var(--cardin-text)", lineHeight: 1 }}>{formatEuro(seasonLayers.frequency)}</div>
+        </div>
+        {!isLite ? (
+          <div className="rounded-xl px-3.5 py-3" style={{ backgroundColor: "var(--cardin-card)", border: "1px solid var(--cardin-border)", borderTop: "2.5px solid rgba(0,61,44,0.14)" }}>
+            <div style={{ fontSize: "0.55rem", letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--cardin-label-light)", marginBottom: 4 }}>Propagation</div>
+            <div className="font-serif" style={{ fontSize: "1.25rem", color: "var(--cardin-text)", lineHeight: 1 }}>{formatEuro(seasonLayers.domino)}</div>
+          </div>
+        ) : null}
+      </motion.div>
+
+      <div className="mb-8" />
 
       <motion.div
         animate={{ opacity: phase >= 2 ? 1 : 0 }}
@@ -1991,28 +2021,6 @@ function StepActivation({
             </div>
           ))}
         </div>
-      </motion.div>
-
-      <motion.div
-        animate={{ opacity: phase >= 2 ? 1 : 0 }}
-        className={isLite ? "mb-8 grid grid-cols-2 gap-2" : "mb-8 grid grid-cols-3 gap-2"}
-        initial={{ opacity: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-      >
-        <div className="rounded-xl px-3 py-2.5" style={{ backgroundColor: "var(--cardin-green-tint)", border: "1px solid rgba(0,61,44,0.1)" }}>
-          <div style={{ fontSize: "0.5rem", letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--cardin-green-primary)", marginBottom: 2 }}>Récupération</div>
-          <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--cardin-green-primary)" }}>{formatEuro(seasonLayers.recovery)}</div>
-        </div>
-        <div className="rounded-xl px-3 py-2.5" style={{ backgroundColor: "var(--cardin-green-tint)", border: "1px solid rgba(0,61,44,0.1)" }}>
-          <div style={{ fontSize: "0.5rem", letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--cardin-green-secondary)", marginBottom: 2 }}>Fréquence</div>
-          <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--cardin-green-secondary)" }}>{formatEuro(seasonLayers.frequency)}</div>
-        </div>
-        {!isLite ? (
-          <div className="rounded-xl px-3 py-2.5" style={{ backgroundColor: "var(--cardin-domino-blue-light)", border: "1px solid rgba(128,164,214,0.15)" }}>
-            <div style={{ fontSize: "0.5rem", letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--cardin-domino-blue)", marginBottom: 2 }}>Propagation client</div>
-            <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--cardin-domino-blue)" }}>{formatEuro(seasonLayers.domino)}</div>
-          </div>
-        ) : null}
       </motion.div>
 
       <motion.details
@@ -2075,11 +2083,11 @@ function StepActivation({
         {captured ? (
           <motion.a
             animate={{ opacity: 1, scale: 1 }}
-            className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full px-6 text-sm font-medium sm:w-auto"
+            className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full px-6 text-sm font-medium transition hover:brightness-110 sm:w-auto"
             href={STRIPE_PAYMENT_LINK}
             initial={{ opacity: 0, scale: 0.98 }}
             rel="noreferrer"
-            style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2" }}
+            style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2", boxShadow: "0 6px 18px rgba(0,61,44,0.18)" }}
             target="_blank"
             transition={{ duration: 0.35, ease: "easeOut" }}
           >
@@ -2099,7 +2107,18 @@ function StepActivation({
             Précisez votre lieu pour lancer le paiement
           </div>
         )}
-        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+          {!captured ? (
+            <a
+              className="underline underline-offset-2"
+              href={STRIPE_PAYMENT_LINK}
+              rel="noreferrer"
+              style={{ color: "var(--cardin-label)", fontSize: "0.78rem" }}
+              target="_blank"
+            >
+              Déjà convaincu · payer directement
+            </a>
+          ) : null}
           <Link className="text-[var(--cardin-green-primary)] underline underline-offset-2" href={engineHref}>
             Ajuster avant paiement
           </Link>
@@ -2287,9 +2306,13 @@ function MerchantIdentityCapture({
           />
         </div>
         <button
-          className="mt-1 h-11 rounded-full px-5 text-sm font-medium transition disabled:opacity-50"
+          className="mt-1 h-11 rounded-full px-5 text-sm font-medium transition hover:brightness-110 disabled:opacity-40"
           disabled={status === "sending" || !canSubmit}
-          style={{ backgroundColor: "var(--cardin-green-primary)", color: "#FAF8F2" }}
+          style={{
+            backgroundColor: "var(--cardin-green-primary)",
+            color: "#FAF8F2",
+            boxShadow: canSubmit ? "0 6px 18px rgba(0,61,44,0.18)" : "none",
+          }}
           type="submit"
         >
           {status === "sending" ? "Envoi…" : "Envoyer et préparer le paiement"}
@@ -2314,19 +2337,145 @@ function MerchantIdentityCapture({
   )
 }
 
-function ActivationChecklistCard({ title, items }: { title: string; items: string[] }) {
+type ActivationTone = "promise" | "immediate" | "thirty" | "staff"
+
+type ActivationCard = {
+  title: string
+  icon: string
+  tone: ActivationTone
+  items: string[]
+  pill?: string
+}
+
+const ACTIVATION_TONE_STYLES: Record<ActivationTone, {
+  bg: string
+  border: string
+  headBg: string
+  iconBg: string
+  iconColor: string
+  hlColor: string
+  textColor: string
+  diamondColor: string
+  pillBg?: string
+  pillColor?: string
+  pillBorder?: string
+}> = {
+  promise: {
+    bg: "var(--cardin-card)",
+    border: "var(--cardin-border)",
+    headBg: "rgba(0,61,44,0.08)",
+    iconBg: "var(--cardin-green-primary)",
+    iconColor: "#E8E2D6",
+    hlColor: "var(--cardin-green-primary)",
+    textColor: "var(--cardin-text)",
+    diamondColor: "rgba(0,61,44,0.3)",
+    pillBg: "var(--cardin-green-primary)",
+    pillColor: "#E8E2D6",
+  },
+  immediate: {
+    bg: "var(--cardin-card)",
+    border: "var(--cardin-border)",
+    headBg: "rgba(0,61,44,0.04)",
+    iconBg: "rgba(0,61,44,0.12)",
+    iconColor: "var(--cardin-green-primary)",
+    hlColor: "var(--cardin-label)",
+    textColor: "var(--cardin-text)",
+    diamondColor: "rgba(0,61,44,0.24)",
+  },
+  thirty: {
+    bg: "var(--cardin-card)",
+    border: "var(--cardin-border)",
+    headBg: "rgba(0,61,44,0.03)",
+    iconBg: "rgba(0,61,44,0.08)",
+    iconColor: "var(--cardin-green-primary)",
+    hlColor: "var(--cardin-label)",
+    textColor: "var(--cardin-text)",
+    diamondColor: "rgba(0,61,44,0.2)",
+  },
+  staff: {
+    bg: "var(--cardin-green-primary)",
+    border: "transparent",
+    headBg: "rgba(255,255,255,0.05)",
+    iconBg: "rgba(232,226,214,0.14)",
+    iconColor: "#E8E2D6",
+    hlColor: "rgba(232,226,214,0.5)",
+    textColor: "#E8E2D6",
+    diamondColor: "rgba(232,226,214,0.4)",
+    pillBg: "rgba(232,226,214,0.1)",
+    pillColor: "rgba(232,226,214,0.75)",
+    pillBorder: "1px solid rgba(232,226,214,0.22)",
+  },
+}
+
+function Diamond({ color }: { color: string }) {
   return (
-    <div className="rounded-2xl border p-5" style={{ backgroundColor: "var(--cardin-card)", borderColor: "var(--cardin-border)" }}>
-      <p style={{ fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--cardin-label-light)" }}>{title}</p>
-      <ul className="mt-4 space-y-2.5" style={{ fontSize: "0.78rem", color: "var(--cardin-body)", lineHeight: 1.55 }}>
-        {items.map((item) => (
-          <li className="flex gap-2" key={item}>
-            <span style={{ color: "var(--cardin-green-primary)", fontWeight: 700 }}>•</span>
-            <span>{item}</span>
-          </li>
+    <span
+      aria-hidden
+      className="shrink-0"
+      style={{
+        width: 6,
+        height: 6,
+        borderRadius: 1,
+        background: color,
+        transform: "rotate(45deg)",
+        marginTop: 6,
+      }}
+    />
+  )
+}
+
+function ActivationChecklistCard({ card }: { card: ActivationCard }) {
+  const t = ACTIVATION_TONE_STYLES[card.tone]
+  return (
+    <motion.div
+      className="flex flex-col overflow-hidden rounded-2xl border h-full"
+      style={{ backgroundColor: t.bg, borderColor: t.border }}
+      whileHover={{ y: -3, boxShadow: "0 10px 28px rgba(0,61,44,0.08)" }}
+      transition={{ duration: 0.18, ease: "easeOut" }}
+    >
+      <div className="flex items-center gap-2.5 px-4 py-3" style={{ backgroundColor: t.headBg }}>
+        <div
+          className="flex items-center justify-center rounded-lg"
+          style={{
+            width: 30, height: 30, flexShrink: 0,
+            backgroundColor: t.iconBg,
+            color: t.iconColor,
+            fontSize: "0.62rem",
+            fontWeight: 600,
+            letterSpacing: "0.02em",
+            fontFamily: "var(--font-sans), -apple-system, sans-serif",
+          }}
+        >
+          {card.icon}
+        </div>
+        <span style={{ fontSize: "0.58rem", letterSpacing: "0.14em", textTransform: "uppercase", color: t.hlColor, fontWeight: 500 }}>
+          {card.title}
+        </span>
+      </div>
+      <div className="flex flex-1 flex-col gap-2 px-4 py-4">
+        {card.items.map((item) => (
+          <div className="flex items-start gap-2.5" key={item}>
+            <Diamond color={t.diamondColor} />
+            <span style={{ fontSize: "0.78rem", color: t.textColor, lineHeight: 1.5 }}>{item}</span>
+          </div>
         ))}
-      </ul>
-    </div>
+        {card.pill ? (
+          <span
+            className="mt-2 inline-block rounded-full px-3 py-1"
+            style={{
+              width: "fit-content",
+              fontSize: "0.62rem",
+              letterSpacing: "0.06em",
+              backgroundColor: t.pillBg,
+              color: t.pillColor,
+              border: t.pillBorder ?? "none",
+            }}
+          >
+            {card.pill}
+          </span>
+        ) : null}
+      </div>
+    </motion.div>
   )
 }
 
@@ -2334,7 +2483,7 @@ function ActivationChecklistRail({
   cards,
   visible,
 }: {
-  cards: { title: string; items: string[] }[]
+  cards: ActivationCard[]
   visible: boolean
 }) {
   const railRef = useRef<HTMLDivElement | null>(null)
@@ -2356,7 +2505,6 @@ function ActivationChecklistRail({
   return (
     <motion.div
       animate={{ opacity: visible ? 1 : 0 }}
-      className="mb-6"
       initial={{ opacity: 0 }}
       transition={{ duration: 0.4, delay: 0.1 }}
     >
@@ -2365,25 +2513,15 @@ function ActivationChecklistRail({
         <div
           className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-4 pb-2"
           ref={railRef}
-          style={{
-            scrollbarWidth: "none",
-            WebkitOverflowScrolling: "touch",
-          }}
+          style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
         >
           {cards.map((card, i) => (
-            <div
-              className="shrink-0 snap-center"
-              key={card.title}
-              style={{ width: "86%" }}
-            >
+            <div className="shrink-0 snap-center" key={card.title} style={{ width: "86%" }}>
               <motion.div
-                animate={{
-                  scale: activeIndex === i ? 1 : 0.975,
-                  opacity: activeIndex === i ? 1 : 0.8,
-                }}
+                animate={{ scale: activeIndex === i ? 1 : 0.975, opacity: activeIndex === i ? 1 : 0.78 }}
                 transition={{ duration: 0.28, ease: "easeOut" }}
               >
-                <ActivationChecklistCard items={card.items} title={card.title} />
+                <ActivationChecklistCard card={card} />
               </motion.div>
             </div>
           ))}
@@ -2391,10 +2529,7 @@ function ActivationChecklistRail({
         <div className="mt-3 flex items-center justify-center gap-1.5">
           {cards.map((card, i) => (
             <motion.span
-              animate={{
-                width: activeIndex === i ? 18 : 6,
-                opacity: activeIndex === i ? 1 : 0.45,
-              }}
+              animate={{ width: activeIndex === i ? 18 : 6, opacity: activeIndex === i ? 1 : 0.45 }}
               className="block h-1.5 rounded-full"
               key={card.title}
               style={{ backgroundColor: "var(--cardin-green-primary)" }}
@@ -2404,12 +2539,85 @@ function ActivationChecklistRail({
         </div>
       </div>
 
-      {/* Desktop / tablet: preserved grid */}
-      <div className="hidden gap-3 md:grid md:grid-cols-2">
+      {/* Desktop / tablet: 2×2 grid */}
+      <div className="hidden gap-2.5 md:grid md:grid-cols-2">
         {cards.map((card) => (
-          <ActivationChecklistCard items={card.items} key={card.title} title={card.title} />
+          <ActivationChecklistCard card={card} key={card.title} />
         ))}
       </div>
+    </motion.div>
+  )
+}
+
+function ActivationTimelineStrip({ visible }: { visible: boolean }) {
+  const steps = [
+    { time: "Aujourd'hui", label: "Paiement" },
+    { time: "48 h", label: "Activation" },
+    { time: "30 jours", label: "Premiers retours" },
+    { time: "3 mois", label: "Revenu lisible" },
+  ]
+
+  const toneBg = ["rgba(0,61,44,0.06)", "rgba(0,61,44,0.1)", "rgba(0,61,44,0.16)", "var(--cardin-green-primary)"]
+
+  return (
+    <motion.div
+      animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 6 }}
+      className="mb-5 flex overflow-hidden rounded-2xl border"
+      initial={{ opacity: 0, y: 6 }}
+      style={{ borderColor: "var(--cardin-border)" }}
+      transition={{ duration: 0.4, delay: 0.08 }}
+    >
+      {steps.map((step, i) => {
+        const isLast = i === steps.length - 1
+        const isDark = i === 3
+        return (
+          <div
+            className="relative flex-1 px-3 py-3"
+            key={step.time}
+            style={{
+              backgroundColor: toneBg[i],
+              borderRight: isLast ? "none" : "1px solid rgba(0,61,44,0.08)",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "0.66rem",
+                fontWeight: 600,
+                letterSpacing: "0.02em",
+                color: isDark ? "rgba(232,226,214,0.65)" : "var(--cardin-text)",
+                marginBottom: 4,
+                fontFamily: "var(--font-sans), -apple-system, sans-serif",
+              }}
+            >
+              {step.time}
+            </p>
+            <p
+              style={{
+                fontSize: "0.72rem",
+                lineHeight: 1.3,
+                color: isDark ? "#E8E2D6" : "var(--cardin-text)",
+              }}
+            >
+              {step.label}
+            </p>
+            {!isLast ? (
+              <span
+                aria-hidden
+                className="absolute"
+                style={{
+                  right: -6, top: "50%", transform: "translateY(-50%)",
+                  fontSize: "0.9rem",
+                  color: "rgba(0,61,44,0.25)",
+                  zIndex: 1,
+                  fontFamily: "var(--font-serif), Georgia, serif",
+                }}
+              >
+                ›
+              </span>
+            ) : null}
+          </div>
+        )
+      })}
     </motion.div>
   )
 }
