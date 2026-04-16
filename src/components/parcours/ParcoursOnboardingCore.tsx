@@ -1123,7 +1123,7 @@ function StepSummit({ seasonRewardId, setSeasonRewardId, selectedId, setSelected
   const summaryLine = buildSummaryLine(worldId, rewardType, selectedId, moment)
 
   const seasonOptions = SEASON_REWARDS[worldId]
-  const diamondPct = Math.round(DIAMOND_RATE[worldId] * 100)
+
 
   return (
     <>
@@ -1158,7 +1158,7 @@ function StepSummit({ seasonRewardId, setSeasonRewardId, selectedId, setSelected
           style={{ fontSize: "0.68rem", color: "var(--cardin-label-light)", marginBottom: "0.65rem", letterSpacing: "0.01em" }}
           transition={{ delay: 0.24, duration: 0.3 }}
         >
-          accessible aux meilleurs parcours · réservé à ~{diamondPct}% des clients
+          accessible aux meilleurs parcours · part limitée des clients actifs
         </motion.p>
         <div className="flex flex-col gap-2">
           {seasonOptions.map((opt, i) => (
