@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 
+import { formatEuro } from "@/lib/calculator"
 import {
   buildCardinMerchantInput,
   buildCardinMerchantHref,
@@ -12,6 +13,7 @@ import {
   CARDIN_WEAK_MOMENT_OPTIONS,
   generateMerchantSlug,
   getDefaultCreateSelection,
+  resolveCardinMerchantPage,
   type CardinClienteleId,
   type CardinReturnRhythmId,
   type CardinWeakMomentId,
@@ -31,8 +33,25 @@ export function CardinCreateForm() {
   const [submitting, setSubmitting] = useState(false)
 
   const canSubmit = businessName.trim().length > 1
-
-  const previewHref = useMemo(() => buildCardinMerchantPath(generateMerchantSlug(businessName.trim() || "Votre lieu")), [businessName])
+  const previewSlug = useMemo(() => generateMerchantSlug(businessName.trim() || "Votre lieu"), [businessName])
+  const previewHref = useMemo(() => buildCardinMerchantPath(previewSlug), [previewSlug])
+  const previewMerchant = useMemo(
+    () =>
+      resolveCardinMerchantPage(previewSlug, {
+        businessName: businessName.trim() || "Votre lieu",
+        world: worldId,
+        weakMoment: weakMomentId,
+        returnRhythm: returnRhythmId,
+        clientele: clienteleId,
+        note,
+      }),
+    [businessName, clienteleId, note, previewSlug, returnRhythmId, weakMomentId, worldId],
+  )
+  const previewNarrative = useMemo(
+    () =>
+      `Cardin va relancer ${previewMerchant.businessName} sur ${previewMerchant.weakMomentLabel}, avec un retour ${previewMerchant.returnRhythmLabel} pour une clientèle ${previewMerchant.clienteleLabel}.`,
+    [previewMerchant.businessName, previewMerchant.clienteleLabel, previewMerchant.returnRhythmLabel, previewMerchant.weakMomentLabel],
+  )
 
   const handleWorldChange = (nextWorldId: LandingWorldId) => {
     const defaults = getDefaultCreateSelection(nextWorldId)
@@ -156,7 +175,10 @@ export function CardinCreateForm() {
           </select>
         </Field>
 
-        <Field label="Observation libre">
+        <Field
+          hint="Un détail terrain, un jour qui porte déjà seul, un créneau à relancer."
+          label="Ce que vous voyez déjà"
+        >
           <textarea
             className="min-h-[7rem] w-full rounded-2xl border border-[#D7DDD2] bg-[#FBF9F3] px-4 py-3 text-sm text-[#173328] outline-none transition focus:border-[#173A2E]"
             onChange={(event) => setNote(event.target.value)}
@@ -167,15 +189,27 @@ export function CardinCreateForm() {
       </div>
 
       <div className="mt-6 rounded-[1.4rem] border border-[#E2DDD1] bg-[#FBF9F3] p-5">
-        <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Ce que la page va ouvrir</p>
-        <p className="mt-3 text-sm leading-7 text-[#203B31]">
-          Une lecture du lieu, des scénarios concrets, une première saison cadrée et la même URL avant ou après la réservation.
+        <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Lecture en cours</p>
+        <p className="mt-3 text-sm leading-7 text-[#203B31]">{previewNarrative}</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <PreviewFact label="Projection de saison" value={`${formatEuro(previewMerchant.projectionLow)} à ${formatEuro(previewMerchant.projectionHigh)}`} />
+          <PreviewFact label="Sommet visé" value={previewMerchant.seasonRewardLabel} />
+          <PreviewFact label="Point de départ" value={previewMerchant.temporalAnchor} />
+        </div>
+        <p className="mt-4 text-sm leading-6 text-[#556159]">
+          {previewMerchant.note
+            ? `Signal du lieu intégré : ${previewMerchant.note}`
+            : "Ajoutez un signal du lieu pour donner encore plus de relief à la lecture."}
         </p>
-        <p className="mt-3 text-xs leading-6 text-[#6A726B]">{previewHref}</p>
+        <p className="mt-4 text-xs leading-6 text-[#6A726B]">{previewHref}</p>
       </div>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm leading-6 text-[#556159]">Cardin lit le lieu, ouvre la page, puis garde la même base pour la démo et la suite.</p>
+        <p className="max-w-2xl text-sm leading-6 text-[#556159]">
+          {canSubmit
+            ? `${previewMerchant.businessName} est déjà cadré pour la démo : même base, même lien, avant puis après réservation.`
+            : "Cardin lit le lieu, ouvre la page, puis garde la même base pour la démo et la suite."}
+        </p>
         <button
           className={cn(buttonVariants({ variant: "primary", size: "md" }), "justify-center")}
           disabled={!canSubmit || submitting}
@@ -190,15 +224,33 @@ export function CardinCreateForm() {
 
 function Field({
   label,
+  hint,
   children,
 }: {
   label: string
+  hint?: string
   children: React.ReactNode
 }) {
   return (
     <label className="block">
       <span className="text-[11px] uppercase tracking-[0.16em] text-[#6D776F]">{label}</span>
+      {hint ? <p className="mt-2 text-sm leading-6 text-[#556159]">{hint}</p> : null}
       <div className="mt-2">{children}</div>
     </label>
+  )
+}
+
+function PreviewFact({
+  label,
+  value,
+}: {
+  label: string
+  value: string
+}) {
+  return (
+    <div className="rounded-[1rem] border border-[#D7DDD2] bg-[#FFFEFA] p-4">
+      <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">{label}</p>
+      <p className="mt-2 text-sm leading-6 text-[#203B31]">{value}</p>
+    </div>
   )
 }

@@ -300,6 +300,10 @@ function StickyCta({
   const isActivated = displayState === "activation"
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
+  const projectionRange = `${formatEuro(merchant.projectionLow)} à ${formatEuro(merchant.projectionHigh)}`
+  const roiLow = roundRoiMultiple(merchant.projectionLow / LANDING_PRICING.activationFee)
+  const roiHigh = roundRoiMultiple(merchant.projectionHigh / LANDING_PRICING.activationFee)
+  const roiRange = `${roiLow}x à ${roiHigh}x l'activation`
 
   const handleCheckout = async () => {
     if (checkoutLoading) return
@@ -335,7 +339,7 @@ function StickyCta({
     }
 
     setCheckoutLoading(false)
-        setCheckoutError("Le paiement s'ouvre depuis cette page dès que la liaison Cardin est prête.")
+    setCheckoutError("Le paiement s'ouvre depuis cette page dès que la liaison Cardin est prête.")
   }
 
   return (
@@ -355,6 +359,7 @@ function StickyCta({
               <p className="mt-1 text-[13px] leading-5 text-[#556159]">
                 Mise en place sous 48 h · {merchant.contactEmail}
               </p>
+              <p className="mt-1 text-[13px] leading-5 text-[#556159]">Cap de saison confirmé : {projectionRange}</p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
               <Link className={cn(buttonVariants({ variant: "primary", size: "md" }), "justify-center")} href="/dashboard-demo">
@@ -377,6 +382,9 @@ function StickyCta({
               <p className="mt-1.5 text-[15px] font-medium leading-tight text-[#173328] sm:text-base">Réserver ma saison Cardin.</p>
               <p className="mt-1 text-[13px] leading-5 text-[#556159]">
                 {LANDING_PRICING.compactLabel} · mise en place sous 48 h
+              </p>
+              <p className="mt-1 text-[13px] leading-5 text-[#556159]">
+                Projection : {projectionRange} · {roiRange}
               </p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
@@ -405,4 +413,8 @@ function StickyCta({
       </div>
     </div>
   )
+}
+
+function roundRoiMultiple(value: number) {
+  return Math.max(0.5, Math.round(value * 10) / 10).toFixed(1)
 }
