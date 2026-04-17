@@ -7,6 +7,7 @@ type CardinPageRow = {
   business_name: string
   world_id: LandingWorldId
   reading_payload: {
+    merchantId?: string
     weakMomentId?: CardinWeakMomentId
     returnRhythmId?: CardinReturnRhythmId
     clienteleId?: CardinClienteleId
@@ -21,6 +22,7 @@ export type StoredCardinPage = {
   slug: string
   businessName: string
   worldId: LandingWorldId
+  merchantId?: string
   weakMomentId?: CardinWeakMomentId
   returnRhythmId?: CardinReturnRhythmId
   clienteleId?: CardinClienteleId
@@ -47,6 +49,7 @@ export async function getStoredCardinPageBySlug(slug: string): Promise<StoredCar
       slug: data.slug,
       businessName: data.business_name,
       worldId: data.world_id,
+      merchantId: data.reading_payload?.merchantId,
       weakMomentId: data.reading_payload?.weakMomentId,
       returnRhythmId: data.reading_payload?.returnRhythmId,
       clienteleId: data.reading_payload?.clienteleId,
@@ -66,12 +69,15 @@ export async function getStoredCardinPageBySlug(slug: string): Promise<StoredCar
 
 export async function upsertCardinPage(input: CardinMerchantInput) {
   const supabase = createSupabaseServiceClient()
+  const { data: existing } = await supabase.from("cardin_pages").select("reading_payload").eq("slug", input.slug).maybeSingle<{ reading_payload?: CardinPageRow["reading_payload"] }>()
+  const merchantId = input.merchantId || existing?.reading_payload?.merchantId || null
   const { error } = await supabase.from("cardin_pages").upsert(
     {
       slug: input.slug,
       business_name: input.businessName,
       world_id: input.worldId,
       reading_payload: {
+        merchantId,
         weakMomentId: input.weakMomentId,
         returnRhythmId: input.returnRhythmId,
         clienteleId: input.clienteleId,

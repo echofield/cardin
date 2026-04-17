@@ -10,6 +10,7 @@ import {
 import { linkCardinCheckoutSession, upsertCardinPage } from "@/lib/cardin-page-store"
 import { LANDING_PRICING, LANDING_WORLDS } from "@/lib/landing-content"
 import { getStripeClient } from "@/lib/stripe-server"
+import { createClientSupabaseServer } from "@/lib/supabase/server"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -26,8 +27,18 @@ type Payload = {
 }
 
 export async function POST(request: Request) {
+  const supabase = createClientSupabaseServer()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   const payload = (await request.json()) as Payload
   const businessName = (payload.businessName ?? "").trim()
+  let merchantId: string | undefined
+
+  if (user?.id) {
+    const { data: merchant } = await supabase.from("merchants").select("id").eq("id", user.id).maybeSingle<{ id: string }>()
+    merchantId = merchant?.id
+  }
 
   if (
     !payload.slug ||
@@ -42,6 +53,7 @@ export async function POST(request: Request) {
 
   const input = buildCardinMerchantInput({
     businessName,
+    merchantId,
     worldId: payload.worldId,
     weakMomentId: payload.weakMomentId,
     returnRhythmId: payload.returnRhythmId,

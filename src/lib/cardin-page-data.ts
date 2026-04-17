@@ -29,6 +29,7 @@ export type CardinScenario = {
 
 export type CardinMerchantPage = {
   slug: string
+  merchantId?: string
   businessName: string
   worldId: LandingWorldId
   weakMomentId: CardinWeakMomentId
@@ -85,6 +86,7 @@ export const CARDIN_CLIENTELE_OPTIONS: Array<{ id: CardinClienteleId; label: str
 ]
 
 type CardinGenerationInput = {
+  merchantId?: string
   businessName?: string
   world?: string
   weakMoment?: string
@@ -96,6 +98,7 @@ type CardinGenerationInput = {
 
 export type CardinMerchantInput = {
   slug: string
+  merchantId?: string
   businessName: string
   worldId: LandingWorldId
   weakMomentId: CardinWeakMomentId
@@ -450,6 +453,7 @@ export function buildCardinMerchantPath(slug: string) {
 
 export function buildCardinMerchantInput({
   businessName,
+  merchantId,
   worldId,
   weakMomentId,
   returnRhythmId,
@@ -458,6 +462,7 @@ export function buildCardinMerchantInput({
   contactEmail,
 }: {
   businessName: string
+  merchantId?: string
   worldId: LandingWorldId
   weakMomentId: CardinWeakMomentId
   returnRhythmId: CardinReturnRhythmId
@@ -467,6 +472,7 @@ export function buildCardinMerchantInput({
 }): CardinMerchantInput {
   return {
     slug: generateMerchantSlug(businessName),
+    merchantId: merchantId?.trim() || undefined,
     businessName: businessName.trim(),
     worldId,
     weakMomentId,
@@ -532,6 +538,7 @@ export function resolveCardinMerchantPage(slug: string, options: CardinGeneratio
 
   return {
     slug,
+    merchantId: options.merchantId?.trim() || undefined,
     businessName,
     worldId,
     weakMomentId,

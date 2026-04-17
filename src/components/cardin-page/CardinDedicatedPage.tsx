@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
+import QRCode from "qrcode"
 
 import { formatEuro } from "@/lib/calculator"
 import type { CardinMerchantPage, CardinPageState } from "@/lib/cardin-page-data"
@@ -45,6 +46,43 @@ export function CardinDedicatedPage({
   const seasonReferenceLine = isActivated
     ? "Cette page reste la référence du lieu pendant la mise en place."
     : "Le même lien reste relisible pour la décision, le partage et la suite."
+  const projectionBasis = [
+    {
+      label: "Moment moteur",
+      value: merchant.weakMomentLabel,
+      detail: "Créneau que Cardin remet en mouvement pour ouvrir la saison.",
+    },
+    {
+      label: "Rythme visé",
+      value: merchant.returnRhythmLabel,
+      detail: "Cadence de retour retenue pour densifier la saison.",
+    },
+    {
+      label: "Clientèle",
+      value: merchant.clienteleLabel,
+      detail: "Base relationnelle sur laquelle la propagation s'appuie.",
+    },
+    {
+      label: "Sommet",
+      value: merchant.seasonRewardLabel,
+      detail: "Accès visible qui donne du relief au retour.",
+    },
+  ] as const
+  const activationSteps = [
+    {
+      label: "Imprimez le QR",
+      value: `${merchant.seasonSetup}. Support comptoir prêt sous 48 h.`,
+    },
+    {
+      label: "Annoncez la première ouverture",
+      value: `Première promesse visible : ${merchant.seasonRewardLabel}.`,
+    },
+    {
+      label: "Validez les passages",
+      value: `L'équipe valide chaque passage réel sur ${merchant.weakMomentLabel}, puis laisse monter le retour ${merchant.returnRhythmLabel}.`,
+    },
+  ] as const
+  const activationStaffLine = "Scannez ici, vous débloquez votre première récompense. Ensuite on valide vos passages au comptoir."
 
   const whatsappHref = useMemo(() => {
     const message = isActivated
@@ -193,6 +231,54 @@ export function CardinDedicatedPage({
               />
             </div>
           </div>
+
+          <div className="mt-5 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="rounded-[1.2rem] border border-[#D7DDD2] bg-[rgba(255,255,250,0.74)] p-4">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[#587064]">Pourquoi cette projection</p>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#556159]">
+                La fourchette s'appuie sur le point faible lu, le rythme de retour retenu, la clientèle dominante et le sommet de saison affiché plus haut.
+              </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {projectionBasis.map((item) => (
+                  <ProjectionBasisTile key={item.label} detail={item.detail} label={item.label} value={item.value} />
+                ))}
+              </div>
+            </div>
+
+            {isActivated ? (
+              <div className="rounded-[1.2rem] border border-[#C8D4CB] bg-[rgba(255,255,250,0.82)] p-4">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-[#173A2E]">Activation Card</p>
+                <p className="mt-2 text-sm leading-6 text-[#556159]">
+                  Votre système est prêt en 3 étapes. L'objectif est simple : rendre l'entrée évidente pour le client et le geste évident pour l'équipe.
+                </p>
+                <div className="mt-4 space-y-3">
+                  {activationSteps.map((item, index) => (
+                    <ChecklistItem index={index + 1} key={item.label} label={item.label} value={item.value} />
+                  ))}
+                </div>
+                <div className="mt-4 rounded-[1rem] border border-[#D7DDD2] bg-[#FFFEFA] p-4">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">Phrase staff</p>
+                  <p className="mt-2 text-sm leading-6 text-[#203B31]">{activationStaffLine}</p>
+                  <p className="mt-1 text-[13px] leading-5 text-[#556159]">{merchant.contactEmail} reste le contact direct Cardin pour le lieu.</p>
+                </div>
+                <ActivationQrCard merchantId={merchant.merchantId} />
+              </div>
+            ) : (
+              <div className="rounded-[1.2rem] border border-[#D7DDD2] bg-[rgba(255,255,250,0.82)] p-4">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-[#587064]">Base économique</p>
+                <p className="mt-2 text-sm leading-6 text-[#556159]">
+                  {LANDING_PRICING.compactLabel}. La même lecture sert la décision maintenant, puis la mise en place une fois la saison réservée.
+                </p>
+                <div className="mt-4 grid gap-3">
+                  <ProjectionBasisTile
+                    detail="Même base de lecture, même lien, même projection pour convaincre puis lancer."
+                    label="Continuité"
+                    value="Avant et après réservation"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </section>
       </div>
 
@@ -284,6 +370,114 @@ function ProjectionTile({ label, value }: { label: string; value: string }) {
     <div className="rounded-[1.1rem] border border-[#D7DDD2] bg-[#FFFEFA] p-4">
       <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">{label}</p>
       <p className="mt-2 text-sm leading-6 text-[#203B31]">{value}</p>
+    </div>
+  )
+}
+
+function ProjectionBasisTile({
+  label,
+  value,
+  detail,
+}: {
+  label: string
+  value: string
+  detail: string
+}) {
+  return (
+    <div className="rounded-[1rem] border border-[#D7DDD2] bg-[#FFFEFA] p-4">
+      <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">{label}</p>
+      <p className="mt-2 text-sm leading-6 text-[#203B31]">{value}</p>
+      <p className="mt-1 text-[13px] leading-5 text-[#556159]">{detail}</p>
+    </div>
+  )
+}
+
+function ChecklistItem({
+  index,
+  label,
+  value,
+}: {
+  index: number
+  label: string
+  value: string
+}) {
+  return (
+    <div className="flex gap-3 rounded-[1rem] border border-[#D7DDD2] bg-[#FFFEFA] p-3">
+      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#173A2E] text-[11px] font-medium text-[#FBFAF6]">
+        {index}
+      </div>
+      <div className="min-w-0">
+        <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">{label}</p>
+        <p className="mt-1 text-sm leading-6 text-[#203B31]">{value}</p>
+      </div>
+    </div>
+  )
+}
+
+function ActivationQrCard({ merchantId }: { merchantId?: string }) {
+  const [scanUrl, setScanUrl] = useState(merchantId ? `/scan/${merchantId}` : "")
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!merchantId || typeof window === "undefined") return
+
+    const nextScanUrl = `${window.location.origin}/scan/${merchantId}`
+    setScanUrl(nextScanUrl)
+
+    void QRCode.toDataURL(nextScanUrl, {
+      width: 320,
+      margin: 1,
+      color: {
+        dark: "#173A2E",
+        light: "#FFFEFA",
+      },
+    }).then(setQrCodeUrl).catch(() => setQrCodeUrl(null))
+  }, [merchantId])
+
+  if (!merchantId) {
+    return (
+      <div className="mt-4 rounded-[1rem] border border-[#D7DDD2] bg-[#FFFEFA] p-4">
+        <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">QR d'activation</p>
+        <p className="mt-2 text-sm leading-6 text-[#556159]">
+          Le QR imprimable se branche dès que cette page est reliée à un espace marchand Cardin actif.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-4 rounded-[1rem] border border-[#D7DDD2] bg-[#FFFEFA] p-4">
+      <p className="text-[10px] uppercase tracking-[0.16em] text-[#6D776F]">QR à afficher</p>
+      <p className="mt-2 text-sm leading-6 text-[#556159]">
+        Le client scanne ici. Sa carte s'ouvre, puis l'équipe valide le passage au comptoir.
+      </p>
+      {qrCodeUrl ? (
+        <img alt="QR Cardin à afficher" className="mt-4 w-full max-w-[220px] rounded-xl border border-[#D7DDD2] bg-white p-2" src={qrCodeUrl} />
+      ) : (
+        <div className="mt-4 flex h-[220px] w-full max-w-[220px] items-center justify-center rounded-xl border border-[#D7DDD2] bg-[#FBF9F3] text-sm text-[#556159]">
+          Génération du QR...
+        </div>
+      )}
+      <p className="mt-3 break-all text-[13px] leading-5 text-[#556159]">{scanUrl}</p>
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <a
+          className={cn(buttonVariants({ variant: "subtle", size: "md" }), "justify-center")}
+          href={scanUrl}
+          rel="noreferrer"
+          target="_blank"
+        >
+          Ouvrir le parcours client
+        </a>
+        {qrCodeUrl ? (
+          <a
+            className={cn(buttonVariants({ variant: "subtle", size: "md" }), "justify-center")}
+            download={`qr-${merchantId}.png`}
+            href={qrCodeUrl}
+          >
+            Télécharger le QR PNG
+          </a>
+        ) : null}
+      </div>
     </div>
   )
 }

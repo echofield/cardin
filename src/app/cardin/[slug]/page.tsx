@@ -29,6 +29,7 @@ function resolveMerchantFromRequest(
   stored: Awaited<ReturnType<typeof getStoredCardinPageBySlug>>,
 ) {
   return resolveCardinMerchantPage(slug, {
+    merchantId: stored?.merchantId,
     businessName: searchParams?.name ?? stored?.businessName,
     world: searchParams?.world ?? stored?.worldId,
     contactEmail: searchParams?.contact ?? stored?.contactEmail,
