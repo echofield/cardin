@@ -2,8 +2,10 @@
 
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
+import { calculateRecovery } from "@/lib/calculator"
+import { LANDING_PRICING, STRIPE_PAYMENT_LINK } from "@/lib/landing-content"
 import { CARDIN_CONTACT_EMAIL } from "@/lib/site-contact"
 
 type RewardKey = "cafe" | "menu" | "experience"
@@ -12,42 +14,41 @@ type BusinessKey = "cafe" | "bar" | "restaurant" | "beaute" | "boutique"
 type RewardConfig = {
   glyph: string
   label: string
-  revenuePerReturn: number
-  returnRate: number
+  recoveryMultiplier: number
   steps: number
   stepLabels: string[]
 }
 
 type BusinessConfig = {
+  avgTicket: number
   brand: string
   defaultReward: RewardKey
   label: string
-  basketMultiplier: number
-  returnMultiplier: number
+  lossRate: number
+  recoveryRate: number
 }
+
+const DAYS_OPEN = 26
 
 const REWARDS: Record<RewardKey, RewardConfig> = {
   cafe: {
     glyph: "◇",
     label: "Café offert",
-    revenuePerReturn: 6.5,
-    returnRate: 0.32,
+    recoveryMultiplier: 0.94,
     steps: 3,
     stepLabels: ["Première visite", "Deuxième visite", "Troisième visite"],
   },
   menu: {
     glyph: "◈",
     label: "Menu offert",
-    revenuePerReturn: 11.2,
-    returnRate: 0.44,
+    recoveryMultiplier: 1,
     steps: 5,
     stepLabels: ["Visite 1", "Visite 2", "Visite 3", "Visite 4", "Visite 5"],
   },
   experience: {
     glyph: "◆",
     label: "Expérience",
-    revenuePerReturn: 18.4,
-    returnRate: 0.58,
+    recoveryMultiplier: 1.08,
     steps: 8,
     stepLabels: ["Visite 1", "Visite 2", "Visite 3", "Visite 4", "Visite 5", "Visite 6", "Visite 7", "Visite 8"],
   },
@@ -55,41 +56,52 @@ const REWARDS: Record<RewardKey, RewardConfig> = {
 
 const BUSINESSES: Record<BusinessKey, BusinessConfig> = {
   cafe: {
+    avgTicket: 9,
     brand: "Le comptoir",
     defaultReward: "cafe",
     label: "Café",
-    basketMultiplier: 1,
-    returnMultiplier: 1,
+    lossRate: 0.28,
+    recoveryRate: 0.22,
   },
   bar: {
+    avgTicket: 12,
     brand: "La maison",
     defaultReward: "menu",
     label: "Bar",
-    basketMultiplier: 1.6,
-    returnMultiplier: 0.95,
+    lossRate: 0.28,
+    recoveryRate: 0.2,
   },
   restaurant: {
+    avgTicket: 17,
     brand: "La table",
     defaultReward: "menu",
     label: "Restaurant",
-    basketMultiplier: 2.4,
-    returnMultiplier: 0.85,
+    lossRate: 0.32,
+    recoveryRate: 0.16,
   },
   beaute: {
+    avgTicket: 39,
     brand: "L'institut",
     defaultReward: "experience",
     label: "Beauté",
-    basketMultiplier: 3.8,
-    returnMultiplier: 0.75,
+    lossRate: 0.36,
+    recoveryRate: 0.15,
   },
   boutique: {
+    avgTicket: 39,
     brand: "L'atelier",
     defaultReward: "experience",
     label: "Boutique",
-    basketMultiplier: 5.5,
-    returnMultiplier: 0.55,
+    lossRate: 0.32,
+    recoveryRate: 0.17,
   },
 }
+
+const LEGAL_LINKS = [
+  { href: "/privacy", label: "Confidentialité" },
+  { href: "/terms", label: "Conditions" },
+  { href: "/legal", label: "Mentions" },
+]
 
 const PARTICLES = [
   { x: "8%", y: "18%", delay: 0.1, duration: 9.8 },
@@ -108,24 +120,35 @@ const PARTICLES = [
 
 function useAnimatedNumber(target: number, duration = 850) {
   const [value, setValue] = useState(target)
+  const valueRef = useRef(target)
+
+  useEffect(() => {
+    valueRef.current = value
+  }, [value])
 
   useEffect(() => {
     let frame = 0
-    const start = value
+    const start = valueRef.current
     const delta = target - start
-    if (delta === 0) return
+
+    if (delta === 0) {
+      setValue(target)
+      return
+    }
 
     const startedAt = performance.now()
     const tick = (now: number) => {
       const progress = Math.min((now - startedAt) / duration, 1)
       const eased = 1 - Math.pow(1 - progress, 3)
-      setValue(Math.round(start + delta * eased))
+      const nextValue = Math.round(start + delta * eased)
+      valueRef.current = nextValue
+      setValue(nextValue)
       if (progress < 1) frame = requestAnimationFrame(tick)
     }
 
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [duration, target, value])
+  }, [duration, target])
 
   return value
 }
@@ -178,31 +201,33 @@ export function CardinHomePage() {
     return () => window.clearInterval(storyTimer)
   }, [reward.steps])
 
-  const returnsPerDay = useMemo(
-    () => Math.round(passagesPerDay * reward.returnRate * business.returnMultiplier),
-    [business.returnMultiplier, passagesPerDay, reward.returnRate],
-  )
-  const revenuePerDay = useMemo(
-    () => Math.round(returnsPerDay * reward.revenuePerReturn * business.basketMultiplier),
-    [business.basketMultiplier, returnsPerDay, reward.revenuePerReturn],
-  )
-  const monthlyReturns = returnsPerDay * 30
-  const monthlyRevenue = revenuePerDay * 30
+  const monthlyProjection = useMemo(() => {
+    const recoveryRate = Math.min(0.45, business.recoveryRate * reward.recoveryMultiplier)
+    return calculateRecovery({
+      clientsPerDay: passagesPerDay,
+      avgTicket: business.avgTicket,
+      daysOpen: DAYS_OPEN,
+      recoveryRate,
+      returnLossRate: business.lossRate,
+    })
+  }, [business.avgTicket, business.lossRate, business.recoveryRate, passagesPerDay, reward.recoveryMultiplier])
+
+  const recoveredPerDay = Math.round(monthlyProjection.recoveredClients / DAYS_OPEN)
 
   const graph = useMemo(() => {
     const values = Array.from({ length: 20 }, (_, index) => {
       const t = index / 19
       const noise = Math.sin(index * 0.7) * 0.08 + Math.cos(index * 1.15) * 0.04
-      return returnsPerDay * (0.62 + t * 0.34 + noise)
+      return recoveredPerDay * (0.62 + t * 0.34 + noise)
     })
     return buildGraph(values)
-  }, [returnsPerDay])
+  }, [recoveredPerDay])
 
   const displayPassages = useAnimatedNumber(passagesPerDay)
-  const displayReturns = useAnimatedNumber(returnsPerDay)
-  const displayRevenue = useAnimatedNumber(revenuePerDay)
-  const displayMonthlyReturns = useAnimatedNumber(monthlyReturns)
-  const displayMonthlyRevenue = useAnimatedNumber(monthlyRevenue)
+  const displayReturns = useAnimatedNumber(recoveredPerDay)
+  const displayRevenue = useAnimatedNumber(Math.round(monthlyProjection.extraRevenue))
+  const displayMonthlyReturns = useAnimatedNumber(Math.round(monthlyProjection.recoveredClients))
+  const displayMonthlyRevenue = useAnimatedNumber(Math.round(monthlyProjection.extraRevenue))
 
   const visibleSteps = Math.min(reward.steps, 4)
   const phoneSteps = Array.from({ length: visibleSteps }, (_, index) => {
@@ -215,7 +240,7 @@ export function CardinHomePage() {
     : {
         initial: { opacity: 0, y: 28 },
         whileInView: { opacity: 1, y: 0 },
-        viewport: { once: true, amount: 0.25 },
+        viewport: { amount: 0.25, once: true },
         transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
       }
 
@@ -325,7 +350,7 @@ export function CardinHomePage() {
 
       <section className="relative overflow-hidden border-y border-[#d4cdbd] bg-[#ece6da] px-6 py-24 sm:px-8 lg:px-12 lg:py-28" id="impact">
         <div className="pointer-events-none absolute inset-0">
-          {PARTICLES.map((particle, index) => (
+          {PARTICLES.map((particle) => (
             <motion.span
               animate={reducedMotion ? undefined : { x: [0, 10, -6, 0], y: [0, -24, -54, 0], opacity: [0.06, 0.32, 0.1, 0.06] }}
               className="absolute h-[2px] w-[2px] rounded-full bg-[#b8956a]"
@@ -443,7 +468,7 @@ export function CardinHomePage() {
             <div className="grid grid-cols-3 gap-5 sm:gap-7">
               <Metric label="Passages / jour" value={displayPassages.toLocaleString("fr-FR")} />
               <Metric accent label="Retours déclenchés" value={displayReturns.toLocaleString("fr-FR")} />
-              <Metric label="Revenu récupéré" tone="warm" value={formatEuro(displayRevenue)} />
+              <Metric label="Revenu récupéré / mois" tone="warm" value={formatEuro(displayRevenue)} />
             </div>
 
             <div className="mt-8 h-11">
@@ -484,8 +509,14 @@ export function CardinHomePage() {
             <div className="mt-6 border-t border-dashed border-[#d4cdbd] pt-5 text-center">
               <p className="text-[9px] uppercase tracking-[0.25em] text-[#8a8578]">Projection sur 30 jours</p>
               <p className="mt-2 font-serif text-[18px] leading-[1.45] text-[#1a2a22] sm:text-[20px]">
-                <span className="text-[22px] font-medium text-[#0f3d2e] sm:text-[24px]">{displayMonthlyReturns.toLocaleString("fr-FR")}</span> clients revenus ·{" "}
-                <span className="text-[22px] font-medium text-[#b8956a] sm:text-[24px]">{formatEuro(displayMonthlyRevenue)}</span> récupérés
+                <span className="text-[22px] font-medium text-[#0f3d2e] sm:text-[24px]">
+                  {displayMonthlyReturns.toLocaleString("fr-FR")}
+                </span>{" "}
+                clients revenus ·{" "}
+                <span className="text-[22px] font-medium text-[#b8956a] sm:text-[24px]">
+                  {formatEuro(displayMonthlyRevenue)}
+                </span>{" "}
+                récupérés
               </p>
             </div>
           </motion.div>
@@ -622,28 +653,58 @@ export function CardinHomePage() {
       </section>
 
       <motion.section className="px-6 py-[136px] pb-[104px] text-center sm:px-8 lg:px-12" {...panelMotion}>
-        <p className="mx-auto mb-14 max-w-[640px] font-serif text-[clamp(20px,2.2vw,26px)] italic leading-[1.5] text-[#3d4d43]">
+        <p className="mx-auto mb-10 max-w-[640px] font-serif text-[clamp(20px,2.2vw,26px)] italic leading-[1.5] text-[#3d4d43]">
           Conçu à Paris pour les commerçants
           <br />
           qui comptent leurs clients.
         </p>
-        <Link
-          className="inline-flex min-h-12 items-center justify-center rounded-sm border border-[#0f3d2e] bg-[#0f3d2e] px-7 py-3 text-[12px] uppercase tracking-[0.15em] text-[#f2ede4] transition hover:border-[#1a2a22] hover:bg-[#1a2a22]"
-          href="/parcours"
-        >
-          Lancer ma simulation
-        </Link>
+
+        <p className="mx-auto mb-8 max-w-[520px] text-[11px] uppercase tracking-[0.18em] text-[#8a8578]">
+          {LANDING_PRICING.compactLabel} · activation sous 48 h
+        </p>
+
+        <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <Link
+            className="inline-flex min-h-12 items-center justify-center rounded-sm border border-[#0f3d2e] bg-[#0f3d2e] px-7 py-3 text-[12px] uppercase tracking-[0.15em] text-[#f2ede4] transition hover:border-[#1a2a22] hover:bg-[#1a2a22]"
+            href="/parcours"
+          >
+            Lancer ma simulation
+          </Link>
+          <a
+            className="inline-flex min-h-12 items-center justify-center rounded-sm border border-[#d4cdbd] px-7 py-3 text-[12px] uppercase tracking-[0.15em] text-[#1a2a22] transition hover:border-[#0f3d2e] hover:bg-[rgba(15,61,46,0.03)] hover:text-[#0f3d2e]"
+            href={STRIPE_PAYMENT_LINK}
+            rel="noreferrer"
+            target="_blank"
+          >
+            Réserver ma saison
+          </a>
+        </div>
       </motion.section>
 
       <footer
-        className="flex flex-col gap-4 border-t border-[#d4cdbd] px-6 py-12 text-center text-[11px] uppercase tracking-[0.15em] text-[#8a8578] sm:px-8 lg:flex-row lg:items-center lg:justify-between lg:px-12"
+        className="border-t border-[#d4cdbd] px-6 py-12 text-center text-[11px] uppercase tracking-[0.15em] text-[#8a8578] sm:px-8 lg:px-12"
         id="contact"
       >
-        <div>Cardin · Paris</div>
-        <a className="transition hover:text-[#0f3d2e]" href={`mailto:${CARDIN_CONTACT_EMAIL}`}>
-          {CARDIN_CONTACT_EMAIL}
-        </a>
-        <div>by Symi</div>
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="text-left">
+            <div>Cardin · Paris</div>
+            <div className="mt-2">by Symi</div>
+          </div>
+
+          <div className="flex flex-col gap-3 text-left">
+            {LEGAL_LINKS.map((link) => (
+              <Link className="transition hover:text-[#0f3d2e]" href={link.href} key={link.href}>
+                {link.label}
+              </Link>
+            ))}
+          </div>
+
+          <div className="text-left">
+            <a className="transition hover:text-[#0f3d2e]" href={`mailto:${CARDIN_CONTACT_EMAIL}`}>
+              {CARDIN_CONTACT_EMAIL}
+            </a>
+          </div>
+        </div>
       </footer>
     </main>
   )
