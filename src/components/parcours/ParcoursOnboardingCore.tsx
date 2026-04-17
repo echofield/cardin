@@ -1343,7 +1343,7 @@ function StepMechanics({
 
   return (
     <>
-      <StepHeader num="04" label="Activation" />
+      <StepHeader num="04" label="Mécanique" />
 
       <motion.h1
         animate={{ opacity: 1, y: 0 }}
@@ -1900,7 +1900,7 @@ function StepActivation({
             transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
           />
         </motion.div>
-        <span style={{ fontSize: "0.7rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--cardin-green-primary)", fontWeight: 600 }}>Activation prête</span>
+        <span style={{ fontSize: "0.7rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--cardin-green-primary)", fontWeight: 600 }}>Saison prête</span>
       </motion.div>
 
       <motion.h1

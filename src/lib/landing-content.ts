@@ -56,7 +56,7 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
     seasonRevenueBandEuro: { min: 2000, max: 6000 },
     basket: "Panier moyen 5 à 8 €",
     onboardingLead:
-      "Moteur de revenu saisonnier : Diamond visible dès le départ, missions sur le parcours, retour et recommandation activés.",
+      "Le café où l’on revient. Chaque passage compte. La saison fait son travail.",
     proofLine: "Passage → retour → recommandation et moments activés.",
     summitPromise: "1 boisson signature par mois pendant 1 an.",
     baselineRecoveredPerMonth: 2400,
@@ -69,7 +69,7 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
     seasonRevenueBandEuro: { min: 3000, max: 8000 },
     basket: "Panier moyen 10 à 20 €",
     onboardingLead:
-      "Moteur de revenu sur le créneau soir : Diamond visible dès le départ, réseau naturel et créations au comptoir.",
+      "Le bar que l’on ramène. Un régulier amène un ami. Le comptoir devient un lieu.",
     proofLine: "Passage → retour → habitudes de soirée et invitations.",
     summitPromise: "1 création signature au bar par mois pendant 1 an.",
     baselineRecoveredPerMonth: 3200,
@@ -82,7 +82,7 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
     seasonRevenueBandEuro: { min: 4000, max: 10000 },
     basket: "Panier moyen 40 à 60 €",
     onboardingLead:
-      "Objectif de saison ambitieux : Diamond comme horizon, réseau de tables et récurrence entre deux services.",
+      "La table qu’on se raconte. Le client revient, puis revient à deux. La saison se remplit.",
     proofLine: "Table → retour client → réseau activé par invitation.",
     summitPromise: "1 repas signature par mois pendant 1 an.",
     baselineRecoveredPerMonth: 4200,
@@ -95,7 +95,7 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
     seasonRevenueBandEuro: { min: 4000, max: 10000 },
     basket: "Valeur client élevée",
     onboardingLead:
-      "Revenu saisonnier calibré : Diamond comme statut long terme, missions qui structurent la récurrence.",
+      "Le rituel qui tient. Chaque rendez-vous installe le suivant. La clientèle se cristallise.",
     proofLine: "Cycle → retour → recommandation et privilèges maîtrisés.",
     summitPromise: "1 soin signature par mois pendant 1 an.",
     baselineRecoveredPerMonth: 3200,
@@ -108,7 +108,7 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
     seasonRevenueBandEuro: { min: 5000, max: 12000 },
     basket: "Valeur client élevée",
     onboardingLead:
-      "Saison orientée désir : Diamond comme expérience régulière, upside fort quand le réseau s’active.",
+      "La boutique qu’on défend. Statut visible, accès privilégié, retour naturel.",
     proofLine: "Désir → retour client → accès et statut maîtrisés.",
     summitPromise: "100 € collection par mois pendant 1 an.",
     baselineRecoveredPerMonth: 3600,

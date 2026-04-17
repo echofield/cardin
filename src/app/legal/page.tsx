@@ -27,11 +27,11 @@ export default function LegalPage() {
       </section>
       <section>
         <h2 className="font-serif text-2xl text-[#173328]">Publication</h2>
-        <p className="mt-3">Les informations publiques presentes ici decrivent le produit, la logique de saison, l'activation des cartes et le cadre general du service.</p>
+        <p className="mt-3">Les informations publiques présentes ici décrivent le produit, la logique de saison, l&apos;activation des cartes et le cadre général du service.</p>
       </section>
       <section>
         <h2 className="font-serif text-2xl text-[#173328]">Contact</h2>
-        <p className="mt-3">Les activations et demandes se font actuellement via le parcours d'activation Cardin et les echanges directs lies a chaque lieu.</p>
+        <p className="mt-3">Les activations et demandes se font actuellement via le parcours d&apos;activation Cardin et les échanges directs liés à chaque lieu.</p>
       </section>
     </LegalShell>
   )

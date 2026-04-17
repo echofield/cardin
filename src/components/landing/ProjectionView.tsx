@@ -115,8 +115,7 @@ export function ProjectionView() {
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-[#5C655E]">{bundle.brandPunchline}</p>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-[#7A847B]">
-            Cardin Protocol v5 : Diamond comme horizon dès le départ, missions sur le parcours, récompenses bornées et
-            croissance contrôlée.
+            Le client sait où il va. Le lieu voit revenir. La saison se construit.
           </p>
           {seasonFrame ? (
             <div className="mx-auto mt-6 max-w-2xl">
@@ -190,20 +189,14 @@ export function ProjectionView() {
             ) : null}
 
             <div className="mt-8 border-t border-[#E7EAE4] pt-6">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-[#9AA396]">Indicateur modèle (scénario courant)</p>
-              <p className="mt-2 text-xs leading-relaxed text-[#7A847B]">
-                La fourchette large ci-dessus (bande marché) reflète le cadrage saison ; le chiffre ci-dessous est l’estimateur
-                du scénario et des curseurs actuels — plus étroit, utile pour comparer des réglages, pas pour remplacer la
-                bande.
-              </p>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[#9AA396]">Ajusté à vos curseurs</p>
               <p className="mt-2 font-serif text-2xl leading-none text-[#15372B] sm:text-3xl">
                 +{formatEuro(animLow)}
                 <span className="mx-2 text-[#98A297]">à</span>
                 +{formatEuro(animHigh)}
               </p>
               <p className="mt-3 text-xs text-[#7A847B]">
-                Estimation nette après récompenses bornées sur le jeu de paramètres actuel — à lire comme contrôle technique,
-                pas comme plafond émotionnel. Budget saison recommandé : {formatEuro(protocolPreset.seasonBudget)}.
+                Ce que votre configuration actuelle vise sur la saison. La fourchette se resserre à mesure que vous précisez.
               </p>
               <p className="mt-2 text-sm text-[#2A3F35]">Équivalent mensuel ≈ {formatEuro(simulation.monthly_projection)}</p>
             </div>
@@ -214,9 +207,9 @@ export function ProjectionView() {
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <DetailBlock label="Budget reward" value={`${formatEuro(protocolPreset.seasonBudget)} / saison`} />
-              <DetailBlock label="Cap Diamond" value={`${Math.round(protocolPreset.maxDiamondRatio * 100)}% des clients actifs`} />
-              <DetailBlock label="Token Diamond" value={`1 toutes les ${protocolPreset.diamond.tokenCycleDays} j si activité + budget`} />
+              <DetailBlock label="Budget saison" value={`${formatEuro(protocolPreset.seasonBudget)}`} />
+              <DetailBlock label="Clients Diamond" value={`~${Math.round(protocolPreset.maxDiamondRatio * 100)}% — vos meilleurs`} />
+              <DetailBlock label="Rythme Diamond" value={`1 nouveau tous les ${protocolPreset.diamond.tokenCycleDays} j`} />
             </div>
 
             <div className="mt-6 border-t border-[#E7EAE4] pt-6">
@@ -241,19 +234,19 @@ export function ProjectionView() {
             />
 
             <div className="mt-5 rounded-[28px] border border-[#D7DDD2] bg-[#FDFCF8] px-6 py-6">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-[#93A094]">Rituel Cardin</p>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[#93A094]">Le geste, en trois temps</p>
               <div className="mt-4 space-y-3 text-sm text-[#2A3F35]">
-                <p>1. Le client scanne, puis le lieu crée la carte et la session.</p>
+                <p>1. Le client scanne. Sa carte de saison s&apos;ouvre.</p>
                 <p>2. Le staff valide le passage réel.</p>
-                <p>3. La progression avance, l'avantage reste borné par le protocole.</p>
+                <p>3. Le client voit où il en est. Il revient pour la suite.</p>
               </div>
             </div>
 
             <div className="mt-5 rounded-[28px] border border-[#173A2E]/25 bg-[linear-gradient(180deg,#FBFAF6_0%,#F0F4EC_100%)] px-6 py-6">
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#355246]">Diamond</p>
               <p className="mt-3 text-sm text-[#2A3F35]">
-                Débloquez le Diamond : couche d’attraction visible, expériences régulières et statut — un privilège cadencé
-                et budgété, pas un coupon infini.
+                Au sommet de la saison : un statut que vos meilleurs clients atteignent, et que le lieu reconnaît. Pas un
+                coupon. Une place.
               </p>
             </div>
           </div>
@@ -274,7 +267,7 @@ export function ProjectionView() {
             href="/login"
             onClick={() => trackEvent("hero_cta", { source: "projection_cta" })}
           >
-            Mettre en place dans mon commerce
+            Réserver ma saison Cardin
           </Link>
           <Link className="text-sm text-[#7A847B] underline-offset-4 hover:text-[#15372B] hover:underline" href="/landing">
             Voir d'autres commerces

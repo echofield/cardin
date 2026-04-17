@@ -20,13 +20,13 @@
 
 export default function PrivacyPage() {
   return (
-    <LegalShell eyebrow="Cadre public" title="Confidentialite">
+    <LegalShell eyebrow="Cadre public" title="Confidentialité">
       <section>
         <h2 className="font-serif text-2xl text-[#173328]">Principe</h2>
         <p className="mt-3">Cardin traite les données nécessaires au fonctionnement de la saison, à l&apos;activation des accès digitaux et au suivi marchand.</p>
       </section>
       <section>
-        <h2 className="font-serif text-2xl text-[#173328]">Donnees traitees</h2>
+        <h2 className="font-serif text-2xl text-[#173328]">Données traitées</h2>
         <p className="mt-3">Selon le parcours activé, Cardin peut traiter des identifiants de carte digitale, des événements de visite, des informations de progression, des journaux d&apos;activation et des données techniques de service.</p>
       </section>
       <section>
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
       </section>
       <section>
         <h2 className="font-serif text-2xl text-[#173328]">Cadre</h2>
-        <p className="mt-3">Cardin avance actuellement lieu par lieu. Les demandes liees a la confidentialite, a l'acces ou a la suppression des donnees sont traitees dans le cadre de chaque activation.</p>
+        <p className="mt-3">Cardin avance actuellement lieu par lieu. Les demandes liées à la confidentialité, à l&apos;accès ou à la suppression des données sont traitées dans le cadre de chaque activation.</p>
       </section>
     </LegalShell>
   )

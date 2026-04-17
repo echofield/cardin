@@ -30,12 +30,12 @@ export default function TermsPage() {
         <p className="mt-3">Le lieu utilise Cardin pour lancer une saison de récurrence, de propagation et d&apos;affluence via un parcours digital et un espace marchand associé.</p>
       </section>
       <section>
-        <h2 className="font-serif text-2xl text-[#173328]">Evolution</h2>
-        <p className="mt-3">Le systeme evolue encore. Certaines fonctions sont configurees avec le lieu durant la premiere saison avant de devenir plus autonomes.</p>
+        <h2 className="font-serif text-2xl text-[#173328]">Évolution</h2>
+        <p className="mt-3">Le système évolue encore. Certaines fonctions sont configurées avec le lieu durant la première saison avant de devenir plus autonomes.</p>
       </section>
       <section>
         <h2 className="font-serif text-2xl text-[#173328]">Saison suivante</h2>
-        <p className="mt-3">La saison suivante est decidee a partir des resultats, de la traction observee et des regles fixees avec le lieu pour la suite.</p>
+        <p className="mt-3">La saison suivante est décidée à partir des résultats, de la traction observée et des règles fixées avec le lieu pour la suite.</p>
       </section>
     </LegalShell>
   )
