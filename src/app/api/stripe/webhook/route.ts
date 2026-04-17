@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import type Stripe from "stripe"
 
+import { markCardinPagePaid } from "@/lib/cardin-page-store"
 import { sendStripeCheckoutEmails } from "@/lib/email"
 import { getStripeClient, getStripeWebhookSecret } from "@/lib/stripe-server"
 import { createSupabaseServiceClient } from "@/lib/supabase/service"
@@ -64,6 +65,11 @@ async function markEventStatus(eventId: string, status: "processed" | "failed", 
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session, origin: string) {
+  const cardinSlug = typeof session.metadata?.cardin_slug === "string" ? session.metadata.cardin_slug : null
+  if (cardinSlug) {
+    await markCardinPagePaid(cardinSlug, session.id)
+  }
+
   await sendStripeCheckoutEmails({
     sessionId: session.id,
     amountTotal: session.amount_total,
