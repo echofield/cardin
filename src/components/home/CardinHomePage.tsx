@@ -346,6 +346,23 @@ export function CardinHomePage() {
             Simuler mon commerce
           </Link>
         </motion.div>
+
+        <motion.div
+          animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
+          className="mt-5"
+          initial={reducedMotion ? false : { opacity: 0, y: 14 }}
+          transition={{ duration: 0.8, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <Link
+            className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-[#6f7a72] transition hover:text-[#0f3d2e] sm:text-[12px]"
+            href="/diagnostic"
+          >
+            Recevoir un diagnostic rapide
+            <span aria-hidden="true" className="text-[#b8956a]">
+              →
+            </span>
+          </Link>
+        </motion.div>
       </section>
 
       <section className="relative overflow-hidden border-y border-[#d4cdbd] bg-[#ece6da] px-6 py-24 sm:px-8 lg:px-12 lg:py-28" id="impact">
