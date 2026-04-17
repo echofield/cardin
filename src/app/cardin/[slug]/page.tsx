@@ -69,8 +69,8 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const imagePath = buildOpenGraphImageUrl(params.slug, merchant, displayState)
   const description =
     displayState === "activation"
-      ? `Saison Cardin r\u00e9serv\u00e9e pour ${merchant.businessName}. Lecture du lieu, cadre de saison et mise en place sous 48 h.`
-      : `Lecture du lieu, premi\u00e8re saison Cardin et projection partageable pour ${merchant.businessName}. ${merchant.weakMomentLabel}, retour ${merchant.returnRhythmLabel}, client\u00e8le ${merchant.clienteleLabel}.`
+      ? `Saison Cardin réservée pour ${merchant.businessName}. Lecture du lieu, cadre de saison et mise en place sous 48 h.`
+      : `Lecture du lieu, première saison Cardin et projection partageable pour ${merchant.businessName}. ${merchant.weakMomentLabel}, retour ${merchant.returnRhythmLabel}, clientèle ${merchant.clienteleLabel}.`
 
   return {
     title,

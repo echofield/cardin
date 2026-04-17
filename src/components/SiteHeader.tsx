@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { href: "/landing#methode", label: "Méthode" },
   { href: "/landing#cas", label: "Cas" },
   { href: "/landing", label: "Simuler" },
+  { href: "/cardin/create", label: "Création" },
   { href: "/landing#contact", label: "Contact" },
 ]
 

@@ -47,13 +47,13 @@ export default async function CardinMerchantOgImage({ params, searchParams }: Im
     note: searchParams?.note,
   })
   const isActivated = searchParams?.status === "activation"
-  const range = `${formatProjection(merchant.projectionLow)} \u00e0 ${formatProjection(merchant.projectionHigh)}`
-  const statusLabel = isActivated ? "Saison r\u00e9serv\u00e9e" : "Lecture du lieu"
-  const sideTitle = isActivated ? "Saison r\u00e9serv\u00e9e" : "Projection de saison"
+  const range = `${formatProjection(merchant.projectionLow)} à ${formatProjection(merchant.projectionHigh)}`
+  const statusLabel = isActivated ? "Saison réservée" : "Lecture du lieu"
+  const sideTitle = isActivated ? "Saison réservée" : "Projection de saison"
   const sideValue = isActivated ? "Sous 48 h" : range
   const sideText = isActivated
-    ? "Cardin pr\u00e9pare maintenant la mise en place du lieu."
-    : "Premi\u00e8re saison, retour dominant et lien partageable pour la d\u00e9cision."
+    ? "Cardin prépare maintenant la mise en place du lieu."
+    : "Première saison, retour dominant et lien partageable pour la décision."
 
   return new ImageResponse(
     (
@@ -189,7 +189,7 @@ export default async function CardinMerchantOgImage({ params, searchParams }: Im
                   maxWidth: 720,
                 }}
               >
-                {isActivated ? "Le cadre de saison est r\u00e9serv\u00e9 pour ce lieu." : merchant.subtitle}
+                {isActivated ? "Le cadre de saison est réservé pour ce lieu." : merchant.subtitle}
               </div>
               <div
                 style={{
@@ -200,8 +200,8 @@ export default async function CardinMerchantOgImage({ params, searchParams }: Im
                 }}
               >
                 {isActivated
-                  ? "M\u00eame lecture du lieu, m\u00eame lien de r\u00e9f\u00e9rence, m\u00eame point d'appui pour l'\u00e9quipe."
-                  : "Lecture du lieu, premi\u00e8re saison Cardin et lien partageable pour la d\u00e9cision."}
+                  ? "Même lecture du lieu, même lien de référence, même point d'appui pour l'équipe."
+                  : "Lecture du lieu, première saison Cardin et lien partageable pour la décision."}
               </div>
             </div>
 
