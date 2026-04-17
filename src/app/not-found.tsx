@@ -12,7 +12,7 @@ export default function NotFound() {
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             className="inline-flex h-11 items-center justify-center rounded-full border border-[#1B4332] bg-[#1B4332] px-6 text-sm font-medium text-[#FBFAF6] transition hover:brightness-110"
-            href="/landing"
+            href="/"
           >
             Revenir à l&apos;accueil
           </Link>

@@ -1,6 +1,14 @@
+import type { Metadata } from "next"
 import { Suspense } from "react"
 
 import { ClientParcoursSimulator } from "@/components/client-parcours/ClientParcoursSimulator"
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 function ParcoursClientFallback() {
   return (

@@ -238,8 +238,8 @@ export function ClientParcoursSimulator() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-[#69736C]">Simulation — aucun compte, aucune donnée enregistrée</p>
             <div className="flex gap-3">
-              <Link className="text-xs text-[#173A2E] underline underline-offset-2" href="/landing">
-                Retour landing
+              <Link className="text-xs text-[#173A2E] underline underline-offset-2" href="/">
+                Retour accueil
               </Link>
               <Link className="text-xs text-[#173A2E] underline underline-offset-2" href="/demo">
                 Démo complète

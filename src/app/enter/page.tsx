@@ -10,7 +10,7 @@ export default function EnterPage({
 }) {
   const id = (searchParams.merchant_id ?? "").trim()
   if (!id) {
-    redirect("/landing")
+    redirect("/")
   }
   redirect(`/scan/${encodeURIComponent(id)}`)
 }

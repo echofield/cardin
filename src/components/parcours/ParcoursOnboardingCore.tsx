@@ -280,7 +280,7 @@ function ParcoursOnboardingCoreInner({ variant }: Props) {
                 ←
               </button>
             )}
-            <Link className="font-serif" href="/landing" style={{ fontSize: "1.05rem", color: "var(--cardin-green-primary)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+            <Link className="font-serif" href="/" style={{ fontSize: "1.05rem", color: "var(--cardin-green-primary)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
               Cardin
             </Link>
           </div>
@@ -2103,8 +2103,8 @@ function StepActivation({
             Voir la suite après paiement
           </Link>
           {variant === "embedded" ? null : (
-            <Link className="text-[var(--cardin-green-primary)] underline underline-offset-2" href="/landing#methode">
-              Revoir la méthode
+            <Link className="text-[var(--cardin-green-primary)] underline underline-offset-2" href="/#impact">
+              Revoir l&apos;impact
             </Link>
           )}
         </div>

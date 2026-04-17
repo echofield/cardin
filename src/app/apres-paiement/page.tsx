@@ -1,7 +1,15 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 
 import { PublicFooter } from "@/components/shared/PublicFooter"
 import { CARDIN_CONTACT_EMAIL } from "@/lib/site-contact"
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 export default function ApresPaiementPage() {
   return (
@@ -43,7 +51,7 @@ export default function ApresPaiementPage() {
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <Link
           className="inline-flex h-12 flex-1 items-center justify-center rounded-full bg-[#173A2E] px-6 text-sm font-medium text-[#FBFAF6] transition hover:bg-[#24533F]"
-          href="/landing"
+          href="/"
         >
           Retour à l&apos;accueil
         </Link>

@@ -509,7 +509,7 @@ export function CardPhoneView({
           <Link className="text-sm underline" href={`/scan/${data.merchant.id}${demo ? "?demo=1" : ""}`}>
             {profile.card.createAnotherLabel}
           </Link>
-          <Link className="text-sm underline" href="/landing">
+          <Link className="text-sm underline" href="/">
             {profile.card.brandLinkLabel}
           </Link>
         </div>

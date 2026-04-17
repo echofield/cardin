@@ -27,9 +27,9 @@ export function PublicFooter() {
           <div className="mt-4 flex flex-wrap gap-3">
             <Link
               className="inline-flex h-11 items-center justify-center rounded-full border border-[#1B4332] bg-[#1B4332] px-5 text-sm font-medium text-[#FBFAF6] transition hover:bg-[#24533F]"
-              href="/engine"
+              href="/parcours"
             >
-              Lancer ma saison
+              Lancer ma simulation
             </Link>
             <a
               className="inline-flex h-11 items-center justify-center rounded-full border border-[#D4D9D0] bg-[#FFFDF8] px-5 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5]"
@@ -56,7 +56,10 @@ export function PublicFooter() {
               </div>
             ))}
           </div>
-          <Link className="mt-5 inline-flex h-11 items-center justify-center rounded-full border border-[#D4D9D0] bg-[#FFFDF8] px-5 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5]" href="/landing#top">
+          <Link
+            className="mt-5 inline-flex h-11 items-center justify-center rounded-full border border-[#D4D9D0] bg-[#FFFDF8] px-5 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5]"
+            href="/#top"
+          >
             Revenir au début
           </Link>
         </div>

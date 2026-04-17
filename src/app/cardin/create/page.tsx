@@ -6,6 +6,10 @@ import { PublicFooter } from "@/components/shared/PublicFooter"
 export const metadata: Metadata = {
   title: "Créer une page Cardin",
   description: "Préparez une page Cardin dédiée à un lieu en quelques champs.",
+  robots: {
+    index: false,
+    follow: false,
+  },
 }
 
 export default function CardinCreatePage() {
@@ -20,7 +24,8 @@ export default function CardinCreatePage() {
               Ouvrir une page Cardin à partir d&apos;une lecture du lieu.
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-[#566159] sm:text-lg">
-              Quelques champs suffisent. Cardin lit le moment faible, le rythme de retour et la clientèle dominante, puis ouvre une page prête pour la démo.
+              Quelques champs suffisent. Cardin lit le moment faible, le rythme de retour et la clientèle dominante, puis
+              ouvre une page prête pour la démo.
             </p>
           </div>
 

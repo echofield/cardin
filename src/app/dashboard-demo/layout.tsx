@@ -1,7 +1,5 @@
 import type { Metadata } from "next"
 
-import { DemoNarrative } from "@/components/demo/DemoNarrative"
-
 export const metadata: Metadata = {
   robots: {
     index: false,
@@ -9,6 +7,6 @@ export const metadata: Metadata = {
   },
 }
 
-export default function DemoPage() {
-  return <DemoNarrative />
+export default function DashboardDemoLayout({ children }: { children: React.ReactNode }) {
+  return children
 }

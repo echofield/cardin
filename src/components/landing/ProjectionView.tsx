@@ -98,7 +98,7 @@ export function ProjectionView() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#F6F5F0] px-6">
         <p className="font-serif text-2xl text-[#15372B]">Aucun résultat pour ce lien.</p>
-        <Link className="mt-6 text-sm text-[#173A2E] underline underline-offset-4" href="/landing">
+        <Link className="mt-6 text-sm text-[#173A2E] underline underline-offset-4" href="/">
           Retour
         </Link>
       </div>
@@ -269,8 +269,8 @@ export function ProjectionView() {
           >
             Réserver ma saison Cardin
           </Link>
-          <Link className="text-sm text-[#7A847B] underline-offset-4 hover:text-[#15372B] hover:underline" href="/landing">
-            Voir d'autres commerces
+          <Link className="text-sm text-[#7A847B] underline-offset-4 hover:text-[#15372B] hover:underline" href="/">
+            Revenir à l&apos;accueil
           </Link>
         </div>
       </div>

@@ -507,12 +507,11 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
         <Link className="text-[#173A2E] underline" href={`/merchant/${merchantId}`}>
           {profile.staff.dashboardLinkLabel}
         </Link>
-        <Link className="text-[#173A2E] underline" href="/landing">
+        <Link className="text-[#173A2E] underline" href="/">
           {profile.staff.brandLinkLabel}
         </Link>
       </div>
     </div>
   )
 }
-
 

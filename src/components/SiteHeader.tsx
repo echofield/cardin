@@ -4,11 +4,9 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 const NAV_ITEMS = [
-  { href: "/landing#methode", label: "Méthode" },
-  { href: "/landing#cas", label: "Cas" },
-  { href: "/landing", label: "Simuler" },
-  { href: "/cardin/create", label: "Création" },
-  { href: "/landing#contact", label: "Contact" },
+  { href: "/#impact", label: "Impact" },
+  { href: "/parcours", label: "Simuler" },
+  { href: "/#contact", label: "Contact" },
 ]
 
 export function SiteHeader() {
@@ -17,14 +15,14 @@ export function SiteHeader() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-[#E4E7E0]/80 bg-[#F6F5F0]/95 pt-safe">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-6">
-        <Link className="flex flex-col leading-none" href="/landing">
+        <Link className="flex flex-col leading-none" href="/">
           <span className="font-serif text-[1.15rem] font-semibold tracking-[0.06em] text-[#15372B]">CARDIN</span>
           <span className="mt-0.5 text-[9px] tracking-[0.08em] text-[#6B766D]">by Symi</span>
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">
           {NAV_ITEMS.map((item) => {
-            const active = item.href === pathname || (item.href === "/landing" && pathname === "/")
+            const active = item.href === "/parcours" && pathname === "/parcours"
             return (
               <Link
                 className={[
@@ -42,9 +40,9 @@ export function SiteHeader() {
 
         <Link
           className="inline-flex h-10 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#FFFDF8] px-4 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] md:hidden"
-          href="/landing#onboarding"
+          href="/parcours"
         >
-          Parcours
+          Simuler
         </Link>
       </div>
     </header>

@@ -8,7 +8,7 @@ type GoogleSignInButtonProps = {
   label?: string
 }
 
-export function GoogleSignInButton({ nextPath = "/landing", label = "Se connecter avec Google" }: GoogleSignInButtonProps) {
+export function GoogleSignInButton({ nextPath = "/", label = "Se connecter avec Google" }: GoogleSignInButtonProps) {
   return (
     <Button
       onClick={async () => {

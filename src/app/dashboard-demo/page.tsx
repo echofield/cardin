@@ -61,7 +61,7 @@ function SectorSelector() {
             <div style={{ fontSize: '0.98rem', fontWeight: 600, color: '#15372B' }}>Vue marchand tablette</div>
           </div>
           <Link
-            href="/landing"
+            href="/"
             style={{
               fontSize: '0.65rem',
               padding: '6px 12px',
@@ -72,7 +72,7 @@ function SectorSelector() {
               letterSpacing: '0.04em',
             }}
           >
-            Retour site
+            Retour accueil
           </Link>
         </div>
 

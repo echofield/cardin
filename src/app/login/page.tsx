@@ -3,7 +3,7 @@
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton"
 
 export default function LoginPage({ searchParams }: { searchParams: { next?: string } }) {
-  const next = searchParams.next ?? "/landing"
+  const next = searchParams.next ?? "/"
 
   return (
     <main className="min-h-screen bg-[#F8F7F2] px-4 py-12 text-[#173A2E] sm:px-6 lg:px-8">
@@ -16,7 +16,7 @@ export default function LoginPage({ searchParams }: { searchParams: { next?: str
           <GoogleSignInButton label="Continuer avec Google" nextPath={next} />
         </div>
 
-        <Link className="mt-6 inline-block text-sm underline" href="/landing">
+        <Link className="mt-6 inline-block text-sm underline" href="/">
           Retour à la landing
         </Link>
       </div>

@@ -1,4 +1,13 @@
-﻿import { EngineFlow } from "@/components/engine/EngineFlow"
+import type { Metadata } from "next"
+
+import { EngineFlow } from "@/components/engine/EngineFlow"
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 type EnginePageProps = {
   searchParams?: {
@@ -21,4 +30,3 @@ export default function EnginePage({ searchParams }: EnginePageProps) {
     </main>
   )
 }
-

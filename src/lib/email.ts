@@ -229,7 +229,7 @@ export async function sendContactEmails(input: ContactEmailInput) {
     requestLine,
     ...(recap ? ["", "─────", "", recap.text] : []),
     "",
-    `Landing : ${siteUrl}/landing`,
+    `Landing : ${siteUrl}/`,
   ].join("\n")
 
   const internalHtml = `
@@ -240,7 +240,7 @@ export async function sendContactEmails(input: ContactEmailInput) {
     <p><strong>E-mail :</strong> ${escapeHtml(input.email)}</p>
     <p><strong>Demande :</strong><br />${escapeHtml(requestLine).replace(/\n/g, "<br />")}</p>
     ${recap ? recap.html : ""}
-    <p><strong>Landing :</strong> <a href="${siteUrl}/landing">${siteUrl}/landing</a></p>
+    <p><strong>Landing :</strong> <a href="${siteUrl}/">${siteUrl}/</a></p>
   `
 
   const businessGreeting = input.businessName?.trim()

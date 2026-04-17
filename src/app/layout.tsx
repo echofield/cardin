@@ -1,7 +1,7 @@
 ﻿import type { Metadata, Viewport } from "next"
 import { Cormorant_Garamond, Manrope } from "next/font/google"
 
-import { SiteHeader } from "@/components/SiteHeader"
+import { AppChrome } from "@/components/AppChrome"
 
 import "./globals.css"
 
@@ -27,9 +27,9 @@ const body = Manrope({
 
 const SITE_URL = process.env.CARDIN_SITE_URL ?? "https://getcardin.com"
 const SITE_NAME = "Cardin"
-const SITE_TITLE = "Cardin — moteur de retour pour commerces et communautés"
+const SITE_TITLE = "Cardin — transformez les clients de passage en clients qui reviennent"
 const SITE_DESCRIPTION =
-  "Transformez chaque passage en progression mesurable. QR d'entrée, carte digitale, récompense de saison. Activation sous 48 h, lecture du retour sous 30 jours."
+  "Cardin transforme le passage en retour client. Simulez l'impact sur votre commerce, puis lancez une saison claire."
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -75,8 +75,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html className={`${heading.variable} ${body.variable}`} lang="fr">
       <body className="font-sans antialiased">
-        <SiteHeader />
-        <div className="pb-safe min-h-dvh-safe pt-[calc(3.5rem+env(safe-area-inset-top,0px))]">{children}</div>
+        <AppChrome>{children}</AppChrome>
       </body>
     </html>
   )

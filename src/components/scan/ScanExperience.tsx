@@ -187,9 +187,9 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
       const payload = (await response.json()) as { fallbackUrl?: string }
       trackEvent("wallet_button_clicked", { provider, merchantId, mode: "fallback" })
 
-      if (typeof window !== "undefined") window.location.href = payload.fallbackUrl ?? cardData?.cardUrl ?? "/landing"
+      if (typeof window !== "undefined") window.location.href = payload.fallbackUrl ?? cardData?.cardUrl ?? "/"
     } catch {
-      if (typeof window !== "undefined") window.location.href = cardData?.cardUrl ?? "/landing"
+      if (typeof window !== "undefined") window.location.href = cardData?.cardUrl ?? "/"
     }
   }
 
@@ -207,7 +207,7 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
       <main className="min-h-dvh-safe bg-[#F8F7F2] px-4 py-12 pb-[max(3rem,env(safe-area-inset-bottom,0px))] text-[#173A2E]">
         <Card className="mx-auto max-w-xl p-6">
           <p className="text-sm text-[#A64040]">{merchantError ?? fallbackProfile.scan.notFound}</p>
-          <Link className="mt-4 inline-block text-sm underline" href="/landing">
+          <Link className="mt-4 inline-block text-sm underline" href="/">
             {fallbackProfile.scan.backHome}
           </Link>
         </Card>
