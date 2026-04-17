@@ -4,7 +4,7 @@ import { CardinHomePage } from "@/components/home/CardinHomePage"
 
 export const metadata: Metadata = {
   title: "Cardin",
-  description: "Transformez les clients de passage en clients qui reviennent.",
+  description: "Le revenu qui part avec vos clients. Récupéré.",
 }
 
 export default function HomePage() {

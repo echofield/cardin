@@ -27,9 +27,9 @@ const body = Manrope({
 
 const SITE_URL = process.env.CARDIN_SITE_URL ?? "https://getcardin.com"
 const SITE_NAME = "Cardin"
-const SITE_TITLE = "Cardin — transformez les clients de passage en clients qui reviennent"
+const SITE_TITLE = "Cardin — le revenu qui part avec vos clients. Récupéré."
 const SITE_DESCRIPTION =
-  "Cardin transforme le passage en retour client. Simulez l'impact sur votre commerce, puis lancez une saison claire."
+  "Cardin transforme chaque passage en raison structurée de revenir. Simulez l'impact sur votre commerce puis lancez une saison claire."
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
