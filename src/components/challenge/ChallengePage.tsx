@@ -488,8 +488,8 @@ export function ChallengePage() {
             <RuleCard index="iii." text="Activation sous 24 h après paiement." />
           </div>
 
-          <div className="mt-10 text-center">
-            <div className="mb-5 inline-flex flex-wrap items-center justify-center gap-3 text-[12px] uppercase tracking-[0.2em] text-[#8a8578]">
+          <div className="mt-9 text-center">
+            <div className="mb-4 inline-flex flex-wrap items-center justify-center gap-2.5 text-[12px] uppercase tracking-[0.2em] text-[#8a8578]">
               <span>Challenge Cardin</span>
               <span className="h-[3px] w-[3px] rounded-full bg-[#8a8578]/50" />
               <span>
@@ -500,7 +500,7 @@ export function ChallengePage() {
             </div>
 
             <a
-              className="inline-flex items-center gap-3 rounded-[2px] border border-[#0f3d2e] bg-[#0f3d2e] px-8 py-4 text-[12px] uppercase tracking-[0.22em] text-[#f2ede4] transition hover:border-[#1a2a22] hover:bg-[#1a2a22]"
+              className="inline-flex w-full max-w-[28rem] items-center justify-center gap-3 rounded-[2px] border border-[#0f3d2e] bg-[#0f3d2e] px-8 py-4 text-[12px] uppercase tracking-[0.22em] text-[#f2ede4] transition hover:border-[#1a2a22] hover:bg-[#1a2a22] sm:px-10"
               href={challengeHref}
               rel={STRIPE_CHALLENGE_LINK ? "noreferrer" : undefined}
               target={STRIPE_CHALLENGE_LINK ? "_blank" : undefined}
@@ -508,7 +508,7 @@ export function ChallengePage() {
               <span>{challengeLinkLabel}</span>
               <span aria-hidden="true">→</span>
             </a>
-            <p className="mt-3 text-[11px] italic tracking-[0.08em] text-[#8a8578]">
+            <p className="mt-2.5 text-[11px] italic tracking-[0.08em] text-[#8a8578]">
               {STRIPE_CHALLENGE_LINK ? "Paiement sécurisé par Stripe · activation sous 24 h" : "Lien Stripe à brancher · fallback contact prêt"}
             </p>
           </div>
