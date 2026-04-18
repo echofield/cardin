@@ -6,9 +6,9 @@ import { SiteHeader } from "@/components/SiteHeader"
 
 export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const isHomePage = pathname === "/"
+  const hideChrome = pathname === "/" || pathname === "/parcours" || pathname.startsWith("/parcours/")
 
-  if (isHomePage) {
+  if (hideChrome) {
     return <>{children}</>
   }
 

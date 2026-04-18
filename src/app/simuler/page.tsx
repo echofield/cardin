@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
 
-export default function ParcoursPage() {
+export default function SimulerPage() {
   redirect("/parcours/lecture")
 }

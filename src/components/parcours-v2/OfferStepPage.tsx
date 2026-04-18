@@ -1,0 +1,133 @@
+"use client"
+
+import Link from "next/link"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { gsap } from "gsap"
+
+import { LANDING_PRICING } from "@/lib/landing-content"
+import { buildCheckoutMetadata, buildOfferRecapItems, computeImpactBreakdown, serializeLectureQuery } from "@/lib/parcours-v2"
+import { useParcoursFlow } from "@/components/parcours-v2/ParcoursFlowProvider"
+import { ParcoursParticles } from "@/components/parcours-v2/ParcoursParticles"
+import { ParcoursShell } from "@/components/parcours-v2/ParcoursShell"
+
+export function OfferStepPage() {
+  const { state } = useParcoursFlow()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const totalRef = useRef<HTMLSpanElement | null>(null)
+  const lectureQuery = serializeLectureQuery(state)
+  const recapItems = buildOfferRecapItems(state)
+  const impact = useMemo(() => computeImpactBreakdown(state), [state])
+
+  useEffect(() => {
+    if (!totalRef.current) return
+    const counter = { value: 0 }
+    const tween = gsap.to(counter, {
+      value: impact.total,
+      duration: 1.6,
+      ease: "power2.out",
+      onUpdate: () => {
+        if (totalRef.current) totalRef.current.textContent = `+€${Math.round(counter.value).toLocaleString("fr-FR")}`
+      },
+    })
+    return () => {
+      tween.kill()
+    }
+  }, [impact.total])
+
+  const activate = async () => {
+    if (loading) return
+    setLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch("/api/parcours/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...state,
+          metadata: buildCheckoutMetadata(state),
+        }),
+      })
+
+      const payload = (await response.json()) as { ok?: boolean; url?: string; error?: string }
+
+      if (!response.ok || !payload.ok || !payload.url) {
+        throw new Error(payload.error ?? "checkout_failed")
+      }
+
+      window.location.assign(payload.url)
+    } catch (checkoutError) {
+      setError(checkoutError instanceof Error ? checkoutError.message : "checkout_failed")
+      setLoading(false)
+    }
+  }
+
+  return (
+    <ParcoursShell backHref={`/parcours/impact${lectureQuery ? `?${lectureQuery}` : ""}`} stepIndex={3}>
+      <ParcoursParticles />
+
+      <section className="relative z-[2] flex min-h-[calc(100dvh-120px)] flex-col items-center justify-center px-4 pb-12 pt-4 text-center">
+        <div className="mb-8 flex max-w-[640px] flex-wrap justify-center gap-2">
+          {recapItems.map((item) => (
+            <span
+              className={`rounded-full border px-3 py-1.5 text-[10px] uppercase tracking-[0.14em] ${item.warm ? "border-[#d4b892] text-[#8c6a44]" : "border-[#d4cdbd] text-[#8a8578]"}`}
+              key={item.key}
+            >
+              {item.label}
+            </span>
+          ))}
+        </div>
+
+        <h1 className="font-serif text-[clamp(48px,7vw,80px)] leading-[1.02] tracking-[-0.015em] text-[#1a2a22]">
+          Votre saison <em className="italic text-[#0f3d2e]">est prête.</em>
+        </h1>
+
+        <p className="mt-5 max-w-[540px] font-serif text-[clamp(16px,1.9vw,20px)] italic leading-[1.5] text-[#3d4d43]">
+          Activation digitale sous 48 heures. Premiers retours lisibles sous 30 jours.
+        </p>
+
+        <div className="mt-12 flex flex-col items-center gap-7">
+          <div className="relative flex h-24 w-24 items-center justify-center">
+            <span className="absolute inset-0 rounded-full border border-[#b8956a] opacity-30" />
+            <span className="absolute -inset-3 rounded-full border border-dashed border-[#d4b892] opacity-50" />
+            <span className="font-serif text-4xl text-[#b8956a]">◆</span>
+          </div>
+
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-[10px] uppercase tracking-[0.32em] text-[#8a8578]">Objectif de saison</span>
+            <span className="font-serif text-[clamp(52px,8vw,88px)] font-medium leading-none tracking-[-0.02em] text-[#0f3d2e]" ref={totalRef}>
+              +€0
+            </span>
+            <span className="font-serif text-base italic text-[#8a8578]">net · sur 3 mois</span>
+          </div>
+        </div>
+
+        <div className="mt-12 flex flex-wrap items-center justify-center gap-3 text-[12px] uppercase tracking-[0.18em] text-[#8a8578]">
+          <span>Saison <strong className="font-medium text-[#1a2a22]">90 jours</strong></span>
+          <span className="h-[3px] w-[3px] rounded-full bg-[#8a8578]/60" />
+          <span><strong className="font-medium text-[#1a2a22]">{LANDING_PRICING.activationFee} €</strong> TTC</span>
+          <span className="h-[3px] w-[3px] rounded-full bg-[#8a8578]/60" />
+          <span>Annulable avant activation</span>
+        </div>
+
+        <div className="mt-12 flex flex-col items-center gap-4">
+          <button
+            className="inline-flex items-center gap-4 rounded-sm border border-[#0f3d2e] bg-[#0f3d2e] px-12 py-5 text-[12px] uppercase tracking-[0.22em] text-[#f2ede4] transition hover:border-[#1a2a22] hover:bg-[#1a2a22] disabled:opacity-60"
+            onClick={activate}
+            type="button"
+          >
+            <span>{loading ? "Ouverture du paiement..." : "Activer ma première saison"}</span>
+            <span aria-hidden="true">→</span>
+          </button>
+          <p className="text-[10px] italic tracking-[0.08em] text-[#8a8578]">Paiement sécurisé par Stripe</p>
+          <Link className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-[#8a8578] transition hover:text-[#0f3d2e]" href={`/parcours/impact${lectureQuery ? `?${lectureQuery}` : ""}`}>
+            <span aria-hidden="true">←</span>
+            <span>Revoir l'impact</span>
+          </Link>
+          {error ? <p className="max-w-md text-sm text-[#8c6a44]">{error}</p> : null}
+        </div>
+      </section>
+    </ParcoursShell>
+  )
+}
