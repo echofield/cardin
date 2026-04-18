@@ -41,10 +41,21 @@ export const LANDING_PRICING = {
   liteStickyLabel: "Activer Cardin — 300 € (saison 3 mois)",
 } as const
 
+export const CHALLENGE_PRICING = {
+  activationFee: 150,
+  compactLabel: "150 € TTC pour un Challenge Cardin",
+  shortLabel: "Challenge Cardin · 150 € TTC",
+} as const
+
 /** Paiement activation saison (Stripe Checkout / Payment Link). Override in prod: `NEXT_PUBLIC_STRIPE_PAYMENT_LINK`. */
 const DEFAULT_STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sY5kD4RS66P4Tv7xl9Zm07"
 export const STRIPE_PAYMENT_LINK =
   (typeof process !== "undefined" && process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK?.trim()) || DEFAULT_STRIPE_PAYMENT_LINK
+
+/** Paiement challenge Cardin (Stripe Checkout / Payment Link). Override in prod: `NEXT_PUBLIC_STRIPE_CHALLENGE_LINK`. */
+const DEFAULT_STRIPE_CHALLENGE_LINK = "https://buy.stripe.com/4gMaEXckkcvd71D6th9Zm08"
+export const STRIPE_CHALLENGE_LINK =
+  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_STRIPE_CHALLENGE_LINK?.trim()) || DEFAULT_STRIPE_CHALLENGE_LINK
 
 export const LANDING_WORLD_ORDER: LandingWorldId[] = ["cafe", "bar", "restaurant", "beaute", "boutique"]
 

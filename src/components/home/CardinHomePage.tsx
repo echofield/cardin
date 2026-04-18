@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { calculateRecovery } from "@/lib/calculator"
-import { LANDING_PRICING, STRIPE_PAYMENT_LINK } from "@/lib/landing-content"
+import { CHALLENGE_PRICING, LANDING_PRICING, STRIPE_PAYMENT_LINK } from "@/lib/landing-content"
 import { CARDIN_CONTACT_EMAIL } from "@/lib/site-contact"
 
 type RewardKey = "cafe" | "menu" | "experience"
@@ -102,6 +102,27 @@ const LEGAL_LINKS = [
   { href: "/terms", label: "Conditions" },
   { href: "/legal", label: "Mentions" },
 ]
+
+const OFFER_FRAMES = [
+  {
+    title: "Challenge Cardin",
+    lead: "Le format d'activation. Court, visible, facile à raconter et à lancer.",
+    detail: "Un cadre rapide pour provoquer un retour, une participation ou une venue accompagnée.",
+    meta: `${CHALLENGE_PRICING.shortLabel} · activation sous 24 h`,
+    cta: "Lancer un challenge",
+    href: "/challenge",
+    tone: "accent" as const,
+  },
+  {
+    title: "Saison Cardin",
+    lead: "Le système complet. Lecture, configuration, impact et offre sur 90 jours.",
+    detail: "Le bon choix pour structurer le retour, la propagation et la valeur sur une vraie saison.",
+    meta: `${LANDING_PRICING.compactLabel} · activation sous 48 h`,
+    cta: "Construire une saison",
+    href: "/parcours",
+    tone: "default" as const,
+  },
+] as const
 
 const PARTICLES = [
   { x: "8%", y: "18%", delay: 0.1, duration: 9.8 },
@@ -262,8 +283,13 @@ export function CardinHomePage() {
                   </a>
                 </li>
                 <li>
-                  <Link className="text-[10px] uppercase tracking-[0.15em] text-[#0f3d2e] transition hover:text-[#0f3d2e] sm:text-[12px]" href="/parcours">
-                    Simuler
+                  <Link className="text-[10px] uppercase tracking-[0.15em] text-[#0f3d2e] transition hover:text-[#0f3d2e] sm:text-[12px]" href="/challenge">
+                    Challenge
+                  </Link>
+                </li>
+                <li>
+                  <Link className="text-[10px] uppercase tracking-[0.15em] text-[#3d4d43] transition hover:text-[#0f3d2e] sm:text-[12px]" href="/parcours">
+                    Saison
                   </Link>
                 </li>
                 <li>
@@ -333,19 +359,38 @@ export function CardinHomePage() {
           initial={reducedMotion ? false : { opacity: 0, y: 16 }}
           transition={{ duration: 0.8, delay: 0.32, ease: [0.22, 1, 0.36, 1] }}
         >
-          <a
+          <Link
             className="inline-flex min-h-12 items-center justify-center rounded-sm border border-[#0f3d2e] bg-[#0f3d2e] px-7 py-3 text-[12px] uppercase tracking-[0.15em] text-[#f2ede4] transition hover:border-[#1a2a22] hover:bg-[#1a2a22]"
-            href="#impact"
+            href="/challenge"
           >
-            Voir l&apos;impact
-          </a>
+            Lancer un challenge
+          </Link>
           <Link
             className="inline-flex min-h-12 items-center justify-center rounded-sm border border-[#d4cdbd] px-7 py-3 text-[12px] uppercase tracking-[0.15em] text-[#1a2a22] transition hover:border-[#0f3d2e] hover:bg-[rgba(15,61,46,0.03)] hover:text-[#0f3d2e]"
-            href="/parcours"
+            href="/challenge"
           >
-            Simuler mon commerce
+            Construire une saison
           </Link>
         </motion.div>
+
+        <motion.p
+          animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
+          className="mt-5 text-[11px] uppercase tracking-[0.18em] text-[#8a8578]"
+          initial={reducedMotion ? false : { opacity: 0, y: 14 }}
+          transition={{ duration: 0.8, delay: 0.38, ease: [0.22, 1, 0.36, 1] }}
+        >
+          Challenge pour dÃ©clencher vite Â· Saison pour structurer sur 90 jours
+        </motion.p>
+
+        <motion.a
+          animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
+          className="mt-6 inline-flex text-[11px] uppercase tracking-[0.18em] text-[#3d4d43] underline decoration-[#d4cdbd] underline-offset-4 transition hover:text-[#0f3d2e] hover:decoration-[#0f3d2e]"
+          href="#impact"
+          initial={reducedMotion ? false : { opacity: 0, y: 12 }}
+          transition={{ duration: 0.8, delay: 0.44, ease: [0.22, 1, 0.36, 1] }}
+        >
+          Voir l&apos;impact
+        </motion.a>
 
       </section>
 
@@ -653,6 +698,64 @@ export function CardinHomePage() {
         </motion.div>
       </section>
 
+      <motion.section className="border-t border-[#d4cdbd] bg-[#f6f1e7] px-6 py-24 sm:px-8 lg:px-12" {...panelMotion}>
+        <div className="mx-auto max-w-[980px]">
+          <div className="text-center">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-[#8a8578]">Deux intensitÃ©s</p>
+            <h2 className="mt-5 font-serif text-[clamp(32px,4vw,44px)] leading-[1.15] text-[#1a2a22]">
+              Le mÃªme systÃ¨me.
+              <br />
+              Deux cadres pour <em className="font-normal italic text-[#0f3d2e]">entrer</em> dans Cardin.
+            </h2>
+            <p className="mx-auto mt-5 max-w-[640px] font-serif text-[18px] italic leading-[1.55] text-[#3d4d43]">
+              Challenge pour dÃ©clencher vite. Saison pour structurer le retour sur 90 jours.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-5 lg:grid-cols-2">
+            {OFFER_FRAMES.map((frame) => (
+              <article
+                className={[
+                  "rounded border px-6 py-7 text-left shadow-[0_12px_30px_rgba(15,61,46,0.04)] sm:px-7 sm:py-8",
+                  frame.tone === "accent"
+                    ? "border-[#c9b28d] bg-[linear-gradient(180deg,#fff8ef_0%,#f6efe3_100%)]"
+                    : "border-[#d4cdbd] bg-[#f2ede4]",
+                ].join(" ")}
+                key={frame.title}
+              >
+                <p className="text-[10px] uppercase tracking-[0.22em] text-[#8a8578]">{frame.meta}</p>
+                <h3 className="mt-4 font-serif text-[30px] leading-[1.1] text-[#1a2a22]">{frame.title}</h3>
+                <p className="mt-4 font-serif text-[20px] leading-[1.35] text-[#1a2a22]">{frame.lead}</p>
+                <p className="mt-3 max-w-[34rem] text-[15px] leading-7 text-[#556159]">{frame.detail}</p>
+                <div className="mt-7 flex flex-wrap items-center gap-3">
+                  <Link
+                    className={[
+                      "inline-flex min-h-11 items-center justify-center rounded-sm border px-6 py-3 text-[11px] uppercase tracking-[0.16em] transition",
+                      frame.tone === "accent"
+                        ? "border-[#0f3d2e] bg-[#0f3d2e] text-[#f2ede4] hover:border-[#1a2a22] hover:bg-[#1a2a22]"
+                        : "border-[#0f3d2e] text-[#0f3d2e] hover:bg-[rgba(15,61,46,0.04)]",
+                    ].join(" ")}
+                    href={frame.href}
+                  >
+                    {frame.cta}
+                  </Link>
+                  {frame.title === "Saison Cardin" ? (
+                    <a
+                      className="inline-flex text-[11px] uppercase tracking-[0.18em] text-[#3d4d43] underline decoration-[#d4cdbd] underline-offset-4 transition hover:text-[#0f3d2e] hover:decoration-[#0f3d2e]"
+                      href={STRIPE_PAYMENT_LINK}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      RÃ©server directement
+                    </a>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </motion.section>
+
       <motion.section className="px-6 py-[136px] pb-[104px] text-center sm:px-8 lg:px-12" {...panelMotion}>
         <p className="mx-auto mb-10 max-w-[640px] font-serif text-[clamp(20px,2.2vw,26px)] italic leading-[1.5] text-[#3d4d43]">
           Conçu à Paris pour les commerçants
@@ -660,8 +763,12 @@ export function CardinHomePage() {
           qui comptent leurs clients.
         </p>
 
-        <p className="mx-auto mb-8 max-w-[520px] text-[11px] uppercase tracking-[0.18em] text-[#8a8578]">
+        <p className="hidden">
           {LANDING_PRICING.compactLabel} · activation sous 48 h
+        </p>
+
+        <p className="mx-auto mb-8 max-w-[620px] text-[11px] uppercase tracking-[0.18em] text-[#8a8578]">
+          Challenge pour entrer · Saison pour installer le cadre
         </p>
 
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -669,16 +776,17 @@ export function CardinHomePage() {
             className="inline-flex min-h-12 items-center justify-center rounded-sm border border-[#0f3d2e] bg-[#0f3d2e] px-7 py-3 text-[12px] uppercase tracking-[0.15em] text-[#f2ede4] transition hover:border-[#1a2a22] hover:bg-[#1a2a22]"
             href="/parcours"
           >
-            Lancer ma simulation
+            Lancer un challenge
           </Link>
-          <a
-            className="inline-flex min-h-12 items-center justify-center rounded-sm border border-[#d4cdbd] px-7 py-3 text-[12px] uppercase tracking-[0.15em] text-[#1a2a22] transition hover:border-[#0f3d2e] hover:bg-[rgba(15,61,46,0.03)] hover:text-[#0f3d2e]"
-            href={STRIPE_PAYMENT_LINK}
-            rel="noreferrer"
-            target="_blank"
+          <Link
+            className="group relative inline-flex min-h-12 items-center justify-center rounded-sm border border-[#d4cdbd] px-7 py-3 text-[12px] uppercase tracking-[0.15em] text-transparent transition hover:border-[#0f3d2e] hover:bg-[rgba(15,61,46,0.03)] hover:text-transparent"
+            href="/parcours"
           >
+            <span className="absolute inset-0 flex items-center justify-center text-[#1a2a22] transition group-hover:text-[#0f3d2e]">
+              Construire une saison
+            </span>
             Réserver ma saison
-          </a>
+          </Link>
         </div>
       </motion.section>
 

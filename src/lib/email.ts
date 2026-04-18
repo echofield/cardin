@@ -30,6 +30,80 @@ type EmailConfig = {
   contactToEmail: string
 }
 
+export async function sendRevenirCaptureEmails(input: RevenirCaptureEmailInput) {
+  const config = getEmailConfig()
+  const siteUrl = getSiteUrl(input.origin)
+  const parcoursUrl = `${siteUrl}/parcours/lecture`
+  const offerUrl = `${siteUrl}/parcours/offre`
+  const sourceLine = input.source?.trim() ? input.source.trim() : "direct"
+  const contactLabel = input.contactType === "whatsapp" ? "WhatsApp" : "E-mail"
+
+  const internalText = [
+    "Revenir Cardin · nouveau contact",
+    "",
+    `Lieu : ${input.businessName}`,
+    `${contactLabel} : ${input.contactValue}`,
+    `Source : ${sourceLine}`,
+    "",
+    `Reprendre la simulation : ${parcoursUrl}`,
+    `Activer la saison : ${offerUrl}`,
+  ].join("\n")
+
+  const internalHtml = `
+    <h2 style="font-family:Georgia,serif;color:#163328;">Revenir Cardin · nouveau contact</h2>
+    <p><strong>Lieu :</strong> ${escapeHtml(input.businessName)}</p>
+    <p><strong>${escapeHtml(contactLabel)} :</strong> ${escapeHtml(input.contactValue)}</p>
+    <p><strong>Source :</strong> ${escapeHtml(sourceLine)}</p>
+    <p><a href="${parcoursUrl}">Reprendre la simulation</a><br /><a href="${offerUrl}">Activer la saison</a></p>
+  `
+
+  await sendMail({
+    to: config.contactToEmail,
+    replyTo: input.contactType === "email" ? input.contactValue : undefined,
+    subject: `Cardin · revenir plus tard — ${input.businessName}`,
+    text: internalText,
+    html: internalHtml,
+  })
+
+  if (input.contactType !== "email") {
+    return
+  }
+
+  const merchantText = [
+    `Bonjour ${input.businessName},`,
+    "",
+    "Votre accès Cardin est prêt.",
+    "Vous pouvez reprendre votre lecture ou activer votre première saison quand le moment est bon.",
+    "",
+    `Reprendre la simulation : ${parcoursUrl}`,
+    `Activer la saison : ${offerUrl}`,
+    "",
+    `Une question ? Écrivez à ${config.contactToEmail}.`,
+    "",
+    "À très vite,",
+    "L'équipe Cardin",
+  ].join("\n")
+
+  const merchantHtml = `
+    <div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;color:#163328;line-height:1.6;">
+      <p>Bonjour ${escapeHtml(input.businessName)},</p>
+      <p>Votre accès Cardin est prêt.</p>
+      <p>Vous pouvez reprendre votre lecture ou activer votre première saison quand le moment est bon.</p>
+      <p><a href="${parcoursUrl}" style="color:#1f5a46;">Reprendre la simulation</a><br /><a href="${offerUrl}" style="color:#1f5a46;">Activer la saison</a></p>
+      <p>Une question ? Écrivez à <a href="mailto:${escapeHtml(config.contactToEmail)}" style="color:#1f5a46;">${escapeHtml(config.contactToEmail)}</a>.</p>
+      <p style="margin-top:20px;">À très vite,<br />L'équipe Cardin</p>
+    </div>
+  `
+
+  await sendMail({
+    to: input.contactValue,
+    replyTo: config.contactToEmail,
+    subject: "Cardin · votre accès est prêt",
+    text: merchantText,
+    html: merchantHtml,
+  })
+}
+
 export type ParcoursSelectionsPayload = {
   worldId: LandingWorldId
   seasonRewardId: SeasonRewardId | null
@@ -61,6 +135,14 @@ type StripeCheckoutEmailInput = {
   customerName?: string | null
   paymentLinkId?: string | null
   origin?: string
+}
+
+type RevenirCaptureEmailInput = {
+  businessName: string
+  contactType: "whatsapp" | "email"
+  contactValue: string
+  origin?: string
+  source?: string | null
 }
 
 let transporter: nodemailer.Transporter | null = null

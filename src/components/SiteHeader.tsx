@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation"
 
 const NAV_ITEMS = [
   { href: "/#impact", label: "Impact" },
-  { href: "/parcours", label: "Simuler" },
+  { href: "/challenge", label: "Challenge" },
+  { href: "/parcours", label: "Saison" },
   { href: "/#contact", label: "Contact" },
 ]
 
@@ -22,7 +23,9 @@ export function SiteHeader() {
 
         <nav className="hidden items-center gap-6 md:flex">
           {NAV_ITEMS.map((item) => {
-            const active = item.href === "/parcours" && (pathname === "/parcours" || pathname.startsWith("/parcours/"))
+            const active =
+              (item.href === "/parcours" && (pathname === "/parcours" || pathname.startsWith("/parcours/"))) ||
+              (item.href === "/challenge" && pathname === "/challenge")
             return (
               <Link
                 className={[
@@ -40,9 +43,9 @@ export function SiteHeader() {
 
         <Link
           className="inline-flex h-10 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#FFFDF8] px-4 text-sm font-medium text-[#173A2E] transition hover:border-[#B8C3B5] md:hidden"
-          href="/parcours"
+          href="/challenge"
         >
-          Simuler
+          Lancer
         </Link>
       </div>
     </header>
