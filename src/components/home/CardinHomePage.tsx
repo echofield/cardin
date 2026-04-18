@@ -198,6 +198,7 @@ function buildGraph(values: number[]) {
 
 export function CardinHomePage() {
   const reducedMotion = useReducedMotion()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [businessKey, setBusinessKey] = useState<BusinessKey>("cafe")
   const [rewardKey, setRewardKey] = useState<RewardKey>(BUSINESSES.cafe.defaultReward)
   const [passagesPerDay, setPassagesPerDay] = useState(50)
@@ -275,8 +276,8 @@ export function CardinHomePage() {
           </Link>
 
           <div className="flex flex-col items-end gap-2">
-            <nav>
-              <ul className="flex items-center gap-5 sm:gap-7 lg:gap-9">
+            <nav className="hidden sm:block">
+              <ul className="flex items-center gap-7 lg:gap-9">
                 <li>
                   <a className="text-[10px] uppercase tracking-[0.15em] text-[#3d4d43] transition hover:text-[#0f3d2e] sm:text-[12px]" href="#impact">
                     Impact
@@ -299,11 +300,67 @@ export function CardinHomePage() {
                 </li>
               </ul>
             </nav>
-            <p className="text-[10px] tracking-[0.2em] text-[#8a8578]">
+            <div className="flex items-center gap-3 sm:hidden">
+              <Link
+                className="inline-flex h-9 items-center justify-center rounded-full border border-[#d4cdbd] bg-[rgba(242,237,228,0.86)] px-3.5 text-[12px] uppercase tracking-[0.12em] text-[#0f3d2e]"
+                href="/challenge"
+              >
+                Lancer
+              </Link>
+              <button
+                aria-expanded={mobileMenuOpen}
+                aria-label={mobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#d4cdbd] bg-[rgba(242,237,228,0.86)] text-[#0f3d2e]"
+                onClick={() => setMobileMenuOpen((open) => !open)}
+                type="button"
+              >
+                <span className="relative block h-3.5 w-4">
+                  <span className={["absolute left-0 top-0 h-px w-4 bg-current transition", mobileMenuOpen ? "translate-y-[7px] rotate-45" : ""].join(" ")} />
+                  <span className={["absolute left-0 top-[7px] h-px w-4 bg-current transition", mobileMenuOpen ? "opacity-0" : "opacity-100"].join(" ")} />
+                  <span className={["absolute left-0 top-[14px] h-px w-4 bg-current transition", mobileMenuOpen ? "-translate-y-[7px] -rotate-45" : ""].join(" ")} />
+                </span>
+              </button>
+            </div>
+            <p className="hidden text-[10px] tracking-[0.2em] text-[#8a8578] sm:block">
               <span className="text-[#1a2a22]">FR</span> / EN
             </p>
           </div>
         </div>
+
+        {mobileMenuOpen ? (
+          <div className="mt-3 border-t border-[#d4cdbd] pt-3 sm:hidden">
+            <nav className="flex flex-col items-end gap-1">
+              <a
+                className="rounded-2xl px-3 py-2 text-[11px] uppercase tracking-[0.14em] text-[#0f3d2e]"
+                href="#impact"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Impact
+              </a>
+              <Link
+                className="rounded-2xl px-3 py-2 text-[11px] uppercase tracking-[0.14em] text-[#0f3d2e]"
+                href="/challenge"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Challenge
+              </Link>
+              <Link
+                className="rounded-2xl px-3 py-2 text-[11px] uppercase tracking-[0.14em] text-[#0f3d2e]"
+                href="/parcours"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Saison
+              </Link>
+              <a
+                className="rounded-2xl px-3 py-2 text-[11px] uppercase tracking-[0.14em] text-[#0f3d2e]"
+                href="#contact"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Contact
+              </a>
+            </nav>
+          </div>
+        ) : null}
       </header>
 
       <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 pb-20 pt-32 text-center sm:px-8 lg:px-12">
