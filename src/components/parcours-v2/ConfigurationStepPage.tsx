@@ -1,20 +1,20 @@
 "use client"
 
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 import { buttonVariants } from "@/ui"
 import { cn } from "@/lib/utils"
 import {
-  DIAMOND_OPTIONS,
   PARCOURS_DECAY_VALUES,
-  REWARD_OPTIONS,
   SPREAD_OPTIONS,
   WHO_OPTIONS,
   buildConfigurationPhrase,
   buildRecapItems,
   computeConfigurationTension,
   getBusinessOption,
+  getDiamondOptions,
   getDiamondOption,
+  getRewardOptions,
   getRewardOption,
   getSpreadOption,
   serializeLectureQuery,
@@ -24,11 +24,14 @@ import { ParcoursParticles } from "@/components/parcours-v2/ParcoursParticles"
 import { ParcoursShell } from "@/components/parcours-v2/ParcoursShell"
 
 export function ConfigurationStepPage() {
+  const router = useRouter()
   const { state, updateState } = useParcoursFlow()
   const business = getBusinessOption(state.business) ?? getBusinessOption("cafe")
-  const reward = getRewardOption(state.reward)
+  const rewardOptions = getRewardOptions(state.business)
+  const reward = getRewardOption(state.reward, state.business)
   const spread = getSpreadOption(state.spread)
-  const diamond = getDiamondOption(state.diamond)
+  const diamondOptions = getDiamondOptions(state.business)
+  const diamond = getDiamondOption(state.diamond, state.business)
   const phrase = buildConfigurationPhrase(state)
   const tension = computeConfigurationTension(state)
   const lectureQuery = serializeLectureQuery(state)
@@ -50,7 +53,7 @@ export function ConfigurationStepPage() {
           </p>
         </div>
 
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)] lg:gap-12">
+        <div className="grid gap-8 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.95fr)] xl:gap-10">
           <div className="flex flex-col gap-8">
             <section>
               <SectionLabel label="La Mécanique" />
@@ -61,7 +64,7 @@ export function ConfigurationStepPage() {
                   name="Récompense"
                 >
                   <div className="flex flex-wrap gap-2">
-                    {REWARD_OPTIONS.map((option) => (
+                    {rewardOptions.map((option) => (
                       <button
                         className={chipClass(state.reward === option.key)}
                         key={option.key}
@@ -119,9 +122,9 @@ export function ConfigurationStepPage() {
             <section>
               <SectionLabel label="L'Aimant · pourquoi ils jouent" warm />
               <div className="rounded-md border border-[#d4b892] bg-[linear-gradient(to_bottom,rgba(184,149,106,0.04),transparent)] px-5">
-                <Track hint="le summit de la saison" index="05" name="Diamond" warm>
+                <Track hint="le tirage de la saison" index="05" name="Diamond" warm>
                   <div className="flex flex-wrap gap-2">
-                    {DIAMOND_OPTIONS.map((option) => (
+                    {diamondOptions.map((option) => (
                       <button
                         className={warmChipClass(state.diamond === option.key)}
                         key={option.key}
@@ -154,7 +157,7 @@ export function ConfigurationStepPage() {
             </section>
           </div>
 
-          <aside className="lg:sticky lg:top-24">
+          <aside className="xl:sticky xl:top-24">
             <div className="mb-4 flex items-center gap-3 rounded border border-[#d4cdbd] bg-[rgba(15,61,46,0.04)] px-4 py-3 text-[10px] uppercase tracking-[0.2em] text-[#3d4d43]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#0f3d2e]" />
               <span className="font-medium">Saison · 90 jours</span>
@@ -162,7 +165,7 @@ export function ConfigurationStepPage() {
             </div>
 
             <div className="mb-5 flex justify-center">
-              <div className="w-[260px] rounded-[28px] border border-[#d4cdbd] bg-[#e3dccc] p-3 shadow-[0_20px_48px_rgba(15,61,46,0.08)]">
+              <div className="w-full max-w-[260px] rounded-[28px] border border-[#d4cdbd] bg-[#e3dccc] p-3 shadow-[0_20px_48px_rgba(15,61,46,0.08)]">
                 <div className="rounded-[18px] bg-[#f2ede4] px-4 py-6">
                   <div className="border-b border-[#d4cdbd] pb-3 text-center font-serif text-[15px] tracking-[0.25em] text-[#0f3d2e]">
                     {business?.brand}
@@ -251,9 +254,13 @@ export function ConfigurationStepPage() {
             </div>
 
             <div className="mt-9 flex flex-col items-center gap-3">
-              <Link className={cn(buttonVariants({ variant: "primary", size: "lg" }))} href={`/parcours/impact${lectureQuery ? `?${lectureQuery}` : ""}`}>
+              <button
+                className={cn(buttonVariants({ variant: "primary", size: "lg" }))}
+                onClick={() => router.push(`/parcours/impact${lectureQuery ? `?${lectureQuery}` : ""}`)}
+                type="button"
+              >
                 Voir l'impact
-              </Link>
+              </button>
               <p className="text-[11px] italic tracking-[0.1em] text-[#8a8578]">Ajustable jusqu'au paiement.</p>
             </div>
 
@@ -330,7 +337,7 @@ function SliderRow({
   const tickValues = marks ?? Array.from({ length: max - min + 1 }, (_, index) => min + index)
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
       <div className="relative flex-1">
         <input
           className="absolute inset-0 z-10 h-8 w-full cursor-pointer appearance-none bg-transparent opacity-0"
@@ -355,7 +362,7 @@ function SliderRow({
           />
         </div>
       </div>
-      <div className={`min-w-[90px] text-right font-serif text-2xl ${tint === "warm" ? "text-[#8c6a44]" : "text-[#0f3d2e]"}`}>
+      <div className={`min-w-[90px] text-left font-serif text-2xl sm:text-right ${tint === "warm" ? "text-[#8c6a44]" : "text-[#0f3d2e]"}`}>
         {value}
         <span className="ml-1 font-sans text-[10px] uppercase tracking-[0.12em] text-[#8a8578]">{valueLabel}</span>
       </div>

@@ -36,6 +36,20 @@ export type BusinessOption = {
   basketByLevel: { bas: number; moyen: number; eleve: number }
 }
 
+type RewardOption = {
+  key: ParcoursRewardKey
+  label: string
+  phrase: string
+  multiplier: number
+}
+
+type DiamondOption = {
+  key: ParcoursDiamondKey
+  label: string
+  phrase: string
+  multiplier: number
+}
+
 export type LeakOption = {
   key: ParcoursLeakKey
   label: string
@@ -189,12 +203,43 @@ export const RHYTHM_OPTIONS: Array<{ key: ParcoursRhythmKey; label: string; mult
   { key: "mensuel", label: "Mensuel", multiplier: 0.75 },
 ]
 
-export const REWARD_OPTIONS: Array<{ key: ParcoursRewardKey; label: string; phrase: string; multiplier: number }> = [
-  { key: "cafe", label: "Café offert", phrase: "1 café offert", multiplier: 1 },
-  { key: "credit", label: "5 € de crédit", phrase: "5 € de crédit", multiplier: 1.06 },
-  { key: "menu", label: "Menu offert", phrase: "1 menu offert", multiplier: 1.12 },
-  { key: "invitation", label: "Invitation", phrase: "une invitation partageable", multiplier: 1.09 },
+const REWARD_BASE_OPTIONS: Array<{ key: ParcoursRewardKey; multiplier: number }> = [
+  { key: "cafe", multiplier: 1 },
+  { key: "credit", multiplier: 1.06 },
+  { key: "menu", multiplier: 1.12 },
+  { key: "invitation", multiplier: 1.09 },
 ]
+
+const REWARD_COPY: Record<ParcoursRewardKey, Record<ParcoursBusinessKey, { label: string; phrase: string }>> = {
+  cafe: {
+    cafe: { label: "Café offert", phrase: "1 café offert" },
+    bar: { label: "Verre offert", phrase: "1 verre offert" },
+    restaurant: { label: "Dessert offert", phrase: "1 dessert offert" },
+    beaute: { label: "Soin flash offert", phrase: "1 soin flash offert" },
+    boutique: { label: "Accessoire offert", phrase: "1 accessoire offert" },
+  },
+  credit: {
+    cafe: { label: "5 € de crédit", phrase: "5 € de crédit" },
+    bar: { label: "8 € de crédit", phrase: "8 € de crédit" },
+    restaurant: { label: "12 € de crédit", phrase: "12 € de crédit" },
+    beaute: { label: "15 € de crédit", phrase: "15 € de crédit" },
+    boutique: { label: "20 € de crédit", phrase: "20 € de crédit" },
+  },
+  menu: {
+    cafe: { label: "Menu offert", phrase: "1 menu offert" },
+    bar: { label: "Planche offerte", phrase: "1 planche offerte" },
+    restaurant: { label: "Plat offert", phrase: "1 plat offert" },
+    beaute: { label: "Soin offert", phrase: "1 soin offert" },
+    boutique: { label: "Produit offert", phrase: "1 produit offert" },
+  },
+  invitation: {
+    cafe: { label: "Invitation duo", phrase: "une invitation à deux" },
+    bar: { label: "Invitation duo", phrase: "une invitation pour deux" },
+    restaurant: { label: "Table duo", phrase: "une table duo à débloquer" },
+    beaute: { label: "Invitation soin", phrase: "une invitation soin à partager" },
+    boutique: { label: "Invitation preview", phrase: "une invitation preview à partager" },
+  },
+}
 
 export const WHO_OPTIONS: Array<{ key: ParcoursWhoKey; label: string; phrase: string; multiplier: number }> = [
   { key: "all", label: "Tous", phrase: "tous les clients", multiplier: 0.98 },
@@ -208,11 +253,35 @@ export const SPREAD_OPTIONS: Array<{ key: ParcoursSpreadKey; label: string; phra
   { key: "group", label: "Groupe", phrase: "à partager à plusieurs", multiplier: 1.28 },
 ]
 
-export const DIAMOND_OPTIONS: Array<{ key: ParcoursDiamondKey; label: string; phrase: string; multiplier: number }> = [
-  { key: "dinner", label: "1 dîner / mois · 1 an", phrase: "1 dîner/mois pendant 1 an", multiplier: 1 },
-  { key: "credit", label: "200 € · 12 mois", phrase: "200 € de crédit sur 12 mois", multiplier: 1.08 },
-  { key: "unlimited", label: "Accès illimité · 1 mois", phrase: "accès illimité pendant 1 mois", multiplier: 1.14 },
+const DIAMOND_BASE_OPTIONS: Array<{ key: ParcoursDiamondKey; multiplier: number }> = [
+  { key: "dinner", multiplier: 1 },
+  { key: "credit", multiplier: 1.08 },
+  { key: "unlimited", multiplier: 1.14 },
 ]
+
+const DIAMOND_COPY: Record<ParcoursDiamondKey, Record<ParcoursBusinessKey, { label: string; phrase: string }>> = {
+  dinner: {
+    cafe: { label: "Tirage brunch · 1 an", phrase: "entrée au tirage Diamond · 1 brunch/mois pendant 1 an" },
+    bar: { label: "Tirage soirée · 1 an", phrase: "entrée au tirage Diamond · 1 soirée/mois pendant 1 an" },
+    restaurant: { label: "Tirage dîner · 1 an", phrase: "entrée au tirage Diamond · 1 dîner/mois pendant 1 an" },
+    beaute: { label: "Tirage soin signature · 1 an", phrase: "entrée au tirage Diamond · 1 soin signature/trimestre pendant 1 an" },
+    boutique: { label: "Tirage preview · 1 an", phrase: "entrée au tirage Diamond · 1 preview/mois pendant 1 an" },
+  },
+  credit: {
+    cafe: { label: "Tirage 200 € crédit", phrase: "entrée au tirage Diamond · 200 € de crédit sur 12 mois" },
+    bar: { label: "Tirage 250 € crédit", phrase: "entrée au tirage Diamond · 250 € de crédit sur 12 mois" },
+    restaurant: { label: "Tirage 300 € crédit", phrase: "entrée au tirage Diamond · 300 € de crédit sur 12 mois" },
+    beaute: { label: "Tirage 300 € crédit", phrase: "entrée au tirage Diamond · 300 € de crédit sur 12 mois" },
+    boutique: { label: "Tirage 400 € crédit", phrase: "entrée au tirage Diamond · 400 € de crédit sur 12 mois" },
+  },
+  unlimited: {
+    cafe: { label: "Tirage accès comptoir", phrase: "entrée au tirage Diamond · accès comptoir pendant 1 mois" },
+    bar: { label: "Tirage accès maison", phrase: "entrée au tirage Diamond · accès maison pendant 1 mois" },
+    restaurant: { label: "Tirage accès chef", phrase: "entrée au tirage Diamond · accès chef pendant 1 mois" },
+    beaute: { label: "Tirage accès cabine", phrase: "entrée au tirage Diamond · accès cabine pendant 1 mois" },
+    boutique: { label: "Tirage accès privé", phrase: "entrée au tirage Diamond · accès privé pendant 1 mois" },
+  },
+}
 
 const IMPACT_PROFILES: Record<ParcoursBusinessKey, ImpactProfile> = {
   cafe: {
@@ -325,8 +394,20 @@ export function getLeakOption(key: ParcoursLeakKey | null) {
   return LEAK_OPTIONS.find((option) => option.key === key) ?? null
 }
 
-export function getRewardOption(key: ParcoursRewardKey) {
-  return REWARD_OPTIONS.find((option) => option.key === key) ?? REWARD_OPTIONS[0]
+function resolveBusinessKey(key: ParcoursBusinessKey | null | undefined) {
+  return key ?? "cafe"
+}
+
+export function getRewardOptions(businessKey?: ParcoursBusinessKey | null): RewardOption[] {
+  const resolvedBusiness = resolveBusinessKey(businessKey)
+  return REWARD_BASE_OPTIONS.map((option) => ({
+    ...option,
+    ...REWARD_COPY[option.key][resolvedBusiness],
+  }))
+}
+
+export function getRewardOption(key: ParcoursRewardKey, businessKey?: ParcoursBusinessKey | null) {
+  return getRewardOptions(businessKey).find((option) => option.key === key) ?? getRewardOptions(businessKey)[0]
 }
 
 export function getWhoOption(key: ParcoursWhoKey) {
@@ -337,8 +418,16 @@ export function getSpreadOption(key: ParcoursSpreadKey) {
   return SPREAD_OPTIONS.find((option) => option.key === key) ?? SPREAD_OPTIONS[0]
 }
 
-export function getDiamondOption(key: ParcoursDiamondKey) {
-  return DIAMOND_OPTIONS.find((option) => option.key === key) ?? DIAMOND_OPTIONS[0]
+export function getDiamondOptions(businessKey?: ParcoursBusinessKey | null): DiamondOption[] {
+  const resolvedBusiness = resolveBusinessKey(businessKey)
+  return DIAMOND_BASE_OPTIONS.map((option) => ({
+    ...option,
+    ...DIAMOND_COPY[option.key][resolvedBusiness],
+  }))
+}
+
+export function getDiamondOption(key: ParcoursDiamondKey, businessKey?: ParcoursBusinessKey | null) {
+  return getDiamondOptions(businessKey).find((option) => option.key === key) ?? getDiamondOptions(businessKey)[0]
 }
 
 export function getVolumeOption(key: ParcoursVolumeKey | null) {
@@ -392,18 +481,18 @@ export function buildRecapItems(state: ParcoursQueryState) {
 
 export function buildOfferRecapItems(state: ParcoursFlowState) {
   const items = buildRecapItems(state)
-  items.push({ key: "reward", label: `Récompense · ${getRewardOption(state.reward).label}` })
+  items.push({ key: "reward", label: `Récompense · ${getRewardOption(state.reward, state.business).label}` })
   items.push({ key: "threshold", label: `Seuil · ${state.threshold} passages` })
   items.push({ key: "spread", label: `Propagation · ${getSpreadOption(state.spread).label.toLowerCase()}` })
-  items.push({ key: "diamond", label: `◊ Diamond · ${getDiamondOption(state.diamond).label}`, warm: true })
+  items.push({ key: "diamond", label: `◊ Diamond · ${getDiamondOption(state.diamond, state.business).label}`, warm: true })
   return items
 }
 
-export function buildConfigurationPhrase(state: ParcoursConfigurationState) {
-  const reward = getRewardOption(state.reward)
+export function buildConfigurationPhrase(state: ParcoursConfigurationState & Partial<ParcoursQueryState>) {
+  const reward = getRewardOption(state.reward, state.business)
   const who = getWhoOption(state.who)
   const spread = getSpreadOption(state.spread)
-  const diamond = getDiamondOption(state.diamond)
+  const diamond = getDiamondOption(state.diamond, state.business)
   const thresholdPart = `dès le ${state.threshold}${state.threshold === 1 ? "er" : "e"} passage`
 
   return [
@@ -445,10 +534,10 @@ export function computeImpactBreakdown(state: ParcoursFlowState, businessKey?: P
   const key = businessKey ?? state.business ?? "cafe"
   const profile = IMPACT_PROFILES[key]
   const leak = getLeakOption(state.leak)
-  const reward = getRewardOption(state.reward)
+  const reward = getRewardOption(state.reward, key)
   const who = getWhoOption(state.who)
   const spread = getSpreadOption(state.spread)
-  const diamond = getDiamondOption(state.diamond)
+  const diamond = getDiamondOption(state.diamond, key)
   const decayIndex = Math.max(0, PARCOURS_DECAY_VALUES.indexOf(state.decay as (typeof PARCOURS_DECAY_VALUES)[number]))
 
   const thresholdMultiplier =
@@ -488,6 +577,21 @@ export function computeImpactBreakdown(state: ParcoursFlowState, businessKey?: P
       v4: Math.round(profile.waves.v4 * waveMultiplier),
       max: Math.round(maxWave * waveMultiplier),
     },
+  }
+}
+
+export function buildOfferProjectionRange(total: number) {
+  const min = total * 0.88
+  const max = total * 1.08
+
+  const round = (value: number) => {
+    const step = value >= 4000 ? 100 : value >= 1500 ? 50 : 20
+    return Math.round(value / step) * step
+  }
+
+  return {
+    min: round(min),
+    max: round(max),
   }
 }
 

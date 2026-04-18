@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { gsap } from "gsap"
 
@@ -14,6 +14,7 @@ import { ParcoursShell } from "@/components/parcours-v2/ParcoursShell"
 type LeverKey = "retour" | "panier" | "propagation" | "missions"
 
 export function ImpactStepPage() {
+  const router = useRouter()
   const { state } = useParcoursFlow()
   const [viewBusiness, setViewBusiness] = useState(state.business ?? "cafe")
   const [open, setOpen] = useState(false)
@@ -152,6 +153,9 @@ export function ImpactStepPage() {
           <p className="mx-auto mt-4 max-w-[560px] font-serif text-[clamp(18px,2vw,22px)] italic leading-[1.5] text-[#3d4d43]">
             Quatre leviers. Un total. Un moteur qui se propage — et qui s&apos;arrête.
           </p>
+          <p className="mx-auto mt-3 max-w-[520px] text-[11px] uppercase tracking-[0.22em] text-[#8a8578] sm:text-[12px]">
+            Chaque étape déclenche la suivante. Rien n&apos;est laissé au hasard.
+          </p>
         </div>
 
         <div className="space-y-10">
@@ -252,10 +256,11 @@ export function ImpactStepPage() {
             {[
               "Chaque porteur peut inviter une fois, à son palier de propagation.",
               "Chaque récompense est validée au comptoir, jamais automatique.",
+              "Le tirage Diamond récompense certains clients dans la saison, pas tout le monde.",
               "La saison dure 90 jours. Passée cette borne, tout se réinitialise.",
             ].map((rule, index) => (
               <div className="flex gap-4 border-b border-[#d4cdbd] pb-4 last:border-b-0 last:pb-0" key={rule}>
-                <span className="min-w-6 font-serif text-base italic text-[#b8956a]">{["i", "ii", "iii"][index]}</span>
+                <span className="min-w-6 font-serif text-base italic text-[#b8956a]">{["i", "ii", "iii", "iv"][index]}</span>
                 <span className="font-serif text-[17px] leading-[1.5] text-[#1a2a22]">{rule}</span>
               </div>
             ))}
@@ -263,9 +268,13 @@ export function ImpactStepPage() {
         </div>
 
         <div className="mt-12 flex flex-col items-center gap-3">
-          <Link className={cn(buttonVariants({ variant: "primary", size: "lg" }))} href={`/parcours/offre${lectureQuery ? `?${lectureQuery}` : ""}`}>
+          <button
+            className={cn(buttonVariants({ variant: "primary", size: "lg" }))}
+            onClick={() => router.push(`/parcours/offre${lectureQuery ? `?${lectureQuery}` : ""}`)}
+            type="button"
+          >
             Activer ma première saison
-          </Link>
+          </button>
           <p className="text-[11px] italic tracking-[0.1em] text-[#8a8578]">Saison de 90 jours · ajustable jusqu'au paiement</p>
         </div>
       </section>

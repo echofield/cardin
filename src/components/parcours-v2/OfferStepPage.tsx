@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { gsap } from "gsap"
 
 import { LANDING_PRICING } from "@/lib/landing-content"
-import { buildCheckoutMetadata, buildOfferRecapItems, computeImpactBreakdown, serializeLectureQuery } from "@/lib/parcours-v2"
+import { buildCheckoutMetadata, buildOfferProjectionRange, buildOfferRecapItems, computeImpactBreakdown, serializeLectureQuery } from "@/lib/parcours-v2"
 import { useParcoursFlow } from "@/components/parcours-v2/ParcoursFlowProvider"
 import { ParcoursParticles } from "@/components/parcours-v2/ParcoursParticles"
 import { ParcoursShell } from "@/components/parcours-v2/ParcoursShell"
@@ -14,26 +14,30 @@ export function OfferStepPage() {
   const { state } = useParcoursFlow()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const totalRef = useRef<HTMLSpanElement | null>(null)
+  const rangeRef = useRef<HTMLSpanElement | null>(null)
   const lectureQuery = serializeLectureQuery(state)
   const recapItems = buildOfferRecapItems(state)
   const impact = useMemo(() => computeImpactBreakdown(state), [state])
+  const offerRange = useMemo(() => buildOfferProjectionRange(impact.total), [impact.total])
 
   useEffect(() => {
-    if (!totalRef.current) return
-    const counter = { value: 0 }
+    if (!rangeRef.current) return
+    const counter = { min: 0, max: 0 }
     const tween = gsap.to(counter, {
-      value: impact.total,
+      min: offerRange.min,
+      max: offerRange.max,
       duration: 1.6,
       ease: "power2.out",
       onUpdate: () => {
-        if (totalRef.current) totalRef.current.textContent = `+€${Math.round(counter.value).toLocaleString("fr-FR")}`
+        if (rangeRef.current) {
+          rangeRef.current.textContent = `€${Math.round(counter.min).toLocaleString("fr-FR")} — €${Math.round(counter.max).toLocaleString("fr-FR")}`
+        }
       },
     })
     return () => {
       tween.kill()
     }
-  }, [impact.total])
+  }, [offerRange.max, offerRange.min])
 
   const activate = async () => {
     if (loading) return
@@ -95,11 +99,11 @@ export function OfferStepPage() {
           </div>
 
           <div className="flex flex-col items-center gap-2">
-            <span className="text-[10px] uppercase tracking-[0.32em] text-[#8a8578]">Objectif de saison</span>
-            <span className="font-serif text-[clamp(52px,8vw,88px)] font-medium leading-none tracking-[-0.02em] text-[#0f3d2e]" ref={totalRef}>
-              +€0
+            <span className="text-[10px] uppercase tracking-[0.32em] text-[#8a8578]">Projection de saison</span>
+            <span className="font-serif text-[clamp(36px,6vw,68px)] font-medium leading-[1.06] tracking-[-0.02em] text-[#0f3d2e]" ref={rangeRef}>
+              €0 — €0
             </span>
-            <span className="font-serif text-base italic text-[#8a8578]">net · sur 3 mois</span>
+            <span className="font-serif text-base italic text-[#8a8578]">fourchette réaliste · net sur 3 mois</span>
           </div>
         </div>
 

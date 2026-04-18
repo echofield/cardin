@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { gsap } from "gsap"
 
@@ -24,6 +24,7 @@ import { ParcoursShell } from "@/components/parcours-v2/ParcoursShell"
 const PANELS = ["business", "leak", "params", "diagnostic"] as const
 
 export function LectureStepPage() {
+  const router = useRouter()
   const { state, updateQueryState, lectureQuery } = useParcoursFlow()
   const [panelIndex, setPanelIndex] = useState(0)
   const [historyStack, setHistoryStack] = useState<number[]>([])
@@ -141,10 +142,10 @@ export function LectureStepPage() {
           </p>
         </div>
 
-        <div className="relative min-h-[480px]">
+        <div className="relative min-h-[520px] pt-9 sm:min-h-[480px] sm:pt-8">
           {showBack ? (
             <button
-              className="absolute -top-9 left-0 inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.2em] text-[#8a8578] transition hover:text-[#0f3d2e]"
+              className="absolute left-0 top-0 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-[#8a8578] transition hover:text-[#0f3d2e]"
               onClick={goBack}
               type="button"
             >
@@ -305,9 +306,13 @@ export function LectureStepPage() {
             </div>
 
             <div className={`mt-9 flex flex-col items-center gap-3 transition-opacity duration-700 ${diagnosticReady ? "opacity-100" : "opacity-0"}`}>
-              <Link className={cn(buttonVariants({ variant: "primary", size: "lg" }))} href={`/parcours/configuration${lectureQuery ? `?${lectureQuery}` : ""}`}>
+              <button
+                className={cn(buttonVariants({ variant: "primary", size: "lg" }))}
+                onClick={() => router.push(`/parcours/configuration${lectureQuery ? `?${lectureQuery}` : ""}`)}
+                type="button"
+              >
                 Voir la simulation complète
-              </Link>
+              </button>
               <p className="text-[11px] italic tracking-[0.1em] text-[#8a8578]">Configuration · Impact · Offre — 3 étapes.</p>
             </div>
           </Panel>
