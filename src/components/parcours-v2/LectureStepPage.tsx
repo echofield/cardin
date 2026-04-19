@@ -142,7 +142,7 @@ export function LectureStepPage() {
           </p>
         </div>
 
-        <div className="relative min-h-[520px] pt-9 sm:min-h-[480px] sm:pt-8">
+        <div className="relative min-h-[760px] pb-8 pt-9 sm:min-h-[640px] sm:pt-8 md:min-h-[520px]">
           {showBack ? (
             <button
               className="absolute left-0 top-0 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-[#8a8578] transition hover:text-[#0f3d2e]"

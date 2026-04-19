@@ -424,7 +424,7 @@ export function CardinHomePage() {
           </Link>
           <Link
             className="inline-flex min-h-12 items-center justify-center rounded-sm border border-[#d4cdbd] px-7 py-3 text-[12px] uppercase tracking-[0.15em] text-[#1a2a22] transition hover:border-[#0f3d2e] hover:bg-[rgba(15,61,46,0.03)] hover:text-[#0f3d2e]"
-            href="/challenge"
+            href="/parcours"
           >
             Construire une saison
           </Link>
@@ -436,7 +436,7 @@ export function CardinHomePage() {
           initial={reducedMotion ? false : { opacity: 0, y: 14 }}
           transition={{ duration: 0.8, delay: 0.38, ease: [0.22, 1, 0.36, 1] }}
         >
-          Challenge pour dÃ©clencher vite Â· Saison pour structurer sur 90 jours
+          Challenge pour déclencher vite · Saison pour structurer sur 90 jours
         </motion.p>
 
         <motion.a
@@ -758,14 +758,14 @@ export function CardinHomePage() {
       <motion.section className="border-t border-[#d4cdbd] bg-[#f6f1e7] px-6 py-24 sm:px-8 lg:px-12" {...panelMotion}>
         <div className="mx-auto max-w-[980px]">
           <div className="text-center">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-[#8a8578]">Deux intensitÃ©s</p>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-[#8a8578]">Deux intensités</p>
             <h2 className="mt-5 font-serif text-[clamp(32px,4vw,44px)] leading-[1.15] text-[#1a2a22]">
-              Le mÃªme systÃ¨me.
+              Le même système.
               <br />
               Deux cadres pour <em className="font-normal italic text-[#0f3d2e]">entrer</em> dans Cardin.
             </h2>
             <p className="mx-auto mt-5 max-w-[640px] font-serif text-[18px] italic leading-[1.55] text-[#3d4d43]">
-              Challenge pour dÃ©clencher vite. Saison pour structurer le retour sur 90 jours.
+              Challenge pour déclencher vite. Saison pour structurer le retour sur 90 jours.
             </p>
           </div>
 
@@ -803,7 +803,7 @@ export function CardinHomePage() {
                       rel="noreferrer"
                       target="_blank"
                     >
-                      RÃ©server directement
+                      Réserver directement
                     </a>
                   ) : null}
                 </div>

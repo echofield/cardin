@@ -1,3 +1,4 @@
+import { calculateRecovery } from "@/lib/calculator"
 import { LANDING_PRICING } from "@/lib/landing-content"
 
 export type ParcoursBusinessKey = "cafe" | "bar" | "restaurant" | "beaute" | "boutique"
@@ -34,6 +35,8 @@ export type BusinessOption = {
   label: string
   brand: string
   basketByLevel: { bas: number; moyen: number; eleve: number }
+  lossRate: number
+  recoveryRate: number
 }
 
 type RewardOption = {
@@ -105,30 +108,40 @@ export const BUSINESS_OPTIONS: BusinessOption[] = [
     label: "Café",
     brand: "Le comptoir",
     basketByLevel: { bas: 4, moyen: 7, eleve: 11 },
+    lossRate: 0.28,
+    recoveryRate: 0.22,
   },
   {
     key: "bar",
     label: "Bar",
     brand: "La maison",
     basketByLevel: { bas: 8, moyen: 14, eleve: 22 },
+    lossRate: 0.28,
+    recoveryRate: 0.2,
   },
   {
     key: "restaurant",
     label: "Restaurant",
     brand: "La table",
     basketByLevel: { bas: 14, moyen: 22, eleve: 38 },
+    lossRate: 0.32,
+    recoveryRate: 0.16,
   },
   {
     key: "beaute",
     label: "Beauté",
     brand: "L'institut",
     basketByLevel: { bas: 28, moyen: 48, eleve: 85 },
+    lossRate: 0.36,
+    recoveryRate: 0.15,
   },
   {
     key: "boutique",
     label: "Boutique",
     brand: "L'atelier",
     basketByLevel: { bas: 35, moyen: 68, eleve: 140 },
+    lossRate: 0.32,
+    recoveryRate: 0.17,
   },
 ]
 
@@ -453,13 +466,22 @@ export function buildLectureProjection(state: ParcoursQueryState) {
   }
 
   const basket = business.basketByLevel[state.basket]
-  const returnRate = 0.38 * leak.multiplier
-  const dailyReturns = volume.value * returnRate * rhythm.multiplier
-  const dailyRevenue = dailyReturns * basket
+  const projection = calculateRecovery({
+    clientsPerDay: volume.value,
+    avgTicket: basket,
+    daysOpen: 26,
+    recoveryRate: Math.min(0.42, business.recoveryRate * leak.multiplier * rhythm.multiplier),
+    returnLossRate: business.lossRate,
+  })
+
+  const roundProjection = (value: number) => {
+    const step = value >= 4000 ? 100 : value >= 1800 ? 50 : 20
+    return Math.round(value / step) * step
+  }
 
   return {
-    min: Math.round((dailyRevenue * 30 * 0.85) / 50) * 50,
-    max: Math.round((dailyRevenue * 30 * 1.15) / 50) * 50,
+    min: roundProjection(projection.extraRevenue * 0.86),
+    max: roundProjection(projection.extraRevenue * 1.1),
   }
 }
 
