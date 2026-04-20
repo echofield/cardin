@@ -36,13 +36,18 @@ export function ParcoursFlowProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     const queryState = parseLectureQuery(searchParams)
+    const freshStart = searchParams.get("fresh") === "1"
     let storedState: Partial<ParcoursFlowState> = {}
 
     if (typeof window !== "undefined") {
       try {
-        const raw = window.sessionStorage.getItem(PARCOURS_STORAGE_KEY)
-        if (raw) {
-          storedState = JSON.parse(raw) as Partial<ParcoursFlowState>
+        if (freshStart) {
+          window.sessionStorage.removeItem(PARCOURS_STORAGE_KEY)
+        } else {
+          const raw = window.sessionStorage.getItem(PARCOURS_STORAGE_KEY)
+          if (raw) {
+            storedState = JSON.parse(raw) as Partial<ParcoursFlowState>
+          }
         }
       } catch {
         storedState = {}

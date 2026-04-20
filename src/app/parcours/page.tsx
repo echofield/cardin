@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
 
 export default function ParcoursPage() {
-  redirect("/parcours/lecture")
+  redirect("/parcours/lecture?fresh=1")
 }
