@@ -12,6 +12,7 @@ import {
   buildRecapItems,
   computeConfigurationTension,
   getBusinessOption,
+  getSeasonPreset,
   getDiamondOptions,
   getDiamondOption,
   getRewardOptions,
@@ -32,6 +33,7 @@ export function ConfigurationStepPage() {
   const spread = getSpreadOption(state.spread)
   const diamondOptions = getDiamondOptions(state.business)
   const diamond = getDiamondOption(state.diamond, state.business)
+  const preset = getSeasonPreset(state.business)
   const phrase = buildConfigurationPhrase(state)
   const tension = computeConfigurationTension(state)
   const lectureQuery = serializeLectureQuery(state)
@@ -44,24 +46,24 @@ export function ConfigurationStepPage() {
 
       <section className="relative z-[2] mx-auto max-w-[1280px]">
         <div className="mb-11 text-center">
-          <p className="mb-3 text-[10px] uppercase tracking-[0.32em] text-[#8a8578]">Étape 02 — Configuration</p>
+          <p className="mb-3 text-[10px] uppercase tracking-[0.32em] text-[#8a8578]">Étape 02 — Saison</p>
           <h1 className="font-serif text-[clamp(38px,5vw,56px)] leading-[1.05] text-[#1a2a22]">
             Votre <em className="italic text-[#0f3d2e]">saison.</em>
           </h1>
           <p className="mx-auto mt-4 max-w-[560px] font-serif text-[clamp(16px,1.8vw,19px)] italic leading-[1.5] text-[#3d4d43]">
-            Six axes. Une mécanique. Un aimant. L&apos;artefact que vous montrez à votre équipe.
+            Un premier moment visible. Un Diamond en jeu. Un cadre simple que votre équipe peut tenir.
           </p>
         </div>
 
         <div className="grid gap-8 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.95fr)] xl:gap-10">
           <div className="flex flex-col gap-8">
             <section>
-              <SectionLabel label="La Mécanique" />
+              <SectionLabel label="Le moment de la semaine" />
               <div className="border-t border-[#d4cdbd]">
                 <Track
                   hint="le geste d'entrée"
                   index="01"
-                  name="Récompense"
+                  name="Ce qui tombe cette semaine"
                 >
                   <div className="flex flex-wrap gap-2">
                     {rewardOptions.map((option) => (
@@ -77,7 +79,7 @@ export function ConfigurationStepPage() {
                   </div>
                 </Track>
 
-                <Track hint="quand ça se déclenche" index="02" name="Seuil">
+                <Track hint="après combien de passages" index="02" name="Déclencheur">
                   <SliderRow
                     max={10}
                     min={1}
@@ -102,7 +104,7 @@ export function ConfigurationStepPage() {
                   </div>
                 </Track>
 
-                <Track hint="seul ou à plusieurs" index="04" name="Propagation">
+                <Track hint="seul ou à plusieurs" index="04" name="Seul ou à plusieurs">
                   <div className="flex flex-wrap gap-2">
                     {SPREAD_OPTIONS.map((option) => (
                       <button
@@ -120,9 +122,9 @@ export function ConfigurationStepPage() {
             </section>
 
             <section>
-              <SectionLabel label="L'Aimant · pourquoi ils jouent" warm />
+              <SectionLabel label="Le sommet · ce qui reste en vue" warm />
               <div className="rounded-md border border-[#d4b892] bg-[linear-gradient(to_bottom,rgba(184,149,106,0.04),transparent)] px-5">
-                <Track hint="le tirage de la saison" index="05" name="Diamond" warm>
+                <Track hint="visible au comptoir toute la saison" index="05" name="Diamond" warm>
                   <div className="flex flex-wrap gap-2">
                     {diamondOptions.map((option) => (
                       <button
@@ -137,7 +139,7 @@ export function ConfigurationStepPage() {
                   </div>
                 </Track>
 
-                <Track hint="l'oubli qui force le retour" index="06" name="Decay" warm>
+                <Track hint="quand il faut revenir" index="06" name="Délai de retour" warm>
                   <SliderRow
                     marks={[3, 5, 7, 10, 14]}
                     max={14}
@@ -158,6 +160,13 @@ export function ConfigurationStepPage() {
           </div>
 
           <aside className="xl:sticky xl:top-24">
+            <div className="mb-4 rounded border border-[#d4cdbd] bg-[#f2ede4] px-4 py-4">
+              <div className="text-[9px] uppercase tracking-[0.28em] text-[#8a8578]">Preset Cardin</div>
+              <div className="mt-2 font-serif text-2xl leading-tight text-[#1a2a22]">{preset.label}</div>
+              <p className="mt-2 text-sm leading-6 text-[#556159]">{preset.summary}</p>
+              <p className="mt-3 text-[10px] uppercase tracking-[0.18em] text-[#8a8578]">{preset.momentLine}</p>
+            </div>
+
             <div className="mb-4 flex items-center gap-3 rounded border border-[#d4cdbd] bg-[rgba(15,61,46,0.04)] px-4 py-3 text-[10px] uppercase tracking-[0.2em] text-[#3d4d43]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#0f3d2e]" />
               <span className="font-medium">Saison · 90 jours</span>
@@ -202,7 +211,7 @@ export function ConfigurationStepPage() {
                     </div>
                     <div className="flex items-baseline gap-2">
                       <span className="font-serif italic text-[#b8956a]">◆</span>
-                      <span>{`Dans ${Math.max(2, state.threshold + 3 - currentStep)} visites : ${diamond.phrase}`}</span>
+                      <span>{`Plus vous revenez, plus le Diamond prend forme : ${diamond.phrase}`}</span>
                     </div>
                   </div>
 
@@ -223,7 +232,7 @@ export function ConfigurationStepPage() {
             </div>
 
             <div className="rounded border border-[#d4cdbd] bg-[#f2ede4] px-5 py-5">
-              <div className="mb-3 text-[9px] uppercase tracking-[0.28em] text-[#8a8578]">Calibration de la saison</div>
+              <div className="mb-3 text-[9px] uppercase tracking-[0.28em] text-[#8a8578]">Tension de saison</div>
               <div className="mb-4 h-[2px] bg-[#ece6da]">
                 <div className="relative h-full">
                   <span
@@ -259,9 +268,9 @@ export function ConfigurationStepPage() {
                 onClick={() => router.push(`/parcours/impact${lectureQuery ? `?${lectureQuery}` : ""}`)}
                 type="button"
               >
-                Voir l'impact
+                Voir la saison en chiffres
               </button>
-              <p className="text-[11px] italic tracking-[0.1em] text-[#8a8578]">Ajustable jusqu'au paiement.</p>
+              <p className="text-[11px] italic tracking-[0.1em] text-[#8a8578]">Premier moment inclus · ajustable jusqu'au paiement.</p>
             </div>
 
             {recapItems.length > 0 ? (

@@ -148,13 +148,13 @@ export function ImpactStepPage() {
           <h1 className="font-serif text-[clamp(44px,6vw,68px)] leading-[1.02] text-[#1a2a22]">
             Votre <em className="italic text-[#0f3d2e]">saison,</em>
             <br />
-            en chiffres.
+            en rythme.
           </h1>
           <p className="mx-auto mt-4 max-w-[560px] font-serif text-[clamp(18px,2vw,22px)] italic leading-[1.5] text-[#3d4d43]">
-            Quatre leviers. Un total. Un moteur qui se propage — et qui s&apos;arrête.
+            Chaque semaine, un moment visible. Au bout, un Diamond qui reste en jeu.
           </p>
           <p className="mx-auto mt-3 max-w-[520px] text-[11px] uppercase tracking-[0.22em] text-[#8a8578] sm:text-[12px]">
-            Chaque étape déclenche la suivante. Rien n&apos;est laissé au hasard.
+            Chaque étape déclenche la suivante. La saison avance, puis se resserre.
           </p>
         </div>
 
@@ -196,20 +196,20 @@ export function ImpactStepPage() {
             <span className="font-serif text-xl text-[#b8956a]">◆</span>
             <span className="h-px w-8 bg-[#b8956a]/50" />
           </div>
-          <div className="mb-4 text-[10px] uppercase tracking-[0.32em] text-[#8a8578]">Revenu incrémental · Saison 3 mois</div>
+          <div className="mb-4 text-[10px] uppercase tracking-[0.32em] text-[#8a8578]">Cap réaliste · Saison 90 jours</div>
           <div className="font-serif text-[clamp(58px,8vw,92px)] font-medium leading-none tracking-[-0.02em] text-[#0f3d2e]" ref={totalRef}>
             +€0
           </div>
-          <div className="mt-3 font-serif text-lg italic text-[#8a8578]">net, après récompenses et coûts</div>
+          <div className="mt-3 font-serif text-lg italic text-[#8a8578]">après moments, retours et coût Diamond borné</div>
           <div className="mt-8 inline-block rounded-full border border-[#d4cdbd] bg-[#f2ede4] px-5 py-2 text-[12px] text-[#3d4d43]">
-            Pour <strong className="font-medium text-[#0f3d2e]">€1</strong> redistribué · <strong className="font-medium text-[#0f3d2e]">{impact.sigma}×</strong> générés · <em>moteur borné à 3× minimum</em>
+            Basé sur votre volume, votre panier et votre rythme de retour · <strong className="font-medium text-[#0f3d2e]">{impact.sigma}×</strong> de levier estimé
           </div>
         </div>
 
         <div className="mt-20">
-          <div className="mb-3 text-center text-[10px] uppercase tracking-[0.32em] text-[#8a8578]">L'effet cascade</div>
+          <div className="mb-3 text-center text-[10px] uppercase tracking-[0.32em] text-[#8a8578]">Quand ça se propage</div>
           <h2 className="text-center font-serif text-[clamp(30px,4vw,40px)] leading-[1.15] text-[#1a2a22]">
-            Vos clients vous amènent <em className="italic text-[#8c6a44]">les leurs.</em>
+            Vos clients reviennent avec <em className="italic text-[#8c6a44]">quelqu&apos;un.</em>
           </h2>
           <p className="mx-auto mt-4 max-w-[620px] text-center font-serif text-[17px] italic leading-[1.5] text-[#3d4d43]">{impact.profile.cascadeSub}</p>
 
@@ -243,21 +243,21 @@ export function ImpactStepPage() {
           </div>
 
           <p className="mx-auto mt-10 max-w-[600px] text-center font-serif text-lg italic leading-[1.5] text-[#3d4d43]">
-            Le moteur amplifie votre acquisition — <em className="text-[#0f3d2e]">puis se stabilise</em>. Par construction, pas par magie.
+            Le rythme s&apos;amplifie — <em className="text-[#0f3d2e]">puis se stabilise</em>. La saison reste lisible et bornée.
           </p>
         </div>
 
         <div className="mt-20 rounded-md border border-[#d4cdbd] bg-[#f2ede4] px-6 py-10">
-          <div className="mb-2 text-center text-[10px] uppercase tracking-[0.3em] text-[#8a8578]">Les règles du jeu</div>
+          <div className="mb-2 text-center text-[10px] uppercase tracking-[0.3em] text-[#8a8578]">Le cadre de saison</div>
           <h3 className="mb-8 text-center font-serif text-[clamp(24px,3vw,30px)] leading-tight text-[#1a2a22]">
-            Ce qui <em className="italic text-[#0f3d2e]">borne</em> le moteur.
+            Ce qui <em className="italic text-[#0f3d2e]">tient</em> la saison.
           </h3>
           <div className="mx-auto flex max-w-[620px] flex-col gap-4">
             {[
-              "Chaque porteur peut inviter une fois, à son palier de propagation.",
+              "Chaque semaine, un moment visible donne une raison claire de revenir ici.",
               "Chaque récompense est validée au comptoir, jamais automatique.",
-              "Le tirage Diamond récompense certains clients dans la saison, pas tout le monde.",
-              "La saison dure 90 jours. Passée cette borne, tout se réinitialise.",
+              "Le Diamond reste visible pendant toute la saison, mais il ne tombe que pour quelques clients.",
+              "La saison dure 90 jours. Passée cette borne, un nouveau cycle peut s'ouvrir.",
             ].map((rule, index) => (
               <div className="flex gap-4 border-b border-[#d4cdbd] pb-4 last:border-b-0 last:pb-0" key={rule}>
                 <span className="min-w-6 font-serif text-base italic text-[#b8956a]">{["i", "ii", "iii", "iv"][index]}</span>
@@ -268,14 +268,14 @@ export function ImpactStepPage() {
         </div>
 
         <div className="mt-12 flex flex-col items-center gap-3">
-          <button
-            className={cn(buttonVariants({ variant: "primary", size: "lg" }))}
-            onClick={() => router.push(`/parcours/offre${lectureQuery ? `?${lectureQuery}` : ""}`)}
-            type="button"
-          >
-            Activer ma première saison
-          </button>
-          <p className="text-[11px] italic tracking-[0.1em] text-[#8a8578]">Saison de 90 jours · ajustable jusqu'au paiement</p>
+              <button
+                className={cn(buttonVariants({ variant: "primary", size: "lg" }))}
+                onClick={() => router.push(`/parcours/offre${lectureQuery ? `?${lectureQuery}` : ""}`)}
+                type="button"
+              >
+            Voir l'offre de saison
+              </button>
+          <p className="text-[11px] italic tracking-[0.1em] text-[#8a8578]">Diamond visible · saison de 90 jours · ajustable jusqu'au paiement</p>
         </div>
       </section>
     </ParcoursShell>

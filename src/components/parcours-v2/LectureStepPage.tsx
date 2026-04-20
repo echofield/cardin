@@ -15,6 +15,7 @@ import {
   buildLectureProjection,
   buildRecapItems,
   getLeakOption,
+  getSeasonPreset,
   isLectureComplete,
 } from "@/lib/parcours-v2"
 import { useParcoursFlow } from "@/components/parcours-v2/ParcoursFlowProvider"
@@ -25,7 +26,7 @@ const PANELS = ["business", "leak", "params", "diagnostic"] as const
 
 export function LectureStepPage() {
   const router = useRouter()
-  const { state, updateQueryState, lectureQuery } = useParcoursFlow()
+  const { state, updateQueryState, updateState, lectureQuery } = useParcoursFlow()
   const [panelIndex, setPanelIndex] = useState(0)
   const [historyStack, setHistoryStack] = useState<number[]>([])
   const [diagnosticReady, setDiagnosticReady] = useState(false)
@@ -138,7 +139,7 @@ export function LectureStepPage() {
             Votre <em className="italic text-[#0f3d2e]">lecture.</em>
           </h1>
           <p className="mx-auto mt-4 max-w-[520px] font-serif text-[clamp(17px,1.8vw,20px)] italic leading-[1.5] text-[#3d4d43]">
-            On ne cherche pas tout. On cherche l&apos;endroit qui casse la boucle.
+            On lit l&apos;endroit qui casse la boucle, puis on pose une saison de 90 jours autour.
           </p>
         </div>
 
@@ -157,14 +158,23 @@ export function LectureStepPage() {
           <Panel active={panelKey === "business"}>
             <PanelKicker label="Votre cadre" />
             <PanelQuestion question="Quel est votre métier ?" />
-            <PanelHint hint="Un choix net suffit pour cadrer la lecture." />
+            <PanelHint hint="Un choix net suffit pour charger une saison prête à ajuster." />
             <div className="flex flex-wrap gap-2">
               {BUSINESS_OPTIONS.map((option) => (
                 <button
                   className={chipClass(state.business === option.key)}
                   key={option.key}
                   onClick={() => {
-                    updateQueryState({ business: option.key })
+                    const preset = getSeasonPreset(option.key)
+                    updateState({
+                      business: option.key,
+                      reward: preset.reward,
+                      threshold: preset.threshold,
+                      who: preset.who,
+                      spread: preset.spread,
+                      diamond: preset.diamond,
+                      decay: preset.decay,
+                    })
                     window.setTimeout(() => nextTo(1), 260)
                   }}
                   type="button"
@@ -207,7 +217,7 @@ export function LectureStepPage() {
           <Panel active={panelKey === "params"}>
             <PanelKicker label="Cadrage" note="3 choix rapides" />
             <PanelQuestion question="Votre ordre de grandeur." />
-            <PanelHint hint="Trois paramètres pour calibrer la lecture." />
+            <PanelHint hint="Trois paramètres pour cadrer la saison, le rythme et le cap Diamond." />
 
             <div className="grid gap-5 md:grid-cols-3">
               <ParamBlock label="Volume / passages">
@@ -302,6 +312,9 @@ export function LectureStepPage() {
                   </span>
                 </div>
                 <p className="mt-3 text-sm text-[#8a8578]">récupérables sur votre activité</p>
+                <p className="mt-2 text-[10px] uppercase tracking-[0.18em] text-[#8a8578]">
+                  Saison 90 jours · Diamond visible · premier moment inclus
+                </p>
               </div>
             </div>
 
@@ -311,9 +324,9 @@ export function LectureStepPage() {
                 onClick={() => router.push(`/parcours/configuration${lectureQuery ? `?${lectureQuery}` : ""}`)}
                 type="button"
               >
-                Voir la simulation complète
+                Passer à la saison
               </button>
-              <p className="text-[11px] italic tracking-[0.1em] text-[#8a8578]">Configuration · Impact · Offre — 3 étapes.</p>
+              <p className="text-[11px] italic tracking-[0.1em] text-[#8a8578]">Moment · Impact · Offre — 3 étapes.</p>
             </div>
           </Panel>
         </div>

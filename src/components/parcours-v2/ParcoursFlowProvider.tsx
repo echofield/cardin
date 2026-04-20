@@ -31,7 +31,7 @@ export function ParcoursFlowProvider({ children }: { children: React.ReactNode }
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [state, setState] = useState<ParcoursFlowState>(DEFAULT_PARCOURS_FLOW_STATE)
+  const [state, setState] = useState<ParcoursFlowState | null>(null)
   const [rehydrated, setRehydrated] = useState(false)
 
   useEffect(() => {
@@ -49,25 +49,27 @@ export function ParcoursFlowProvider({ children }: { children: React.ReactNode }
       }
     }
 
-    setState({
+    const nextState = {
       ...DEFAULT_PARCOURS_FLOW_STATE,
       ...storedState,
       ...queryState,
-    })
+    }
+
+    setState(nextState)
     setRehydrated(true)
   }, [searchParams])
 
   useEffect(() => {
-    if (!rehydrated || typeof window === "undefined") return
+    if (!rehydrated || !state || typeof window === "undefined") return
     window.sessionStorage.setItem(PARCOURS_STORAGE_KEY, JSON.stringify(state))
   }, [rehydrated, state])
 
-  const lectureComplete = isLectureComplete(state)
-  const configurationComplete = isConfigurationComplete(state)
-  const lectureQuery = serializeLectureQuery(state)
+  const lectureComplete = state ? isLectureComplete(state) : false
+  const configurationComplete = state ? isConfigurationComplete(state) : false
+  const lectureQuery = state ? serializeLectureQuery(state) : ""
 
   useEffect(() => {
-    if (!rehydrated) return
+    if (!rehydrated || !state) return
     if (pathname.startsWith("/parcours/configuration") && !lectureComplete) {
       router.replace("/parcours/lecture")
       return
@@ -76,14 +78,19 @@ export function ParcoursFlowProvider({ children }: { children: React.ReactNode }
     if ((pathname.startsWith("/parcours/impact") || pathname.startsWith("/parcours/offre")) && !configurationComplete) {
       router.replace(lectureComplete ? `/parcours/configuration${lectureQuery ? `?${lectureQuery}` : ""}` : "/parcours/lecture")
     }
-  }, [configurationComplete, lectureComplete, lectureQuery, pathname, rehydrated, router])
+  }, [configurationComplete, lectureComplete, lectureQuery, pathname, rehydrated, router, state])
 
   const value = useMemo<ParcoursFlowContextValue>(
     () => ({
-      state,
-      setState,
-      updateQueryState: (patch) => setState((current) => ({ ...current, ...patch })),
-      updateState: (patch) => setState((current) => ({ ...current, ...patch })),
+      state: state ?? DEFAULT_PARCOURS_FLOW_STATE,
+      setState: (next) => {
+        setState((current) => {
+          const base = current ?? DEFAULT_PARCOURS_FLOW_STATE
+          return typeof next === "function" ? next(base) : next
+        })
+      },
+      updateQueryState: (patch) => setState((current) => ({ ...(current ?? DEFAULT_PARCOURS_FLOW_STATE), ...patch })),
+      updateState: (patch) => setState((current) => ({ ...(current ?? DEFAULT_PARCOURS_FLOW_STATE), ...patch })),
       resetFlow: () => setState(DEFAULT_PARCOURS_FLOW_STATE),
       lectureComplete,
       configurationComplete,
@@ -91,6 +98,10 @@ export function ParcoursFlowProvider({ children }: { children: React.ReactNode }
     }),
     [configurationComplete, lectureComplete, lectureQuery, state],
   )
+
+  if (!rehydrated || !state) {
+    return null
+  }
 
   return <ParcoursFlowContext.Provider value={value}>{children}</ParcoursFlowContext.Provider>
 }

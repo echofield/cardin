@@ -220,15 +220,16 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
       <div className="mx-auto max-w-2xl space-y-6">
         <header>
           <p className="text-xs uppercase tracking-[0.14em] text-[#5D675F]">{profile.scan.eyebrow}</p>
-          <h1 className="mt-2 font-serif text-5xl">{merchant.businessName}</h1>
-          <p className="mt-2 text-sm text-[#556159]">{profile.scan.intro}</p>
+          <h1 className="mt-2 break-words font-serif text-[clamp(2.2rem,8vw,3rem)] leading-[1.05]">{merchant.businessName}</h1>
+          <p className="mt-2 text-sm text-[#556159]">Scannez. Vous entrez dans la saison du lieu.</p>
           <p className="mt-2 text-sm text-[#2A3F35]">{merchant.promise}</p>
+          <p className="mt-2 text-xs uppercase tracking-[0.12em] text-[#5D675F]">Moment en cours · Diamond visible toute la saison</p>
           {demo ? <p className="mt-3 text-xs uppercase tracking-[0.12em] text-[#173A2E]">Mode démo</p> : null}
         </header>
 
         <section className="grid gap-4 md:grid-cols-2">
           <Card className="p-6">
-            <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">{profile.scan.firstImpressionTitle}</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">En ce moment ici</p>
             <div className="mt-3 space-y-2 text-sm text-[#173A2E]">
               {profile.scan.firstImpression.map((line) => (
                 <p key={line}>{line}</p>
@@ -250,9 +251,9 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
           <Card className="p-6">
             <p className="text-sm text-[#556159]">{profile.scan.formIntro}</p>
             <p className="mt-3 text-sm text-[#173A2E]">
-              Objectif actuel : {merchant.loyaltyConfig.targetVisits} passages pour débloquer {merchant.loyaltyConfig.rewardLabel}
+              Cette semaine : {merchant.loyaltyConfig.rewardLabel}
             </p>
-            <p className="mt-1 text-sm text-[#2A3F35]">Premier palier à {merchant.loyaltyConfig.midpointThreshold} passages.</p>
+            <p className="mt-1 text-sm text-[#2A3F35]">Le Diamond reste en vue pendant 90 jours. Premier palier à {merchant.loyaltyConfig.midpointThreshold} passages.</p>
 
             <form className="mt-5 space-y-3" onSubmit={onCreateCard}>
               <Input
@@ -279,13 +280,14 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
             <WalletPassPreview businessLabel={merchant.businessName} progressDots={progressDots} rewardLabel={cardData.card.rewardLabel} />
 
             <Card className="p-5">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">{profile.scan.createdTitle}</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">C'est bon. Vous êtes dedans.</p>
               <p className="mt-2 text-sm text-[#556159]">{profile.scan.createdBody}</p>
               <p className="mt-2 text-sm text-[#173A2E]">{cardData.card.customerName}</p>
               <p className="mt-1 text-sm text-[#173A2E]">
                 {cardData.card.stamps} / {cardData.card.targetVisits}
               </p>
               <p className="mt-1 text-sm text-[#2A3F35]">{cardData.card.midpoint.copy}</p>
+              <p className="mt-2 text-xs uppercase tracking-[0.12em] text-[#5D675F]">Revenez. Cette semaine compte.</p>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <Button onClick={() => void openWalletFlow(cardData.appleWalletUrl, "apple")} variant="secondary">

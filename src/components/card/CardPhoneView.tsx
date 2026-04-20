@@ -363,7 +363,7 @@ export function CardPhoneView({
     <main className="min-h-dvh-safe bg-[#F8F7F2] px-4 py-8 pb-[max(2rem,env(safe-area-inset-bottom,0px))] text-[#173A2E] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-xl">
         <p className="text-xs uppercase tracking-[0.14em] text-[#5D675F]">{profile.card.pageEyebrow}</p>
-        <h1 className="mt-2 font-serif text-5xl">{data.merchant.businessName}</h1>
+        <h1 className="mt-2 break-words font-serif text-[clamp(2.2rem,8vw,3rem)] leading-[1.05]">{data.merchant.businessName}</h1>
         <p className="mt-2 text-sm text-[#556159]">
           {data.card.customerName} · {statusLabel}
         </p>
@@ -371,6 +371,11 @@ export function CardPhoneView({
           {displayCode}
           {demo ? " · mode démo" : ""}
         </p>
+        {data.season ? (
+          <p className="mt-2 text-xs uppercase tracking-[0.12em] text-[#5E6961]">
+            Saison en cours · fin dans {data.season.daysRemaining} jours
+          </p>
+        ) : null}
 
         {merchantValidatedBanner ? (
           <div className="mt-4 rounded-2xl border border-[#173A2E]/25 bg-[#EEF3EC] px-4 py-3 text-sm text-[#173A2E]">
@@ -383,27 +388,33 @@ export function CardPhoneView({
 
           {data.protocol ? (
             <Card className="mt-4 p-4">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Objectif de saison</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">En ce moment ici</p>
               <p className="mt-1 text-sm text-[#173A2E]">{data.protocol.seasonObjective}</p>
-              <p className="mt-2 text-xs text-[#556159]">{data.protocol.diamondLine}</p>
+              <p className="mt-3 text-xs uppercase tracking-[0.12em] text-[#5E6961]">Diamond en jeu</p>
+              <p className="mt-1 text-sm text-[#2A3F35]">{data.protocol.diamondLine}</p>
               {data.protocol.rewardsPaused ? <p className="mt-2 text-sm text-[#A64040]">Les nouveaux avantages sont temporairement en pause. Votre progression continue.</p> : null}
             </Card>
           ) : null}
 
           {data.message ? (
             <Card className="mt-4 p-4">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">{profile.card.signalLabel}</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Cette semaine</p>
               <p className="mt-1 text-lg text-[#173A2E]">{data.message.title}</p>
               <p className="mt-2 text-sm text-[#2A3F35]">{data.message.body}</p>
             </Card>
           ) : null}
 
           <Card className="mt-4 p-4">
-            <p className="text-sm text-[#556159]">{profile.card.progressLabel}</p>
+            <p className="text-sm text-[#556159]">Votre saison avance</p>
             <p className="mt-1 text-xl">
               {data.card.stamps} / {data.card.targetVisits}
             </p>
             <p className="mt-2 text-sm text-[#2A3F35]">{data.card.midpoint.copy}</p>
+            <p className="mt-2 text-xs text-[#556159]">
+              {data.card.seasonProgress?.summitReached
+                ? "Vous êtes au sommet de la saison."
+                : "Encore quelques passages utiles pour vous rapprocher du Diamond."}
+            </p>
             {data.card.statusName ? <p className="mt-2 text-xs uppercase tracking-[0.12em] text-[#355246]">{data.card.statusName}</p> : null}
             {data.card.seasonProgress ? (
               <div className="mt-3 text-xs text-[#355246]">
@@ -417,7 +428,7 @@ export function CardPhoneView({
 
           {activeBenefit ? (
             <Card className="mt-4 p-4">
-              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">{profile.card.activeRewardLabel}</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#5E6961]">Accès en cours</p>
               <p className="mt-2 text-lg text-[#173A2E]">{activeBenefit.title}</p>
               <p className="mt-1 text-sm text-[#2A3F35]">{activeBenefit.description}</p>
               <p className="mt-3 text-sm text-[#556159]">{activeBenefit.detail}</p>
@@ -468,7 +479,7 @@ export function CardPhoneView({
                     : profile.card.inviteDisabled}
               </p>
               {data.invite.enabled ? (
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                   <input
                     className="h-10 flex-1 rounded-xl border border-[#D5DBD1] bg-white px-3 text-sm"
                     onChange={(e) => setInviteName(e.target.value)}
@@ -476,7 +487,7 @@ export function CardPhoneView({
                     value={inviteName}
                   />
                   <button
-                    className="rounded-xl bg-[#173A2E] px-4 text-sm text-white disabled:opacity-60"
+                    className="h-10 rounded-xl bg-[#173A2E] px-4 text-sm text-white disabled:opacity-60"
                     disabled={inviteState === "loading"}
                     onClick={onInvite}
                     type="button"

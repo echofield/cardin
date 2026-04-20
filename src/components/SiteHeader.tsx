@@ -6,7 +6,6 @@ import { useState } from "react"
 
 const NAV_ITEMS = [
   { href: "/#impact", label: "Impact" },
-  { href: "/challenge", label: "Challenge" },
   { href: "/parcours", label: "Saison" },
   { href: "/#contact", label: "Contact" },
 ]
@@ -27,8 +26,7 @@ export function SiteHeader() {
         <nav className="hidden items-center gap-6 md:flex">
           {NAV_ITEMS.map((item) => {
             const active =
-              (item.href === "/parcours" && (pathname === "/parcours" || pathname.startsWith("/parcours/"))) ||
-              (item.href === "/challenge" && pathname === "/challenge")
+              item.href === "/parcours" && (pathname === "/parcours" || pathname.startsWith("/parcours/"))
             return (
               <Link
                 className={[
@@ -47,7 +45,7 @@ export function SiteHeader() {
           <div className="flex items-center gap-3 md:hidden">
             <Link
               className="inline-flex h-9 items-center justify-center rounded-full border border-[#D6DCD3] bg-[#FFFDF8] px-3.5 text-[13px] font-medium text-[#173A2E] transition hover:border-[#B8C3B5]"
-              href="/challenge"
+              href="/parcours"
             >
               Lancer
             </Link>

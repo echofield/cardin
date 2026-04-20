@@ -88,7 +88,7 @@ export function OfferStepPage() {
         </h1>
 
         <p className="mt-5 max-w-[540px] font-serif text-[clamp(16px,1.9vw,20px)] italic leading-[1.5] text-[#3d4d43]">
-          Activation digitale sous 48 heures. Premiers retours lisibles sous 30 jours.
+          Premier moment cadré cette semaine. Diamond visible dès l'installation. Activation digitale sous 48 heures.
         </p>
 
         <div className="mt-12 flex flex-col items-center gap-7">
@@ -99,11 +99,11 @@ export function OfferStepPage() {
           </div>
 
           <div className="flex flex-col items-center gap-2">
-            <span className="text-[10px] uppercase tracking-[0.32em] text-[#8a8578]">Projection de saison</span>
+            <span className="text-[10px] uppercase tracking-[0.32em] text-[#8a8578]">Projection réaliste de saison</span>
             <span className="font-serif text-[clamp(36px,6vw,68px)] font-medium leading-[1.06] tracking-[-0.02em] text-[#0f3d2e]" ref={rangeRef}>
               €0 — €0
             </span>
-            <span className="font-serif text-base italic text-[#8a8578]">fourchette réaliste · net sur 3 mois</span>
+            <span className="font-serif text-base italic text-[#8a8578]">fourchette réaliste · net sur 90 jours</span>
           </div>
         </div>
 
@@ -112,7 +112,9 @@ export function OfferStepPage() {
           <span className="h-[3px] w-[3px] rounded-full bg-[#8a8578]/60" />
           <span><strong className="font-medium text-[#1a2a22]">{LANDING_PRICING.activationFee} €</strong> TTC</span>
           <span className="h-[3px] w-[3px] rounded-full bg-[#8a8578]/60" />
-          <span>Annulable avant activation</span>
+          <span>Premier moment inclus</span>
+          <span className="h-[3px] w-[3px] rounded-full bg-[#8a8578]/60" />
+          <span>Diamond visible</span>
         </div>
 
         <div className="mt-12 flex flex-col items-center gap-4">
@@ -121,7 +123,7 @@ export function OfferStepPage() {
             onClick={activate}
             type="button"
           >
-            <span>{loading ? "Ouverture du paiement..." : "Activer ma première saison"}</span>
+            <span>{loading ? "Ouverture du paiement..." : "Activer Cardin pour 90 jours"}</span>
             <span aria-hidden="true">→</span>
           </button>
           <p className="text-[10px] italic tracking-[0.08em] text-[#8a8578]">Paiement sécurisé par Stripe</p>

@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { calculateRecovery } from "@/lib/calculator"
-import { CHALLENGE_PRICING, LANDING_PRICING, STRIPE_PAYMENT_LINK } from "@/lib/landing-content"
+import { LANDING_PRICING, STRIPE_PAYMENT_LINK } from "@/lib/landing-content"
 import { CARDIN_CONTACT_EMAIL } from "@/lib/site-contact"
 
 type RewardKey = "cafe" | "menu" | "experience"
@@ -105,20 +105,20 @@ const LEGAL_LINKS = [
 
 const OFFER_FRAMES = [
   {
-    title: "Challenge Cardin",
-    lead: "Le format d'activation. Court, visible, facile à raconter et à lancer.",
-    detail: "Un cadre rapide pour provoquer un retour, une participation ou une venue accompagnée.",
-    meta: `${CHALLENGE_PRICING.shortLabel} · activation sous 24 h`,
-    cta: "Lancer un challenge",
-    href: "/challenge",
+    title: "Les moments Cardin",
+    lead: "Les impulsions visibles de la saison. Ce que le lieu montre, ce que les clients racontent.",
+    detail: "Chaque semaine, un moment clair donne une raison de revenir, d'inviter et de participer autour du Diamond.",
+    meta: "moments hebdomadaires · Diamond visible",
+    cta: "Voir la saison",
+    href: "/parcours",
     tone: "accent" as const,
   },
   {
     title: "Saison Cardin",
-    lead: "Le système complet. Lecture, configuration, impact et offre sur 90 jours.",
-    detail: "Le bon choix pour structurer le retour, la propagation et la valeur sur une vraie saison.",
+    lead: "Le système complet. Une saison de 90 jours installée dans le lieu.",
+    detail: "Lecture du lieu, premier moment, rythme hebdomadaire, retours, invitations et Diamond au sommet.",
     meta: `${LANDING_PRICING.compactLabel} · activation sous 48 h`,
-    cta: "Construire une saison",
+    cta: "Construire ma saison",
     href: "/parcours",
     tone: "default" as const,
   },
@@ -284,11 +284,6 @@ export function CardinHomePage() {
                   </a>
                 </li>
                 <li>
-                  <Link className="text-[10px] uppercase tracking-[0.15em] text-[#0f3d2e] transition hover:text-[#0f3d2e] sm:text-[12px]" href="/challenge">
-                    Challenge
-                  </Link>
-                </li>
-                <li>
                   <Link className="text-[10px] uppercase tracking-[0.15em] text-[#3d4d43] transition hover:text-[#0f3d2e] sm:text-[12px]" href="/parcours">
                     Saison
                   </Link>
@@ -303,7 +298,7 @@ export function CardinHomePage() {
             <div className="flex items-center gap-3 sm:hidden">
               <Link
                 className="inline-flex h-9 items-center justify-center rounded-full border border-[#d4cdbd] bg-[rgba(242,237,228,0.86)] px-3.5 text-[12px] uppercase tracking-[0.12em] text-[#0f3d2e]"
-                href="/challenge"
+                href="/parcours"
               >
                 Lancer
               </Link>
@@ -337,13 +332,6 @@ export function CardinHomePage() {
               >
                 Impact
               </a>
-              <Link
-                className="rounded-2xl px-3 py-2 text-[11px] uppercase tracking-[0.14em] text-[#0f3d2e]"
-                href="/challenge"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Challenge
-              </Link>
               <Link
                 className="rounded-2xl px-3 py-2 text-[11px] uppercase tracking-[0.14em] text-[#0f3d2e]"
                 href="/parcours"
@@ -407,7 +395,7 @@ export function CardinHomePage() {
           initial={reducedMotion ? false : { opacity: 0, y: 16 }}
           transition={{ duration: 0.9, delay: 0.24, ease: [0.22, 1, 0.36, 1] }}
         >
-          Chaque passage devient une raison structurée de revenir.
+          Chaque semaine, il se passe quelque chose ici. Le Diamond reste en jeu toute la saison.
         </motion.p>
 
         <motion.div
@@ -418,15 +406,15 @@ export function CardinHomePage() {
         >
           <Link
             className="inline-flex min-h-12 items-center justify-center rounded-sm border border-[#0f3d2e] bg-[#0f3d2e] px-7 py-3 text-[12px] uppercase tracking-[0.15em] text-[#f2ede4] transition hover:border-[#1a2a22] hover:bg-[#1a2a22]"
-            href="/challenge"
+            href="/parcours"
           >
-            Lancer un challenge
+            Lancer ma saison
           </Link>
           <Link
             className="inline-flex min-h-12 items-center justify-center rounded-sm border border-[#d4cdbd] px-7 py-3 text-[12px] uppercase tracking-[0.15em] text-[#1a2a22] transition hover:border-[#0f3d2e] hover:bg-[rgba(15,61,46,0.03)] hover:text-[#0f3d2e]"
-            href="/parcours"
+            href="#impact"
           >
-            Construire une saison
+            Voir l'impact
           </Link>
         </motion.div>
 
@@ -436,7 +424,7 @@ export function CardinHomePage() {
           initial={reducedMotion ? false : { opacity: 0, y: 14 }}
           transition={{ duration: 0.8, delay: 0.38, ease: [0.22, 1, 0.36, 1] }}
         >
-          Challenge pour déclencher vite · Saison pour structurer sur 90 jours
+          Saison 90 jours · moments hebdomadaires · Diamond visible
         </motion.p>
 
         <motion.a
@@ -738,9 +726,9 @@ export function CardinHomePage() {
         </div>
 
         <motion.p className="relative z-10 mx-auto mt-20 max-w-[600px] text-center font-serif text-[clamp(20px,2.2vw,24px)] italic leading-[1.5] text-[#3d4d43]" {...panelMotion}>
-          Pas une carte de fidélité.
+          Pas un programme de fidélité.
           <br />
-          <strong className="font-medium not-italic text-[#0f3d2e]">Un système de retour client.</strong>
+          <strong className="font-medium not-italic text-[#0f3d2e]">Une saison de moments visibles.</strong>
         </motion.p>
 
         <motion.div
@@ -758,14 +746,14 @@ export function CardinHomePage() {
       <motion.section className="border-t border-[#d4cdbd] bg-[#f6f1e7] px-6 py-24 sm:px-8 lg:px-12" {...panelMotion}>
         <div className="mx-auto max-w-[980px]">
           <div className="text-center">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-[#8a8578]">Deux intensités</p>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-[#8a8578]">Une saison, deux horizons</p>
             <h2 className="mt-5 font-serif text-[clamp(32px,4vw,44px)] leading-[1.15] text-[#1a2a22]">
               Le même système.
               <br />
-              Deux cadres pour <em className="font-normal italic text-[#0f3d2e]">entrer</em> dans Cardin.
+              Deux lectures pour <em className="font-normal italic text-[#0f3d2e]">comprendre</em> Cardin.
             </h2>
             <p className="mx-auto mt-5 max-w-[640px] font-serif text-[18px] italic leading-[1.55] text-[#3d4d43]">
-              Challenge pour déclencher vite. Saison pour structurer le retour sur 90 jours.
+              Le moment de la semaine attire. La saison de 90 jours tient le rythme jusqu'au Diamond.
             </p>
           </div>
 
@@ -825,7 +813,7 @@ export function CardinHomePage() {
         </p>
 
         <p className="mx-auto mb-8 max-w-[620px] text-[11px] uppercase tracking-[0.18em] text-[#8a8578]">
-          Challenge pour entrer · Saison pour installer le cadre
+          Saison 90 jours · Diamond visible · activation sous 48 h
         </p>
 
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -833,14 +821,14 @@ export function CardinHomePage() {
             className="inline-flex min-h-12 items-center justify-center rounded-sm border border-[#0f3d2e] bg-[#0f3d2e] px-7 py-3 text-[12px] uppercase tracking-[0.15em] text-[#f2ede4] transition hover:border-[#1a2a22] hover:bg-[#1a2a22]"
             href="/parcours"
           >
-            Lancer un challenge
+            Lancer ma saison
           </Link>
           <Link
             className="group relative inline-flex min-h-12 items-center justify-center rounded-sm border border-[#d4cdbd] px-7 py-3 text-[12px] uppercase tracking-[0.15em] text-transparent transition hover:border-[#0f3d2e] hover:bg-[rgba(15,61,46,0.03)] hover:text-transparent"
-            href="/parcours"
+            href="#impact"
           >
             <span className="absolute inset-0 flex items-center justify-center text-[#1a2a22] transition group-hover:text-[#0f3d2e]">
-              Construire une saison
+              Voir l'impact
             </span>
             Réserver ma saison
           </Link>
@@ -891,7 +879,7 @@ function Metric({
     <div className="flex flex-col items-center gap-2 text-center">
       <span
         className={[
-          "font-serif text-[clamp(28px,3.4vw,40px)] font-medium leading-none tabular-nums",
+          "font-serif text-[clamp(22px,5.4vw,40px)] font-medium leading-none tabular-nums",
           tone === "warm" ? "text-[#b8956a]" : accent ? "text-[#0f3d2e]" : "text-[#1a2a22]",
         ].join(" ")}
       >

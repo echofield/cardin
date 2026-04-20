@@ -4,7 +4,11 @@ import { ChallengePage } from "@/components/challenge/ChallengePage"
 
 export const metadata: Metadata = {
   title: "Challenge Cardin",
-  description: "Un challenge court, cadré par Cardin, pour provoquer un retour mesurable sur votre commerce.",
+  description: "Un format Cardin court pour provoquer un retour mesurable dans un lieu.",
+  robots: {
+    index: false,
+    follow: false,
+  },
 }
 
 export default function Page() {
