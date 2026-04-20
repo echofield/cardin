@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
 
@@ -354,7 +355,14 @@ export function MerchantDashboard({ merchantId, demo = false }: { merchantId: st
         <section className="grid gap-4 lg:grid-cols-2">
           <Card className="p-6">
             <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">QR à afficher</p>
-            <img alt="QR fidélité" className="mt-3 w-full rounded-2xl border border-[#D4DBD1] bg-[#FCFCF8] p-3" src={`/api/merchant/${merchantId}/qr`} />
+            <Image
+              alt="QR fidélité"
+              className="mt-3 w-full rounded-2xl border border-[#D4DBD1] bg-[#FCFCF8] p-3"
+              height={320}
+              src={`/api/merchant/${merchantId}/qr`}
+              unoptimized
+              width={320}
+            />
             <p className="mt-3 break-all text-xs text-[#5E6961]">{scanUrl}</p>
             <div className="mt-4 flex gap-3">
               <Button

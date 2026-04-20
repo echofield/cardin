@@ -1,5 +1,6 @@
 ﻿"use client"
 
+import Image from "next/image"
 import { FormEvent, useEffect, useMemo, useState } from "react"
 
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton"
@@ -260,7 +261,14 @@ export function InstallLeadForm({
         </div>
       ) : null}
 
-      <img alt="QR Cardin" className="mt-4 w-full max-w-[220px] rounded-xl border border-[#C4D2C4] bg-white p-2" src={state.qrCodeUrl} />
+      <Image
+        alt="QR Cardin"
+        className="mt-4 w-full max-w-[220px] rounded-xl border border-[#C4D2C4] bg-white p-2"
+        height={220}
+        src={state.qrCodeUrl}
+        unoptimized
+        width={220}
+      />
 
       <div className="mt-4 space-y-2 text-xs">
         <a className="block underline" href={state.dashboardUrl} rel="noreferrer" target="_blank">

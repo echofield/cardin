@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import QRCode from "qrcode"
@@ -452,7 +453,14 @@ function ActivationQrCard({ merchantId }: { merchantId?: string }) {
         Le client scanne ici. Sa carte s'ouvre, puis l'équipe valide le passage au comptoir.
       </p>
       {qrCodeUrl ? (
-        <img alt="QR Cardin à afficher" className="mt-4 w-full max-w-[220px] rounded-xl border border-[#D7DDD2] bg-white p-2" src={qrCodeUrl} />
+        <Image
+          alt="QR Cardin à afficher"
+          className="mt-4 w-full max-w-[220px] rounded-xl border border-[#D7DDD2] bg-white p-2"
+          height={220}
+          src={qrCodeUrl}
+          unoptimized
+          width={220}
+        />
       ) : (
         <div className="mt-4 flex h-[220px] w-full max-w-[220px] items-center justify-center rounded-xl border border-[#D7DDD2] bg-[#FBF9F3] text-sm text-[#556159]">
           Génération du QR...
