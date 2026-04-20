@@ -1,221 +1,204 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { gsap } from "gsap"
 
 import { CHALLENGE_PRICING, STRIPE_CHALLENGE_LINK } from "@/lib/landing-content"
 import { CARDIN_CONTACT_EMAIL, buildContactMailto } from "@/lib/site-contact"
 
 type BusinessKey = "cafe" | "bar" | "restaurant" | "beaute" | "boutique"
-type TempoKey = "classic" | "motion"
 
-type MotionCard = {
-  tag: string
-  phrase: string
+type ChallengeAct = {
+  label: string
+  title: string
+  detail: string
 }
 
-type ChallengeTempo = {
+type ChallengeBusiness = {
+  label: string
   name: string
-  actionPhrase: string
-  action: string
-  actionSub: string
-  duration: string
-  durationSub: string
+  lead: string
+  frame: string
+  frameSub: string
   winners: string
   winnersSub: string
   cost: number
   returnMin: number
   returnSub: string
-}
-
-type ChallengeBusiness = {
-  label: string
-  classic: ChallengeTempo
-  motion: ChallengeTempo
-  motionLabel: string
-  motionCards: MotionCard[]
+  acts: [ChallengeAct, ChallengeAct, ChallengeAct]
+  carry: [string, string, string]
 }
 
 const CHALLENGES: Record<BusinessKey, ChallengeBusiness> = {
   cafe: {
     label: "Café",
-    classic: {
-      name: "L'appel du duo.",
-      actionPhrase: "Invitez un ami à prendre un café cette semaine. Les 10 premiers duos gagnent un mois de café offert.",
-      action: "Venir à deux",
-      actionSub: "scanne au comptoir",
-      duration: "7 jours",
-      durationSub: "une semaine calendaire",
-      winners: "10 duos",
-      winnersSub: "premiers arrivés",
-      cost: 180,
-      returnMin: 1800,
-      returnSub: "sur la semaine",
-    },
-    motion: {
-      name: "Le défi qui tourne.",
-      actionPhrase: "Un nouveau défi chaque jour, lisible au comptoir. Le premier client qui le relève gagne sa récompense.",
-      action: "Défi du jour",
-      actionSub: "un par jour",
-      duration: "2 à 3 semaines",
-      durationSub: "cadre court et relançable",
-      winners: "multiples",
-      winnersSub: "un par défi relevé",
-      cost: 180,
-      returnMin: 2200,
-      returnSub: "sur 2 à 3 semaines",
-    },
-    motionLabel: "Un défi par jour qui récompense le premier à le relever",
-    motionCards: [
-      { tag: "Défi du matin", phrase: "Venez avant 9h. Le 5e arrivé gagne son café + croissant offert." },
-      { tag: "Défi du duo", phrase: "Venez à deux aujourd'hui. Le premier duo gagne deux cafés offerts." },
-      { tag: "Défi de l'après-midi", phrase: "Passez entre 15h et 17h. Le 3e à scanner gagne un goûter complet." },
-      { tag: "Défi du week-end", phrase: "Venez samedi avec un ami. Le duo le plus tôt gagne un brunch pour deux." },
+    name: "Le duo du matin.",
+    lead: "Un moment simple qui fait venir, regroupe, puis fait arriver quelque chose entre deux clients.",
+    frame: "7 jours",
+    frameSub: "le jour et la semaine se choisissent avec vous",
+    winners: "1 duo",
+    winnersSub: "résolution rare, racontable, rejouable",
+    cost: 180,
+    returnMin: 1800,
+    returnSub: "sur la semaine activée",
+    acts: [
+      {
+        label: "Acte 1 — Attirer",
+        title: "Ce matin, un café est offert.",
+        detail: "Le lieu annonce une possibilité simple, visible, sans tout révéler.",
+      },
+      {
+        label: "Acte 2 — Regrouper",
+        title: "Venez à deux → votre passage compte.",
+        detail: "Le duo devient l’unité du challenge. On ne pousse pas le solo, on fait se former un groupe.",
+      },
+      {
+        label: "Acte 3 — Résoudre",
+        title: "Un duo reçoit son café offert pendant 7 jours.",
+        detail: "La résolution est courte, rare, immédiatement racontable au comptoir.",
+      },
+    ],
+    carry: [
+      "Des passages se forment à deux, pas seulement seuls.",
+      "Le lieu prouve qu’il peut faire arriver quelque chose en direct.",
+      "Ce moment peut se rejouer et ouvrir une saison Cardin.",
     ],
   },
   bar: {
     label: "Bar",
-    classic: {
-      name: "La table la plus nombreuse.",
-      actionPhrase: "Ramenez vos amis ce vendredi soir. L'équipe la plus nombreuse gagne la tournée.",
-      action: "Venir à 3+",
-      actionSub: "valide par le staff",
-      duration: "1 soirée",
-      durationSub: "le vendredi choisi",
-      winners: "1 équipe",
-      winnersSub: "la plus nombreuse",
-      cost: 180,
-      returnMin: 1900,
-      returnSub: "sur la soirée",
-    },
-    motion: {
-      name: "La soirée qui surprend.",
-      actionPhrase: "Chaque soirée, une nouvelle mission au bar. Le premier à la valider gagne sa récompense.",
-      action: "Mission du soir",
-      actionSub: "révélée au comptoir",
-      duration: "2 semaines",
-      durationSub: "plusieurs soirées",
-      winners: "multiples",
-      winnersSub: "un par mission validée",
-      cost: 180,
-      returnMin: 2400,
-      returnSub: "sur 2 semaines",
-    },
-    motionLabel: "Une mission par soirée qui récompense le premier à la relever",
-    motionCards: [
-      { tag: "Mission du soir", phrase: "Goûtez le cocktail signature. Le 3e à le commander gagne sa tournée offerte." },
-      { tag: "Mission du groupe", phrase: "Venez à 4 ou plus. Le premier groupe gagne la tournée du bar." },
-      { tag: "Mission surprise", phrase: "Commandez la création du jour. Le 5e à scanner gagne un verre offert." },
-      { tag: "Mission du week-end", phrase: "Passez samedi avant 22h. Le premier à arriver gagne deux verres offerts." },
+    name: "La table qui gagne.",
+    lead: "Le challenge transforme une soirée en scène publique. Les groupes se composent avant même d’arriver.",
+    frame: "1 soirée",
+    frameSub: "le créneau et le soir se règlent avec vous",
+    winners: "1 table",
+    winnersSub: "la plus nombreuse, annoncée en salle",
+    cost: 180,
+    returnMin: 1900,
+    returnSub: "sur la soirée activée",
+    acts: [
+      {
+        label: "Acte 1 — Attirer",
+        title: "Ce soir, une table sera offerte.",
+        detail: "La promesse est simple. Tout le monde comprend qu’il peut se passer quelque chose.",
+      },
+      {
+        label: "Acte 2 — Regrouper",
+        title: "Venez à 3 ou plus → vous entrez dans la sélection.",
+        detail: "Le challenge pousse les groupes, pas le passage isolé. Le bar devient un point de rendez-vous.",
+      },
+      {
+        label: "Acte 3 — Résoudre",
+        title: "La table la plus nombreuse gagne la tournée.",
+        detail: "La résolution est visible, théâtrale, et immédiatement racontée dans la salle.",
+      },
+    ],
+    carry: [
+      "Les groupes arrivent déjà constitués avant le service.",
+      "La résolution donne une scène au lieu, pas juste une remise.",
+      "Le bar peut rejouer ce format sur d’autres soirs faibles.",
     ],
   },
   restaurant: {
     label: "Restaurant",
-    classic: {
-      name: "La plus belle table.",
-      actionPhrase: "Réservez une table de 4+ ce jeudi soir. Le dîner de la plus grande tablée est offert.",
-      action: "Table 4+",
-      actionSub: "réservation validée",
-      duration: "1 soirée",
-      durationSub: "le jeudi choisi",
-      winners: "1 table",
-      winnersSub: "la plus grande",
-      cost: 220,
-      returnMin: 2200,
-      returnSub: "sur la soirée",
-    },
-    motion: {
-      name: "La semaine qui récompense.",
-      actionPhrase: "Un défi par service, midi ou soir. Le premier client à le valider gagne.",
-      action: "Défi du service",
-      actionSub: "un par midi/soir",
-      duration: "2 semaines",
-      durationSub: "plusieurs services",
-      winners: "multiples",
-      winnersSub: "un par défi validé",
-      cost: 220,
-      returnMin: 2800,
-      returnSub: "sur 2 semaines",
-    },
-    motionLabel: "Un défi par service qui récompense le premier à le relever",
-    motionCards: [
-      { tag: "Défi du midi", phrase: "Commandez le plat du chef ce midi. Le premier à le choisir gagne son dessert offert." },
-      { tag: "Défi du soir", phrase: "Réservez une table de 4+. La première table complète gagne l'apéritif offert." },
-      { tag: "Défi de l'accord", phrase: "Prenez l'accord mets-vin. Le 3e client à le commander gagne son verre offert." },
-      { tag: "Défi du retour", phrase: "Revenez cette semaine avec un nouveau convive. Le premier duo gagne un menu offert." },
+    name: "La table qui compte.",
+    lead: "Le challenge crée des réservations groupées et donne une raison concrète d’être plusieurs à la même table.",
+    frame: "1 soir",
+    frameSub: "le jour et le service se choisissent avec vous",
+    winners: "1 table",
+    winnersSub: "parmi les tables de 4 ou plus",
+    cost: 220,
+    returnMin: 2200,
+    returnSub: "sur le service activé",
+    acts: [
+      {
+        label: "Acte 1 — Attirer",
+        title: "Jeudi soir, une table sera offerte.",
+        detail: "Le lieu annonce un enjeu clair, lisible en une phrase.",
+      },
+      {
+        label: "Acte 2 — Regrouper",
+        title: "Table de 4 ou plus → vous entrez dans la sélection.",
+        detail: "Le challenge pousse la réservation groupée et augmente naturellement le panier.",
+      },
+      {
+        label: "Acte 3 — Résoudre",
+        title: "La table la plus nombreuse est offerte.",
+        detail: "La résolution est nette, sans ambiguïté, et facile à annoncer au moment juste.",
+      },
+    ],
+    carry: [
+      "Le restaurant fait monter la taille des tables sans jargon marketing.",
+      "Le challenge crée une vraie raison de réserver ensemble.",
+      "Le format peut ouvrir une suite de services Cardin sur la saison.",
     ],
   },
   beaute: {
     label: "Beauté",
-    classic: {
-      name: "Le rendez-vous découverte.",
-      actionPhrase: "Prenez un premier rendez-vous découverte cette semaine. Deux clientes gagnent un soin express offert.",
-      action: "RDV découverte",
-      actionSub: "effectué en salon",
-      duration: "14 jours",
-      durationSub: "deux semaines",
-      winners: "2 clientes",
-      winnersSub: "tirées parmi les RDV effectués",
-      cost: 210,
-      returnMin: 1800,
-      returnSub: "sur le mois qui suit",
-    },
-    motion: {
-      name: "Le parcours révélateur.",
-      actionPhrase: "Chaque semaine, une nouvelle proposition en salon. La première cliente à la réserver gagne.",
-      action: "Proposition hebdo",
-      actionSub: "une par semaine",
-      duration: "3 à 4 semaines",
-      durationSub: "cadre relançable",
-      winners: "multiples",
-      winnersSub: "une par proposition",
-      cost: 210,
-      returnMin: 2000,
-      returnSub: "sur 4 semaines",
-    },
-    motionLabel: "Une proposition par semaine qui récompense la première à la réserver",
-    motionCards: [
-      { tag: "Proposition de la semaine", phrase: "Réservez un soin express en semaine. La première à réserver gagne un second soin offert." },
-      { tag: "Proposition duo", phrase: "Venez à deux pour un soin partagé. Le premier duo gagne un soin visage offert." },
-      { tag: "Proposition créneau calme", phrase: "Prenez un RDV en matinée. La 3e cliente gagne un add-on offert." },
-      { tag: "Proposition rituel", phrase: "Testez le rituel signature. La première à réserver gagne un soin anniversaire." },
+    name: "Le rendez-vous qui revient.",
+    lead: "Ici, le groupe se forme dans le temps. Le challenge sélectionne celles qui reviennent vraiment.",
+    frame: "14 jours",
+    frameSub: "le rythme et la fenêtre se choisissent avec vous",
+    winners: "2 clientes",
+    winnersSub: "parmi celles revenues une deuxième fois",
+    cost: 210,
+    returnMin: 1800,
+    returnSub: "sur le mois qui suit",
+    acts: [
+      {
+        label: "Acte 1 — Attirer",
+        title: "Cette semaine, deux rendez-vous seront offerts.",
+        detail: "Le lieu ouvre une possibilité claire, sans rabattre la valeur du soin.",
+      },
+      {
+        label: "Acte 2 — Regrouper",
+        title: "Revenez une deuxième fois → vous entrez dans la sélection.",
+        detail: "Le challenge filtre les clientes sérieuses. Ici, le groupe se crée par retour qualifié, pas par foule.",
+      },
+      {
+        label: "Acte 3 — Résoudre",
+        title: "Deux clientes parmi celles revenues reçoivent un soin complet.",
+        detail: "La résolution valorise l’effort et transforme le retour en événement concret.",
+      },
+    ],
+    carry: [
+      "Le salon ne récompense pas la curiosité seule, mais le vrai retour.",
+      "La sélection crée de la valeur sans banaliser le soin.",
+      "Ce premier cadre peut devenir un rythme de saison et nourrir Diamond.",
     ],
   },
   boutique: {
     label: "Boutique",
-    classic: {
-      name: "L'essayage signature.",
-      actionPhrase: "Essayez une pièce de la nouvelle collection cette semaine. Deux personnes gagnent un crédit boutique.",
-      action: "Essayage",
-      actionSub: "valide en boutique",
-      duration: "14 jours",
-      durationSub: "deux semaines",
-      winners: "2 personnes",
-      winnersSub: "tirées parmi les essayages",
-      cost: 240,
-      returnMin: 2000,
-      returnSub: "sur le mois qui suit",
-    },
-    motion: {
-      name: "La garde-robe qui s'écrit.",
-      actionPhrase: "Une pièce à l'honneur par livraison ou drop. La première personne à la relever gagne un crédit.",
-      action: "Pièce du moment",
-      actionSub: "une par drop ou livraison",
-      duration: "3 à 4 semaines",
-      durationSub: "cadre relançable",
-      winners: "multiples",
-      winnersSub: "un crédit par défi",
-      cost: 240,
-      returnMin: 2400,
-      returnSub: "sur 4 semaines",
-    },
-    motionLabel: "Une pièce par livraison qui récompense la première à la relever",
-    motionCards: [
-      { tag: "Pièce du moment", phrase: "Essayez la pièce du mois. La première à l'essayer gagne un crédit boutique." },
-      { tag: "Pièce du drop", phrase: "Venez au lancement du drop. Le 3e arrivé gagne un crédit." },
-      { tag: "Pièce partagée", phrase: "Venez avec un proche pour un essayage duo. Le premier duo gagne un crédit partagé." },
-      { tag: "Pièce du retour", phrase: "Revenez avec la pièce précédente portée. La première à revenir gagne un crédit." },
+    name: "La cabine du duo.",
+    lead: "Le challenge transforme l’essayage en scène sociale. La boutique ne baisse pas le prix, elle fait arriver quelque chose entre deux personnes.",
+    frame: "7 à 10 jours",
+    frameSub: "la pièce, le look et la fenêtre se choisissent avec vous",
+    winners: "1 duo",
+    winnersSub: "sélectionné parmi les duos passés en cabine",
+    cost: 240,
+    returnMin: 2200,
+    returnSub: "sur la période activée",
+    acts: [
+      {
+        label: "Acte 1 — Attirer",
+        title: "Cette semaine, un duo repartira avec un geste rare de la boutique.",
+        detail: "On n’annonce pas une promo. On annonce une possibilité plus désirable, plus intrigante.",
+      },
+      {
+        label: "Acte 2 — Regrouper",
+        title: "Venez à deux essayer la même pièce ou composer un look ensemble.",
+        detail: "Le duo devient la scène. L’essayage se raconte, se montre et se partage dans le lieu.",
+      },
+      {
+        label: "Acte 3 — Résoudre",
+        title: "Un duo reçoit un cadeau choisi par la boutique.",
+        detail: "Pas de crédit impersonnel. Un geste choisi, remis par la boutique, qui laisse une vraie mémoire.",
+      },
+    ],
+    carry: [
+      "La boutique fait venir des duos, pas seulement des passages d’essayage.",
+      "Le geste final garde de la désirabilité et du goût, sans tomber dans la remise.",
+      "Le format peut se rejouer par collection, drop ou moment faible.",
     ],
   },
 }
@@ -227,16 +210,13 @@ const PARTICLES = Array.from({ length: 18 }, (_, index) => ({
 
 export function ChallengePage() {
   const [businessKey, setBusinessKey] = useState<BusinessKey>("cafe")
-  const [tempo, setTempo] = useState<TempoKey>("classic")
-  const [motionIndex, setMotionIndex] = useState(0)
   const [whyOpen, setWhyOpen] = useState(false)
   const returnRef = useRef<HTMLSpanElement | null>(null)
   const costRef = useRef<HTMLSpanElement | null>(null)
 
-  const business = CHALLENGES[businessKey]
-  const challenge = business[tempo]
+  const challenge = CHALLENGES[businessKey]
   const ratio = challenge.returnMin / challenge.cost
-  const challengeHref = STRIPE_CHALLENGE_LINK || buildChallengeFallbackMailto(business.label, tempo)
+  const challengeHref = STRIPE_CHALLENGE_LINK || buildChallengeFallbackMailto(challenge.label)
   const challengeLinkLabel = STRIPE_CHALLENGE_LINK ? "Lancer mon challenge" : "Recevoir le lien challenge"
 
   useEffect(() => {
@@ -269,17 +249,6 @@ export function ChallengePage() {
   }, [])
 
   useEffect(() => {
-    if (tempo !== "motion") return
-
-    const timer = window.setInterval(() => {
-      setMotionIndex((current) => (current + 1) % business.motionCards.length)
-    }, 3500)
-
-    return () => window.clearInterval(timer)
-  }, [business.motionCards.length, tempo, businessKey])
-
-  useEffect(() => {
-    setMotionIndex(0)
     const nextCost = { value: 0 }
     const nextReturn = { value: 0 }
 
@@ -332,12 +301,12 @@ export function ChallengePage() {
             <span className="h-px w-4 bg-[#b8956a]/70" />
           </p>
           <h1 className="font-serif text-[clamp(46px,7vw,76px)] leading-[1.02] tracking-[-0.015em] text-[#1a2a22]" data-challenge-title>
-            Un défi. <em className="italic text-[#0f3d2e]">Un gagnant.</em>
+            Attirer. <em className="italic text-[#0f3d2e]">Regrouper.</em>
             <br />
-            Un retour mesurable.
+            Résoudre.
           </h1>
-          <p className="mx-auto mt-5 max-w-[680px] font-serif text-[clamp(17px,2vw,21px)] italic leading-[1.55] text-[#3d4d43]" data-challenge-sub>
-            Cardin calibre un challenge court pour votre commerce. Mono-action côté client. Ratio cadré avant lancement.
+          <p className="mx-auto mt-5 max-w-[720px] font-serif text-[clamp(17px,2vw,21px)] italic leading-[1.55] text-[#3d4d43]" data-challenge-sub>
+            Un Challenge Cardin crée des groupes de clients, puis fait arriver quelque chose entre eux.
           </p>
         </div>
 
@@ -363,36 +332,14 @@ export function ChallengePage() {
           <span className="absolute left-0 top-0 h-5 w-5 border-l border-t border-[#b8956a]/50" />
           <span className="absolute bottom-0 right-0 h-5 w-5 border-b border-r border-[#b8956a]/50" />
 
-          <div className="mx-auto mb-8 flex w-fit items-center gap-1 rounded-full border border-[#d4cdbd] bg-[#ece6da] p-1">
-            <button
-              className={tempoButtonClass(tempo === "classic")}
-              onClick={() => setTempo("classic")}
-              type="button"
-            >
-              <span className="font-serif text-[13px]">◇</span>
-              Challenge signature
-            </button>
-            <button
-              className={tempoButtonClass(tempo === "motion")}
-              onClick={() => setTempo("motion")}
-              type="button"
-            >
-              <span className="font-serif text-[13px]">↻</span>
-              Challenge en mouvement
-            </button>
-          </div>
-
-          <p className="text-center text-[10px] uppercase tracking-[0.3em] text-[#8a8578]">
-            {tempo === "motion" ? `Challenge en mouvement · ${business.label}` : `Challenge signature · ${business.label}`}
-          </p>
+          <p className="text-center text-[10px] uppercase tracking-[0.3em] text-[#8a8578]">Challenge Cardin · {challenge.label}</p>
 
           <h2 className="mt-3 text-center font-serif text-[clamp(30px,4.5vw,44px)] leading-[1.12] tracking-[-0.01em] text-[#1a2a22]">
-            {challenge.name.split(".")[0]}
-            <span className="text-[#0f3d2e]">{challenge.name.endsWith(".") ? "." : ""}</span>
+            {challenge.name}
           </h2>
 
-          <p className="mx-auto mt-5 max-w-[590px] text-center font-serif text-[17px] italic leading-[1.55] text-[#3d4d43]">
-            {challenge.actionPhrase}
+          <p className="mx-auto mt-5 max-w-[620px] text-center font-serif text-[17px] italic leading-[1.55] text-[#3d4d43]">
+            {challenge.lead}
           </p>
 
           <div className="mb-8 mt-7 flex items-center justify-center gap-3">
@@ -401,39 +348,15 @@ export function ChallengePage() {
             <span className="h-px w-14 bg-[#b8956a]/40" />
           </div>
 
-          {tempo === "motion" ? (
-            <div className="mb-8 rounded-md border border-[#d4b892] bg-[linear-gradient(to_bottom,rgba(255,250,240,0.7),rgba(184,149,106,0.05))] px-5 py-5 text-center">
-              <div className="mb-3 flex items-center justify-center gap-3 text-[9px] uppercase tracking-[0.3em] text-[#8a8578]">
-                <span className="h-px w-4 bg-[#b8956a]/50" />
-                <span>{business.motionLabel}</span>
-                <span className="h-px w-4 bg-[#b8956a]/50" />
-              </div>
-              <div className="min-h-[74px]">
-                <span className="inline-block rounded-full border border-[#b8956a] px-3 py-1 text-[9px] uppercase tracking-[0.2em] text-[#8c6a44]">
-                  {business.motionCards[motionIndex].tag}
-                </span>
-                <p className="mx-auto mt-4 max-w-[520px] font-serif text-[17px] leading-[1.4] text-[#1a2a22]">
-                  {business.motionCards[motionIndex].phrase}
-                </p>
-              </div>
-              <div className="mt-4 flex justify-center gap-1.5">
-                {business.motionCards.map((_, index) => (
-                  <span
-                    className={[
-                      "h-[5px] w-[5px] rounded-full transition",
-                      index === motionIndex ? "bg-[#b8956a]" : "bg-[#d4cdbd]",
-                    ].join(" ")}
-                    key={index}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : null}
+          <div className="grid gap-4 md:grid-cols-3">
+            {challenge.acts.map((act) => (
+              <ActCard detail={act.detail} key={act.label} label={act.label} title={act.title} />
+            ))}
+          </div>
 
-          <div className="grid border-y border-[#d4cdbd] md:grid-cols-3">
-            <Param label="Action" sub={challenge.actionSub} value={challenge.action} />
-            <Param label="Cadre" sub={challenge.durationSub} value={challenge.duration} />
-            <Param label="Gagnants" sub={challenge.winnersSub} value={challenge.winners} warm />
+          <div className="mt-8 grid border-y border-[#d4cdbd] md:grid-cols-2">
+            <Param label="Cadre" sub={challenge.frameSub} value={challenge.frame} />
+            <Param label="Résolution" sub={challenge.winnersSub} value={challenge.winners} warm />
           </div>
 
           <div className="mt-8 rounded border border-[#d4cdbd] bg-[linear-gradient(to_bottom,rgba(15,61,46,0.03),rgba(184,149,106,0.04))] px-5 py-5 sm:px-7">
@@ -469,23 +392,23 @@ export function ChallengePage() {
               onClick={() => setWhyOpen((current) => !current)}
               type="button"
             >
-              <span>Pourquoi ce ratio tient</span>
+              <span>Ce que ce challenge laisse derrière lui</span>
               <span className={`text-[8px] transition ${whyOpen ? "rotate-180" : ""}`}>▾</span>
             </button>
 
             {whyOpen ? (
               <div className="mt-4 grid gap-3 text-left md:grid-cols-3">
-                <WhyCard description="La récompense est comptée sur son coût réel pour vous, pas sur son prix de vente." index="i." title="Marge, pas revenu" />
-                <WhyCard description="Les non-gagnants participent en consommant. C'est là que le ratio se construit." index="ii." title="Les perdants consomment" />
-                <WhyCard description="Cardin ne lance pas si le volume estimé est trop faible pour rendre le cadre crédible." index="iii." title="Seuil de participation" />
+                <WhyCard description={challenge.carry[0]} index="i." title="Des groupes se forment" />
+                <WhyCard description={challenge.carry[1]} index="ii." title="Un moment se raconte" />
+                <WhyCard description={challenge.carry[2]} index="iii." title="Un rythme peut s’ouvrir" />
               </div>
             ) : null}
           </div>
 
           <div className="mt-8 grid gap-3 md:grid-cols-3">
-            <RuleCard index="i." text="Validation au comptoir. Pas de triche possible." />
-            <RuleCard index="ii." text="Règlement auto-généré, conforme au cadre français." />
-            <RuleCard index="iii." text="Activation sous 24 h après paiement." />
+            <RuleCard index="i." text="Toujours un groupe, jamais un passage purement individuel." />
+            <RuleCard index="ii." text="Toujours peu de gagnants. La rareté fait la scène." />
+            <RuleCard index="iii." text="Le jour et la fenêtre se choisissent avec le commerce." />
           </div>
 
           <div className="mt-9 text-center">
@@ -515,15 +438,15 @@ export function ChallengePage() {
         </article>
 
         <div className="mx-auto mt-16 max-w-[720px] border-t border-[#d4cdbd] px-4 pt-8 text-center">
-          <p className="text-[9px] uppercase tracking-[0.3em] text-[#8a8578]">Pour aller plus loin</p>
+          <p className="text-[9px] uppercase tracking-[0.3em] text-[#8a8578]">Le pont vers la suite</p>
           <h3 className="mt-3 font-serif text-[clamp(24px,3vw,30px)] leading-[1.25] text-[#1a2a22]">
-            Le challenge est une saison, <em className="italic text-[#0f3d2e]">condensée.</em>
+            Le challenge ouvre un rythme. <em className="italic text-[#0f3d2e]">La saison l’installe.</em>
           </h3>
-          <p className="mx-auto mt-3 max-w-[520px] font-serif text-[16px] italic leading-[1.5] text-[#3d4d43]">
-            Si vous voulez structurer le retour client sur 90 jours avec propagation, lecture du lieu et offre de saison, découvrez la Saison Cardin.
+          <p className="mx-auto mt-3 max-w-[560px] font-serif text-[16px] italic leading-[1.5] text-[#3d4d43]">
+            Un Challenge Cardin prouve qu’un groupe peut se former et qu’un moment peut se résoudre dans le lieu. La Saison Cardin rejoue cela sur plusieurs semaines, puis mène quelques participants jusqu’au Diamond.
           </p>
           <Link className="mt-5 inline-flex text-[11px] uppercase tracking-[0.2em] text-[#0f3d2e] underline decoration-[#0f3d2e] underline-offset-4 transition hover:opacity-70" href="/parcours/lecture">
-            Voir la Saison →
+            Ouvrir la Saison →
           </Link>
         </div>
       </section>
@@ -531,11 +454,14 @@ export function ChallengePage() {
   )
 }
 
-function tempoButtonClass(active: boolean) {
-  return [
-    "inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[10px] uppercase tracking-[0.16em] transition",
-    active ? "bg-[#1a2a22] text-[#f2ede4]" : "text-[#8a8578] hover:text-[#0f3d2e]",
-  ].join(" ")
+function ActCard({ label, title, detail }: ChallengeAct) {
+  return (
+    <div className="rounded-[3px] border border-[#d4cdbd] bg-[#f6f1e7] px-4 py-5">
+      <div className="text-[9px] uppercase tracking-[0.28em] text-[#8a8578]">{label}</div>
+      <div className="mt-3 font-serif text-[24px] leading-[1.15] text-[#1a2a22]">{title}</div>
+      <div className="mt-2 font-serif text-[13px] italic leading-[1.5] text-[#3d4d43]">{detail}</div>
+    </div>
+  )
 }
 
 function Param({ label, sub, value, warm = false }: { label: string; sub: string; value: string; warm?: boolean }) {
@@ -567,7 +493,7 @@ function RuleCard({ index, text }: { index: string; text: string }) {
   )
 }
 
-function buildChallengeFallbackMailto(businessLabel: string, tempo: TempoKey) {
+function buildChallengeFallbackMailto(businessLabel: string) {
   return buildContactMailto(
     "Cardin · challenge",
     [
@@ -576,7 +502,6 @@ function buildChallengeFallbackMailto(businessLabel: string, tempo: TempoKey) {
       "Je veux lancer un Challenge Cardin.",
       "",
       `Type de lieu : ${businessLabel}`,
-      `Format : ${tempo === "motion" ? "Challenge en mouvement" : "Challenge signature"}`,
       "",
       `Recontactez-moi sur ${CARDIN_CONTACT_EMAIL} ou revenez vers moi avec le lien de paiement challenge.`,
     ].join("\r\n"),
