@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
+import { useReducedMotion } from "framer-motion"
 import { gsap } from "gsap"
 
 type ApiResponse = {
@@ -9,11 +10,15 @@ type ApiResponse = {
   resumeUrl?: string
   offerUrl?: string
   contactType?: "whatsapp" | "email"
+  recoveryUrl?: string | null
+  recoveryState?: "activation" | "projection" | "paid" | null
+  hasPaidCheckout?: boolean
   fallbackMailto?: string
   error?: string
 }
 
 export function RevenirPage({ source }: { source?: string | null }) {
+  const reducedMotion = useReducedMotion()
   const [contactType, setContactType] = useState<"whatsapp" | "email">("whatsapp")
   const [businessName, setBusinessName] = useState("")
   const [contactValue, setContactValue] = useState("")
@@ -21,6 +26,8 @@ export function RevenirPage({ source }: { source?: string | null }) {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fallbackMailto, setFallbackMailto] = useState<string | null>(null)
+  const [recoveryUrl, setRecoveryUrl] = useState<string | null>(null)
+  const [recoveryState, setRecoveryState] = useState<"activation" | "projection" | "paid" | null>(null)
 
   const successLine = useMemo(() => {
     if (!businessName.trim()) {
@@ -31,6 +38,17 @@ export function RevenirPage({ source }: { source?: string | null }) {
   }, [businessName])
 
   useEffect(() => {
+    if (reducedMotion) {
+      const introTargets = document.querySelectorAll<HTMLElement>(
+        "[data-revenir-glyph], [data-revenir-title], [data-revenir-subtitle], [data-revenir-form], [data-revenir-links]",
+      )
+      introTargets.forEach((node) => {
+        node.style.opacity = "1"
+        node.style.transform = "none"
+      })
+      return
+    }
+
     const particles = document.querySelectorAll<HTMLElement>("[data-revenir-particle]")
     const glyphRing = document.querySelector<HTMLElement>("[data-revenir-ring]")
     const glyphOuter = document.querySelector<HTMLElement>("[data-revenir-ring-outer]")
@@ -83,7 +101,7 @@ export function RevenirPage({ source }: { source?: string | null }) {
       outerTween?.kill()
       particleTweens.forEach((tween) => tween.kill())
     }
-  }, [])
+  }, [reducedMotion])
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -112,6 +130,8 @@ export function RevenirPage({ source }: { source?: string | null }) {
         throw new Error(payload.error ?? "submit_failed")
       }
 
+      setRecoveryUrl(payload.recoveryUrl ?? null)
+      setRecoveryState(payload.recoveryState ?? null)
       setSuccess(true)
     } catch (submitError) {
       setError(resolveErrorMessage(submitError))
@@ -252,6 +272,20 @@ export function RevenirPage({ source }: { source?: string | null }) {
             <p className="mx-auto mt-4 max-w-[380px] font-serif text-lg italic leading-[1.5] text-[#3d4d43]">{successLine}</p>
 
             <div className="mt-10 space-y-3">
+              {recoveryUrl ? (
+                <Link className={choiceClass(true)} href={recoveryUrl}>
+                  <span className="flex flex-col items-start gap-1 text-left">
+                    <span className="font-medium">
+                      {recoveryState === "activation" ? "Retrouver ma page Cardin" : "Reprendre ma page Cardin"}
+                    </span>
+                    <span className="font-serif text-[13px] italic tracking-normal opacity-70">
+                      {recoveryState === "activation" ? "Saison active" : "Brouillon sauvegardé"}
+                    </span>
+                  </span>
+                  <span aria-hidden="true">→</span>
+                </Link>
+              ) : null}
+
               <Link className={choiceClass(false)} href="/parcours/lecture">
                 <span className="flex flex-col items-start gap-1 text-left">
                   <span className="font-medium">Reprendre la simulation</span>
@@ -260,13 +294,15 @@ export function RevenirPage({ source }: { source?: string | null }) {
                 <span aria-hidden="true">→</span>
               </Link>
 
-              <Link className={choiceClass(true)} href="/parcours/offre">
-                <span className="flex flex-col items-start gap-1 text-left">
-                  <span className="font-medium">Activer ma saison</span>
-                  <span className="font-serif text-[13px] italic tracking-normal opacity-70">490 € TTC · 90 jours</span>
-                </span>
-                <span aria-hidden="true">→</span>
-              </Link>
+              {recoveryState !== "activation" ? (
+                <Link className={choiceClass(!recoveryUrl)} href="/parcours/offre">
+                  <span className="flex flex-col items-start gap-1 text-left">
+                    <span className="font-medium">Activer ma saison</span>
+                    <span className="font-serif text-[13px] italic tracking-normal opacity-70">490 € TTC · 90 jours</span>
+                  </span>
+                  <span aria-hidden="true">→</span>
+                </Link>
+              ) : null}
             </div>
 
             <p className="mt-8 border-t border-[#d4cdbd] pt-6 font-serif text-sm italic leading-[1.6] text-[#8a8578]">

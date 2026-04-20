@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useReducedMotion } from "framer-motion"
 import { gsap } from "gsap"
 
 import { buttonVariants } from "@/ui"
@@ -15,6 +16,7 @@ type LeverKey = "retour" | "panier" | "propagation" | "missions"
 
 export function ImpactStepPage() {
   const router = useRouter()
+  const reducedMotion = useReducedMotion()
   const { state } = useParcoursFlow()
   const [viewBusiness, setViewBusiness] = useState(state.business ?? "cafe")
   const [open, setOpen] = useState(false)
@@ -24,6 +26,32 @@ export function ImpactStepPage() {
   const impact = useMemo(() => computeImpactBreakdown(state, viewBusiness), [state, viewBusiness])
 
   useEffect(() => {
+    if (reducedMotion) {
+      ;(["retour", "panier", "propagation", "missions"] as LeverKey[]).forEach((key) => {
+        const row = document.getElementById(`impact-row-${key}`)
+        const valueNode = document.getElementById(`impact-val-${key}`)
+        const barNode = document.getElementById(`impact-bar-${key}`)
+        const percentNode = document.getElementById(`impact-pct-${key}`)
+        if (row) row.style.opacity = "1"
+        if (barNode) barNode.style.width = `${Math.max(10, impact.percentages[key])}%`
+        if (valueNode) valueNode.textContent = `€${Math.round(impact.levers[key]).toLocaleString("fr-FR")}`
+        if (percentNode) percentNode.textContent = `${impact.percentages[key]}% du total`
+      })
+      if (totalRef.current) {
+        totalRef.current.textContent = `+€${Math.round(impact.total).toLocaleString("fr-FR")}`
+      }
+      ;(["v1", "v2", "v3", "v4"] as const).forEach((wave) => {
+        const row = document.getElementById(`wave-row-${wave}`)
+        const fillNode = waveRefs.current[wave]
+        const valueNode = document.getElementById(`wave-val-${wave}`)
+        const value = impact.waves[wave]
+        if (row) row.style.opacity = "1"
+        if (fillNode) fillNode.style.width = `${(value / impact.waves.max) * 100}%`
+        if (valueNode) valueNode.textContent = `${value}`
+      })
+      return
+    }
+
     const counters: gsap.core.Tween[] = []
     const timeline = gsap.timeline()
 
@@ -105,7 +133,7 @@ export function ImpactStepPage() {
       timeline.kill()
       counters.forEach((counter) => counter.kill())
     }
-  }, [impact])
+  }, [impact, reducedMotion])
 
   return (
     <ParcoursShell

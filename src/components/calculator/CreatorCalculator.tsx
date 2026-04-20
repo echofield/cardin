@@ -47,17 +47,17 @@ export function CreatorCalculator({ onCalculate }: Props) {
     <div className="rounded-2xl border-2 border-[#173A2E] bg-white p-6">
       <h3 className="font-serif text-2xl text-[#173A2E]">Calculateur Créateur</h3>
       <p className="mt-2 text-sm text-[#556159]">
-        Votre communauté existe. Cardin la rend plus engagée.
+        Vos clients existent déjà. Cardin les ramène plus souvent.
       </p>
 
       <div className="mt-6 space-y-6">
         {/* Question 1: Community size */}
         <div>
           <label className="block text-sm font-medium text-[#2A3F35]">
-            Taille de votre communauté ?
+            Taille de votre audience ?
           </label>
           <p className="mt-1 text-xs text-[#5E6961]">
-            Abonnés, followers, liste email - qui vous suit actuellement
+            Abonnés, followers, liste e-mail — qui vous suit aujourd&apos;hui
           </p>
           <div className="mt-3 flex items-center gap-4">
             <input

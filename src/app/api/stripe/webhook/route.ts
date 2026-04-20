@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
 import type Stripe from "stripe"
 
-import { markCardinPagePaid } from "@/lib/cardin-page-store"
+import { applyParcoursCheckoutPayment, markCardinPagePaid } from "@/lib/cardin-page-store"
 import { sendStripeCheckoutEmails } from "@/lib/email"
+import { normalizePhone } from "@/lib/phone"
 import { getStripeClient, getStripeWebhookSecret } from "@/lib/stripe-server"
 import { createSupabaseServiceClient } from "@/lib/supabase/service"
 
@@ -64,10 +65,39 @@ async function markEventStatus(eventId: string, status: "processed" | "failed", 
   }
 }
 
+function extractBusinessNameFromSession(session: Stripe.Checkout.Session): string | null {
+  const customField = session.custom_fields?.find((field) => field?.key === "business_name")
+  const fromCustomField = customField?.text?.value
+  if (typeof fromCustomField === "string" && fromCustomField.trim().length > 0) {
+    return fromCustomField.trim()
+  }
+  const fromName = session.customer_details?.name
+  if (typeof fromName === "string" && fromName.trim().length > 0) {
+    return fromName.trim()
+  }
+  return null
+}
+
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session, origin: string) {
   const cardinSlug = typeof session.metadata?.cardin_slug === "string" ? session.metadata.cardin_slug : null
+  const flow = typeof session.metadata?.flow === "string" ? session.metadata.flow : null
+
   if (cardinSlug) {
-    await markCardinPagePaid(cardinSlug, session.id)
+    if (flow === "parcours") {
+      const { canonical: normalizedPhone } = normalizePhone(session.customer_details?.phone ?? null)
+      await applyParcoursCheckoutPayment({
+        slug: cardinSlug,
+        sessionId: session.id,
+        businessName: extractBusinessNameFromSession(session),
+        contactEmail:
+          session.customer_details?.email?.toLowerCase().trim() ??
+          session.customer_email?.toLowerCase().trim() ??
+          null,
+        contactPhone: normalizedPhone,
+      })
+    } else {
+      await markCardinPagePaid(cardinSlug, session.id)
+    }
   }
 
   await sendStripeCheckoutEmails({

@@ -1,5 +1,6 @@
 import type { CardinClienteleId, CardinMerchantInput, CardinReturnRhythmId, CardinWeakMomentId } from "@/lib/cardin-page-data"
 import type { LandingWorldId } from "@/lib/landing-content"
+import type { ParcoursFlowState } from "@/lib/parcours-v2"
 import { createSupabaseServiceClient } from "@/lib/supabase/service"
 
 type CardinPageRow = {
@@ -119,6 +120,76 @@ export async function markCardinPagePaid(slug: string, sessionId: string) {
       updated_at: new Date().toISOString(),
     })
     .eq("slug", slug)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
+const PARCOURS_WORLD_IDS: ReadonlyArray<LandingWorldId> = ["cafe", "bar", "restaurant", "beaute", "boutique"]
+
+function resolveParcoursWorld(business: ParcoursFlowState["business"]): LandingWorldId {
+  if (business && (PARCOURS_WORLD_IDS as string[]).includes(business)) {
+    return business as LandingWorldId
+  }
+  return "cafe"
+}
+
+export async function upsertParcoursDraft(input: { slug: string; state: ParcoursFlowState }) {
+  const supabase = createSupabaseServiceClient()
+  const worldId = resolveParcoursWorld(input.state.business)
+
+  const { error } = await supabase.from("cardin_pages").upsert(
+    {
+      slug: input.slug,
+      business_name: "Saison Cardin",
+      world_id: worldId,
+      reading_payload: {
+        flow: "parcours",
+        parcours: input.state,
+        contactEmail: null,
+        contactPhone: null,
+      },
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "slug" },
+  )
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
+export async function applyParcoursCheckoutPayment(input: {
+  slug: string
+  sessionId: string
+  businessName: string | null
+  contactEmail: string | null
+  contactPhone: string | null
+}) {
+  const supabase = createSupabaseServiceClient()
+  const { data: existing } = await supabase
+    .from("cardin_pages")
+    .select("reading_payload,business_name")
+    .eq("slug", input.slug)
+    .maybeSingle<{ reading_payload: CardinPageRow["reading_payload"]; business_name: string }>()
+
+  const readingPayload = {
+    ...(existing?.reading_payload ?? {}),
+    contactEmail: input.contactEmail ?? existing?.reading_payload?.contactEmail ?? null,
+    contactPhone: input.contactPhone ?? (existing?.reading_payload as { contactPhone?: string | null } | null)?.contactPhone ?? null,
+  }
+
+  const { error } = await supabase
+    .from("cardin_pages")
+    .update({
+      business_name: input.businessName?.trim() || existing?.business_name || "Saison Cardin",
+      reading_payload: readingPayload,
+      stripe_session_id: input.sessionId,
+      paid_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("slug", input.slug)
 
   if (error) {
     throw new Error(error.message)

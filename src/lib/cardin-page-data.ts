@@ -483,9 +483,8 @@ export function buildCardinMerchantInput({
   }
 }
 
-export function resolveCardinPageState(paidAt: string | null, requestedState?: string): CardinPageState {
-  if (paidAt) return "activation"
-  return requestedState === "activation" ? "activation" : "projection"
+export function resolveCardinPageState(paidAt: string | null, _requestedState?: string): CardinPageState {
+  return paidAt ? "activation" : "projection"
 }
 
 export function resolveCardinMerchantPage(slug: string, options: CardinGenerationInput = {}): CardinMerchantPage {

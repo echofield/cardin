@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useReducedMotion } from "framer-motion"
 import { gsap } from "gsap"
 
 import { buttonVariants } from "@/ui"
@@ -26,6 +27,7 @@ const PANELS = ["business", "leak", "params", "diagnostic"] as const
 
 export function LectureStepPage() {
   const router = useRouter()
+  const reducedMotion = useReducedMotion()
   const { state, updateQueryState, updateState, lectureQuery } = useParcoursFlow()
   const [panelIndex, setPanelIndex] = useState(0)
   const [historyStack, setHistoryStack] = useState<number[]>([])
@@ -75,6 +77,12 @@ export function LectureStepPage() {
 
     if (!minEl || !maxEl) return
 
+    if (reducedMotion) {
+      minEl.textContent = `€${Math.round(target.min).toLocaleString("fr-FR")}`
+      maxEl.textContent = `€${Math.round(target.max).toLocaleString("fr-FR")}`
+      return
+    }
+
     minEl.textContent = "€0"
     maxEl.textContent = "€0"
 
@@ -92,7 +100,7 @@ export function LectureStepPage() {
     return () => {
       animation.kill()
     }
-  }, [diagnosticReady, state])
+  }, [diagnosticReady, reducedMotion, state])
 
   const canShowDiagnostic = !!(state.volume && state.basket && state.rhythm)
 

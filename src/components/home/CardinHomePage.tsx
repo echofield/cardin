@@ -556,7 +556,7 @@ export function CardinHomePage() {
               Côté marchand
             </span>
 
-            <div className="grid grid-cols-3 gap-5 sm:gap-7">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-6 md:gap-7">
               <Metric label="Passages / jour" value={displayPassages.toLocaleString("fr-FR")} />
               <Metric accent label="Retours déclenchés" value={displayReturns.toLocaleString("fr-FR")} />
               <Metric label="Revenu récupéré / mois" tone="warm" value={formatEuro(displayRevenue)} />
@@ -879,7 +879,7 @@ function Metric({
     <div className="flex flex-col items-center gap-2 text-center">
       <span
         className={[
-          "font-serif text-[clamp(22px,5.4vw,40px)] font-medium leading-none tabular-nums",
+          "font-serif text-[clamp(26px,3.8vw,38px)] font-medium leading-none tabular-nums",
           tone === "warm" ? "text-[#b8956a]" : accent ? "text-[#0f3d2e]" : "text-[#1a2a22]",
         ].join(" ")}
       >

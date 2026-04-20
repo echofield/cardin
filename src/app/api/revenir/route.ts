@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 
 import { buildContactMailto } from "@/lib/site-contact"
 import { isEmailConfigured, sendRevenirCaptureEmails } from "@/lib/email"
+import { lookupParcoursRecovery } from "@/lib/parcours-recovery"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -75,27 +76,51 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "invalid_phone", fallbackMailto }, { status: 400 })
   }
 
-  if (!isEmailConfigured()) {
-    return NextResponse.json({ ok: false, error: "email_not_configured", fallbackMailto }, { status: 503 })
+  const recovery = await lookupParcoursRecovery({ contactType, contactValue }).catch((error) => {
+    console.warn("parcours_recovery_lookup_failed", error)
+    return null
+  })
+
+  const recoveryUrl = recovery?.cardinPageSlug
+    ? `/cardin/${recovery.cardinPageSlug}${recovery.cardinPageState === "projection" ? "?state=projection" : ""}`
+    : null
+
+  let emailSent = false
+  let emailError: string | null = null
+
+  if (isEmailConfigured()) {
+    try {
+      await sendRevenirCaptureEmails({
+        businessName,
+        contactType,
+        contactValue,
+        origin: new URL(request.url).origin,
+        source,
+      })
+      emailSent = true
+    } catch (error) {
+      emailError = error instanceof Error ? error.message : "revenir_send_failed"
+      console.warn("revenir_send_failed", error)
+    }
+  } else {
+    emailError = "email_not_configured"
   }
 
-  try {
-    await sendRevenirCaptureEmails({
-      businessName,
-      contactType,
-      contactValue,
-      origin: new URL(request.url).origin,
-      source,
-    })
-
+  if (recoveryUrl || emailSent) {
     return NextResponse.json({
       ok: true,
       resumeUrl: "/parcours/lecture",
       offerUrl: "/parcours/offre",
       contactType,
+      recoveryUrl,
+      recoveryState: recovery?.cardinPageState ?? null,
+      hasPaidCheckout: recovery?.hasPaidCheckout ?? false,
+      emailSent,
     })
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "revenir_send_failed"
-    return NextResponse.json({ ok: false, error: message, fallbackMailto }, { status: 500 })
   }
+
+  return NextResponse.json(
+    { ok: false, error: emailError ?? "revenir_send_failed", fallbackMailto },
+    { status: emailError === "email_not_configured" ? 503 : 500 },
+  )
 }

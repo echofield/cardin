@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server"
 
+import { linkCardinCheckoutSession, upsertParcoursDraft } from "@/lib/cardin-page-store"
 import { LANDING_PRICING } from "@/lib/landing-content"
 import {
   buildCheckoutMetadata,
   type ParcoursBasketKey,
   type ParcoursBusinessKey,
   type ParcoursDiamondKey,
+  type ParcoursFlowState,
   type ParcoursLeakKey,
   type ParcoursRewardKey,
   type ParcoursRhythmKey,
@@ -32,6 +34,14 @@ type Payload = {
   decay?: number
 }
 
+function generateParcoursSlug() {
+  const uuid =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+  return `parcours-${uuid.replace(/-/g, "").slice(0, 16)}`
+}
+
 export async function POST(request: Request) {
   try {
     const payload = (await request.json()) as Payload
@@ -42,7 +52,7 @@ export async function POST(request: Request) {
       process.env.STRIPE_PRICE_ID?.trim() ||
       ""
 
-    const metadata = buildCheckoutMetadata({
+    const flowState: ParcoursFlowState = {
       business: payload.business ?? null,
       leak: payload.leak ?? null,
       volume: payload.volume ?? null,
@@ -54,7 +64,23 @@ export async function POST(request: Request) {
       spread: payload.spread ?? "solo",
       diamond: payload.diamond ?? "dinner",
       decay: clampInt(payload.decay, 3, 14, 7),
-    })
+    }
+
+    const slug = generateParcoursSlug()
+
+    let persistedSlug: string | null = null
+    try {
+      await upsertParcoursDraft({ slug, state: flowState })
+      persistedSlug = slug
+    } catch (persistError) {
+      console.warn("parcours_draft_persist_failed", persistError)
+    }
+
+    const metadata = {
+      ...buildCheckoutMetadata(flowState),
+      flow: "parcours",
+      ...(persistedSlug ? { cardin_slug: persistedSlug } : {}),
+    }
 
     const session = await getStripeClient().checkout.sessions.create({
       mode: "payment",
@@ -68,6 +94,7 @@ export async function POST(request: Request) {
           type: "text",
         },
       ],
+      client_reference_id: persistedSlug ?? undefined,
       line_items: priceId
         ? [
             {
@@ -90,6 +117,14 @@ export async function POST(request: Request) {
           ],
       metadata,
     })
+
+    if (persistedSlug) {
+      try {
+        await linkCardinCheckoutSession(persistedSlug, session.id)
+      } catch (linkError) {
+        console.warn("parcours_draft_link_failed", linkError)
+      }
+    }
 
     return NextResponse.json({ ok: true, url: session.url })
   } catch (error) {

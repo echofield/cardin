@@ -55,7 +55,7 @@ export function ConfigurationStepPage() {
           </p>
         </div>
 
-        <div className="grid gap-8 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.95fr)] xl:gap-10">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.95fr)] lg:gap-9 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.95fr)] xl:gap-10">
           <div className="flex flex-col gap-8">
             <section>
               <SectionLabel label="Le moment de la semaine" />
@@ -159,7 +159,7 @@ export function ConfigurationStepPage() {
             </section>
           </div>
 
-          <aside className="xl:sticky xl:top-24">
+          <aside className="lg:sticky lg:top-24">
             <div className="mb-4 rounded border border-[#d4cdbd] bg-[#f2ede4] px-4 py-4">
               <div className="text-[9px] uppercase tracking-[0.28em] text-[#8a8578]">Preset Cardin</div>
               <div className="mt-2 font-serif text-2xl leading-tight text-[#1a2a22]">{preset.label}</div>
