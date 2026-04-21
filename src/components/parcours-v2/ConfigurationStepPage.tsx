@@ -2,43 +2,52 @@
 
 import { useRouter } from "next/navigation"
 
-import { buttonVariants } from "@/ui"
-import { cn } from "@/lib/utils"
-import {
-  PARCOURS_DECAY_VALUES,
-  SPREAD_OPTIONS,
-  WHO_OPTIONS,
-  buildConfigurationPhrase,
-  buildRecapItems,
-  computeConfigurationTension,
-  getBusinessOption,
-  getSeasonPreset,
-  getDiamondOptions,
-  getDiamondOption,
-  getRewardOptions,
-  getRewardOption,
-  getSpreadOption,
-  serializeLectureQuery,
-} from "@/lib/parcours-v2"
 import { useParcoursFlow } from "@/components/parcours-v2/ParcoursFlowProvider"
 import { ParcoursParticles } from "@/components/parcours-v2/ParcoursParticles"
 import { ParcoursShell } from "@/components/parcours-v2/ParcoursShell"
+import {
+  PARCOURS_DECAY_VALUES,
+  RESONANCE_DAY_OPTIONS,
+  buildConfigurationPhrase,
+  buildOfferRecapItems,
+  buildParticipationLine,
+  buildWeeklyMomentLine,
+  computeConfigurationTension,
+  getBusinessOption,
+  getDiamondOption,
+  getDiamondOptions,
+  getResonanceDayOption,
+  getRewardOption,
+  getRewardOptions,
+  getSeasonPreset,
+  getSpreadOption,
+  getWhoOption,
+  serializeLectureQuery,
+} from "@/lib/parcours-v2"
+import { cn } from "@/lib/utils"
+import { buttonVariants } from "@/ui"
 
 export function ConfigurationStepPage() {
   const router = useRouter()
   const { state, updateState } = useParcoursFlow()
+
   const business = getBusinessOption(state.business) ?? getBusinessOption("cafe")
   const rewardOptions = getRewardOptions(state.business)
   const reward = getRewardOption(state.reward, state.business)
+  const who = getWhoOption(state.who)
   const spread = getSpreadOption(state.spread)
   const diamondOptions = getDiamondOptions(state.business)
   const diamond = getDiamondOption(state.diamond, state.business)
   const preset = getSeasonPreset(state.business)
+  const resonanceDay = getResonanceDayOption(state.resonanceDay, state.business)
   const phrase = buildConfigurationPhrase(state)
   const tension = computeConfigurationTension(state)
   const lectureQuery = serializeLectureQuery(state)
-  const recapItems = buildRecapItems(state)
+  const recapItems = buildOfferRecapItems(state)
+  const participationLine = buildParticipationLine(state)
+  const weeklyMomentLine = buildWeeklyMomentLine(state)
   const currentStep = Math.min(Math.floor(state.threshold / 2), state.threshold - 1)
+  const returnWindowDays = Math.max(1, state.decay - 2)
 
   return (
     <ParcoursShell backHref={`/parcours/lecture${lectureQuery ? `?${lectureQuery}` : ""}`} stepIndex={1}>
@@ -60,11 +69,7 @@ export function ConfigurationStepPage() {
             <section>
               <SectionLabel label="Le moment de la semaine" />
               <div className="border-t border-[#d4cdbd]">
-                <Track
-                  hint="le geste d'entrée"
-                  index="01"
-                  name="Ce qui tombe cette semaine"
-                >
+                <Track hint="ce qui tombe cette semaine" index="01" name="Ce qui se passe">
                   <div className="flex flex-wrap gap-2">
                     {rewardOptions.map((option) => (
                       <button
@@ -77,9 +82,28 @@ export function ConfigurationStepPage() {
                       </button>
                     ))}
                   </div>
+                  <SelectionHint>{weeklyMomentLine}</SelectionHint>
                 </Track>
 
-                <Track hint="après combien de passages" index="02" name="Déclencheur">
+                <Track hint="le jour qui porte la saison" index="02" name="Jour clé">
+                  <div className="flex flex-wrap gap-2">
+                    {RESONANCE_DAY_OPTIONS.map((option) => (
+                      <button
+                        className={chipClass(resonanceDay.key === option.key)}
+                        key={option.key}
+                        onClick={() => updateState({ resonanceDay: option.key })}
+                        type="button"
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                  <SelectionHint>
+                    Le preset {preset.label.toLowerCase()} démarre sur {resonanceDay.label.toLowerCase()} et garde Diamond visible tout du long.
+                  </SelectionHint>
+                </Track>
+
+                <Track hint="après combien de passages" index="03" name="Déclencheur">
                   <SliderRow
                     max={10}
                     min={1}
@@ -89,34 +113,44 @@ export function ConfigurationStepPage() {
                   />
                 </Track>
 
-                <Track hint="qui y accède" index="03" name="Qui">
+                <Track hint="qui peut entrer" index="04" name="Qui entre">
                   <div className="flex flex-wrap gap-2">
-                    {WHO_OPTIONS.map((option) => (
-                      <button
-                        className={chipClass(state.who === option.key)}
-                        key={option.key}
-                        onClick={() => updateState({ who: option.key })}
-                        type="button"
-                      >
-                        {option.label}
-                      </button>
-                    ))}
+                    {(["all", "regular", "top"] as const).map((key) => {
+                      const option = getWhoOption(key)
+
+                      return (
+                        <button
+                          className={chipClass(state.who === key)}
+                          key={option.key}
+                          onClick={() => updateState({ who: option.key })}
+                          type="button"
+                        >
+                          {option.label}
+                        </button>
+                      )
+                    })}
                   </div>
+                  <SelectionHint>{who.description}</SelectionHint>
                 </Track>
 
-                <Track hint="seul ou à plusieurs" index="04" name="Seul ou à plusieurs">
+                <Track hint="solo, duo ou groupe" index="05" name="Format de participation">
                   <div className="flex flex-wrap gap-2">
-                    {SPREAD_OPTIONS.map((option) => (
-                      <button
-                        className={chipClass(state.spread === option.key)}
-                        key={option.key}
-                        onClick={() => updateState({ spread: option.key })}
-                        type="button"
-                      >
-                        {option.label}
-                      </button>
-                    ))}
+                    {(["solo", "duo", "group"] as const).map((key) => {
+                      const option = getSpreadOption(key)
+
+                      return (
+                        <button
+                          className={chipClass(state.spread === key)}
+                          key={option.key}
+                          onClick={() => updateState({ spread: option.key })}
+                          type="button"
+                        >
+                          {option.label}
+                        </button>
+                      )
+                    })}
                   </div>
+                  <SelectionHint>{spread.description}</SelectionHint>
                 </Track>
               </div>
             </section>
@@ -124,7 +158,7 @@ export function ConfigurationStepPage() {
             <section>
               <SectionLabel label="Le sommet · ce qui reste en vue" warm />
               <div className="rounded-md border border-[#d4b892] bg-[linear-gradient(to_bottom,rgba(184,149,106,0.04),transparent)] px-5">
-                <Track hint="visible au comptoir toute la saison" index="05" name="Diamond" warm>
+                <Track hint="visible au comptoir toute la saison" index="06" name="Diamond" warm>
                   <div className="flex flex-wrap gap-2">
                     {diamondOptions.map((option) => (
                       <button
@@ -137,9 +171,10 @@ export function ConfigurationStepPage() {
                       </button>
                     ))}
                   </div>
+                  <SelectionHint warm>{diamond.phrase}</SelectionHint>
                 </Track>
 
-                <Track hint="quand il faut revenir" index="06" name="Délai de retour" warm>
+                <Track hint="quand il faut revenir" index="07" name="Délai de retour" warm>
                   <SliderRow
                     marks={[3, 5, 7, 10, 14]}
                     max={14}
@@ -164,7 +199,14 @@ export function ConfigurationStepPage() {
               <div className="text-[9px] uppercase tracking-[0.28em] text-[#8a8578]">Preset Cardin</div>
               <div className="mt-2 font-serif text-2xl leading-tight text-[#1a2a22]">{preset.label}</div>
               <p className="mt-2 text-sm leading-6 text-[#556159]">{preset.summary}</p>
-              <p className="mt-3 text-[10px] uppercase tracking-[0.18em] text-[#8a8578]">{preset.momentLine}</p>
+
+              <div className="mt-4 space-y-3 border-t border-[#d4cdbd] pt-4">
+                <PreviewMeta label="Pourquoi" value={preset.why} />
+                <PreviewMeta label="Jour clé" value={resonanceDay.label} />
+                <PreviewMeta label="Cette semaine" value={weeklyMomentLine} />
+                <PreviewMeta label="Entrée" value={participationLine} />
+                <PreviewMeta label="Diamond" value={diamond.phrase} />
+              </div>
             </div>
 
             <div className="mb-4 flex items-center gap-3 rounded border border-[#d4cdbd] bg-[rgba(15,61,46,0.04)] px-4 py-3 text-[10px] uppercase tracking-[0.2em] text-[#3d4d43]">
@@ -173,61 +215,90 @@ export function ConfigurationStepPage() {
               <span className="ml-auto font-serif text-xs normal-case italic tracking-[0.02em] text-[#8a8578]">borne claire, pas perpétuelle</span>
             </div>
 
-            <div className="mb-5 flex justify-center">
-              <div className="w-full max-w-[260px] rounded-[28px] border border-[#d4cdbd] bg-[#e3dccc] p-3 shadow-[0_20px_48px_rgba(15,61,46,0.08)]">
-                <div className="rounded-[18px] bg-[#f2ede4] px-4 py-6">
-                  <div className="border-b border-[#d4cdbd] pb-3 text-center font-serif text-[15px] tracking-[0.25em] text-[#0f3d2e]">
-                    {business?.brand}
-                  </div>
+            <div className="mb-5">
+              <div className="mb-3 text-[9px] uppercase tracking-[0.28em] text-[#8a8578]">Côté client</div>
+              <div className="flex justify-center">
+                <div className="w-full max-w-[260px] rounded-[28px] border border-[#d4cdbd] bg-[#e3dccc] p-3 shadow-[0_20px_48px_rgba(15,61,46,0.08)]">
+                  <div className="rounded-[18px] bg-[#f2ede4] px-4 py-6">
+                    <div className="border-b border-[#d4cdbd] pb-3 text-center font-serif text-[15px] tracking-[0.25em] text-[#0f3d2e]">
+                      {business?.brand}
+                    </div>
 
-                  <div className="mt-5 flex items-center">
-                    {Array.from({ length: state.threshold }).map((_, index) => (
-                      <div className="flex items-center" key={index}>
-                        <div
-                          className={[
-                            "relative h-[14px] w-[14px] rounded-full border",
-                            index < currentStep
-                              ? "border-[#0f3d2e] bg-[#0f3d2e]"
-                              : index === currentStep
-                                ? "border-2 border-[#0f3d2e] shadow-[0_0_0_4px_rgba(15,61,46,0.08)]"
-                                : "border-[#d4cdbd] bg-[#f2ede4]",
-                          ].join(" ")}
-                        >
-                          {index < currentStep ? <span className="absolute inset-[3px] rounded-full bg-[#f2ede4]" /> : null}
+                    <div className="mt-5 flex items-center">
+                      {Array.from({ length: state.threshold }).map((_, index) => (
+                        <div className="flex items-center" key={index}>
+                          <div
+                            className={[
+                              "relative h-[14px] w-[14px] rounded-full border",
+                              index < currentStep
+                                ? "border-[#0f3d2e] bg-[#0f3d2e]"
+                                : index === currentStep
+                                  ? "border-2 border-[#0f3d2e] shadow-[0_0_0_4px_rgba(15,61,46,0.08)]"
+                                  : "border-[#d4cdbd] bg-[#f2ede4]",
+                            ].join(" ")}
+                          >
+                            {index < currentStep ? <span className="absolute inset-[3px] rounded-full bg-[#f2ede4]" /> : null}
+                          </div>
+                          {index < state.threshold - 1 ? (
+                            <div className={`h-px w-7 ${index < currentStep ? "bg-[#0f3d2e]" : "bg-[#d4cdbd]"}`} />
+                          ) : null}
                         </div>
-                        {index < state.threshold - 1 ? (
-                          <div className={`h-px w-7 ${index < currentStep ? "bg-[#0f3d2e]" : "bg-[#d4cdbd]"}`} />
-                        ) : null}
+                      ))}
+                      <div className="h-px w-7 bg-[#d4cdbd]" />
+                      <div className="h-3 w-3 rotate-45 rounded-[2px] bg-[#b8956a]" />
+                    </div>
+
+                    <div className="mt-5 space-y-3 border-y border-dashed border-[#d4cdbd] py-4 text-sm text-[#3d4d43]">
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-serif italic text-[#b8956a]">→</span>
+                        <span>Vous êtes dedans.</span>
                       </div>
-                    ))}
-                    <div className="h-px w-7 bg-[#d4cdbd]" />
-                    <div className="h-3 w-3 rotate-45 rounded-[2px] bg-[#b8956a]" />
-                  </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-serif italic text-[#b8956a]">→</span>
+                        <span>{weeklyMomentLine}</span>
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-serif italic text-[#b8956a]">→</span>
+                        <span>{participationLine}</span>
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-serif italic text-[#b8956a]">◆</span>
+                        <span>Diamond en jeu : {diamond.phrase}</span>
+                      </div>
+                    </div>
 
-                  <div className="mt-5 space-y-3 border-y border-dashed border-[#d4cdbd] py-4 text-sm text-[#3d4d43]">
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-serif italic text-[#b8956a]">→</span>
-                      <span>{state.threshold - currentStep === 1 ? "Prochain passage" : `Dans ${Math.max(1, state.threshold - currentStep)} passages`} → {reward.phrase}</span>
-                    </div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-serif italic text-[#b8956a]">◆</span>
-                      <span>{`Plus vous revenez, plus le Diamond prend forme : ${diamond.phrase}`}</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4">
-                    <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-[0.1em] text-[#8a8578]">
-                      <span>Reste</span>
-                      <span className="font-serif normal-case tracking-[0.02em] text-[#8c6a44]">{Math.max(1, state.decay - 2)} jours</span>
-                    </div>
-                    <div className="h-[3px] overflow-hidden rounded bg-[#ece6da]">
-                      <div
-                        className="h-full bg-[linear-gradient(to_right,#0f3d2e_0%,#b8956a_65%,#a8512a_100%)]"
-                        style={{ width: `${(Math.max(1, state.decay - 2) / state.decay) * 100}%` }}
-                      />
+                    <div className="mt-4">
+                      <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-[0.1em] text-[#8a8578]">
+                        <span>Retour</span>
+                        <span className="font-serif normal-case tracking-[0.02em] text-[#8c6a44]">{returnWindowDays} jours</span>
+                      </div>
+                      <div className="h-[3px] overflow-hidden rounded bg-[#ece6da]">
+                        <div
+                          className="h-full bg-[linear-gradient(to_right,#0f3d2e_0%,#b8956a_65%,#a8512a_100%)]"
+                          style={{ width: `${(returnWindowDays / state.decay) * 100}%` }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <div className="mb-5 rounded border border-[#d4cdbd] bg-[#f2ede4] px-5 py-5">
+              <div className="mb-3 text-[9px] uppercase tracking-[0.28em] text-[#8a8578]">Au comptoir</div>
+              <div className="grid gap-4 sm:grid-cols-[88px_minmax(0,1fr)]">
+                <div className="flex h-[88px] items-center justify-center rounded border border-dashed border-[#b8956a] bg-[rgba(184,149,106,0.06)] text-[11px] uppercase tracking-[0.28em] text-[#8c6a44]">
+                  QR
+                </div>
+                <div className="space-y-3">
+                  <PreviewMeta label="Cette semaine" value={`${resonanceDay.label} · ${reward.label}`} />
+                  <PreviewMeta label="Moment" value={weeklyMomentLine} />
+                  <PreviewMeta label="Entrée" value={participationLine} />
+                  <PreviewMeta label="Diamond" value={diamond.label} />
+                </div>
+              </div>
+              <div className="mt-4 rounded border border-[#d4cdbd] bg-[#f7f3eb] px-3 py-3 text-[11px] uppercase tracking-[0.18em] text-[#3d4d43]">
+                Scannez. Vous êtes dedans.
               </div>
             </div>
 
@@ -276,7 +347,13 @@ export function ConfigurationStepPage() {
             {recapItems.length > 0 ? (
               <div className="mt-6 flex flex-wrap justify-center gap-2">
                 {recapItems.map((item) => (
-                  <span className="rounded-full border border-[#d4cdbd] px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-[#8a8578]" key={item.key}>
+                  <span
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-[10px] uppercase tracking-[0.1em]",
+                      item.warm ? "border-[#d4b892] text-[#8c6a44]" : "border-[#d4cdbd] text-[#8a8578]",
+                    )}
+                    key={item.key}
+                  >
                     {item.label}
                   </span>
                 ))}
@@ -320,6 +397,19 @@ function Track({
         <span className="text-[11px] italic text-[#8a8578]">{hint}</span>
       </div>
       <div>{children}</div>
+    </div>
+  )
+}
+
+function SelectionHint({ children, warm = false }: { children: React.ReactNode; warm?: boolean }) {
+  return <p className={cn("mt-3 text-[11px] italic leading-5", warm ? "text-[#8c6a44]" : "text-[#8a8578]")}>{children}</p>
+}
+
+function PreviewMeta({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="text-[9px] uppercase tracking-[0.2em] text-[#8a8578]">{label}</div>
+      <p className="mt-1 text-sm leading-6 text-[#3d4d43]">{value}</p>
     </div>
   )
 }

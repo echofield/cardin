@@ -6,6 +6,7 @@ import {
   buildCheckoutMetadata,
   type ParcoursBasketKey,
   type ParcoursBusinessKey,
+  type ParcoursDayKey,
   type ParcoursDiamondKey,
   type ParcoursFlowState,
   type ParcoursLeakKey,
@@ -27,6 +28,7 @@ type Payload = {
   basket?: ParcoursBasketKey | null
   rhythm?: ParcoursRhythmKey | null
   reward?: ParcoursRewardKey
+  resonanceDay?: ParcoursDayKey | null
   threshold?: number
   who?: ParcoursWhoKey
   spread?: ParcoursSpreadKey
@@ -59,6 +61,7 @@ export async function POST(request: Request) {
       basket: payload.basket ?? null,
       rhythm: payload.rhythm ?? null,
       reward: payload.reward ?? "cafe",
+      resonanceDay: payload.resonanceDay ?? null,
       threshold: clampInt(payload.threshold, 1, 10, 3),
       who: payload.who ?? "all",
       spread: payload.spread ?? "solo",

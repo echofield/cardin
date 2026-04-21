@@ -6,6 +6,7 @@ export type ParcoursLeakKey = "disparition" | "creuses" | "frequence" | "propaga
 export type ParcoursVolumeKey = "faible" | "moyen" | "fort"
 export type ParcoursBasketKey = "bas" | "moyen" | "eleve"
 export type ParcoursRhythmKey = "rapide" | "hebdo" | "mensuel"
+export type ParcoursDayKey = "mardi" | "mercredi" | "jeudi" | "vendredi"
 export type ParcoursRewardKey = "cafe" | "credit" | "menu" | "invitation"
 export type ParcoursWhoKey = "all" | "regular" | "top"
 export type ParcoursSpreadKey = "solo" | "duo" | "group"
@@ -21,6 +22,7 @@ export type ParcoursQueryState = {
 
 export type ParcoursConfigurationState = {
   reward: ParcoursRewardKey
+  resonanceDay: ParcoursDayKey | null
   threshold: number
   who: ParcoursWhoKey
   spread: ParcoursSpreadKey
@@ -35,6 +37,11 @@ export type ParcoursSeasonPreset = {
   label: string
   summary: string
   momentLine: string
+  why: string
+  day: ParcoursDayKey
+  moment: string
+  entry: string
+  diamondLine: string
 } & ParcoursConfigurationState
 
 export type BusinessOption = {
@@ -58,6 +65,18 @@ type DiamondOption = {
   label: string
   phrase: string
   multiplier: number
+}
+
+type ResonanceDayOption = {
+  key: ParcoursDayKey
+  label: string
+  shortLabel: string
+}
+
+type ChoiceDisplay = {
+  label: string
+  phrase: string
+  description: string
 }
 
 export type LeakOption = {
@@ -102,6 +121,7 @@ export const DEFAULT_PARCOURS_FLOW_STATE: ParcoursFlowState = {
   basket: null,
   rhythm: null,
   reward: "cafe",
+  resonanceDay: null,
   threshold: 3,
   who: "all",
   spread: "solo",
@@ -114,8 +134,14 @@ export const SEASON_PRESETS: Record<ParcoursBusinessKey, ParcoursSeasonPreset> =
     key: "cafe",
     label: "Retour rapide",
     summary: "Remettre du rythme sur les heures faibles et faire revenir en duo.",
+    why: "Idéal pour relancer un créneau creux sans compliquer le comptoir.",
+    day: "mardi",
+    moment: "une boisson peut tomber au comptoir",
+    entry: "scan simple, puis retour rapide",
+    diamondLine: "1 boisson signature / semaine pendant 1 an",
     momentLine: "Mardi 15h–18h · un duo peut déclencher le premier moment.",
     reward: "cafe",
+    resonanceDay: null,
     threshold: 3,
     who: "all",
     spread: "duo",
@@ -126,8 +152,14 @@ export const SEASON_PRESETS: Record<ParcoursBusinessKey, ParcoursSeasonPreset> =
     key: "bar",
     label: "Nuit vivante",
     summary: "Faire monter les groupes et donner un vrai rendez-vous au soir creux.",
+    why: "Pensé pour remplir un soir faible et faire venir à plusieurs.",
+    day: "vendredi",
+    moment: "une bouteille ou une table peut tomber en salle",
+    entry: "scan simple, puis duo ou groupe",
+    diamondLine: "1 bouteille / mois pendant 1 an",
     momentLine: "Vendredi soir · une table peut être désignée en salle.",
     reward: "menu",
+    resonanceDay: null,
     threshold: 3,
     who: "all",
     spread: "group",
@@ -137,9 +169,15 @@ export const SEASON_PRESETS: Record<ParcoursBusinessKey, ParcoursSeasonPreset> =
   restaurant: {
     key: "restaurant",
     label: "Jour plein",
+    why: "Conçu pour donner un vrai motif de retour sur un service plus faible.",
+    day: "mardi",
+    moment: "une table peut basculer sur le service",
+    entry: "scan simple, puis table ou groupe",
+    diamondLine: "1 repas / mois pendant 1 an",
     summary: "Créer une raison de réserver ensemble et de revenir sur la semaine.",
     momentLine: "Mardi ou jeudi · une table de 4+ peut faire basculer le service.",
     reward: "menu",
+    resonanceDay: null,
     threshold: 3,
     who: "all",
     spread: "group",
@@ -148,10 +186,16 @@ export const SEASON_PRESETS: Record<ParcoursBusinessKey, ParcoursSeasonPreset> =
   },
   beaute: {
     key: "beaute",
+    why: "Utile pour provoquer un retour concret sur un jour plus calme.",
+    day: "jeudi",
+    moment: "un soin peut s'ouvrir sur un retour validé",
+    entry: "après retour, avec possibilité de duo",
+    diamondLine: "1 soin / trimestre pendant 1 an",
     label: "Retour élégant",
     summary: "Raccourcir le cycle de retour sans abîmer le niveau de service.",
     momentLine: "Cette semaine · un second rendez-vous peut ouvrir le moment.",
     reward: "menu",
+    resonanceDay: null,
     threshold: 4,
     who: "regular",
     spread: "duo",
@@ -160,10 +204,16 @@ export const SEASON_PRESETS: Record<ParcoursBusinessKey, ParcoursSeasonPreset> =
   },
   boutique: {
     key: "boutique",
+    why: "Fait revenir pour une pièce, un vote ou un duo, sans tomber dans la promo brute.",
+    day: "vendredi",
+    moment: "un duo ou un vote peut déclencher la pièce qui tombe",
+    entry: "scan simple, puis duo ou vote",
+    diamondLine: "100 € de crédit / mois pendant 1 an",
     label: "Désir et jeu",
     summary: "Créer un rendez-vous social autour d'une pièce, d'un duo ou d'un vote.",
     momentLine: "Cette semaine · un duo ou un vote peut déclencher la pièce qui tombe.",
     reward: "credit",
+    resonanceDay: null,
     threshold: 3,
     who: "all",
     spread: "duo",
@@ -171,6 +221,13 @@ export const SEASON_PRESETS: Record<ParcoursBusinessKey, ParcoursSeasonPreset> =
     decay: 10,
   },
 }
+
+export const RESONANCE_DAY_OPTIONS: ResonanceDayOption[] = [
+  { key: "mardi", label: "Mardi", shortLabel: "Mardi" },
+  { key: "mercredi", label: "Mercredi", shortLabel: "Mer." },
+  { key: "jeudi", label: "Jeudi", shortLabel: "Jeudi" },
+  { key: "vendredi", label: "Vendredi", shortLabel: "Ven." },
+]
 
 export const BUSINESS_OPTIONS: BusinessOption[] = [
   {
@@ -336,6 +393,72 @@ export const SPREAD_OPTIONS: Array<{ key: ParcoursSpreadKey; label: string; phra
   { key: "group", label: "Groupe", phrase: "à plusieurs", multiplier: 1.28 },
 ]
 
+const WHO_DISPLAY: Record<ParcoursWhoKey, ChoiceDisplay> = {
+  all: {
+    label: "Tous",
+    phrase: "tous les clients",
+    description: "Tous les clients peuvent entrer dès le scan.",
+  },
+  regular: {
+    label: "Après retour",
+    phrase: "les clients déjà revenus",
+    description: "Le moment s'ouvre après un vrai retour validé.",
+  },
+  top: {
+    label: "Sur invitation",
+    phrase: "les clients invités",
+    description: "Le lieu réserve ce moment à certains clients.",
+  },
+}
+
+const SPREAD_DISPLAY: Record<ParcoursSpreadKey, ChoiceDisplay> = {
+  solo: {
+    label: "Solo",
+    phrase: "en solo",
+    description: "Chaque client joue seul, sans effet de groupe.",
+  },
+  duo: {
+    label: "Duo",
+    phrase: "à deux",
+    description: "Venir avec quelqu'un compte dans le moment.",
+  },
+  group: {
+    label: "Groupe",
+    phrase: "à plusieurs",
+    description: "Les tables et les groupes font monter la saison.",
+  },
+}
+
+const REWARD_PRESENTATION_OVERRIDES: Partial<Record<ParcoursRewardKey, Partial<Record<ParcoursBusinessKey, { label: string; phrase: string }>>>> = {
+  invitation: {
+    boutique: { label: "Invitation duo", phrase: "une invitation duo à partager" },
+  },
+}
+
+const DIAMOND_PRESENTATION_OVERRIDES: Partial<Record<ParcoursDiamondKey, Partial<Record<ParcoursBusinessKey, { label: string; phrase: string }>>>> = {
+  dinner: {
+    cafe: { label: "1 boisson signature / semaine", phrase: "1 boisson signature / semaine pendant 1 an" },
+    bar: { label: "1 bouteille / mois", phrase: "1 bouteille / mois pendant 1 an" },
+    restaurant: { label: "1 repas / mois", phrase: "1 repas / mois pendant 1 an" },
+    beaute: { label: "1 soin / trimestre", phrase: "1 soin / trimestre pendant 1 an" },
+    boutique: { label: "100 € / mois", phrase: "100 € de crédit / mois pendant 1 an" },
+  },
+  credit: {
+    cafe: { label: "120 € de crédit", phrase: "120 € de crédit sur 12 mois" },
+    bar: { label: "180 € de crédit", phrase: "180 € de crédit sur 12 mois" },
+    restaurant: { label: "300 € de crédit", phrase: "300 € de crédit sur 12 mois" },
+    beaute: { label: "300 € de crédit", phrase: "300 € de crédit sur 12 mois" },
+    boutique: { label: "400 € de crédit", phrase: "400 € de crédit sur 12 mois" },
+  },
+  unlimited: {
+    cafe: { label: "1 petit-déjeuner / mois", phrase: "1 petit-déjeuner / mois pendant 1 an" },
+    bar: { label: "1 table offerte / mois", phrase: "1 table offerte / mois pendant 1 an" },
+    restaurant: { label: "Table privilège / mois", phrase: "1 table privilège / mois pendant 1 an" },
+    beaute: { label: "1 créneau prioritaire / mois", phrase: "1 créneau prioritaire / mois pendant 1 an" },
+    boutique: { label: "1 pièce offerte / trimestre", phrase: "1 pièce offerte / trimestre pendant 1 an" },
+  },
+}
+
 const DIAMOND_BASE_OPTIONS: Array<{ key: ParcoursDiamondKey; multiplier: number }> = [
   { key: "dinner", multiplier: 1 },
   { key: "credit", multiplier: 1.08 },
@@ -462,10 +585,10 @@ const IMPACT_PROFILES: Record<ParcoursBusinessKey, ImpactProfile> = {
       retour: "<strong>Il gagne</strong> une boutique qui connaît son goût. <span class=\"sep\">·</span> <strong>Vous gagnez</strong> une relation de saison.",
       panier: "<strong>Il construit</strong> sa garde-robe, pas juste un achat. <span class=\"sep\">·</span> <strong>Vous augmentez</strong> le panier par visite.",
       propagation: "<strong>Il amène</strong> ses amis pour les essayages. <span class=\"sep\">·</span> <strong>Vous gagnez</strong> des clients par affinité.",
-      missions: "<strong>Il participe</strong> aux drops et previews privés. <span class=\"sep\">·</span> <strong>Vous activez</strong> votre meilleur cercle.",
+      missions: "<strong>Il participe</strong> aux sélections et aux temps forts de la boutique. <span class=\"sep\">·</span> <strong>Vous activez</strong> votre meilleur cercle.",
     },
     cascadeSub:
-      "Au 3e passage validé, chaque client peut inviter un proche, avec un accès preview à la prochaine pièce. L'invité entre à son tour dans le parcours.",
+      "Au 3e passage validé, chaque client peut inviter un proche, avec un accès prioritaire à la prochaine pièce. L'invité entre à son tour dans le parcours.",
   },
 }
 
@@ -475,6 +598,11 @@ export function getBusinessOption(key: ParcoursBusinessKey | null) {
 
 export function getSeasonPreset(businessKey?: ParcoursBusinessKey | null) {
   return SEASON_PRESETS[businessKey ?? "cafe"]
+}
+
+export function getResonanceDayOption(dayKey?: ParcoursDayKey | null, businessKey?: ParcoursBusinessKey | null) {
+  const resolvedKey = dayKey ?? getSeasonPreset(businessKey).day
+  return RESONANCE_DAY_OPTIONS.find((option) => option.key === resolvedKey) ?? RESONANCE_DAY_OPTIONS[0]
 }
 
 export function getLeakOption(key: ParcoursLeakKey | null) {
@@ -490,6 +618,7 @@ export function getRewardOptions(businessKey?: ParcoursBusinessKey | null): Rewa
   return REWARD_BASE_OPTIONS.map((option) => ({
     ...option,
     ...REWARD_COPY[option.key][resolvedBusiness],
+    ...(REWARD_PRESENTATION_OVERRIDES[option.key]?.[resolvedBusiness] ?? {}),
   }))
 }
 
@@ -498,11 +627,13 @@ export function getRewardOption(key: ParcoursRewardKey, businessKey?: ParcoursBu
 }
 
 export function getWhoOption(key: ParcoursWhoKey) {
-  return WHO_OPTIONS.find((option) => option.key === key) ?? WHO_OPTIONS[0]
+  const option = WHO_OPTIONS.find((candidate) => candidate.key === key) ?? WHO_OPTIONS[0]
+  return { ...option, ...WHO_DISPLAY[option.key] }
 }
 
 export function getSpreadOption(key: ParcoursSpreadKey) {
-  return SPREAD_OPTIONS.find((option) => option.key === key) ?? SPREAD_OPTIONS[0]
+  const option = SPREAD_OPTIONS.find((candidate) => candidate.key === key) ?? SPREAD_OPTIONS[0]
+  return { ...option, ...SPREAD_DISPLAY[option.key] }
 }
 
 export function getDiamondOptions(businessKey?: ParcoursBusinessKey | null): DiamondOption[] {
@@ -510,11 +641,39 @@ export function getDiamondOptions(businessKey?: ParcoursBusinessKey | null): Dia
   return DIAMOND_BASE_OPTIONS.map((option) => ({
     ...option,
     ...DIAMOND_COPY[option.key][resolvedBusiness],
+    ...(DIAMOND_PRESENTATION_OVERRIDES[option.key]?.[resolvedBusiness] ?? {}),
   }))
 }
 
 export function getDiamondOption(key: ParcoursDiamondKey, businessKey?: ParcoursBusinessKey | null) {
   return getDiamondOptions(businessKey).find((option) => option.key === key) ?? getDiamondOptions(businessKey)[0]
+}
+
+export function buildParticipationLine(state: Pick<ParcoursConfigurationState, "who" | "spread">) {
+  const access = state.who === "all" ? "Entrée dès le scan" : state.who === "regular" ? "Entrée après retour" : "Entrée sur invitation"
+  const format = state.spread === "solo" ? "chacun joue en solo" : state.spread === "duo" ? "venir à deux compte" : "les groupes comptent"
+
+  return `${access} · ${format}`
+}
+
+export function buildWeeklyMomentLine(state: Pick<ParcoursConfigurationState, "reward" | "resonanceDay"> & Partial<ParcoursQueryState>) {
+  const businessKey = resolveBusinessKey(state.business)
+  const day = getResonanceDayOption(state.resonanceDay, businessKey)
+  const reward = getRewardOption(state.reward, businessKey)
+
+  switch (businessKey) {
+    case "bar":
+      return `${day.label} soir · ${reward.phrase} peut tomber pour une table`
+    case "restaurant":
+      return `${day.label} · ${reward.phrase} peut faire basculer une table`
+    case "beaute":
+      return `${day.label} · ${reward.phrase} peut s'ouvrir sur un retour validé`
+    case "boutique":
+      return `${day.label} · ${reward.phrase} peut tomber côté boutique`
+    case "cafe":
+    default:
+      return `${day.label} · ${reward.phrase} peut tomber au comptoir`
+  }
 }
 
 export function getVolumeOption(key: ParcoursVolumeKey | null) {
@@ -577,10 +736,11 @@ export function buildRecapItems(state: ParcoursQueryState) {
 
 export function buildOfferRecapItems(state: ParcoursFlowState) {
   const items = buildRecapItems(state)
+  items.push({ key: "day", label: `Jour clé · ${getResonanceDayOption(state.resonanceDay, state.business).label}` })
   items.push({ key: "reward", label: `Moment · ${getRewardOption(state.reward, state.business).label}` })
   items.push({ key: "threshold", label: `Déclencheur · ${state.threshold} passages` })
   items.push({ key: "spread", label: `Cadre · ${getSpreadOption(state.spread).label.toLowerCase()}` })
-  items.push({ key: "diamond", label: `◊ Diamond · ${getDiamondOption(state.diamond, state.business).label}`, warm: true })
+  items.push({ key: "diamond", label: `◇ Diamond · ${getDiamondOption(state.diamond, state.business).label}`, warm: true })
   return items
 }
 
@@ -589,10 +749,11 @@ export function buildConfigurationPhrase(state: ParcoursConfigurationState & Par
   const who = getWhoOption(state.who)
   const spread = getSpreadOption(state.spread)
   const diamond = getDiamondOption(state.diamond, state.business)
+  const day = getResonanceDayOption(state.resonanceDay, state.business)
   const thresholdPart = `après ${state.threshold} passages`
 
   return [
-    reward.phrase,
+    `${day.label} : ${reward.phrase}`,
     spread.phrase,
     thresholdPart,
     `pour ${who.phrase}`,
@@ -748,6 +909,7 @@ export function buildCheckoutMetadata(state: ParcoursFlowState) {
     parcours_basket: state.basket ?? "unknown",
     parcours_rhythm: state.rhythm ?? "unknown",
     parcours_reward: state.reward,
+    parcours_resonance_day: getResonanceDayOption(state.resonanceDay, state.business).key,
     parcours_threshold: String(state.threshold),
     parcours_who: state.who,
     parcours_spread: state.spread,
