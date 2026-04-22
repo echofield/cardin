@@ -278,28 +278,28 @@ export function CardinStarterPage() {
     >
       <ParcoursParticles />
 
-      <section className="relative z-[2] mx-auto grid min-h-[92dvh] max-w-[1240px] gap-12 px-6 pb-16 pt-28 md:px-8 lg:grid-cols-[minmax(0,1fr)_460px] lg:items-center lg:gap-16 lg:px-12">
+      <section className="relative z-[2] mx-auto grid min-h-[92dvh] max-w-[1240px] gap-10 px-5 pb-14 pt-24 sm:px-6 md:grid-cols-[minmax(0,1fr)_320px] md:items-center md:gap-10 md:px-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-12 lg:px-10 xl:grid-cols-[minmax(0,1fr)_460px] xl:gap-16 xl:px-12">
         <div className="text-left">
           <p className="mb-4 inline-flex items-center gap-3 text-[10px] uppercase tracking-[0.32em] text-[#8c6a44]" ref={heroKickerRef}>
             <span className="h-px w-[14px] bg-[#b8956a]/70" />
             Commencer avec Cardin
           </p>
-          <h1 className="font-serif text-[clamp(60px,9vw,92px)] leading-[0.96] tracking-[-0.03em] text-[#1a2a22]" ref={heroBrandRef}>
+          <h1 className="font-serif text-[clamp(48px,15vw,92px)] leading-[0.96] tracking-[-0.03em] text-[#1a2a22]" ref={heroBrandRef}>
             Cardin
           </h1>
-          <p className="mt-4 max-w-[560px] font-serif text-[clamp(22px,2.9vw,32px)] leading-[1.2] tracking-[-0.01em] text-[#1a2a22]" ref={heroTitleRef}>
+          <p className="mt-4 max-w-[560px] font-serif text-[clamp(20px,6.6vw,32px)] leading-[1.2] tracking-[-0.01em] text-[#1a2a22]" ref={heroTitleRef}>
             Le système qui
             <em className="mx-2 font-medium italic text-[#0f3d2e]">fait revenir</em>
             vos clients.
           </p>
-          <p className="mt-5 max-w-[540px] font-serif text-[17px] italic leading-[1.6] text-[#3d4d43]" ref={heroSubRef}>
+          <p className="mt-5 max-w-[540px] font-serif text-[15px] italic leading-[1.6] text-[#3d4d43] sm:text-[16px]" ref={heroSubRef}>
             Un premier mois simple pour lancer Cardin dans un lieu, poser un moment visible, faire scanner les clients,
             et commencer à transformer le passage en retour.
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-3" ref={heroCtasRef}>
+          <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap" ref={heroCtasRef}>
             <a
-              className="inline-flex min-h-12 items-center justify-center gap-3 rounded-[2px] border border-[#0f3d2e] bg-[#0f3d2e] px-7 py-3 text-[11px] uppercase tracking-[0.22em] text-[#f2ede4] transition hover:border-[#1a2a22] hover:bg-[#1a2a22]"
+              className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-[2px] border border-[#0f3d2e] bg-[#0f3d2e] px-6 py-3 text-[10px] uppercase tracking-[0.22em] text-[#f2ede4] transition hover:border-[#1a2a22] hover:bg-[#1a2a22] sm:w-auto sm:px-7 sm:text-[11px]"
               href={challengeCta.href}
               rel={challengeCta.external ? "noreferrer" : undefined}
               target={challengeCta.external ? "_blank" : undefined}
@@ -308,24 +308,24 @@ export function CardinStarterPage() {
               <span className="text-[14px]">→</span>
             </a>
             <Link
-              className="inline-flex min-h-12 items-center justify-center rounded-[2px] border border-[#d4cdbd] px-7 py-3 text-[11px] uppercase tracking-[0.22em] text-[#1a2a22] transition hover:border-[#0f3d2e] hover:bg-[rgba(15,61,46,0.03)] hover:text-[#0f3d2e]"
+              className="inline-flex min-h-12 w-full items-center justify-center rounded-[2px] border border-[#d4cdbd] px-6 py-3 text-[10px] uppercase tracking-[0.22em] text-[#1a2a22] transition hover:border-[#0f3d2e] hover:bg-[rgba(15,61,46,0.03)] hover:text-[#0f3d2e] sm:w-auto sm:px-7 sm:text-[11px]"
               href="/parcours/lecture"
             >
               Voir la saison complète
             </Link>
           </div>
 
-          <p className="mt-5 text-[10px] uppercase tracking-[0.2em] text-[#8a8578]" ref={heroMetaRef}>
+          <p className="mt-5 text-[10px] uppercase leading-5 tracking-[0.18em] text-[#8a8578]" ref={heroMetaRef}>
             Premier mois {CHALLENGE_PRICING.activationFee}€ TTC <span className="mx-2 text-[#b8956a]">·</span> Saison {LANDING_PRICING.activationFee}€{" "}
             <span className="mx-2 text-[#b8956a]">·</span> {metaLine}
           </p>
         </div>
 
-        <div className="relative mx-auto w-full max-w-[460px]" ref={engineStageRef}>
-          <div className="pointer-events-none absolute inset-[-22px] rounded-[12px] border border-dashed border-[#b8956a]/30" />
-          <div className="pointer-events-none absolute inset-[-38px] rounded-[18px] border border-[#b8956a]/15" />
+        <div className="relative mx-auto w-full max-w-[320px] sm:max-w-[360px] md:max-w-[320px] lg:max-w-[380px] xl:max-w-[460px]" ref={engineStageRef}>
+          <div className="pointer-events-none absolute inset-[-12px] rounded-[12px] border border-dashed border-[#b8956a]/30 sm:inset-[-16px] lg:inset-[-22px]" />
+          <div className="pointer-events-none absolute inset-[-22px] rounded-[18px] border border-[#b8956a]/15 sm:inset-[-28px] lg:inset-[-38px]" />
 
-          <div className="relative h-[570px] [perspective:1800px]">
+          <div className="relative h-[500px] [perspective:1800px] sm:h-[540px] md:h-[500px] lg:h-[540px] xl:h-[570px]">
             <div
               className="relative h-full w-full transition-transform duration-[1200ms] [transform-style:preserve-3d] [transition-timing-function:cubic-bezier(0.68,-0.2,0.265,1.2)]"
               style={{ transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
@@ -334,7 +334,7 @@ export function CardinStarterPage() {
                 className="absolute inset-0"
                 style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
               >
-                <article className="relative flex h-full flex-col overflow-hidden rounded-[6px] border border-[#b8956a] bg-[radial-gradient(circle_at_15%_10%,rgba(184,149,106,0.08),transparent_45%),radial-gradient(circle_at_85%_90%,rgba(15,61,46,0.04),transparent_45%),#f2ede4] px-7 pb-6 pt-8 shadow-[0_24px_60px_rgba(15,61,46,0.1),0_48px_100px_rgba(15,61,46,0.06)]">
+                <article className="relative flex h-full flex-col overflow-hidden rounded-[6px] border border-[#b8956a] bg-[radial-gradient(circle_at_15%_10%,rgba(184,149,106,0.08),transparent_45%),radial-gradient(circle_at_85%_90%,rgba(15,61,46,0.04),transparent_45%),#f2ede4] px-4 pb-4 pt-6 shadow-[0_24px_60px_rgba(15,61,46,0.1),0_48px_100px_rgba(15,61,46,0.06)] sm:px-5 sm:pb-5 sm:pt-7 xl:px-7 xl:pb-6 xl:pt-8">
                   <div className="pointer-events-none absolute inset-[1px] rounded-[6px] border border-[#b8956a]/40" />
                   <span className="absolute left-[10px] top-[10px] h-[14px] w-[14px] border-l border-t border-[#b8956a]/60" />
                   <span className="absolute right-[10px] top-[10px] h-[14px] w-[14px] border-r border-t border-[#b8956a]/60" />
@@ -346,41 +346,41 @@ export function CardinStarterPage() {
                     Cardin en cours
                   </div>
 
-                  <div className="mt-5 text-center">
-                    <p className="font-serif text-[14px] tracking-[0.4em] text-[#1a2a22]">CARDIN</p>
-                    <p className="mt-1 text-[8px] uppercase tracking-[0.3em] text-[#8a8578]">Saison · {currentMoment.place}</p>
+                  <div className="mt-4 text-center sm:mt-5">
+                    <p className="font-serif text-[12px] tracking-[0.34em] text-[#1a2a22] sm:text-[13px] xl:text-[14px]">CARDIN</p>
+                    <p className="mt-1 text-[7px] uppercase tracking-[0.24em] text-[#8a8578] sm:text-[8px] sm:tracking-[0.3em]">Saison · {currentMoment.place}</p>
                   </div>
 
-                  <div className="mt-5 border-y border-[#d4cdbd] px-4 py-4 text-center">
+                  <div className="mt-4 border-y border-[#d4cdbd] px-3 py-3 text-center sm:mt-5 sm:px-4 sm:py-4">
                     <p className="text-[8px] uppercase tracking-[0.3em] text-[#8c6a44]">À gagner</p>
-                    <p className="mt-2 font-serif text-[22px] leading-[1.2] text-[#1a2a22]">
+                    <p className="mt-2 font-serif text-[18px] leading-[1.2] text-[#1a2a22] sm:text-[20px] xl:text-[22px]">
                       <em className="italic text-[#0f3d2e]">{currentMoment.summitTitle}</em>
                     </p>
-                    <p className="mt-1 font-serif text-[12px] italic text-[#3d4d43]">{currentMoment.summitDetail}</p>
+                    <p className="mt-1 font-serif text-[10px] italic text-[#3d4d43] sm:text-[11px] xl:text-[12px]">{currentMoment.summitDetail}</p>
                   </div>
 
-                  <div className="mt-5 border-y border-[#d4cdbd] px-4 py-4 text-center">
+                  <div className="mt-4 border-y border-[#d4cdbd] px-3 py-3 text-center sm:mt-5 sm:px-4 sm:py-4">
                     <p className="text-[8px] uppercase tracking-[0.3em] text-[#8c6a44]">Cette semaine</p>
-                    <p className="mt-2 font-serif text-[22px] leading-[1.2] text-[#1a2a22]">
+                    <p className="mt-2 font-serif text-[18px] leading-[1.2] text-[#1a2a22] sm:text-[20px] xl:text-[22px]">
                       {currentMoment.day},
                       <em className="ml-1 italic text-[#0f3d2e]">{currentMoment.weeklyMoment}</em>
                     </p>
-                    <p className="mt-1 font-serif text-[12px] italic text-[#3d4d43]">{currentMoment.weeklyDetail}</p>
+                    <p className="mt-1 font-serif text-[10px] italic text-[#3d4d43] sm:text-[11px] xl:text-[12px]">{currentMoment.weeklyDetail}</p>
                   </div>
 
-                  <div className="mt-5">
+                  <div className="mt-4 sm:mt-5">
                     <div className="mb-2 flex items-center justify-between">
                       <span className="text-[8px] uppercase tracking-[0.24em] text-[#8a8578]">Progression</span>
                       <span className="font-serif text-[12px] italic text-[#8c6a44]">{diamondCount} sur 4</span>
                     </div>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                       {Array.from({ length: 4 }, (_, index) => {
                         const isFilled = index < diamondCount
                         const isCurrent = index === diamondCount
                         return (
                           <div
                             className={[
-                              "relative flex aspect-square items-center justify-center rounded-[3px] border font-serif text-[16px] transition",
+                              "relative flex aspect-square items-center justify-center rounded-[3px] border font-serif text-[14px] transition sm:text-[15px] xl:text-[16px]",
                               isFilled
                                 ? "border-[#b8956a] bg-[rgba(184,149,106,0.12)] text-[#8c6a44]"
                                 : isCurrent
@@ -397,7 +397,7 @@ export function CardinStarterPage() {
                     </div>
                   </div>
 
-                  <div className="mt-5">
+                  <div className="mt-4 sm:mt-5">
                     <div className="mb-2 flex items-center justify-between text-[8px] uppercase tracking-[0.22em] text-[#8a8578]">
                       <span>Saison en cours</span>
                       <span className="font-serif text-[11px] italic normal-case tracking-normal text-[#8c6a44]">jour {day} / 90</span>
@@ -412,19 +412,19 @@ export function CardinStarterPage() {
                     </div>
                   </div>
 
-                  <div className="mt-5 flex items-center justify-between rounded-[4px] border border-[#d4b892] bg-[rgba(184,149,106,0.04)] px-4 py-3">
+                  <div className="mt-4 flex items-center justify-between rounded-[4px] border border-[#d4b892] bg-[rgba(184,149,106,0.04)] px-3 py-3 sm:mt-5 sm:px-4">
                     <div>
                       <p className="text-[8px] uppercase tracking-[0.24em] text-[#8a8578]">Passages validés</p>
-                      <p className="mt-1 font-serif text-[22px] leading-none text-[#1a2a22]">{visits}</p>
+                      <p className="mt-1 font-serif text-[18px] leading-none text-[#1a2a22] sm:text-[20px] xl:text-[22px]">{visits}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-[8px] uppercase tracking-[0.24em] text-[#8a8578]">Lecture</p>
-                      <p className="mt-1 font-serif text-[14px] italic text-[#8c6a44]">retour en hausse</p>
+                      <p className="mt-1 font-serif text-[12px] italic text-[#8c6a44] sm:text-[13px] xl:text-[14px]">retour en hausse</p>
                     </div>
                   </div>
 
                   <div className="mt-auto rounded-[3px] border border-dashed border-[#d4cdbd] bg-[rgba(15,61,46,0.03)] px-3 py-3">
-                    <p className="flex items-center gap-2 font-serif text-[12px] italic leading-[1.45] text-[#3d4d43]">
+                    <p className="flex items-center gap-2 font-serif text-[11px] italic leading-[1.45] text-[#3d4d43] xl:text-[12px]">
                       <span className="h-[4px] w-[4px] rounded-full bg-[#0f3d2e]" />
                       {activity}
                     </p>
@@ -436,18 +436,18 @@ export function CardinStarterPage() {
                 className="absolute inset-0"
                 style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
               >
-                <article className="relative flex h-full flex-col rounded-[6px] border border-[#b8956a] bg-[linear-gradient(180deg,#f5efe3,#f2ede4)] px-7 pb-6 pt-8 shadow-[0_24px_60px_rgba(15,61,46,0.1),0_48px_100px_rgba(15,61,46,0.06)]">
+                <article className="relative flex h-full flex-col rounded-[6px] border border-[#b8956a] bg-[linear-gradient(180deg,#f5efe3,#f2ede4)] px-4 pb-4 pt-6 shadow-[0_24px_60px_rgba(15,61,46,0.1),0_48px_100px_rgba(15,61,46,0.06)] sm:px-5 sm:pb-5 sm:pt-7 xl:px-7 xl:pb-6 xl:pt-8">
                   <span className="absolute left-[10px] top-[10px] h-[14px] w-[14px] border-l border-t border-[#b8956a]/60" />
                   <span className="absolute right-[10px] top-[10px] h-[14px] w-[14px] border-r border-t border-[#b8956a]/60" />
                   <span className="absolute bottom-[10px] left-[10px] h-[14px] w-[14px] border-b border-l border-[#b8956a]/60" />
                   <span className="absolute bottom-[10px] right-[10px] h-[14px] w-[14px] border-b border-r border-[#b8956a]/60" />
 
                   <div className="mt-4 text-center">
-                    <p className="font-serif text-[14px] tracking-[0.4em] text-[#1a2a22]">CARDIN</p>
-                    <p className="mt-1 text-[8px] uppercase tracking-[0.3em] text-[#8c6a44]">{currentMoment.vertical}</p>
+                    <p className="font-serif text-[12px] tracking-[0.34em] text-[#1a2a22] sm:text-[13px] xl:text-[14px]">CARDIN</p>
+                    <p className="mt-1 text-[7px] uppercase tracking-[0.24em] text-[#8c6a44] sm:text-[8px] sm:tracking-[0.3em]">{currentMoment.vertical}</p>
                   </div>
 
-                  <div className="my-auto flex flex-col gap-4">
+                  <div className="my-auto flex flex-col gap-3 sm:gap-4">
                     {[
                       ["Fréquence de retour", "plus lisible"],
                       ["Moment de la semaine", currentMoment.day.toLowerCase()],
@@ -455,13 +455,13 @@ export function CardinStarterPage() {
                       ["Diamond", "horizon visible"],
                     ].map(([label, value]) => (
                       <div className="grid grid-cols-[1fr_auto] items-end gap-4 border-b border-dashed border-[#d4b892] pb-3" key={label}>
-                        <span className="font-serif text-[14px] italic leading-[1.4] text-[#3d4d43]">{label}</span>
-                        <span className="font-serif text-[22px] leading-none text-[#0f3d2e]">{value}</span>
+                        <span className="font-serif text-[12px] italic leading-[1.4] text-[#3d4d43] sm:text-[13px] xl:text-[14px]">{label}</span>
+                        <span className="font-serif text-[18px] leading-none text-[#0f3d2e] sm:text-[20px] xl:text-[22px]">{value}</span>
                       </div>
                     ))}
                   </div>
 
-                  <p className="border-t border-[#d4cdbd] pt-4 text-center font-serif text-[12px] italic text-[#8a8578]">
+                  <p className="border-t border-[#d4cdbd] pt-4 text-center font-serif text-[10px] italic text-[#8a8578] sm:text-[11px] xl:text-[12px]">
                     Le premier mois pose déjà le rythme qui peut ensuite devenir une vraie saison.
                   </p>
                 </article>
