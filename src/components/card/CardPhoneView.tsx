@@ -10,6 +10,7 @@ import { getMerchantProfile, type MerchantProfileId } from "@/lib/merchant-profi
 import { cn } from "@/lib/utils"
 import { Button, Card } from "@/ui"
 
+import { useCardInstall } from "@/components/card/useCardInstall"
 import { WalletPassPreview } from "@/components/engine/WalletPassPreview"
 
 type MidpointView = {
@@ -295,7 +296,7 @@ function MonQrSheet({
   )
 }
 
-function WalletSheet({
+export function WalletSheet({
   businessName,
   rewardLabel,
   progressDots,
@@ -372,6 +373,181 @@ function WalletSheet({
           L'interface est prête. Le vrai pass natif pourra être activé dès que les templates Apple / Google seront branchés.
         </p>
       ) : null}
+    </CardSheet>
+  )
+}
+
+function InstallSheet({
+  businessName,
+  rewardLabel,
+  progressDots,
+  activeDots,
+  wallet,
+  installState,
+  onClose,
+  onInstall,
+  onShare,
+  onProviderClick,
+}: {
+  businessName: string
+  rewardLabel: string
+  progressDots: number
+  activeDots: number
+  wallet?: {
+    appleUrl: string
+    googleUrl: string
+    appleReady: boolean
+    googleReady: boolean
+  }
+  installState: {
+    platform: "ios" | "android" | "desktop" | "unknown"
+    isStandalone: boolean
+    canInstallPrompt: boolean
+    supportsShare: boolean
+    installStatus: "idle" | "installing" | "installed" | "dismissed" | "error"
+    shareStatus: "idle" | "shared" | "copied" | "error"
+  }
+  onClose: () => void
+  onInstall: () => Promise<unknown>
+  onShare: () => Promise<unknown>
+  onProviderClick: (provider: "apple" | "google") => Promise<void>
+}) {
+  const walletReady = Boolean(wallet?.appleReady || wallet?.googleReady)
+  const installPrimaryLabel = installState.isStandalone
+    ? "Carte déjà installée"
+    : installState.canInstallPrompt
+      ? installState.installStatus === "installing"
+        ? "Installation…"
+        : "Installer maintenant"
+      : installState.platform === "ios"
+        ? "Voir le geste iPhone"
+        : "Voir comment l'ajouter"
+  const shareLabel = installState.supportsShare ? "Partager le lien" : "Copier le lien"
+  const installStatusLabel = installState.isStandalone
+    ? "Installée"
+    : installState.canInstallPrompt
+      ? "Installable"
+      : "Ajout manuel"
+  const instructionTitle =
+    installState.platform === "ios"
+      ? "iPhone / iPad"
+      : installState.platform === "android"
+        ? "Android"
+        : "Depuis ce navigateur"
+
+  return (
+    <CardSheet
+      onClose={onClose}
+      subtitle="La carte web reste le coeur vivant. L'installation sert juste a la garder sur le telephone, en plein ecran et sans friction."
+      title="Garder cette carte"
+    >
+      <WalletPassPreview
+        activeDots={activeDots}
+        businessLabel={businessName}
+        caption="Carte web dynamique, installable comme un pass."
+        eyebrowLabel="Sur votre téléphone"
+        footerLabel="CARTE INSTALLEE"
+        progressDots={progressDots}
+        rewardLabel={rewardLabel}
+        statusLabel={installStatusLabel}
+      />
+
+      <div className="mt-4 rounded-[1.25rem] border border-[#E2DDD3] bg-[#FBFAF6] p-4">
+        <p className="text-[10px] uppercase tracking-[0.16em] text-[#7B837D]">Accès rapide</p>
+        <p className="mt-2 text-sm leading-6 text-[#556159]">
+          {installState.isStandalone
+            ? "Cette carte est déjà installée sur ce téléphone. Ouvrez-la ensuite comme un pass depuis l'écran d'accueil."
+            : installState.canInstallPrompt
+              ? "Le téléphone peut l'installer maintenant. Ensuite, Cardin s'ouvrira plus vite et en plein écran."
+              : "Le lien reste vivant. Vous pouvez l'ajouter proprement à l'écran d'accueil ou le garder partagé."}
+        </p>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <Button
+            className="w-full"
+            disabled={installState.isStandalone || installState.installStatus === "installing"}
+            onClick={() => void onInstall()}
+            size="md"
+            type="button"
+          >
+            {installPrimaryLabel}
+          </Button>
+          <Button className="w-full" onClick={() => void onShare()} size="md" type="button" variant="secondary">
+            {shareLabel}
+          </Button>
+        </div>
+
+        {installState.shareStatus === "copied" ? <p className="mt-3 text-xs text-[#173A2E]">Lien copié. Vous pouvez maintenant le garder ou l'envoyer.</p> : null}
+        {installState.shareStatus === "shared" ? <p className="mt-3 text-xs text-[#173A2E]">La feuille de partage s'est ouverte.</p> : null}
+      </div>
+
+      <div className="mt-4 rounded-[1.25rem] border border-[#E2DDD3] bg-[#FFFEFB] p-4">
+        <p className="text-[10px] uppercase tracking-[0.16em] text-[#7B837D]">{instructionTitle}</p>
+        <div className="mt-3 space-y-2 text-sm leading-6 text-[#556159]">
+          {installState.platform === "ios" ? (
+            <>
+              <p>1. Touchez le bouton Partager de Safari.</p>
+              <p>2. Choisissez “Sur l'écran d'accueil”.</p>
+              <p>3. Ouvrez ensuite la carte Cardin comme un raccourci plein écran.</p>
+            </>
+          ) : installState.platform === "android" ? (
+            <>
+              <p>1. Utilisez “Installer maintenant” si Android le propose.</p>
+              <p>2. Sinon, ouvrez le menu du navigateur.</p>
+              <p>3. Ajoutez Cardin à l'écran d'accueil pour la garder à portée de main.</p>
+            </>
+          ) : (
+            <>
+              <p>1. Gardez cette URL ouverte ou copiez-la.</p>
+              <p>2. Ajoutez-la à vos favoris ou à l'écran d'accueil si le navigateur le permet.</p>
+              <p>3. La carte web reste la surface vivante, toujours à jour.</p>
+            </>
+          )}
+        </div>
+      </div>
+
+      {walletReady ? (
+        <div className="mt-4 rounded-[1.25rem] border border-[#E2DDD3] bg-[#FBFAF6] p-4">
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#7B837D]">Pass natif optionnel</p>
+          <p className="mt-2 text-sm leading-6 text-[#556159]">Si vous branchez plus tard Apple Wallet ou Google Wallet, ils viennent ici en extension. Pas en coeur de produit.</p>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <button
+              className={cn(
+                "rounded-[1rem] border px-4 py-4 text-left transition",
+                wallet?.appleReady
+                  ? "border-[#173A2E] bg-[#173A2E] text-[#FBFAF6] hover:bg-[#214939]"
+                  : "border-[#E2DDD3] bg-[#F7F3EA] text-[#8A9389]",
+              )}
+              disabled={!wallet?.appleReady}
+              onClick={() => void onProviderClick("apple")}
+              type="button"
+            >
+              <p className="text-[11px] uppercase tracking-[0.16em]">Apple Wallet</p>
+              <p className="mt-2 text-sm">{wallet?.appleReady ? "Ajouter le pass" : "Bientôt activé"}</p>
+            </button>
+
+            <button
+              className={cn(
+                "rounded-[1rem] border px-4 py-4 text-left transition",
+                wallet?.googleReady
+                  ? "border-[#173A2E] bg-[#173A2E] text-[#FBFAF6] hover:bg-[#214939]"
+                  : "border-[#E2DDD3] bg-[#F7F3EA] text-[#8A9389]",
+              )}
+              disabled={!wallet?.googleReady}
+              onClick={() => void onProviderClick("google")}
+              type="button"
+            >
+              <p className="text-[11px] uppercase tracking-[0.16em]">Google Wallet</p>
+              <p className="mt-2 text-sm">{wallet?.googleReady ? "Ajouter le pass" : "Bientôt activé"}</p>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="mt-4 rounded-[1rem] border border-[#E2DDD3] bg-[#FBFAF6] px-4 py-3 text-sm leading-6 text-[#556159]">
+          Les pass Apple / Google pourront venir plus tard. Pour la démo et l'usage réel, la carte web installée suffit déjà.
+        </p>
+      )}
     </CardSheet>
   )
 }
@@ -545,7 +721,7 @@ export function CardPhoneView({
   const [loadError, setLoadError] = useState<string | null>(null)
   const [showQr, setShowQr] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
-  const [showWallet, setShowWallet] = useState(false)
+  const [showInstall, setShowInstall] = useState(false)
   const lastStampsRef = useRef<number | null>(null)
 
   const storageKey = useMemo(() => `cardin:access:${cardRef}`, [cardRef])
@@ -554,6 +730,11 @@ export function CardPhoneView({
     () => (refType === "code" ? `/api/public/card/code/${encodeURIComponent(cardRef)}` : `/api/public/card/${cardRef}`),
     [cardRef, refType],
   )
+
+  const installCardState = useCardInstall({
+    businessName: data?.merchant?.businessName ?? null,
+    label: data?.merchant?.businessName ? `Carte Cardin · ${data.merchant.businessName}` : "Carte Cardin",
+  })
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -888,6 +1069,12 @@ export function CardPhoneView({
     ? `Saison ${data.season.number} · ${data.season.summitTitle} · fin dans ${data.season.daysRemaining} jours`
     : null
 
+  const installButtonLabel = installCardState.isStandalone
+    ? "Carte installée"
+    : installCardState.canInstallPrompt
+      ? "Installer la carte"
+      : "Garder sur ce téléphone"
+
   const qrOpen = async () => {
     await ensureVisitSession()
     setShowQr(true)
@@ -1020,8 +1207,8 @@ export function CardPhoneView({
             <Button className="w-full" onClick={() => void qrOpen()} size="md" type="button">
               Mon QR
             </Button>
-            <Button className="w-full" onClick={() => setShowWallet(true)} size="md" type="button" variant="secondary">
-              Ajouter à Wallet
+            <Button className="w-full" onClick={() => setShowInstall(true)} size="md" type="button" variant="secondary">
+              {installButtonLabel}
             </Button>
           </div>
 
@@ -1050,12 +1237,15 @@ export function CardPhoneView({
 
       {showQr ? <MonQrSheet businessName={data.merchant.businessName} code={displayCode} onClose={() => setShowQr(false)} scanValue={data.card.code || data.card.id} /> : null}
 
-      {showWallet ? (
-        <WalletSheet
+      {showInstall ? (
+        <InstallSheet
           activeDots={Math.max(1, Math.min(data.card.stamps, progressDots))}
           businessName={data.merchant.businessName}
-          onClose={() => setShowWallet(false)}
+          installState={installCardState}
+          onClose={() => setShowInstall(false)}
+          onInstall={installCardState.installCard}
           onProviderClick={handleWalletProvider}
+          onShare={installCardState.shareCard}
           progressDots={progressDots}
           rewardLabel={data.card.rewardLabel}
           wallet={data.wallet}

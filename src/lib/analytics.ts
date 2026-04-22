@@ -12,6 +12,7 @@ type FunnelEventName =
   | "download_setup_brief"
   | "scan_card_created"
   | "wallet_button_clicked"
+  | "card_install_action"
   | "merchant_stamp"
   | "landing_intent_select"
   | "landing_dynamic_select"

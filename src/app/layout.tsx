@@ -2,6 +2,7 @@
 import { Cormorant_Garamond, Manrope } from "next/font/google"
 
 import { AppChrome } from "@/components/AppChrome"
+import { PwaBootstrap } from "@/components/PwaBootstrap"
 
 import "./globals.css"
 
@@ -9,6 +10,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#173A2E",
+  colorScheme: "light",
 }
 
 const heading = Cormorant_Garamond({
@@ -37,6 +40,7 @@ export const metadata: Metadata = {
     default: SITE_TITLE,
     template: "%s · Cardin",
   },
+  manifest: "/manifest.webmanifest",
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
   keywords: [
@@ -48,6 +52,16 @@ export const metadata: Metadata = {
     "retention commerce local",
   ],
   authors: [{ name: "Cardin" }],
+  appleWebApp: {
+    capable: true,
+    title: SITE_NAME,
+    statusBarStyle: "default",
+  },
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   openGraph: {
     type: "website",
     locale: "fr_FR",
@@ -75,6 +89,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html className={`${heading.variable} ${body.variable}`} lang="fr">
       <body className="font-sans antialiased">
+        <PwaBootstrap />
         <AppChrome>{children}</AppChrome>
       </body>
     </html>

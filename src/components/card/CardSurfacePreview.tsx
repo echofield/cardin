@@ -8,13 +8,13 @@ import { Button, Card } from "@/ui"
 
 import { WalletPassPreview } from "@/components/engine/WalletPassPreview"
 
-type PreviewTab = "card" | "qr" | "wallet" | "process"
+type PreviewTab = "card" | "qr" | "install" | "process"
 
 const TABS: Array<{ id: PreviewTab; label: string }> = [
   { id: "card", label: "Carte" },
   { id: "qr", label: "Mon QR" },
-  { id: "wallet", label: "Wallet" },
-  { id: "process", label: "Process" },
+  { id: "install", label: "Installer" },
+  { id: "process", label: "Démo" },
 ]
 
 const PROCESS_STEPS = [
@@ -22,7 +22,7 @@ const PROCESS_STEPS = [
   "2. La carte s'ouvre tout de suite",
   "3. Le client montre Mon QR",
   "4. Le staff scanne et valide",
-  "5. La progression se met a jour",
+  "5. La carte reste sur le téléphone",
 ]
 
 function PreviewQr({ value }: { value: string }) {
@@ -70,7 +70,7 @@ export function CardSurfacePreview() {
                 <p>Moment actif</p>
                 <p>Progression</p>
                 <p>Mon QR</p>
-                <p>Ajouter a Wallet</p>
+                <p>Installer la carte</p>
               </div>
             </Card>
 
@@ -124,11 +124,11 @@ export function CardSurfacePreview() {
                 </div>
               ) : null}
 
-              {tab === "wallet" ? (
+              {tab === "install" ? (
                 <div className="space-y-3">
                   <p className="text-[10px] uppercase tracking-[0.16em] text-[#8C6A44]">Extension</p>
-                  <p className="font-serif text-3xl leading-[1.05]">Wallet n'est pas le coeur, juste le raccourci.</p>
-                  <p className="text-sm leading-6 text-[#556159]">La carte web reste vivante. Le pass natif vient en couche de serieux et de persistance.</p>
+                  <p className="font-serif text-3xl leading-[1.05]">La carte s'installe, puis vit comme un pass.</p>
+                  <p className="text-sm leading-6 text-[#556159]">La carte web reste vivante. L'écran d'accueil et le plein écran donnent la sensation wallet-like. Le natif vient seulement ensuite.</p>
                 </div>
               ) : null}
 
@@ -203,7 +203,7 @@ export function CardSurfacePreview() {
                   <div className="grid grid-cols-2 gap-2">
                     <Button className="w-full">Mon QR</Button>
                     <Button className="w-full" variant="secondary">
-                      Ajouter a Wallet
+                      Installer la carte
                     </Button>
                   </div>
 
@@ -227,23 +227,24 @@ export function CardSurfacePreview() {
                 </div>
               ) : null}
 
-              {tab === "wallet" ? (
+              {tab === "install" ? (
                 <div className="space-y-4">
                   <WalletPassPreview
                     activeDots={3}
                     businessLabel="Cafe Montmartre"
-                    caption="Pass web dynamique, wallet en extension."
-                    footerLabel="PASS CARDIN"
+                    caption="Carte web dynamique, installée comme un pass."
+                    eyebrowLabel="Sur l'ecran d'accueil"
+                    footerLabel="CARTE INSTALLEE"
                     progressDots={6}
                     rewardLabel="Mardi, un diner offert"
-                    statusLabel="Bientot disponible"
+                    statusLabel="Installable"
                   />
                   <div className="grid gap-2">
-                    <button className="rounded-[1rem] border border-[#E2DDD3] bg-[#F7F3EA] px-4 py-4 text-left text-sm text-[#8A9389]" type="button">
-                      Apple Wallet bientot active
+                    <button className="rounded-[1rem] border border-[#173A2E] bg-[#173A2E] px-4 py-4 text-left text-sm text-[#FBFAF6]" type="button">
+                      Installer maintenant
                     </button>
                     <button className="rounded-[1rem] border border-[#E2DDD3] bg-[#F7F3EA] px-4 py-4 text-left text-sm text-[#8A9389]" type="button">
-                      Google Wallet bientot active
+                      Partager ou ajouter a l'ecran d'accueil
                     </button>
                   </div>
                 </div>

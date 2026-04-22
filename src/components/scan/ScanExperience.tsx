@@ -110,14 +110,6 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
     }
   }, [cardData, demo])
 
-  const walletReady = useMemo(
-    () => ({
-      apple: Boolean(cardData?.wallet?.appleReady),
-      google: Boolean(cardData?.wallet?.googleReady),
-    }),
-    [cardData?.wallet?.appleReady, cardData?.wallet?.googleReady],
-  )
-
   useEffect(() => {
     let isMounted = true
 
@@ -199,28 +191,6 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
       alert(profile.scan.createError)
     } finally {
       setSubmitting(false)
-    }
-  }
-
-  const openWalletFlow = async (walletUrl: string, provider: "apple" | "google") => {
-    const providerReady = provider === "apple" ? walletReady.apple : walletReady.google
-    if (!providerReady) return
-
-    try {
-      const response = await fetch(walletUrl)
-
-      if (response.redirected) {
-        trackEvent("wallet_button_clicked", { provider, merchantId, mode: "provider_redirect" })
-        if (typeof window !== "undefined") window.location.href = response.url
-        return
-      }
-
-      const payload = (await response.json()) as { fallbackUrl?: string }
-      trackEvent("wallet_button_clicked", { provider, merchantId, mode: "fallback" })
-
-      if (typeof window !== "undefined") window.location.href = payload.fallbackUrl ?? cardData?.cardUrl ?? "/"
-    } catch {
-      if (typeof window !== "undefined") window.location.href = cardData?.cardUrl ?? "/"
     }
   }
 
@@ -331,36 +301,16 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
               <p className="mt-2 text-xs uppercase tracking-[0.12em] text-[#5D675F]">Revenez. Cette semaine compte.</p>
 
               <p className="mt-4 text-sm text-[#556159]">
-                Ensuite, vous pourrez afficher <span className="text-[#173A2E]">Mon QR</span>, voir le détail et ajouter la carte à Wallet.
+                Ensuite, vous pourrez afficher <span className="text-[#173A2E]">Mon QR</span>, voir le détail et garder la carte sur le téléphone.
               </p>
 
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                 <Link className="inline-block text-sm underline" href={cardOpenUrl ?? `${cardData.cardUrl}${demo ? "?demo=1" : ""}`}>
                   {profile.scan.openCardLabel}
                 </Link>
-                {walletReady.apple ? (
-                  <button
-                    className="text-left text-sm underline text-[#556159] transition hover:text-[#173A2E]"
-                    onClick={() => void openWalletFlow(cardData.wallet?.appleUrl ?? cardData.appleWalletUrl, "apple")}
-                    type="button"
-                  >
-                    {profile.scan.appleWalletLabel}
-                  </button>
-                ) : null}
-                {walletReady.google ? (
-                  <button
-                    className="text-left text-sm underline text-[#556159] transition hover:text-[#173A2E]"
-                    onClick={() => void openWalletFlow(cardData.wallet?.googleUrl ?? cardData.googleWalletUrl, "google")}
-                    type="button"
-                  >
-                    {profile.scan.googleWalletLabel}
-                  </button>
-                ) : null}
               </div>
 
-              {!walletReady.apple && !walletReady.google ? (
-                <p className="mt-3 text-sm text-[#556159]">Wallet sera visible ici dès que les pass Apple / Google seront branchés. Pour l’instant, la carte web reste la bonne surface vivante.</p>
-              ) : null}
+              <p className="mt-3 text-sm text-[#556159]">La carte s’ouvrira ensuite avec un bouton d’installation léger: raccourci écran d’accueil, plein écran, sensation de pass, sans dépendre d’Apple Wallet ou Google Wallet.</p>
             </Card>
           </div>
         )}
