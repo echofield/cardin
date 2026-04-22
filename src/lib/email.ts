@@ -145,6 +145,18 @@ type RevenirCaptureEmailInput = {
   source?: string | null
 }
 
+type FieldCaptureEmailInput = {
+  businessName: string
+  contactName?: string | null
+  whatsapp: string
+  city?: string | null
+  email?: string | null
+  nextAction?: string | null
+  note?: string | null
+  source?: string | null
+  origin?: string
+}
+
 let transporter: nodemailer.Transporter | null = null
 
 function getEmailConfig(): EmailConfig {
@@ -165,6 +177,55 @@ function getEmailConfig(): EmailConfig {
 
 export function isEmailConfigured(): boolean {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS)
+}
+
+export async function sendFieldCaptureEmail(input: FieldCaptureEmailInput) {
+  const config = getEmailConfig()
+  const siteUrl = getSiteUrl(input.origin)
+  const cityLine = input.city?.trim() ? input.city.trim() : "Non précisée"
+  const emailLine = input.email?.trim() ? input.email.trim() : "Non précisé"
+  const nextActionLine = input.nextAction?.trim() ? input.nextAction.trim() : "À définir"
+  const noteLine = input.note?.trim() ? input.note.trim() : "Aucune note"
+  const sourceLine = input.source?.trim() ? input.source.trim() : "terrain"
+
+  const internalText = [
+    "Cardin · capture terrain",
+    "",
+    `Lieu : ${input.businessName}`,
+    `Contact : ${input.contactName?.trim() || "Non précisé"}`,
+    `WhatsApp : ${input.whatsapp}`,
+    `Ville : ${cityLine}`,
+    `E-mail : ${emailLine}`,
+    `Prochaine étape : ${nextActionLine}`,
+    `Source : ${sourceLine}`,
+    "",
+    "Note :",
+    noteLine,
+    "",
+    `Entrée Cardin : ${siteUrl}/commencer`,
+    `Capture terrain : ${siteUrl}/terrain`,
+  ].join("\n")
+
+  const internalHtml = `
+    <h2 style="font-family:Georgia,serif;color:#163328;">Cardin · capture terrain</h2>
+    <p><strong>Lieu :</strong> ${escapeHtml(input.businessName)}</p>
+    <p><strong>Contact :</strong> ${escapeHtml(input.contactName?.trim() || "Non précisé")}</p>
+    <p><strong>WhatsApp :</strong> ${escapeHtml(input.whatsapp)}</p>
+    <p><strong>Ville :</strong> ${escapeHtml(cityLine)}</p>
+    <p><strong>E-mail :</strong> ${escapeHtml(emailLine)}</p>
+    <p><strong>Prochaine étape :</strong> ${escapeHtml(nextActionLine)}</p>
+    <p><strong>Source :</strong> ${escapeHtml(sourceLine)}</p>
+    <p><strong>Note :</strong><br />${escapeHtml(noteLine).replace(/\n/g, "<br />")}</p>
+    <p><a href="${siteUrl}/commencer">Entrée Cardin</a><br /><a href="${siteUrl}/terrain">Capture terrain</a></p>
+  `
+
+  await sendMail({
+    to: config.contactToEmail,
+    replyTo: input.email?.trim() || undefined,
+    subject: `Cardin · capture terrain — ${input.businessName}`,
+    text: internalText,
+    html: internalHtml,
+  })
 }
 
 function getTransporter() {
