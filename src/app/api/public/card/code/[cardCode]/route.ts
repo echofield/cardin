@@ -4,6 +4,7 @@ import { normalizeCardCode } from "@/lib/card-code"
 import { requireCardBearerForRead } from "@/lib/card-access-auth"
 import { getPublicCardPayloadByCode } from "@/lib/public-card"
 import { createSupabaseServiceClient } from "@/lib/supabase/service"
+import { isWalletTemplateReady } from "@/lib/wallet-provider"
 
 export const dynamic = "force-dynamic"
 
@@ -38,8 +39,8 @@ export async function GET(request: Request, { params }: { params: { cardCode: st
       wallet: {
         appleUrl: `${origin}/api/wallet/apple/${payload.card.id}`,
         googleUrl: `${origin}/api/wallet/google/${payload.card.id}`,
-        appleReady: Boolean(process.env.APPLE_WALLET_PASS_URL_TEMPLATE),
-        googleReady: Boolean(process.env.GOOGLE_WALLET_PASS_URL_TEMPLATE),
+        appleReady: isWalletTemplateReady(process.env.APPLE_WALLET_PASS_URL_TEMPLATE),
+        googleReady: isWalletTemplateReady(process.env.GOOGLE_WALLET_PASS_URL_TEMPLATE),
       },
     })
   } catch (error) {

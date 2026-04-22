@@ -77,6 +77,12 @@ type CardCreateSuccess = {
   cardLegacyUrl: string
   appleWalletUrl: string
   googleWalletUrl: string
+  wallet?: {
+    appleUrl: string
+    googleUrl: string
+    appleReady: boolean
+    googleReady: boolean
+  }
   accessToken?: string
 }
 
@@ -103,6 +109,14 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
       return `${cardData.cardUrl}${separator}demo=1`
     }
   }, [cardData, demo])
+
+  const walletReady = useMemo(
+    () => ({
+      apple: Boolean(cardData?.wallet?.appleReady),
+      google: Boolean(cardData?.wallet?.googleReady),
+    }),
+    [cardData?.wallet?.appleReady, cardData?.wallet?.googleReady],
+  )
 
   useEffect(() => {
     let isMounted = true
@@ -189,6 +203,9 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
   }
 
   const openWalletFlow = async (walletUrl: string, provider: "apple" | "google") => {
+    const providerReady = provider === "apple" ? walletReady.apple : walletReady.google
+    if (!providerReady) return
+
     try {
       const response = await fetch(walletUrl)
 
@@ -321,14 +338,29 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
                 <Link className="inline-block text-sm underline" href={cardOpenUrl ?? `${cardData.cardUrl}${demo ? "?demo=1" : ""}`}>
                   {profile.scan.openCardLabel}
                 </Link>
-                <button
-                  className="text-left text-sm underline text-[#556159] transition hover:text-[#173A2E]"
-                  onClick={() => void openWalletFlow(cardData.appleWalletUrl, "apple")}
-                  type="button"
-                >
-                  {profile.scan.appleWalletLabel}
-                </button>
+                {walletReady.apple ? (
+                  <button
+                    className="text-left text-sm underline text-[#556159] transition hover:text-[#173A2E]"
+                    onClick={() => void openWalletFlow(cardData.wallet?.appleUrl ?? cardData.appleWalletUrl, "apple")}
+                    type="button"
+                  >
+                    {profile.scan.appleWalletLabel}
+                  </button>
+                ) : null}
+                {walletReady.google ? (
+                  <button
+                    className="text-left text-sm underline text-[#556159] transition hover:text-[#173A2E]"
+                    onClick={() => void openWalletFlow(cardData.wallet?.googleUrl ?? cardData.googleWalletUrl, "google")}
+                    type="button"
+                  >
+                    {profile.scan.googleWalletLabel}
+                  </button>
+                ) : null}
               </div>
+
+              {!walletReady.apple && !walletReady.google ? (
+                <p className="mt-3 text-sm text-[#556159]">Wallet sera visible ici dès que les pass Apple / Google seront branchés. Pour l’instant, la carte web reste la bonne surface vivante.</p>
+              ) : null}
             </Card>
           </div>
         )}

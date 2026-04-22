@@ -9,6 +9,7 @@ import { buildMidpointView, getMidpointMode, getMidpointThreshold, getRewardLabe
 import { initializeCardForActiveSeason } from "@/lib/season-progression"
 import { createSupabaseServiceClient } from "@/lib/supabase/service"
 import { insertTransactionEvent } from "@/lib/transaction-events"
+import { isWalletTemplateReady } from "@/lib/wallet-provider"
 
 export const dynamic = "force-dynamic"
 
@@ -147,6 +148,12 @@ export async function POST(request: Request) {
       cardLegacyUrl: `${origin}/card/${card.id}?${accessQuery}`,
       appleWalletUrl: `${origin}/api/wallet/apple/${card.id}`,
       googleWalletUrl: `${origin}/api/wallet/google/${card.id}`,
+      wallet: {
+        appleUrl: `${origin}/api/wallet/apple/${card.id}`,
+        googleUrl: `${origin}/api/wallet/google/${card.id}`,
+        appleReady: isWalletTemplateReady(process.env.APPLE_WALLET_PASS_URL_TEMPLATE),
+        googleReady: isWalletTemplateReady(process.env.GOOGLE_WALLET_PASS_URL_TEMPLATE),
+      },
     })
   } catch (error) {
     return NextResponse.json({ ok: false, error: (error as Error).message }, { status: 500 })
