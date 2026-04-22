@@ -78,10 +78,11 @@ const ENTRY_CARDS = [
     detail:
       "Un premier mois simple pour lancer le lieu, poser un moment visible et tester le retour sans complexité lourde.",
     meta: ["30 jours", "1 moment cadré", "même moteur Cardin"],
-    cta: "Commencer pour 150€",
+    cta: "Commencer pour 180€ TTC",
     href: STRIPE_CHALLENGE_LINK || buildContactMailto("Cardin · premier mois", "Bonjour Cardin,\r\n\r\nJe veux commencer avec le Premier mois Cardin.\r\n"),
     external: Boolean(STRIPE_CHALLENGE_LINK),
     featured: true,
+    tax: CHALLENGE_PRICING.taxLabel,
   },
   {
     tag: "Saison complète",
@@ -94,6 +95,7 @@ const ENTRY_CARDS = [
     href: "/parcours/lecture",
     external: false,
     featured: false,
+    tax: null,
   },
 ] as const
 
@@ -268,7 +270,7 @@ export function CardinStarterPage() {
           </div>
 
           <p className="mt-5 text-[10px] uppercase tracking-[0.2em] text-[#8a8578]" ref={heroMetaRef}>
-            Premier mois {CHALLENGE_PRICING.activationFee}€ <span className="mx-2 text-[#b8956a]">·</span> Saison {LANDING_PRICING.activationFee}€{" "}
+            Premier mois {CHALLENGE_PRICING.activationFee}€ TTC <span className="mx-2 text-[#b8956a]">·</span> Saison {LANDING_PRICING.activationFee}€{" "}
             <span className="mx-2 text-[#b8956a]">·</span> {metaLine}
           </p>
         </div>
@@ -277,9 +279,15 @@ export function CardinStarterPage() {
           <div className="pointer-events-none absolute inset-[-22px] rounded-[12px] border border-dashed border-[#b8956a]/30" />
           <div className="pointer-events-none absolute inset-[-38px] rounded-[18px] border border-[#b8956a]/15" />
 
-          <div className={`relative min-h-[570px] [perspective:1800px] ${isFlipped ? "is-flipped" : ""}`}>
-            <div className="relative h-full w-full preserve-3d transition-transform duration-[1200ms] [transform-style:preserve-3d] [transition-timing-function:cubic-bezier(0.68,-0.2,0.265,1.2)] data-[flip=true]:rotate-y-180" data-flip={isFlipped}>
-              <div className="absolute inset-0 backface-hidden [backface-visibility:hidden]">
+          <div className="relative h-[570px] [perspective:1800px]">
+            <div
+              className="relative h-full w-full transition-transform duration-[1200ms] [transform-style:preserve-3d] [transition-timing-function:cubic-bezier(0.68,-0.2,0.265,1.2)]"
+              style={{ transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
+            >
+              <div
+                className="absolute inset-0"
+                style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
+              >
                 <article className="relative flex h-full flex-col overflow-hidden rounded-[6px] border border-[#b8956a] bg-[radial-gradient(circle_at_15%_10%,rgba(184,149,106,0.08),transparent_45%),radial-gradient(circle_at_85%_90%,rgba(15,61,46,0.04),transparent_45%),#f2ede4] px-7 pb-6 pt-8 shadow-[0_24px_60px_rgba(15,61,46,0.1),0_48px_100px_rgba(15,61,46,0.06)]">
                   <div className="pointer-events-none absolute inset-[1px] rounded-[6px] border border-[#b8956a]/40" />
                   <span className="absolute left-[10px] top-[10px] h-[14px] w-[14px] border-l border-t border-[#b8956a]/60" />
@@ -370,7 +378,10 @@ export function CardinStarterPage() {
                 </article>
               </div>
 
-              <div className="absolute inset-0 rotate-y-180 backface-hidden [backface-visibility:hidden] [transform:rotateY(180deg)]">
+              <div
+                className="absolute inset-0"
+                style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+              >
                 <article className="relative flex h-full flex-col rounded-[6px] border border-[#b8956a] bg-[linear-gradient(180deg,#f5efe3,#f2ede4)] px-7 pb-6 pt-8 shadow-[0_24px_60px_rgba(15,61,46,0.1),0_48px_100px_rgba(15,61,46,0.06)]">
                   <span className="absolute left-[10px] top-[10px] h-[14px] w-[14px] border-l border-t border-[#b8956a]/60" />
                   <span className="absolute right-[10px] top-[10px] h-[14px] w-[14px] border-r border-t border-[#b8956a]/60" />
@@ -531,6 +542,7 @@ export function CardinStarterPage() {
               </h3>
               <p className="mt-4 font-serif text-[17px] italic leading-[1.58] text-[#3d4d43]">{card.detail}</p>
               <p className="mt-4 text-[10px] uppercase tracking-[0.18em] text-[#8a8578]">{formatMeta(card.meta)}</p>
+              {card.tax ? <p className="mt-2 text-[11px] italic tracking-[0.06em] text-[#8a8578]">{card.tax}</p> : null}
 
               <div className="mt-7">
                 {card.external ? (
@@ -571,7 +583,7 @@ export function CardinStarterPage() {
             rel={challengeCta.external ? "noreferrer" : undefined}
             target={challengeCta.external ? "_blank" : undefined}
           >
-            Commencer pour 150€
+            Commencer pour 180€ TTC
             <span className="text-[14px]">→</span>
           </a>
           <a

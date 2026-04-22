@@ -42,9 +42,13 @@ export const LANDING_PRICING = {
 } as const
 
 export const CHALLENGE_PRICING = {
-  activationFee: 150,
-  compactLabel: "150 € TTC pour un Challenge Cardin",
-  shortLabel: "Challenge Cardin · 150 € TTC",
+  netFee: 150,
+  vatRate: 0.2,
+  vatAmount: 30,
+  activationFee: 180,
+  compactLabel: "180 € TTC pour le Premier mois Cardin",
+  shortLabel: "Premier mois Cardin · 180 € TTC",
+  taxLabel: "150 € HT + 30 € TVA",
 } as const
 
 /** Paiement activation saison (Stripe Checkout / Payment Link). Override in prod: `NEXT_PUBLIC_STRIPE_PAYMENT_LINK`. */

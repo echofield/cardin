@@ -419,7 +419,7 @@ export function ChallengePage() {
                 <strong className="font-medium text-[#1a2a22]">{CHALLENGE_PRICING.activationFee} €</strong> TTC
               </span>
               <span className="h-[3px] w-[3px] rounded-full bg-[#8a8578]/50" />
-              <span>Récompense incluse</span>
+              <span>{CHALLENGE_PRICING.taxLabel}</span>
             </div>
 
             <a
