@@ -8,7 +8,7 @@ import { trackEvent } from "@/lib/analytics"
 import { LANDING_PRICING } from "@/lib/landing-content"
 import { getSeasonFrameForTemplateId } from "@/lib/merchant-season-framing"
 
-type MerchantWorldId = "cafe" | "bar" | "restaurant" | "boulangerie" | "coiffeur" | "institut-beaute" | "boutique"
+type MerchantWorldId = "cafe" | "bar" | "restaurant" | "boulangerie" | "caviste" | "coiffeur" | "institut-beaute" | "boutique"
 type ObjectiveId = "return" | "domino" | "rare"
 type DominoLevel = "Calme" | "Moyen" | "Fort"
 
@@ -255,6 +255,60 @@ const worlds: MerchantWorld[] = [
         projectionRevenue: 280,
         projectionVolume: 24,
         projectionUnit: "passages",
+        dominoLabel: "Fort",
+        activeDots: 5,
+      },
+    },
+  },
+  {
+    id: "caviste",
+    label: "Caviste",
+    eyebrow: "Selection & degustation",
+    description: "Retour choisi, panier moyen a eleve, moment social et desir de cave.",
+    hero: "Le caviste gagne quand la selection devient rendez-vous.",
+    concepts: {
+      return: {
+        title: "Rendez-vous Cave",
+        hook: "Un cap clair pour remettre la cave dans la boucle.",
+        condition: "4 passages actifs dans le cycle",
+        effect: "acces a une degustation reservee",
+        rewardLabel: "Rendez-vous Cave / degustation reservee",
+        statusLabel: "Actif",
+        notificationLabel: "Votre prochaine degustation peut s'ouvrir bientot",
+        caption: "La carte travaille un retour choisi, pas une promo.",
+        projectionRevenue: 360,
+        projectionVolume: 10,
+        projectionUnit: "visites",
+        dominoLabel: "Moyen",
+        activeDots: 4,
+      },
+      domino: {
+        title: "Duo Degustation",
+        hook: "Inviter quelqu'un accelere la progression et le desir.",
+        condition: "1 invite valide sur une carte active",
+        effect: "boost vers la prochaine selection",
+        rewardLabel: "Duo Degustation / boost cave",
+        statusLabel: "Domino",
+        notificationLabel: "Un invite peut accelerer votre selection",
+        caption: "Le cercle social compte, mais reste cadre.",
+        projectionRevenue: 440,
+        projectionVolume: 12,
+        projectionUnit: "visites",
+        dominoLabel: "Fort",
+        activeDots: 5,
+      },
+      rare: {
+        title: "Cuvee Privee",
+        hook: "Un acces rare au-dessus de la progression normale.",
+        condition: "cartes les plus actives du cycle",
+        effect: "acces a une cuvee ou degustation privee",
+        rewardLabel: "Cuvee Privee / acces reserve",
+        statusLabel: "Rare",
+        notificationLabel: "La Cuvee Privee approche pour les cartes actives",
+        caption: "Le desir vient de l'acces et de la selection.",
+        projectionRevenue: 390,
+        projectionVolume: 9,
+        projectionUnit: "visites",
         dominoLabel: "Fort",
         activeDots: 5,
       },
@@ -623,6 +677,4 @@ export function InlineCalculator() {
     </div>
   )
 }
-
-
 

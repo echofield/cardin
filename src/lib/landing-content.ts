@@ -1,4 +1,4 @@
-﻿export type LandingWorldId = "cafe" | "bar" | "restaurant" | "beaute" | "boutique"
+﻿export type LandingWorldId = "cafe" | "bar" | "boulangerie" | "restaurant" | "caviste" | "beaute" | "boutique"
 
 type LandingWorldContent = {
   label: string
@@ -61,7 +61,7 @@ const DEFAULT_STRIPE_CHALLENGE_LINK = "https://buy.stripe.com/4gMaEXckkcvd71D6th
 export const STRIPE_CHALLENGE_LINK =
   (typeof process !== "undefined" && process.env.NEXT_PUBLIC_STRIPE_CHALLENGE_LINK?.trim()) || DEFAULT_STRIPE_CHALLENGE_LINK
 
-export const LANDING_WORLD_ORDER: LandingWorldId[] = ["cafe", "bar", "restaurant", "beaute", "boutique"]
+export const LANDING_WORLD_ORDER: LandingWorldId[] = ["cafe", "bar", "boulangerie", "restaurant", "caviste", "beaute", "boutique"]
 
 export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
   cafe: {
@@ -90,6 +90,19 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
     baselineRecoveredPerMonth: 3200,
     baselineTrust: 73,
   },
+  boulangerie: {
+    label: "Boulangerie",
+    eyebrow: "Routine de quartier",
+    claim: "+3 000 € à +8 000 € par saison",
+    seasonRevenueBandEuro: { min: 3000, max: 8000 },
+    basket: "Panier moyen 6 à 12 €",
+    onboardingLead:
+      "La boulangerie où l’on repasse dans la semaine. La routine devient rendez-vous.",
+    proofLine: "Passage → retour rapide → quartier activé.",
+    summitPromise: "1 petit-déjeuner ou fournée signature par mois pendant 1 an.",
+    baselineRecoveredPerMonth: 2800,
+    baselineTrust: 74,
+  },
   restaurant: {
     label: "Restaurant",
     eyebrow: "Panier moyen élevé",
@@ -102,6 +115,19 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
     summitPromise: "1 repas signature par mois pendant 1 an.",
     baselineRecoveredPerMonth: 4200,
     baselineTrust: 76,
+  },
+  caviste: {
+    label: "Caviste",
+    eyebrow: "Rituel & sélection",
+    claim: "+4 000 € à +9 000 € par saison",
+    seasonRevenueBandEuro: { min: 4000, max: 9000 },
+    basket: "Panier moyen 25 à 45 €",
+    onboardingLead:
+      "Le caviste qu’on choisit pour la bonne bouteille et le bon moment à partager.",
+    proofLine: "Passage → retour choisi → dégustation et cercle activés.",
+    summitPromise: "1 bouteille découverte ou dégustation privée par mois.",
+    baselineRecoveredPerMonth: 3400,
+    baselineTrust: 77,
   },
   beaute: {
     label: "Beauté",
@@ -134,7 +160,9 @@ export const LANDING_WORLDS: Record<LandingWorldId, LandingWorldContent> = {
 export const LANDING_SECTOR_CARDS: SectorCard[] = [
   { label: "Café",       description: "Volume élevé, passages rapides." },
   { label: "Bar",        description: "Soirée, comptoir, réseau naturel." },
+  { label: "Boulangerie", description: "Routine de quartier, retour rapide." },
   { label: "Restaurant", description: "Table et service, panier fort." },
+  { label: "Caviste",    description: "Sélection, dégustation, retour choisi." },
   { label: "Beauté",     description: "Confiance, régularité, recommandation." },
   { label: "Boutique",   description: "Désir fort, panier élevé." },
 ]

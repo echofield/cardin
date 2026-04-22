@@ -96,6 +96,7 @@ function mapActivityTypeToWeightKey(activityType: string): keyof SectorWeightPro
   const mapping: Record<string, keyof SectorWeightProfiles> = {
     cafe: "cafe",
     boulangerie: "cafe", // Similar daily frequency model
+    caviste: "restaurant",
     restaurant: "restaurant",
     coiffeur: "beaute",
     "institut-beaute": "beaute",

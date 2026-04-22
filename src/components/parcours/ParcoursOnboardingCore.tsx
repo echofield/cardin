@@ -49,7 +49,7 @@ import {
 
 /**
  * Mapping contract (Figma / Glow → Cardin-native):
- * - world → LandingWorldId (cafe | bar | restaurant | beaute | boutique)
+ * - world → LandingWorldId (cafe | bar | boulangerie | restaurant | caviste | beaute | boutique)
  * - summit → ParcoursSummitStyleId (visible | stronger | discreet)
  * - season → 3 mois (getDemoWorldContent, aligné moteur)
  * - final CTA → /engine?template=…&summit=…&season=…  (via buildParcoursEngineHref)
@@ -119,7 +119,9 @@ const SUMMITS: SummitOption[] = [
 const WORLD_DETAILS: Record<LandingWorldId, string> = {
   cafe: "Beaucoup de clients, passages rapides.",
   bar: "Soirée, comptoir, panier plus fort et réseau naturel.",
+  boulangerie: "Routine de quartier, panier léger à moyen, retour rapide.",
   restaurant: "Tables, service plus long, panier plus élevé.",
+  caviste: "Retour choisi, dégustation, panier moyen à élevé.",
   beaute: "Rendez-vous réguliers, confiance et recommandation.",
   boutique: "Visites plus rares, panier et désir forts.",
 }

@@ -55,7 +55,7 @@ export type MerchantStrategyMode =
 
 export type MerchantStrategy = {
   merchantId: string
-  activityType: "cafe" | "restaurant" | "boulangerie" | "coiffeur" | "institut-beaute" | "boutique" | "createur"
+  activityType: "cafe" | "restaurant" | "boulangerie" | "caviste" | "coiffeur" | "institut-beaute" | "boutique" | "createur"
   currentMode: MerchantStrategyMode
   modeActivatedAt: string
 }

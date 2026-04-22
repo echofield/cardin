@@ -3,6 +3,7 @@
 export type EngineActivityId =
   | "cafe"
   | "bar"
+  | "caviste"
   | "restaurant"
   | "boulangerie"
   | "coiffeur"
@@ -127,6 +128,25 @@ const PROFILES: Record<EngineActivityId, ActivityProfile> = {
     challengeBestFor: "Resserrer le délai entre deux sorties.",
     monthlyBestFor: "Créer un moment fort identifiable dans le mois.",
   },
+  caviste: {
+    frequency: "medium",
+    weeklyAnchor: "Rendez-vous cave",
+    challenge: "Défi retour",
+    reward: "Dégustation offerte",
+    monthlyEvent: "Sélection du mois",
+    invitationLayer: "Puis une invitation ciblée pour faire revenir un duo ou un petit cercle autour d'une dégustation.",
+    movementPromise:
+      "La carte remet la cave dans les moments choisis, structure la dégustation et peut faire monter un cercle social plus intentionnel.",
+    weeklyRecommendation: { title: "Rendez-vous cave", detail: "Installer une dégustation ou une sélection hebdomadaire lisible." },
+    challengeRecommendation: { title: "Défi retour", detail: "Faire revenir avant que le choix de bouteille ne reparte ailleurs." },
+    challengeUrgentRecommendation: { title: "Défi retour", detail: "Réactiver vite les clients qui ont coupé leur rituel d'achat." },
+    monthlyRecommendation: { title: "Sélection du mois", detail: "Donner une bonne raison de revenir pour une bouteille ou une cave mise en avant." },
+    monthlyPremiumRecommendation: { title: "Sélection du mois", detail: "Porter une dégustation ou une cuvée plus désirable sans promo brute." },
+    startingDetail: "Première boucle simple à expliquer, parfaite pour remettre une sélection choisie dans la rotation.",
+    weeklyBestFor: "Créer un repère de dégustation entre deux achats plus espacés.",
+    challengeBestFor: "Réactiver le retour avant qu'il ne sorte du radar du lieu.",
+    monthlyBestFor: "Créer un sujet de cave qui donne envie de revenir et d'en parler.",
+  },
   restaurant: {
     frequency: "medium",
     weeklyAnchor: "Rendez-vous hebdo",
@@ -204,6 +224,7 @@ const PROFILES: Record<EngineActivityId, ActivityProfile> = {
 const KNOWN_ACTIVITY_IDS = new Set<EngineActivityId>([
   "cafe",
   "bar",
+  "caviste",
   "restaurant",
   "boulangerie",
   "coiffeur",

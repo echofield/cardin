@@ -38,7 +38,7 @@ type MissionView = {
   expiresAt: string
 }
 
-type LandingWorldIdLite = "cafe" | "bar" | "restaurant" | "beaute" | "boutique"
+type LandingWorldIdLite = "cafe" | "bar" | "boulangerie" | "restaurant" | "caviste" | "beaute" | "boutique"
 
 type ParcoursSelectionsSnapshot = {
   worldId: LandingWorldIdLite

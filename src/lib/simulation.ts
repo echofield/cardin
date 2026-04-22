@@ -53,10 +53,20 @@ const MERCHANT_BASELINES: Record<MerchantProjectionType, MerchantBaseModel> = {
     ticket: { small: 8, standard: 14, premium: 22 },
     frequency: { fragile: 0.78, normal: 1, strong: 1.14 },
   },
+  boulangerie: {
+    traffic: { light: 70, steady: 120, dense: 180 },
+    ticket: { small: 6, standard: 9, premium: 13 },
+    frequency: { fragile: 0.82, normal: 1, strong: 1.18 },
+  },
   restaurant: {
     traffic: { light: 22, steady: 40, dense: 65 },
     ticket: { small: 18, standard: 28, premium: 40 },
     frequency: { fragile: 0.78, normal: 1, strong: 1.14 },
+  },
+  caviste: {
+    traffic: { light: 10, steady: 18, dense: 30 },
+    ticket: { small: 18, standard: 32, premium: 55 },
+    frequency: { fragile: 0.8, normal: 1, strong: 1.1 },
   },
   coiffeur: {
     traffic: { light: 8, steady: 15, dense: 24 },

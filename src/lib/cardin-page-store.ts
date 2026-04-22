@@ -126,7 +126,7 @@ export async function markCardinPagePaid(slug: string, sessionId: string) {
   }
 }
 
-const PARCOURS_WORLD_IDS: ReadonlyArray<LandingWorldId> = ["cafe", "bar", "restaurant", "beaute", "boutique"]
+const PARCOURS_WORLD_IDS: ReadonlyArray<LandingWorldId> = ["cafe", "bar", "boulangerie", "restaurant", "caviste", "beaute", "boutique"]
 
 function resolveParcoursWorld(business: ParcoursFlowState["business"]): LandingWorldId {
   if (business && (PARCOURS_WORLD_IDS as string[]).includes(business)) {

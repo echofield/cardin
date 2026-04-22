@@ -88,6 +88,26 @@ const SCREEN_HERO: Record<LandingWorldId, Partial<Record<ClientScreenId, ScreenH
       italic: "Un café rare peut maintenant s'activer.",
     },
   },
+  boulangerie: {
+    entree: {
+      italic: "Sans friction — la routine du quartier vous retient.",
+    },
+    progression: {
+      italic: "Le premier passage devient déjà une habitude lisible.",
+    },
+    activation: {
+      italic: "La boulangerie vous reconnaît dans la semaine.",
+    },
+    "prochaine-etape": {
+      italic: "Un petit-déjeuner ou une fournée se rapproche.",
+    },
+    domino: {
+      italic: "Invitez quelqu'un sur un moment simple du quartier.",
+    },
+    sommet: {
+      italic: "Une récompense rare peut maintenant s'ouvrir à la cave du quotidien.",
+    },
+  },
   restaurant: {
     entree: {
       italic: "Sans carte ni geste — la maison vous enregistre.",
@@ -106,6 +126,26 @@ const SCREEN_HERO: Record<LandingWorldId, Partial<Record<ClientScreenId, ScreenH
     },
     sommet: {
       italic: "La maison peut ouvrir une table rare.",
+    },
+  },
+  caviste: {
+    entree: {
+      italic: "Sans friction — la cave enregistre votre passage choisi.",
+    },
+    progression: {
+      italic: "La sélection commence à vous reconnaître.",
+    },
+    activation: {
+      italic: "Le caviste peut maintenant vous pousser vers un vrai retour de dégustation.",
+    },
+    "prochaine-etape": {
+      italic: "Une sélection ou une dégustation privée se rapproche.",
+    },
+    domino: {
+      italic: "Ouvrez la cave à une personne proche sur un moment choisi.",
+    },
+    sommet: {
+      italic: "La cave peut ouvrir une cuvée ou une dégustation rare.",
     },
   },
   beaute: {
@@ -165,7 +205,9 @@ export type WorldTiming = {
 export const CLIENT_PARCOURS_TIMING: Record<LandingWorldId, WorldTiming> = {
   cafe: { minDays: 2, maxDays: 4 },
   bar: { minDays: 3, maxDays: 7 },
+  boulangerie: { minDays: 2, maxDays: 5 },
   restaurant: { minDays: 5, maxDays: 10 },
+  caviste: { minDays: 6, maxDays: 14 },
   beaute: { minDays: 10, maxDays: 20 },
   boutique: { minDays: 7, maxDays: 14 },
 }
@@ -199,12 +241,26 @@ export function getTensionPair(
       "prochaine-etape": "Encore un passage et le privilège de soirée devient beaucoup plus concret.",
       domino: "Vous pouvez commencer à faire entrer une autre personne sur un moment choisi.",
     },
+    boulangerie: {
+      entree: "Votre premier passage est enregistré. Le prochain retour enclenche la vraie routine.",
+      progression: "La boulangerie commence à vous reconnaître comme quelqu'un qui revient dans la semaine.",
+      activation: "Un premier geste peut apparaître sur un moment simple: matin, mardi, petit-déjeuner ou fournée.",
+      "prochaine-etape": "Encore un passage et vous approchez d'un petit-déjeuner récurrent ou d'un privilège du quartier.",
+      domino: "Le lieu peut vous laisser inviter une personne proche sur un moment de routine choisi.",
+    },
     restaurant: {
       entree: "Votre première table est enregistrée. Le prochain retour enclenche la vraie progression.",
       progression: "Le restaurant commence à vous reconnaître et peut raccourcir le temps avant votre prochain repas.",
       activation: "Un premier geste peut apparaître pour vous faire revenir entre deux occasions.",
       "prochaine-etape": "Encore un passage et vous approchez d'un niveau VIP ou Organisateur.",
       domino: "Le lieu peut vous laisser ouvrir une prochaine table pour deux ou plus.",
+    },
+    caviste: {
+      entree: "Votre premier passage est enregistré. Le prochain retour lance la vraie trajectoire de cave.",
+      progression: "Le caviste commence à vous reconnaître et peut raccourcir le temps avant votre prochaine bouteille.",
+      activation: "Une dégustation légère, un mercredi ciblé ou une sélection de semaine peut apparaître tôt.",
+      "prochaine-etape": "Encore un passage et vous approchez d'un accès cave ou d'une vraie dégustation privée.",
+      domino: "Le lieu peut vous laisser faire entrer une autre personne sur un moment de dégustation choisi.",
     },
     beaute: {
       entree: "Votre premier rendez-vous est enregistré. Le prochain retour protège déjà votre cycle.",
@@ -228,7 +284,9 @@ export function getTensionPair(
 export const WORLD_MERCHANT_TYPE: Record<LandingWorldId, string> = {
   cafe: "cafe",
   bar: "bar",
+  boulangerie: "boulangerie",
   restaurant: "restaurant",
+  caviste: "caviste",
   beaute: "institut-beaute",
   boutique: "boutique",
 }
@@ -236,7 +294,9 @@ export const WORLD_MERCHANT_TYPE: Record<LandingWorldId, string> = {
 export const WORLD_TARGET_VISITS: Record<LandingWorldId, number> = {
   cafe: 10,
   bar: 8,
+  boulangerie: 8,
   restaurant: 5,
+  caviste: 5,
   beaute: 4,
   boutique: 6,
 }
@@ -269,10 +329,20 @@ export function getTasteSignal(worldId: LandingWorldId, step: TasteStep): { eyeb
       activation: { eyebrow: "Ce qui peut arriver", line: "Mardi, début de service, duo ou création: le premier déclencheur reste court et cadré." },
       "prochaine-etape": { eyebrow: "Ce qui se prépare", line: "Le privilège de soirée se rapproche et le message peut monter d'un cran." },
     },
+    boulangerie: {
+      progression: { eyebrow: "Ce que vous voyez", line: "La boulangerie vous reconnaît déjà comme un retour qui compte dans la semaine." },
+      activation: { eyebrow: "Ce qui peut arriver", line: "Un petit geste peut apparaître tôt: mardi, matin calme, petit-déjeuner ou fournée ciblée." },
+      "prochaine-etape": { eyebrow: "Ce qui se prépare", line: "Le prochain retour peut ouvrir un vrai privilège de routine ou un rôle d'habitué du quartier." },
+    },
     restaurant: {
       progression: { eyebrow: "Ce que vous voyez", line: "Le restaurant commence à vous traiter comme un client qui peut revenir entre deux occasions." },
       activation: { eyebrow: "Ce qui peut arriver", line: "Un premier geste peut apparaître pour vous faire reprendre une table plus tôt que prévu." },
       "prochaine-etape": { eyebrow: "Ce qui se prépare", line: "Encore un passage et vous pouvez basculer vers un vrai niveau VIP ou Organisateur." },
+    },
+    caviste: {
+      progression: { eyebrow: "Ce que vous voyez", line: "Le caviste vous traite déjà comme quelqu'un qui peut revenir pour une vraie sélection." },
+      activation: { eyebrow: "Ce qui peut arriver", line: "Une dégustation légère, une sélection ciblée ou un mercredi cave peut apparaître assez tôt." },
+      "prochaine-etape": { eyebrow: "Ce qui se prépare", line: "Encore un passage et un accès cave plus rare peut devenir disponible." },
     },
     beaute: {
       progression: { eyebrow: "Ce que vous voyez", line: "Le lieu vous traite déjà comme une cliente qui peut reprendre son cycle." },
@@ -340,10 +410,20 @@ export function getSummitOptions(worldId: LandingWorldId): SummitOption[] {
         backendInterpretation: "off_peak_day = mardi · hook calendaire · GP_uplift sur slot ciblé, coût activation borné.",
       },
     ],
+    boulangerie: [
+      { id: "recurrence", title: "1 petit-déjeuner ou fournée par mois", description: "Un rythme simple à comprendre: la routine devient privilège visible dans la durée.", whisper: "Une récompense de quartier, lisible, sans devenir une promo permanente." },
+      { id: "impact", title: "1 petit-déjeuner duo", description: "Le lieu vous ouvre un moment plus social à deux sur la saison.", whisper: "Une vraie raison de revenir accompagné." },
+      { id: "statut", title: "Statut Habitué quartier", description: "Le comptoir vous reconnaît et peut vous ouvrir certains moments ou certaines fournées.", whisper: "Plus qu'une remise: un vrai rôle dans le lieu." },
+    ],
     restaurant: [
       { id: "recurrence", title: "1 dîner signature dans la saison", description: "Un vrai repas à viser, assez fort pour vous faire revenir entre deux occasions.", whisper: "Le restaurant récompense un vrai retour, pas un simple passage." },
       { id: "impact", title: "Table du chef ou moment fort", description: "Le lieu vous ouvre une expérience plus rare et plus visible sur une date choisie.", whisper: "Une vraie table, pas une promo ouverte." },
       { id: "statut", title: "Statut VIP / Organisateur", description: "Le restaurant vous reconnaît et peut vous laisser réserver pour d'autres.", whisper: "Vous ne revenez plus seul: vous ouvrez une vraie table." },
+    ],
+    caviste: [
+      { id: "recurrence", title: "1 dégustation privée dans la saison", description: "Un retour choisi avec une vraie dégustation reconnue au comptoir ou en cave.", whisper: "Une promesse claire, sans transformer la cave en promo permanente." },
+      { id: "impact", title: "1 bouteille découverte réservée", description: "Une sélection plus forte, visible, à activer au bon moment sur la saison.", whisper: "Un vrai motif de retour, pas une ristourne générale." },
+      { id: "statut", title: "Accès sélection cave", description: "Le caviste vous reconnaît, vous priorise et vous ouvre certaines dégustations ou cuvées.", whisper: "Du statut, des droits d'accès, et une vraie reconnaissance." },
     ],
     beaute: [
       { id: "recurrence", title: "1 soin offert dans la saison", description: "Le lieu récompense un vrai cycle de retour par un soin qui compte vraiment.", whisper: "Une récompense de confiance, pas un rabais de dernière minute." },
@@ -367,7 +447,7 @@ export function isValidSummitOptionId(id: string): boolean {
 
 export function normalizeCardinWorld(raw: string | null | undefined): LandingWorldId {
   const v = (raw ?? "cafe").toLowerCase().trim()
-  if (v === "restaurant" || v === "beaute" || v === "boutique" || v === "cafe" || v === "bar") {
+  if (v === "restaurant" || v === "beaute" || v === "boutique" || v === "cafe" || v === "bar" || v === "boulangerie" || v === "caviste") {
     return v as LandingWorldId
   }
   return "cafe"
@@ -384,9 +464,15 @@ export function getSummitUsageInitial(worldId: LandingWorldId, optionId: string)
     "bar:statut": 1,
     "bar:anniversaire": 2,
     "bar:mardi": 3,
+    "boulangerie:recurrence": 4,
+    "boulangerie:impact": 2,
+    "boulangerie:statut": 1,
     "restaurant:recurrence": 3,
     "restaurant:impact": 1,
     "restaurant:statut": 1,
+    "caviste:recurrence": 2,
+    "caviste:impact": 1,
+    "caviste:statut": 1,
     "beaute:recurrence": 1,
     "beaute:impact": 2,
     "beaute:statut": 1,

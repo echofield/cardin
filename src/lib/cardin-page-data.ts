@@ -164,7 +164,9 @@ const DEFAULT_SELECTIONS: Record<
 > = {
   cafe: { weakMomentId: "mardi-apres-midi", returnRhythmId: "3-7-jours", clienteleId: "quartier" },
   bar: { weakMomentId: "debut-de-soiree", returnRhythmId: "1-2-semaines", clienteleId: "mixte" },
+  boulangerie: { weakMomentId: "mardi-apres-midi", returnRhythmId: "3-7-jours", clienteleId: "quartier" },
   restaurant: { weakMomentId: "entre-deux-services", returnRhythmId: "1-2-semaines", clienteleId: "mixte" },
+  caviste: { weakMomentId: "mercredi", returnRhythmId: "1-2-semaines", clienteleId: "mixte" },
   beaute: { weakMomentId: "hors-week-end", returnRhythmId: "mensuel", clienteleId: "quartier" },
   boutique: { weakMomentId: "hors-week-end", returnRhythmId: "mensuel", clienteleId: "passage" },
 }
@@ -287,6 +289,24 @@ const WORLD_READING: Record<LandingWorldId, WorldReadingConfig> = {
       mercredi: 1.01,
     },
   },
+  boulangerie: {
+    subtitleTail: "la routine de quartier au bon moment",
+    engineLine: "Cardin ouvre le retour rapide, densifie la semaine, puis garde une récompense rare et bornée.",
+    weakScenario: (weakLabel, rhythmLabel) =>
+      `Cardin remet la routine sur ${weakLabel}. La boulangerie retrouve du passage sur un rythme ${rhythmLabel}.`,
+    keyMoment:
+      "Cardin choisit une reprise de semaine, un retour de quartier ou un petit-déjeuner visible pour remettre le lieu au centre.",
+    seasonLead:
+      "Cardin ouvre une saison très lisible au comptoir, simple à expliquer à l'équipe et assez légère pour rester crédible sur un commerce de routine.",
+    seasonSetup: "QR comptoir, carte digitale, lecture de routine, récompense visible",
+    humanContact: "Un échange direct pour cadrer le geste comptoir, le moment de quartier et la récompense de saison.",
+    projectionTail: "La boulangerie resserre le retour dans la semaine et remet un vrai rythme de quartier.",
+    weakMomentMultiplier: {
+      "mardi-apres-midi": 1.04,
+      mercredi: 1.02,
+      "hors-week-end": 1.01,
+    },
+  },
   restaurant: {
     subtitleTail: "la table au bon service",
     engineLine: "Cardin ouvre le retour de table, active le duo, puis installe un accès plus rare.",
@@ -302,6 +322,24 @@ const WORLD_READING: Record<LandingWorldId, WorldReadingConfig> = {
     weakMomentMultiplier: {
       "entre-deux-services": 1.04,
       "hors-week-end": 1.01,
+    },
+  },
+  caviste: {
+    subtitleTail: "la cave au bon rendez-vous",
+    engineLine: "Cardin remet la sélection dans la boucle, réactive le duo, puis ouvre un accès plus rare autour de la cave.",
+    weakScenario: (weakLabel, rhythmLabel) =>
+      `Cardin recharge ${weakLabel}. Le caviste retrouve un retour choisi sur un rythme ${rhythmLabel}.`,
+    keyMoment:
+      "Cardin choisit une dégustation, une sélection de semaine ou un rendez-vous avant week-end pour remettre la cave en tension.",
+    seasonLead:
+      "Cardin ouvre une saison lisible côté cave, simple à tenir par l'équipe et pensée pour faire revenir sans rabattre la valeur du lieu.",
+    seasonSetup: "QR comptoir, carte digitale, lecture de cave, récompense visible",
+    humanContact: "Un échange direct pour cadrer la dégustation, la sélection et le privilège de saison.",
+    projectionTail: "Le caviste réinstalle un retour choisi et fait monter la valeur de visite autour de la sélection.",
+    weakMomentMultiplier: {
+      mercredi: 1.03,
+      "hors-week-end": 1.02,
+      "debut-de-soiree": 1.01,
     },
   },
   beaute: {
@@ -368,7 +406,15 @@ const MERCHANT_PRESETS: Record<string, MerchantPreset> = {
 }
 
 export function isLandingWorldId(value: string | undefined): value is LandingWorldId {
-  return value === "cafe" || value === "bar" || value === "restaurant" || value === "beaute" || value === "boutique"
+  return (
+    value === "cafe" ||
+    value === "bar" ||
+    value === "boulangerie" ||
+    value === "restaurant" ||
+    value === "caviste" ||
+    value === "beaute" ||
+    value === "boutique"
+  )
 }
 
 export function isCardinWeakMomentId(value: string | undefined): value is CardinWeakMomentId {
@@ -589,7 +635,9 @@ export function resolveCardinMerchantPage(slug: string, options: CardinGeneratio
 function inferWorldIdFromSlug(slug: string): LandingWorldId {
   const normalized = slug.toLowerCase()
 
-  if (/(bar|cocktail|cave|buvette|pub)/.test(normalized)) return "bar"
+  if (/(caviste|cave-a-vin|caveavin|cellier|degustation|d[ée]gustation|bouteille|cuvee|cuv[ée]e|vin|wine)/.test(normalized)) return "caviste"
+  if (/(bar|cocktail|buvette|pub)/.test(normalized)) return "bar"
+  if (/(boulangerie|boulange|pain|fournee|fourn[ée]e|viennoiserie|baguette)/.test(normalized)) return "boulangerie"
   if (/(restaurant|resto|table|bistro|bistrot|brasserie|osteria|cantine)/.test(normalized)) return "restaurant"
   if (/(beaute|beauty|salon|skin|hair|soin)/.test(normalized)) return "beaute"
   if (/(boutique|concept|store|atelier|maison|studio)/.test(normalized)) return "boutique"

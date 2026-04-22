@@ -1,7 +1,7 @@
 import { calculateRecovery } from "@/lib/calculator"
 import { LANDING_PRICING } from "@/lib/landing-content"
 
-export type ParcoursBusinessKey = "cafe" | "bar" | "restaurant" | "beaute" | "boutique"
+export type ParcoursBusinessKey = "cafe" | "bar" | "boulangerie" | "restaurant" | "caviste" | "beaute" | "boutique"
 export type ParcoursLeakKey = "disparition" | "creuses" | "frequence" | "propagation" | "staff"
 export type ParcoursVolumeKey = "faible" | "moyen" | "fort"
 export type ParcoursBasketKey = "bas" | "moyen" | "eleve"
@@ -220,6 +220,42 @@ export const SEASON_PRESETS: Record<ParcoursBusinessKey, ParcoursSeasonPreset> =
     diamond: "credit",
     decay: 10,
   },
+  boulangerie: {
+    key: "boulangerie",
+    label: "Routine de quartier",
+    why: "Pensé pour des passages fréquents, un panier léger et des temps faibles à réanimer sans promo brute.",
+    day: "mardi",
+    moment: "une viennoiserie ou un petit-déjeuner peut tomber au comptoir",
+    entry: "scan simple, puis retour dans la semaine",
+    diamondLine: "1 petit-déjeuner / mois pendant 1 an",
+    summary: "Resserrer le retour dans la semaine et donner un vrai rendez-vous de quartier.",
+    momentLine: "Mardi matin ou goûter · un retour rapide peut déclencher la fournée.",
+    reward: "cafe",
+    resonanceDay: null,
+    threshold: 4,
+    who: "all",
+    spread: "duo",
+    diamond: "unlimited",
+    decay: 5,
+  },
+  caviste: {
+    key: "caviste",
+    label: "Rituel cave",
+    why: "Pensé pour un panier moyen à élevé, une fréquence choisie et un retour social sans remise frontale.",
+    day: "mercredi",
+    moment: "une dégustation peut s'ouvrir côté cave",
+    entry: "scan simple, puis retour ou duo dégustation",
+    diamondLine: "1 dégustation privée / trimestre pendant 1 an",
+    summary: "Créer un retour choisi autour d'une dégustation, d'une sélection ou d'une bouteille découverte.",
+    momentLine: "Mercredi cave · une dégustation ou une sélection peut faire repartir le cycle.",
+    reward: "menu",
+    resonanceDay: null,
+    threshold: 4,
+    who: "regular",
+    spread: "duo",
+    diamond: "unlimited",
+    decay: 10,
+  },
 }
 
 export const RESONANCE_DAY_OPTIONS: ResonanceDayOption[] = [
@@ -247,12 +283,28 @@ export const BUSINESS_OPTIONS: BusinessOption[] = [
     recoveryRate: 0.2,
   },
   {
+    key: "boulangerie",
+    label: "Boulangerie",
+    brand: "La fournée",
+    basketByLevel: { bas: 6, moyen: 9, eleve: 13 },
+    lossRate: 0.26,
+    recoveryRate: 0.24,
+  },
+  {
     key: "restaurant",
     label: "Restaurant",
     brand: "La table",
     basketByLevel: { bas: 14, moyen: 22, eleve: 38 },
     lossRate: 0.32,
     recoveryRate: 0.16,
+  },
+  {
+    key: "caviste",
+    label: "Caviste",
+    brand: "La cave",
+    basketByLevel: { bas: 18, moyen: 32, eleve: 52 },
+    lossRate: 0.34,
+    recoveryRate: 0.14,
   },
   {
     key: "beaute",
@@ -354,28 +406,36 @@ const REWARD_COPY: Record<ParcoursRewardKey, Record<ParcoursBusinessKey, { label
   cafe: {
     cafe: { label: "Café offert", phrase: "1 café offert" },
     bar: { label: "Verre offert", phrase: "1 verre offert" },
+    boulangerie: { label: "Viennoiserie offerte", phrase: "1 viennoiserie offerte" },
     restaurant: { label: "Dessert offert", phrase: "1 dessert offert" },
+    caviste: { label: "Verre de dégustation offert", phrase: "1 verre de dégustation offert" },
     beaute: { label: "Soin flash offert", phrase: "1 soin flash offert" },
     boutique: { label: "Accessoire offert", phrase: "1 accessoire offert" },
   },
   credit: {
     cafe: { label: "5 € de crédit", phrase: "5 € de crédit" },
     bar: { label: "8 € de crédit", phrase: "8 € de crédit" },
+    boulangerie: { label: "6 € de crédit gourmand", phrase: "6 € de crédit gourmand" },
     restaurant: { label: "12 € de crédit", phrase: "12 € de crédit" },
+    caviste: { label: "15 € de crédit cave", phrase: "15 € de crédit cave" },
     beaute: { label: "15 € de crédit", phrase: "15 € de crédit" },
     boutique: { label: "20 € de crédit", phrase: "20 € de crédit" },
   },
   menu: {
     cafe: { label: "Menu offert", phrase: "1 menu offert" },
     bar: { label: "Planche offerte", phrase: "1 planche offerte" },
+    boulangerie: { label: "Petit-déjeuner offert", phrase: "1 petit-déjeuner offert" },
     restaurant: { label: "Plat offert", phrase: "1 plat offert" },
+    caviste: { label: "Dégustation offerte", phrase: "1 dégustation offerte" },
     beaute: { label: "Soin offert", phrase: "1 soin offert" },
     boutique: { label: "Produit offert", phrase: "1 produit offert" },
   },
   invitation: {
     cafe: { label: "Invitation duo", phrase: "une invitation à deux" },
     bar: { label: "Invitation duo", phrase: "une invitation pour deux" },
+    boulangerie: { label: "Invitation fournée", phrase: "une invitation fournée à partager" },
     restaurant: { label: "Table duo", phrase: "une table duo à débloquer" },
+    caviste: { label: "Invitation dégustation", phrase: "une invitation dégustation à partager" },
     beaute: { label: "Invitation soin", phrase: "une invitation soin à partager" },
     boutique: { label: "Invitation preview", phrase: "une invitation preview à partager" },
   },
@@ -439,21 +499,27 @@ const DIAMOND_PRESENTATION_OVERRIDES: Partial<Record<ParcoursDiamondKey, Partial
   dinner: {
     cafe: { label: "1 boisson signature / semaine", phrase: "1 boisson signature / semaine pendant 1 an" },
     bar: { label: "1 bouteille / mois", phrase: "1 bouteille / mois pendant 1 an" },
+    boulangerie: { label: "1 fournée signature / mois", phrase: "1 fournée signature / mois pendant 1 an" },
     restaurant: { label: "1 repas / mois", phrase: "1 repas / mois pendant 1 an" },
+    caviste: { label: "1 bouteille découverte / mois", phrase: "1 bouteille découverte / mois pendant 6 mois" },
     beaute: { label: "1 soin / trimestre", phrase: "1 soin / trimestre pendant 1 an" },
     boutique: { label: "100 € / mois", phrase: "100 € de crédit / mois pendant 1 an" },
   },
   credit: {
     cafe: { label: "120 € de crédit", phrase: "120 € de crédit sur 12 mois" },
     bar: { label: "180 € de crédit", phrase: "180 € de crédit sur 12 mois" },
+    boulangerie: { label: "120 € de crédit gourmand", phrase: "120 € de crédit gourmand sur 12 mois" },
     restaurant: { label: "300 € de crédit", phrase: "300 € de crédit sur 12 mois" },
+    caviste: { label: "180 € de crédit cave", phrase: "180 € de crédit cave sur 12 mois" },
     beaute: { label: "300 € de crédit", phrase: "300 € de crédit sur 12 mois" },
     boutique: { label: "400 € de crédit", phrase: "400 € de crédit sur 12 mois" },
   },
   unlimited: {
     cafe: { label: "1 petit-déjeuner / mois", phrase: "1 petit-déjeuner / mois pendant 1 an" },
     bar: { label: "1 table offerte / mois", phrase: "1 table offerte / mois pendant 1 an" },
+    boulangerie: { label: "1 petit-déjeuner / mois", phrase: "1 petit-déjeuner / mois pendant 1 an" },
     restaurant: { label: "Table privilège / mois", phrase: "1 table privilège / mois pendant 1 an" },
+    caviste: { label: "1 dégustation privée / trimestre", phrase: "1 dégustation privée / trimestre pendant 1 an" },
     beaute: { label: "1 créneau prioritaire / mois", phrase: "1 créneau prioritaire / mois pendant 1 an" },
     boutique: { label: "1 pièce offerte / trimestre", phrase: "1 pièce offerte / trimestre pendant 1 an" },
   },
@@ -469,21 +535,27 @@ const DIAMOND_COPY: Record<ParcoursDiamondKey, Record<ParcoursBusinessKey, { lab
   dinner: {
     cafe: { label: "Tirage brunch · 1 an", phrase: "entrée au tirage Diamond · 1 brunch/mois pendant 1 an" },
     bar: { label: "Tirage soirée · 1 an", phrase: "entrée au tirage Diamond · 1 soirée/mois pendant 1 an" },
+    boulangerie: { label: "Tirage fournée · 1 an", phrase: "entrée au tirage Diamond · 1 fournée signature/mois pendant 1 an" },
     restaurant: { label: "Tirage dîner · 1 an", phrase: "entrée au tirage Diamond · 1 dîner/mois pendant 1 an" },
+    caviste: { label: "Tirage bouteille découverte", phrase: "entrée au tirage Diamond · 1 bouteille découverte/mois pendant 6 mois" },
     beaute: { label: "Tirage soin signature · 1 an", phrase: "entrée au tirage Diamond · 1 soin signature/trimestre pendant 1 an" },
     boutique: { label: "Tirage preview · 1 an", phrase: "entrée au tirage Diamond · 1 preview/mois pendant 1 an" },
   },
   credit: {
     cafe: { label: "Tirage 200 € crédit", phrase: "entrée au tirage Diamond · 200 € de crédit sur 12 mois" },
     bar: { label: "Tirage 250 € crédit", phrase: "entrée au tirage Diamond · 250 € de crédit sur 12 mois" },
+    boulangerie: { label: "Tirage 120 € gourmand", phrase: "entrée au tirage Diamond · 120 € de crédit gourmand sur 12 mois" },
     restaurant: { label: "Tirage 300 € crédit", phrase: "entrée au tirage Diamond · 300 € de crédit sur 12 mois" },
+    caviste: { label: "Tirage 180 € cave", phrase: "entrée au tirage Diamond · 180 € de crédit cave sur 12 mois" },
     beaute: { label: "Tirage 300 € crédit", phrase: "entrée au tirage Diamond · 300 € de crédit sur 12 mois" },
     boutique: { label: "Tirage 400 € crédit", phrase: "entrée au tirage Diamond · 400 € de crédit sur 12 mois" },
   },
   unlimited: {
     cafe: { label: "Tirage accès comptoir", phrase: "entrée au tirage Diamond · accès comptoir pendant 1 mois" },
     bar: { label: "Tirage accès maison", phrase: "entrée au tirage Diamond · accès maison pendant 1 mois" },
+    boulangerie: { label: "Tirage petit-déjeuner quartier", phrase: "entrée au tirage Diamond · 1 petit-déjeuner/mois pendant 1 an" },
     restaurant: { label: "Tirage accès chef", phrase: "entrée au tirage Diamond · accès chef pendant 1 mois" },
+    caviste: { label: "Tirage accès dégustation", phrase: "entrée au tirage Diamond · accès dégustation privée pendant 1 an" },
     beaute: { label: "Tirage accès cabine", phrase: "entrée au tirage Diamond · accès cabine pendant 1 mois" },
     boutique: { label: "Tirage accès privé", phrase: "entrée au tirage Diamond · accès privé pendant 1 mois" },
   },
@@ -530,6 +602,26 @@ const IMPACT_PROFILES: Record<ParcoursBusinessKey, ImpactProfile> = {
     cascadeSub:
       "À la 3e visite validée, chaque habitué peut inviter un ami pour un verre offert au duo. L'invité entre à son tour dans le parcours. Le moteur se propage en vagues.",
   },
+  boulangerie: {
+    label: "Boulangerie",
+    baseLevers: { retour: 3010, panier: 360, propagation: 40, missions: 220 },
+    baseSigma: 46,
+    waves: { v1: 220, v2: 200, v3: 145, v4: 80 },
+    roles: {
+      retour: "Le Passant devient Habitué quartier",
+      panier: "L'Habitué complète son panier",
+      propagation: "Le Voisin partage l'adresse",
+      missions: "Le Cercle active la rue",
+    },
+    winwin: {
+      retour: "<strong>Il gagne</strong> une routine qui le reconnaît. <span class=\"sep\">·</span> <strong>Vous gagnez</strong> un retour plus serré dans la semaine.",
+      panier: "<strong>Il ajoute</strong> une viennoiserie, une formule, un plaisir utile. <span class=\"sep\">·</span> <strong>Vous augmentez</strong> la valeur par passage.",
+      propagation: "<strong>Il invite</strong> un voisin ou un proche dans la boucle. <span class=\"sep\">·</span> <strong>Vous gagnez</strong> du bouche-à-oreille local sans campagne.",
+      missions: "<strong>Il active</strong> un matin, un goûter, un samedi. <span class=\"sep\">·</span> <strong>Vous remplissez</strong> les moments plus plats.",
+    },
+    cascadeSub:
+      "Au 4e passage validé, chaque habitué peut inviter un proche du quartier, avec une viennoiserie ou un petit-déjeuner partagé. L'invité entre à son tour dans le parcours.",
+  },
   restaurant: {
     label: "Restaurant",
     baseLevers: { retour: 2867, panier: 520, propagation: 75, missions: 737 },
@@ -549,6 +641,26 @@ const IMPACT_PROFILES: Record<ParcoursBusinessKey, ImpactProfile> = {
     },
     cascadeSub:
       "Au 3e repas validé, chaque habitué peut inviter un proche, avec un plat offert à partager. L'invité entre à son tour dans le parcours. Le moteur se propage en vagues.",
+  },
+  caviste: {
+    label: "Caviste",
+    baseLevers: { retour: 2500, panier: 640, propagation: 88, missions: 520 },
+    baseSigma: 30,
+    waves: { v1: 90, v2: 84, v3: 62, v4: 36 },
+    roles: {
+      retour: "Le Visiteur devient Régulier cave",
+      panier: "Le Régulier monte en sélection",
+      propagation: "L'Initié invite son cercle",
+      missions: "Le Passeur remplit la dégustation",
+    },
+    winwin: {
+      retour: "<strong>Il gagne</strong> une cave qui se souvient de ses goûts. <span class=\"sep\">·</span> <strong>Vous gagnez</strong> un retour plus intentionnel.",
+      panier: "<strong>Il découvre</strong> une meilleure bouteille, un accord, une sélection. <span class=\"sep\">·</span> <strong>Vous augmentez</strong> le ticket par visite.",
+      propagation: "<strong>Il partage</strong> une dégustation ou une sélection avec son cercle. <span class=\"sep\">·</span> <strong>Vous gagnez</strong> des clients choisis par affinité.",
+      missions: "<strong>Il organise</strong> une vraie visite de cave. <span class=\"sep\">·</span> <strong>Vous remplissez</strong> les fenêtres de dégustation utiles.",
+    },
+    cascadeSub:
+      "Au 4e passage validé, chaque client régulier peut inviter un proche à une dégustation cadrée. L'invité entre à son tour dans le parcours. Le moteur se diffuse par sélection, pas par remise.",
   },
   beaute: {
     label: "Beauté",
@@ -664,8 +776,12 @@ export function buildWeeklyMomentLine(state: Pick<ParcoursConfigurationState, "r
   switch (businessKey) {
     case "bar":
       return `${day.label} soir · ${reward.phrase} peut tomber pour une table`
+    case "boulangerie":
+      return `${day.label} · ${reward.phrase} peut tomber à la fournée`
     case "restaurant":
       return `${day.label} · ${reward.phrase} peut faire basculer une table`
+    case "caviste":
+      return `${day.label} · ${reward.phrase} peut s'ouvrir côté cave`
     case "beaute":
       return `${day.label} · ${reward.phrase} peut s'ouvrir sur un retour validé`
     case "boutique":

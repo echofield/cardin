@@ -12,6 +12,7 @@ export type ActivityType =
   | "cafe"
   | "restaurant"
   | "boulangerie"
+  | "caviste"
   | "coiffeur"
   | "institut-beaute"
   | "boutique"
@@ -44,6 +45,13 @@ const STATUS_LABELS: Record<ActivityType, Record<InternalTier, string>> = {
     3: "Cercle",
     4: "Diamond Artisan",
     5: "Maison Rare",
+  },
+  caviste: {
+    1: "Passage Cave",
+    2: "Habitué Cave",
+    3: "Cercle Sélection",
+    4: "Diamond Cuvée",
+    5: "Cuvée Rare",
   },
 
   coiffeur: {

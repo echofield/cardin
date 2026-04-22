@@ -16,7 +16,9 @@ export type SeasonRewardOption = {
 export const DIAMOND_RATE: Record<LandingWorldId, number> = {
   cafe:       0.06,
   bar:        0.06, // maps to generic preset
+  boulangerie: 0.06,
   restaurant: 0.08,
+  caviste:    0.07,
   beaute:     0.07, // maps to salon preset
   boutique:   0.12,
 }
@@ -32,10 +34,20 @@ export const SEASON_REWARDS: Record<LandingWorldId, SeasonRewardOption[]> = {
     { id: "bar_1", label: "Table réservée + conso offerte",        sub: "Chaque mois pendant une saison — l'expérience au centre" },
     { id: "bar_2", label: "Soirée privée",                         sub: "Un soir pour eux seuls — invitation exclusive, sur liste" },
   ],
+  boulangerie: [
+    { id: "boulangerie_0", label: "1 petit-déjeuner / mois — 1 an", sub: "Un privilège de routine lisible — assez fort pour créer le retour sans casser la marge" },
+    { id: "boulangerie_1", label: "1 fournée signature / mois",     sub: "Une récompense gourmande, locale, mémorable" },
+    { id: "boulangerie_2", label: "Accès fournée réservée",         sub: "Un moment rare réservé aux meilleurs parcours du quartier" },
+  ],
   restaurant: [
     { id: "restaurant_0", label: "1 dîner pour 2 / mois — 6 mois", sub: "Le retour qui a de la valeur — offrir une table, pas une réduction" },
     { id: "restaurant_1", label: "Menu dégustation offert × 4",    sub: "Quatre fois dans l'année — un rituel gastronomique personnel" },
     { id: "restaurant_2", label: "Table du chef + accord vins",    sub: "Une seule fois — mais inoubliable. La récompense qui se raconte" },
+  ],
+  caviste: [
+    { id: "caviste_0", label: "1 bouteille découverte / mois — 6 mois", sub: "Une vraie récompense de cave, visible et bornée" },
+    { id: "caviste_1", label: "4 dégustations privées dans l'année",     sub: "Un rendez-vous rare, social, assumé" },
+    { id: "caviste_2", label: "Accès sélection cave réservée",           sub: "Un privilège de sélection, pas une remise" },
   ],
   beaute: [
     { id: "beaute_0", label: "Soins illimités — 1 mois",           sub: "Un mois de rituel complet — le privilège de ne pas compter" },
@@ -108,11 +120,23 @@ const REWARD_TYPES_ALL: Record<LandingWorldId, RewardTypeOption[]> = {
     { id: "invitation",  label: "Invitation",   example: "Amener quelqu'un" },
     { id: "evenement",   label: "Événement",    example: "Soirée privée" },
   ],
+  boulangerie: [
+    { id: "direct",      label: "Direct",      example: "1 viennoiserie offerte" },
+    { id: "progression", label: "Progression",  example: "5 passages → petit-déjeuner" },
+    { id: "invitation",  label: "Invitation",   example: "Venir à 2" },
+    { id: "evenement",   label: "Événement",    example: "Fournée réservée" },
+  ],
   restaurant: [
     { id: "direct",      label: "Direct",      example: "1 dessert offert" },
     { id: "progression", label: "Progression",  example: "5 repas → menu dég." },
     { id: "invitation",  label: "Invitation",   example: "Table pour 2" },
     { id: "evenement",   label: "Événement",    example: "Brunch exclusif" },
+  ],
+  caviste: [
+    { id: "direct",      label: "Direct",      example: "1 verre de dégustation offert" },
+    { id: "progression", label: "Progression",  example: "4 passages → sélection cave" },
+    { id: "invitation",  label: "Invitation",   example: "Venir à 2 pour déguster" },
+    { id: "evenement",   label: "Événement",    example: "Dégustation privée" },
   ],
   beaute: [
     { id: "direct",      label: "Direct",      example: "1 soin offert" },
@@ -132,7 +156,9 @@ const REWARD_TYPES_ALL: Record<LandingWorldId, RewardTypeOption[]> = {
 const RECOMMENDED_TYPES: Record<LandingWorldId, RewardTypeId[]> = {
   cafe:       ["direct", "progression"],
   bar:        ["invitation", "evenement"],
+  boulangerie: ["progression", "direct"],
   restaurant: ["progression", "evenement"],
+  caviste:    ["evenement", "invitation"],
   beaute:     ["progression", "direct"],
   boutique:   ["direct", "evenement"],
 }
@@ -192,7 +218,9 @@ export const PROPAGATION_OPTIONS: PropagationOption[] = [
 const REWARD_SHORT: Record<LandingWorldId, Record<RewardTypeId, string>> = {
   cafe:       { direct: "1 café offert",      progression: "5 passages → boisson gratuite", invitation: "venir à 2",       evenement: "dégustation privée" },
   bar:        { direct: "1 verre offert",     progression: "3 soirs → bouteille offerte",   invitation: "amener quelqu'un", evenement: "soirée privée" },
+  boulangerie:{ direct: "1 viennoiserie offerte", progression: "5 passages → petit-déjeuner", invitation: "venir à 2", evenement: "fournée réservée" },
   restaurant: { direct: "1 dessert offert",   progression: "5 repas → menu dégustation",   invitation: "table pour 2",    evenement: "brunch exclusif" },
+  caviste:    { direct: "1 dégustation offerte", progression: "4 passages → sélection cave", invitation: "venir à 2", evenement: "dégustation privée" },
   beaute:     { direct: "1 soin offert",      progression: "5 RDV → soin premium",         invitation: "duo beauté",      evenement: "soirée beauté" },
   boutique:   { direct: "accès early sale",   progression: "3 achats → cadeau offert",     invitation: "amener quelqu'un", evenement: "vente privée" },
 }
@@ -319,7 +347,9 @@ export type EngineMetrics = {
 const SIGMA_BASE: Record<LandingWorldId, number> = {
   cafe:       3.2,
   bar:        2.8,
+  boulangerie: 3.1,
   restaurant: 3.0,
+  caviste:    2.9,
   beaute:     3.5,
   boutique:   2.5,
 }

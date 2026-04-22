@@ -8,7 +8,7 @@ import type { LandingWorldId } from "@/lib/landing-content"
 
 export const dynamic = "force-dynamic"
 
-const WORLDS: LandingWorldId[] = ["cafe", "bar", "restaurant", "beaute", "boutique"]
+const WORLDS: LandingWorldId[] = ["cafe", "bar", "boulangerie", "restaurant", "caviste", "beaute", "boutique"]
 
 function parseSummitMultiplier(raw: string | null): number {
   if (!raw) return 1

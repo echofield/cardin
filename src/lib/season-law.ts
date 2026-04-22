@@ -80,6 +80,11 @@ const summitPresets: Record<string, SummitPreset[]> = {
     { id: "samedi-haut", title: "Samedi haut", promise: "1 privilège du samedi pour la carte la plus haute", annualCost: 220, monthlyRecoveredBoost: 1.1 },
     { id: "reserve-quartier", title: "Réserve quartier", promise: "Une réserve cachée au sommet de la saison", annualCost: 160, monthlyRecoveredBoost: 1.05 },
   ],
+  caviste: [
+    { id: "bouteille-decouverte", title: "Bouteille découverte", promise: "1 bouteille découverte par mois pendant 6 mois", annualCost: 300, monthlyRecoveredBoost: 1.04 },
+    { id: "degustation-privee", title: "Dégustation privée", promise: "4 dégustations privées dans l'année", annualCost: 260, monthlyRecoveredBoost: 1.12 },
+    { id: "selection-cave", title: "Sélection cave", promise: "Accès à une sélection cave réservée", annualCost: 180, monthlyRecoveredBoost: 1.06 },
+  ],
 }
 
 export function normalizeSeasonLength(value?: string): SeasonLength {

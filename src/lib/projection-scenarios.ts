@@ -1,4 +1,4 @@
-export type MerchantProjectionType = "cafe" | "bar" | "restaurant" | "coiffeur" | "beaute" | "boutique"
+export type MerchantProjectionType = "cafe" | "bar" | "boulangerie" | "restaurant" | "caviste" | "coiffeur" | "beaute" | "boutique"
 
 export type TrafficLevel = "light" | "steady" | "dense"
 export type TicketLevel = "small" | "standard" | "premium"
@@ -83,6 +83,8 @@ export type MerchantIdentityOption = {
 }
 
 export const MERCHANT_IDENTITY_OPTIONS: MerchantIdentityOption[] = [
+  { type: "boulangerie", label: "Boulangerie", line: "routine de quartier", detail: "frequence elevee, retour rapide" },
+  { type: "caviste", label: "Caviste", line: "selection & degustation", detail: "panier plus fort, retour choisi" },
   { type: "cafe", label: "Café", line: "passage rapide", detail: "habitudes du quotidien" },
   { type: "bar", label: "Bar", line: "soirée & comptoir", detail: "panier plus fort, réseau naturel" },
   { type: "restaurant", label: "Restaurant", line: "entre deux moments", detail: "services inégaux dans la semaine" },
@@ -95,7 +97,7 @@ function createScenario(scenario: ProjectionScenario): ProjectionScenario {
   return scenario
 }
 
-export const projectionByMerchant: Record<MerchantProjectionType, ProjectionBundle> = {
+const BASE_PROJECTION_BUNDLES: Record<Exclude<MerchantProjectionType, "boulangerie" | "caviste">, ProjectionBundle> = {
   cafe: {
     merchantLabel: "Café",
     merchantLine: "Passage rapide et habitudes du quotidien.",
@@ -766,11 +768,282 @@ export const projectionByMerchant: Record<MerchantProjectionType, ProjectionBund
   },
 }
 
+function deriveBoulangerieBundle(): ProjectionBundle {
+  const base = BASE_PROJECTION_BUNDLES.cafe
+  const [traffic, ticket, frequency] = base.auditBlocks
+
+  return {
+    ...base,
+    merchantLabel: "Boulangerie",
+    merchantLine: "Routine de quartier, volume eleve et panier leger a moyen.",
+    brandPunchline:
+      "Diamond reste visible tres tot : progression courte, retours dans la semaine et petit cercle local qui montent vers un privilege maitrise.",
+    auditBlocks: [
+      {
+        ...traffic,
+        help: "Le rythme reel du comptoir sur les matins utiles et les creux de la journee.",
+      },
+      {
+        ...ticket,
+        help: "Le panier quotidien le plus frequent, pas le samedi exceptionnel.",
+      },
+      {
+        ...frequency,
+        help: "La facilite a revoir la meme personne dans la semaine.",
+      },
+    ],
+    featured: createScenario({
+      ...base.featured,
+      id: "rituel-fournee",
+      title: "Rituel fournee",
+      description: "Une routine lisible qui remet du rythme sur les passages du quartier.",
+      summaryLine: "Faire revenir dans la semaine et transformer la routine en rendez-vous.",
+      startingOffer: "8 passages -> 1 viennoiserie reservee",
+      customerPromise: "Le client voit une progression tres concrete, sans attendre un mois.",
+      triggerHint: "Relance douce 3 jours apres le dernier passage.",
+      pass: {
+        ...base.featured.pass,
+        rewardLabel: "8 passages -> viennoiserie reservee",
+        notificationLabel: "Votre rituel fournee avance cette semaine",
+        progressDots: 8,
+        activeDots: 3,
+      },
+      impact: {
+        ...base.featured.impact,
+        captureRate: 0.09,
+        revisitRate: 0.26,
+        basketLift: 0.02,
+        retentionLift: 0.035,
+        confidenceLow: 0.84,
+        confidenceHigh: 1.14,
+      },
+    }),
+    options: [
+      createScenario({
+        ...base.options[0],
+        id: "mardi-petit-dejeuner",
+        title: "Mardi petit-dejeuner",
+        description: "Donner un vrai motif de retour sur un creux de semaine.",
+        summaryLine: "Faire basculer un jour plat avec un cap simple et utile.",
+        startingOffer: "5 passages le mardi -> formule petit-dejeuner",
+        customerPromise: "Le client comprend qu'un jour precis compte davantage dans la semaine.",
+        triggerHint: "Annonce legere la veille du jour cible.",
+        pass: {
+          ...base.options[0].pass,
+          rewardLabel: "5 mardis -> formule petit-dejeuner",
+          notificationLabel: "Demain, votre passage compte pour le petit-dejeuner",
+        },
+        impact: {
+          ...base.options[0].impact,
+          captureRate: 0.092,
+          revisitRate: 0.22,
+          basketLift: 0.025,
+          retentionLift: 0.03,
+          confidenceLow: 0.83,
+          confidenceHigh: 1.14,
+        },
+      }),
+      createScenario({
+        ...base.options[1],
+        id: "defi-gouter",
+        title: "Defi gouter",
+        description: "Une courte fenetre pour remettre plusieurs passages sur quelques jours.",
+        summaryLine: "Resserrer l'intervalle entre deux achats avant que la routine ne se casse.",
+        startingOffer: "3 visites en 5 jours -> douceur offerte",
+        customerPromise: "Le mouvement est tres lisible et vite atteignable.",
+        triggerHint: "Carte active des le premier scan pour viser la meme semaine.",
+        pass: {
+          ...base.options[1].pass,
+          rewardLabel: "3 visites en 5 jours",
+          notificationLabel: "Plus qu'un passage pour le defi gouter",
+        },
+        impact: {
+          ...base.options[1].impact,
+          captureRate: 0.078,
+          revisitRate: 0.24,
+          basketLift: 0.012,
+          retentionLift: 0.025,
+          confidenceLow: 0.82,
+          confidenceHigh: 1.12,
+        },
+      }),
+      createScenario({
+        ...base.options[2],
+        id: "samedi-quartier",
+        title: "Samedi quartier",
+        description: "Un moment mensuel qui donne envie de viser une fournee attendue.",
+        summaryLine: "Installer un petit temps fort de quartier sans tomber dans la promo.",
+        startingOffer: "6 passages dans le mois -> fournee signature",
+        customerPromise: "Le client attend un moment, pas une remise.",
+        triggerHint: "Le cap du mois est annonce au comptoir des le debut de cycle.",
+        pass: {
+          ...base.options[2].pass,
+          rewardLabel: "6 passages -> fournee signature",
+          notificationLabel: "Votre samedi quartier se rapproche",
+          progressDots: 6,
+        },
+        impact: {
+          ...base.options[2].impact,
+          captureRate: 0.065,
+          revisitRate: 0.19,
+          basketLift: 0.04,
+          retentionLift: 0.022,
+          confidenceLow: 0.83,
+          confidenceHigh: 1.16,
+        },
+      }),
+    ],
+  }
+}
+
+function deriveCavisteBundle(): ProjectionBundle {
+  const base = BASE_PROJECTION_BUNDLES.restaurant
+  const [traffic, ticket, frequency] = base.auditBlocks
+
+  return {
+    ...base,
+    merchantLabel: "Caviste",
+    merchantLine: "Retour choisi, degustation et panier moyen a eleve.",
+    brandPunchline:
+      "Diamond agit comme couche d'acces des les premieres visites : selection, retour et cercle social montent vers un privilege de cave borne.",
+    auditBlocks: [
+      {
+        ...traffic,
+        label: "Visites",
+        help: "Le niveau reel de passages sur les periodes ou vous voulez remettre la cave en mouvement.",
+      },
+      {
+        ...ticket,
+        help: "Le panier le plus frequent sur la cave, pas la caisse exceptionnelle des fetes.",
+      },
+      {
+        ...frequency,
+        help: "La facilite a faire revenir le meme client pour une vraie selection.",
+      },
+    ],
+    featured: createScenario({
+      ...base.featured,
+      id: "selection-cave",
+      title: "Selection cave",
+      description: "Un rendez-vous clair qui remet le caviste dans la boucle entre deux achats.",
+      summaryLine: "Remettre la cave dans les retours choisis et installer un rendez-vous lisible.",
+      startingOffer: "5 passages -> 1 degustation reservee",
+      customerPromise: "Le client comprend qu'il accede a quelque chose de choisi, pas a une remise.",
+      triggerHint: "Relance douce 10 jours apres la derniere visite.",
+      defaultAudit: { traffic: "steady", ticket: "standard", frequency: "normal" },
+      pass: {
+        ...base.featured.pass,
+        rewardLabel: "5 passages -> degustation reservee",
+        notificationLabel: "Votre prochaine degustation se rapproche",
+        progressDots: 5,
+        activeDots: 2,
+      },
+      impact: {
+        ...base.featured.impact,
+        captureRate: 0.075,
+        revisitRate: 0.19,
+        basketLift: 0.05,
+        retentionLift: 0.024,
+        confidenceLow: 0.84,
+        confidenceHigh: 1.15,
+      },
+    }),
+    options: [
+      createScenario({
+        ...base.options[0],
+        id: "mercredi-degustation",
+        title: "Mercredi degustation",
+        description: "Travailler un creux choisi avec une vraie fenetre de cave.",
+        summaryLine: "Faire exister un rendez-vous hebdo sans promo large ni remise directe.",
+        startingOffer: "4 passages le mercredi -> verre de degustation",
+        customerPromise: "Le client comprend qu'un jour et un moment de cave sont privilegies.",
+        triggerHint: "Rappel discret la veille du rendez-vous cave.",
+        defaultAudit: { traffic: "steady", ticket: "standard", frequency: "fragile" },
+        pass: {
+          ...base.options[0].pass,
+          rewardLabel: "4 mercredis -> verre de degustation",
+          notificationLabel: "Demain, votre rendez-vous cave compte",
+          progressDots: 4,
+        },
+        impact: {
+          ...base.options[0].impact,
+          captureRate: 0.074,
+          revisitRate: 0.17,
+          basketLift: 0.045,
+          retentionLift: 0.02,
+          confidenceLow: 0.83,
+          confidenceHigh: 1.14,
+        },
+      }),
+      createScenario({
+        ...base.options[1],
+        id: "defi-retour-cave",
+        title: "Defi retour",
+        description: "Resserrer le delai avant que le prochain achat ne disparaisse du radar.",
+        summaryLine: "Accrocher une seconde visite avant que le cycle naturel ne se rallonge.",
+        startingOffer: "2 visites en 30 jours -> acces selection",
+        customerPromise: "La progression reste simple et orientee selection.",
+        triggerHint: "Carte active des le premier scan, avec fenetre claire de 30 jours.",
+        defaultAudit: { traffic: "dense", ticket: "small", frequency: "fragile" },
+        pass: {
+          ...base.options[1].pass,
+          rewardLabel: "2 visites en 30 jours",
+          notificationLabel: "Une visite de plus pour ouvrir la selection",
+          progressDots: 2,
+        },
+        impact: {
+          ...base.options[1].impact,
+          captureRate: 0.07,
+          revisitRate: 0.16,
+          basketLift: 0.04,
+          retentionLift: 0.018,
+          confidenceLow: 0.83,
+          confidenceHigh: 1.12,
+        },
+      }),
+      createScenario({
+        ...base.options[2],
+        id: "selection-du-mois",
+        title: "Selection du mois",
+        description: "Une vraie raison de repasser pour la bouteille ou la degustation du mois.",
+        summaryLine: "Installer un temps fort de cave attendu, sans promo brute.",
+        startingOffer: "1 passage / mois pendant 3 mois -> invitation degustation privee",
+        customerPromise: "Le client visualise une suite logique de retours choisis.",
+        triggerHint: "Annonce de la selection au debut du mois avec le cap a atteindre.",
+        defaultAudit: { traffic: "light", ticket: "premium", frequency: "strong" },
+        pass: {
+          ...base.options[2].pass,
+          rewardLabel: "3 selections mensuelles -> invitation privee",
+          notificationLabel: "Votre selection du mois approche",
+          progressDots: 3,
+        },
+        impact: {
+          ...base.options[2].impact,
+          captureRate: 0.058,
+          revisitRate: 0.15,
+          basketLift: 0.08,
+          retentionLift: 0.02,
+          confidenceLow: 0.84,
+          confidenceHigh: 1.17,
+        },
+      }),
+    ],
+  }
+}
+
+export const projectionByMerchant: Record<MerchantProjectionType, ProjectionBundle> = {
+  ...BASE_PROJECTION_BUNDLES,
+  boulangerie: deriveBoulangerieBundle(),
+  caviste: deriveCavisteBundle(),
+}
+
 export function isMerchantProjectionType(value: string | null): value is MerchantProjectionType {
   return (
     value === "cafe" ||
     value === "bar" ||
+    value === "boulangerie" ||
     value === "restaurant" ||
+    value === "caviste" ||
     value === "coiffeur" ||
     value === "beaute" ||
     value === "boutique"

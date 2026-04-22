@@ -89,6 +89,7 @@ const ACTIVITY_TYPES: ActivityType[] = [
   "cafe",
   "restaurant",
   "boulangerie",
+  "caviste",
   "coiffeur",
   "institut-beaute",
   "boutique",

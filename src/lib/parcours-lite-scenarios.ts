@@ -89,6 +89,41 @@ export const LITE_SCENARIOS_BY_WORLD: Record<LandingWorldId, LiteScenario[]> = {
       ],
     },
   ],
+  boulangerie: [
+    {
+      id: "boulangerie_jour_calme",
+      title: "Jour calme",
+      mechanicOneLiner:
+        "Un client scanne sur un jour plus plat. Il reçoit une offre qui n'existe que sur ce moment de quartier.",
+      rewards: [
+        { id: "offert", label: "Offert", shortExample: "ex. viennoiserie offerte pour tout petit-déjeuner" },
+        { id: "offre_speciale", label: "Offre spéciale", shortExample: "ex. formule matin réservée" },
+        { id: "cadeau", label: "Cadeau", shortExample: "ex. biscuit maison avec la commande" },
+      ],
+    },
+    {
+      id: "boulangerie_serie",
+      title: "Série de passages",
+      mechanicOneLiner:
+        "Un client revient plusieurs fois dans la semaine. Chaque visite fait monter un avantage simple et lisible.",
+      rewards: [
+        { id: "offert", label: "Offert", shortExample: "ex. produit du jour offert au 5e passage" },
+        { id: "upgrade_croissant", label: "Upgrade croissant", shortExample: "ex. café, puis viennoiserie, puis formule matin" },
+        { id: "surprise", label: "Surprise", shortExample: "le client ne sait pas quelle douceur se débloque" },
+      ],
+    },
+    {
+      id: "boulangerie_duo",
+      title: "Retour à deux",
+      mechanicOneLiner:
+        "Le client revient avec une personne proche. Le duo fait monter plus vite le parcours sur un moment simple.",
+      rewards: [
+        { id: "offert_conditionnel", label: "Offert conditionnel", shortExample: "ex. 2e café offert si vous venez à deux" },
+        { id: "cadeau_commun", label: "Cadeau commun", shortExample: "ex. viennoiserie à partager" },
+        { id: "offre_speciale", label: "Offre spéciale", shortExample: "ex. petit-déjeuner duo réservé" },
+      ],
+    },
+  ],
   restaurant: [
     {
       id: "resto_heures_creuses",
@@ -121,6 +156,41 @@ export const LITE_SCENARIOS_BY_WORLD: Record<LandingWorldId, LiteScenario[]> = {
         { id: "offert", label: "Offert", shortExample: "ex. bouteille offerte" },
         { id: "reduction", label: "Reduction", shortExample: "ex. -10% sur l'addition totale" },
         { id: "experience", label: "Expérience", shortExample: "ex. dessert flambé offert à table — moment mémorable" },
+      ],
+    },
+  ],
+  caviste: [
+    {
+      id: "caviste_selection",
+      title: "Sélection de semaine",
+      mechanicOneLiner:
+        "Le client scanne et voit une sélection réservée sur quelques jours, sans discount brutal.",
+      rewards: [
+        { id: "acces", label: "Accès", shortExample: "ex. cuvée réservée avant le week-end" },
+        { id: "service", label: "Service", shortExample: "ex. dégustation guidée offerte" },
+        { id: "cadeau", label: "Cadeau", shortExample: "ex. verre ou bouchon sommelier offert" },
+      ],
+    },
+    {
+      id: "caviste_duo",
+      title: "Duo dégustation",
+      mechanicOneLiner:
+        "Le client revient avec quelqu'un. Une mécanique sociale ouvre un vrai moment de dégustation à deux.",
+      rewards: [
+        { id: "experience", label: "Expérience", shortExample: "ex. mini-dégustation privée pour deux" },
+        { id: "offert_conditionnel", label: "Offert conditionnel", shortExample: "ex. verre offert si vous venez à deux" },
+        { id: "acces", label: "Accès", shortExample: "ex. sélection duo réservée" },
+      ],
+    },
+    {
+      id: "caviste_retour",
+      title: "Retour choisi",
+      mechanicOneLiner:
+        "Un client revient sur une fenêtre courte après sa première bouteille. Le système l'encourage à rester dans la cave.",
+      rewards: [
+        { id: "service", label: "Service", shortExample: "ex. conseil cave et accord offert" },
+        { id: "cadeau", label: "Cadeau", shortExample: "ex. dégustation sur place" },
+        { id: "acces", label: "Accès", shortExample: "ex. accès à la sélection du mois" },
       ],
     },
   ],

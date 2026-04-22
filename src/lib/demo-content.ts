@@ -63,6 +63,15 @@ const DEMO_WORLD_ASSUMPTIONS: Record<LandingWorldId, DemoWorldAssumptions> = {
     returnPrompt: "Revenez ce week-end",
     weakDayPrompt: "Mardi plus calme",
   },
+  boulangerie: {
+    businessName: "Maison Levain",
+    businessTypeLabel: "Boulangerie",
+    sampleClientName: "Julie P.",
+    merchantType: "boulangerie",
+    invitePrompt: "1 invitation quartier",
+    returnPrompt: "Revenez dans la semaine",
+    weakDayPrompt: "Mardi plus calme",
+  },
   restaurant: {
     businessName: "Maison Serein",
     businessTypeLabel: "Restaurant",
@@ -71,6 +80,15 @@ const DEMO_WORLD_ASSUMPTIONS: Record<LandingWorldId, DemoWorldAssumptions> = {
     invitePrompt: "Invitez une table amie",
     returnPrompt: "Revenez cette semaine",
     weakDayPrompt: "Mardi plus calme",
+  },
+  caviste: {
+    businessName: "Cave des Voisins",
+    businessTypeLabel: "Caviste",
+    sampleClientName: "Antoine V.",
+    merchantType: "caviste",
+    invitePrompt: "Invitez quelqu'un à la dégustation",
+    returnPrompt: "Revenez pour la prochaine sélection",
+    weakDayPrompt: "Mercredi plus calme",
   },
   beaute: {
     businessName: "Atelier Source",

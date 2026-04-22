@@ -49,6 +49,12 @@ const MOMENTS: Record<EngineActivityId, CalendarMoment[]> = {
     { month: 6, label: "Été urbain", reason: "La saison porte le réseau et les duos au comptoir.", scenarioId: "short_challenge", priority: "high" },
     { month: 10, label: "Saison indoor", reason: "Les soirées longues favorisent un moment signature mensuel.", scenarioId: "monthly_gain", priority: "medium" },
   ],
+  caviste: [
+    { month: 2, label: "Foire de printemps", reason: "Le printemps est propice aux sélections et aux dégustations à relancer.", scenarioId: "weekly_rendezvous", priority: "medium" },
+    { month: 5, label: "Apéros d'été", reason: "Les retours choisis et les achats sociaux remontent avant l'été.", scenarioId: "short_challenge", priority: "high" },
+    { month: 10, label: "Beaujolais & cave", reason: "Le moment porte naturellement la dégustation et la conversation autour de la cave.", scenarioId: "monthly_gain", priority: "high" },
+    { month: 11, label: "Fêtes", reason: "Décembre est fort pour remettre une sélection et des retours de valeur dans la boucle.", scenarioId: "starting_loop", priority: "medium" },
+  ],
   restaurant: [
     { month: 1, label: "Saint-Valentin", reason: "Le moment porte naturellement les offres duo et le panier affectif.", scenarioId: "monthly_gain", priority: "high" },
     { month: 4, label: "Milieu de semaine", reason: "Le printemps est utile pour installer un rendez-vous hebdomadaire.", scenarioId: "weekly_rendezvous", priority: "medium" },
@@ -79,6 +85,7 @@ const QUIET_PERIODS: Record<EngineActivityId, string> = {
   boulangerie: "Le creux d'août et les jours de semaine plus plats sont les périodes à protéger.",
   cafe: "Les périodes de bureau ralenti et les matinées moins régulières sont les points de vigilance.",
   bar: "Les inter-saisons creuses et les soirées irrégulières sont les moments à structurer avec un repère clair.",
+  caviste: "Les semaines hors fêtes et les achats trop espacés sont les périodes à retravailler.",
   restaurant: "Les services du milieu de semaine et l'été local sont les moments à travailler.",
   coiffeur: "Les longues périodes sans rendez-vous sont le vrai risque à couvrir.",
   "institut-beaute": "Les trous entre deux séances sont le principal risque de perte.",

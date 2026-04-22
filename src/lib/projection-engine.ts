@@ -55,6 +55,12 @@ export const DEFAULT_PROJECTION_PROFILES: ProjectionProfiles = {
     short_challenge: { revenueWeight: 1.15, returnsWeight: 1.2, primaryEffect: "Séquence de venues rapprochées", secondaryEffect: "Réseau qui s'active sur une courte fenêtre", scenarioRole: "Accélère le retour" },
     monthly_gain: { revenueWeight: 0.94, returnsWeight: 0.88, primaryEffect: "Sujet signature autour du bar", secondaryEffect: "Désir plus fort sans promo permanente", scenarioRole: "Crée un pic d'attention" },
   },
+  caviste: {
+    starting_loop: { revenueWeight: 1, returnsWeight: 1, primaryEffect: "Sélection de cave mieux relancée", secondaryEffect: "Premier retour plus lisible", scenarioRole: "Installe le premier rythme" },
+    weekly_rendezvous: { revenueWeight: 0.9, returnsWeight: 0.84, primaryEffect: "Dégustation hebdo mieux cadrée", secondaryEffect: "Rendez-vous cave plus attendu", scenarioRole: "Travaille un temps faible" },
+    short_challenge: { revenueWeight: 1.12, returnsWeight: 1.08, primaryEffect: "Retour réactivé avant la prochaine bouteille", secondaryEffect: "Cycle resserré sur une fenêtre courte", scenarioRole: "Accélère le retour" },
+    monthly_gain: { revenueWeight: 1.08, returnsWeight: 0.92, primaryEffect: "Sélection du mois plus désirable", secondaryEffect: "Valeur perçue renforcée sans promo brute", scenarioRole: "Crée un pic d'attention" },
+  },
   restaurant: {
     starting_loop: { revenueWeight: 1, returnsWeight: 1, primaryEffect: "Retour entre deux repas", secondaryEffect: "Premier cap simple à expliquer", scenarioRole: "Installe le premier rythme" },
     weekly_rendezvous: { revenueWeight: 0.88, returnsWeight: 0.82, primaryEffect: "Service calme mieux rempli", secondaryEffect: "Repère hebdomadaire plus clair", scenarioRole: "Travaille un temps faible" },
@@ -235,4 +241,3 @@ function buildConfidenceLabelForFamily(family: ProjectionFamily) {
   }
   return "Projection collective et désir"
 }
-

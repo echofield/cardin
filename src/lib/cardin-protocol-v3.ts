@@ -315,6 +315,38 @@ const PRESETS: Record<MerchantProfileId, ProtocolPreset> = {
       budget: 104,
     },
   },
+  caviste: {
+    aov: 32,
+    grossMarginRate: 0.58,
+    seasonBudget: 360,
+    seasonLengthMonths: 3,
+    baseVisitsPerMonth: 1.1,
+    deltaVisitsPerMonth: 0.65,
+    attributionWindowDays: 18,
+    rewardCosts: { midpoint: 2.2, summit: 5.5, propagation: 0 },
+    rewardRedemption: { midpoint: 0.28, summit: 0.14 },
+    incrementality: { direct: 0.6, referral: 0.58 },
+    funnel: {
+      activationRate: 0.48,
+      midpointRate: 0.28,
+      summitRate: 0.14,
+      diamondRate: 0.07,
+      conversionRate: 0.18,
+      maxInvites: 2,
+      referredIncrementalVisits: 1.8,
+    },
+    basketUplift: { engagedVisits: 0, deltaAov: 0 },
+    timeControl: { peakFactor: 1.75 },
+    minGrossProfit: 18,
+    maxDiamondRatio: 0.07,
+    diamond: {
+      tokenCycleDays: 30,
+      tokenCost: 4.8,
+      tokenRedemptionRate: 0.45,
+      maxTokenCycles: 12,
+      budget: 150,
+    },
+  },
   salon: {
     aov: 45,
     grossMarginRate: 0.62,
@@ -788,6 +820,8 @@ function getSeasonObjectiveLine(profileId: MerchantProfileId, profitIncremental:
     case "cafe":
     case "boulangerie":
       return `Objectif de saison: recuperer du rythme sur les heures et jours faibles pour viser ${rounded} de marge additionnelle.`
+    case "caviste":
+      return `Objectif de saison: remettre la cave dans les retours choisis, les degustations et viser ${rounded} de marge additionnelle.`
     case "restaurant":
       return `Objectif de saison: recranter le retour entre les services et viser ${rounded} de marge additionnelle.`
     case "salon":
@@ -807,6 +841,7 @@ export function mapMerchantTypeToProtocolProfile(raw: string | null | undefined)
   if (value === "cafe") return "cafe"
   if (value === "restaurant") return "restaurant"
   if (value === "bar") return "cafe"
+  if (value === "caviste") return "caviste"
   if (value === "boutique") return "boutique"
   if (value === "boulangerie") return "boulangerie"
   if (value === "salon" || value === "beaute" || value === "coiffeur" || value === "institut-beaute") return "salon"

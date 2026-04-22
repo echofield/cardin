@@ -1,6 +1,6 @@
 ﻿import type { LandingWorldId } from "@/lib/landing-content"
 
-export type MerchantProfileId = "generic" | "cafe" | "boulangerie" | "salon" | "boutique" | "restaurant"
+export type MerchantProfileId = "generic" | "cafe" | "boulangerie" | "caviste" | "salon" | "boutique" | "restaurant"
 
 type MetricLabels = {
   trackedClients: string
@@ -382,6 +382,32 @@ const PROFILES: Record<MerchantProfileId, MerchantProfile> = {
         `L'habitude s'installe : ${totalVisits} passages validés, ${repeatClients} clients revenus et ${rewardReadyCards} avantages prêts en boutique.`,
     },
   },
+  caviste: {
+    id: "caviste",
+    businessTypeLabel: "Caviste",
+    promise: "Faire revenir pour la bonne bouteille, la bonne sélection et les bons moments à partager.",
+    ritualPromise: "Le client scanne, passe en attente, puis l'équipe valide son vrai passage en cave ou au comptoir.",
+    scan: {
+      ...baseProfile.scan,
+      eyebrow: "Sélection & dégustation",
+      intro: "Ajoutez votre carte en 10 secondes. Vos passages validés peuvent ouvrir une dégustation, une sélection ou un privilège de cave.",
+      firstImpression: [
+        "Ce QR active votre carte caviste immédiatement.",
+        "Chaque passage validé garde votre sélection en mouvement.",
+        "L'équipe confirme la visite, puis active le bon privilège au bon moment.",
+      ],
+      formIntro: "Une carte pensée pour les retours choisis, les dégustations et les moments de cave qui comptent vraiment.",
+      createdBody: "Votre carte est active. Chaque passage validé par l'équipe vous rapproche d'une dégustation, d'une sélection ou d'un accès réservé.",
+    },
+    card: { ...baseProfile.card, pageEyebrow: "Votre carte caviste" },
+    staff: { ...baseProfile.staff },
+    owner: {
+      ...baseProfile.owner,
+      subtitle: "Retour choisi, sélection, dégustation et cercle du lieu.",
+      summaryNarrative: ({ totalVisits, repeatClients, rewardReadyCards }: { totalVisits: number; repeatClients: number; rewardReadyCards: number }) =>
+        `La cave se raconte : ${totalVisits} passages validés, ${repeatClients} clients revenus et ${rewardReadyCards} privilèges prêts à être ouverts.`,
+    },
+  },
   salon: {
     id: "salon",
     businessTypeLabel: "Salon",
@@ -479,6 +505,8 @@ export function normalizeMerchantProfileId(raw: string | null | undefined): Merc
       return "boutique"
     case "boulangerie":
       return "boulangerie"
+    case "caviste":
+      return "caviste"
     default:
       return "generic"
   }
@@ -496,6 +524,8 @@ export function getLandingWorldForProfile(profileId: MerchantProfileId): Landing
   switch (profileId) {
     case "restaurant":
       return "restaurant"
+    case "caviste":
+      return "caviste"
     case "salon":
       return "beaute"
     case "boutique":
