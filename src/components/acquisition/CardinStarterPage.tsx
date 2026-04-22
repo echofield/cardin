@@ -82,7 +82,7 @@ const ENTRY_CARDS = [
     href: STRIPE_CHALLENGE_LINK || buildContactMailto("Cardin · premier mois", "Bonjour Cardin,\r\n\r\nJe veux commencer avec le Premier mois Cardin.\r\n"),
     external: Boolean(STRIPE_CHALLENGE_LINK),
     featured: true,
-    tax: CHALLENGE_PRICING.taxLabel,
+    tax: `${CHALLENGE_PRICING.activationFee} € TTC`,
   },
   {
     tag: "Saison complète",
@@ -99,12 +99,57 @@ const ENTRY_CARDS = [
   },
 ] as const
 
-const ACTIVITIES = [
-  "Nouveau scan · le client entre dans la saison.",
-  "Cette semaine · mardi devient le rendez-vous.",
-  "Retour validé · le lieu gagne déjà avant la fin.",
-  "Diamond visible · le client voit l'horizon.",
-  "Le rythme s'installe · le passage devient retour.",
+const STARTER_MOMENTS = [
+  {
+    vertical: "restaurant",
+    place: "Bistro du Canal",
+    day: "Mardi",
+    weeklyMoment: "un dîner offert",
+    weeklyDetail: "pour remettre un vrai rendez-vous dans la semaine.",
+    summitTitle: "Un dîner offert",
+    summitDetail: "par mois pendant un an",
+    activity: "Mardi · un dîner offert peut tomber.",
+  },
+  {
+    vertical: "café",
+    place: "Café Montmartre",
+    day: "Mercredi",
+    weeklyMoment: "un café signature offert",
+    weeklyDetail: "pour faire revenir plus vite les habitués.",
+    summitTitle: "Un café offert",
+    summitDetail: "par semaine pendant un an",
+    activity: "Mercredi · un café signature peut tomber.",
+  },
+  {
+    vertical: "bar",
+    place: "Bar Saint-Honoré",
+    day: "Vendredi",
+    weeklyMoment: "une bouteille peut tomber",
+    weeklyDetail: "pour créer une vraie énergie de comptoir.",
+    summitTitle: "Une bouteille offerte",
+    summitDetail: "par mois pendant un an",
+    activity: "Vendredi · une bouteille peut tomber.",
+  },
+  {
+    vertical: "beauté",
+    place: "Maison Beauté",
+    day: "Jeudi",
+    weeklyMoment: "un soin offert",
+    weeklyDetail: "pour transformer le passage en retour choisi.",
+    summitTitle: "Un soin offert",
+    summitDetail: "par trimestre pendant un an",
+    activity: "Jeudi · un soin offert peut tomber.",
+  },
+  {
+    vertical: "boutique",
+    place: "Atelier Marais",
+    day: "Samedi",
+    weeklyMoment: "100 € boutique à gagner",
+    weeklyDetail: "pour donner une vraie scène au lieu et au désir.",
+    summitTitle: "100 € boutique",
+    summitDetail: "par mois pendant un an",
+    activity: "Samedi · 100 € boutique peuvent tomber.",
+  },
 ] as const
 
 const PETIT_SOUVENIR_POINTS = [
@@ -130,11 +175,12 @@ export function CardinStarterPage() {
   const [isFlipped, setIsFlipped] = useState(false)
   const [visits, setVisits] = useState(8)
   const [day, setDay] = useState(42)
-  const [activityIndex, setActivityIndex] = useState(0)
+  const [momentIndex, setMomentIndex] = useState(0)
   const [diamondCount, setDiamondCount] = useState(2)
 
   const progress = Math.min(100, Math.round((day / 90) * 100))
-  const activity = ACTIVITIES[activityIndex % ACTIVITIES.length]
+  const currentMoment = STARTER_MOMENTS[momentIndex % STARTER_MOMENTS.length]
+  const activity = currentMoment.activity
   const challengeCta = ENTRY_CARDS[0]
 
   const metaLine = useMemo(() => "Restaurants · cafés · bars · boutiques · beauté", [])
@@ -144,9 +190,9 @@ export function CardinStarterPage() {
       setIsFlipped((current) => !current)
     }, 9000)
 
-    const activityTimer = window.setInterval(() => {
-      setActivityIndex((current) => current + 1)
-    }, 3200)
+    const momentTimer = window.setInterval(() => {
+      setMomentIndex((current) => current + 1)
+    }, 5200)
 
     const visitTimer = window.setInterval(() => {
       setVisits((current) => current + 1)
@@ -162,7 +208,7 @@ export function CardinStarterPage() {
 
     return () => {
       window.clearInterval(flipTimer)
-      window.clearInterval(activityTimer)
+      window.clearInterval(momentTimer)
       window.clearInterval(visitTimer)
       window.clearInterval(dayTimer)
     }
@@ -302,16 +348,24 @@ export function CardinStarterPage() {
 
                   <div className="mt-5 text-center">
                     <p className="font-serif text-[14px] tracking-[0.4em] text-[#1a2a22]">CARDIN</p>
-                    <p className="mt-1 text-[8px] uppercase tracking-[0.3em] text-[#8a8578]">Premier mois · lieu en test</p>
+                    <p className="mt-1 text-[8px] uppercase tracking-[0.3em] text-[#8a8578]">Saison · {currentMoment.place}</p>
+                  </div>
+
+                  <div className="mt-5 border-y border-[#d4cdbd] px-4 py-4 text-center">
+                    <p className="text-[8px] uppercase tracking-[0.3em] text-[#8c6a44]">À gagner</p>
+                    <p className="mt-2 font-serif text-[22px] leading-[1.2] text-[#1a2a22]">
+                      <em className="italic text-[#0f3d2e]">{currentMoment.summitTitle}</em>
+                    </p>
+                    <p className="mt-1 font-serif text-[12px] italic text-[#3d4d43]">{currentMoment.summitDetail}</p>
                   </div>
 
                   <div className="mt-5 border-y border-[#d4cdbd] px-4 py-4 text-center">
                     <p className="text-[8px] uppercase tracking-[0.3em] text-[#8c6a44]">Cette semaine</p>
                     <p className="mt-2 font-serif text-[22px] leading-[1.2] text-[#1a2a22]">
-                      Mardi, un moment
-                      <em className="ml-1 italic text-[#0f3d2e]">peut tomber.</em>
+                      {currentMoment.day},
+                      <em className="ml-1 italic text-[#0f3d2e]">{currentMoment.weeklyMoment}</em>
                     </p>
-                    <p className="mt-1 font-serif text-[12px] italic text-[#3d4d43]">Le client scanne, entre, puis sait quand revenir.</p>
+                    <p className="mt-1 font-serif text-[12px] italic text-[#3d4d43]">{currentMoment.weeklyDetail}</p>
                   </div>
 
                   <div className="mt-5">
@@ -390,14 +444,14 @@ export function CardinStarterPage() {
 
                   <div className="mt-4 text-center">
                     <p className="font-serif text-[14px] tracking-[0.4em] text-[#1a2a22]">CARDIN</p>
-                    <p className="mt-1 text-[8px] uppercase tracking-[0.3em] text-[#8c6a44]">lecture saison</p>
+                    <p className="mt-1 text-[8px] uppercase tracking-[0.3em] text-[#8c6a44]">{currentMoment.vertical}</p>
                   </div>
 
                   <div className="my-auto flex flex-col gap-4">
                     {[
                       ["Fréquence de retour", "plus lisible"],
-                      ["Moment de la semaine", "vrai mardi à activer"],
-                      ["Lieu", "plus clair au comptoir"],
+                      ["Moment de la semaine", currentMoment.day.toLowerCase()],
+                      ["Lieu", currentMoment.vertical],
                       ["Diamond", "horizon visible"],
                     ].map(([label, value]) => (
                       <div className="grid grid-cols-[1fr_auto] items-end gap-4 border-b border-dashed border-[#d4b892] pb-3" key={label}>
