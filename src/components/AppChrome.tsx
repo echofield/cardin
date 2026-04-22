@@ -8,6 +8,8 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const hideChrome =
     pathname === "/" ||
+    pathname === "/commencer" ||
+    pathname.startsWith("/commencer/") ||
     pathname === "/parcours" ||
     pathname.startsWith("/parcours/") ||
     pathname === "/presentation" ||
