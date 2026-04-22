@@ -90,6 +90,20 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
   const [submitting, setSubmitting] = useState(false)
   const [cardData, setCardData] = useState<CardCreateSuccess | null>(null)
 
+  const cardOpenUrl = useMemo(() => {
+    if (!cardData) return null
+    if (!demo) return cardData.cardUrl
+
+    try {
+      const url = new URL(cardData.cardUrl)
+      url.searchParams.set("demo", "1")
+      return url.toString()
+    } catch {
+      const separator = cardData.cardUrl.includes("?") ? "&" : "?"
+      return `${cardData.cardUrl}${separator}demo=1`
+    }
+  }, [cardData, demo])
+
   useEffect(() => {
     let isMounted = true
 
@@ -193,6 +207,16 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
     }
   }
 
+  useEffect(() => {
+    if (!cardOpenUrl || typeof window === "undefined") return
+
+    const timer = window.setTimeout(() => {
+      window.location.href = cardOpenUrl
+    }, 900)
+
+    return () => window.clearTimeout(timer)
+  }, [cardOpenUrl])
+
   if (loadingMerchant) {
     return (
       <main className="min-h-dvh-safe bg-[#F8F7F2] px-4 py-12 pb-[max(3rem,env(safe-area-inset-bottom,0px))] text-[#173A2E]">
@@ -281,7 +305,7 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
 
             <Card className="p-5">
               <p className="text-xs uppercase tracking-[0.12em] text-[#5F6B62]">C'est bon. Vous êtes dedans.</p>
-              <p className="mt-2 text-sm text-[#556159]">{profile.scan.createdBody}</p>
+              <p className="mt-2 text-sm text-[#556159]">Votre carte Cardin s'ouvre automatiquement.</p>
               <p className="mt-2 text-sm text-[#173A2E]">{cardData.card.customerName}</p>
               <p className="mt-1 text-sm text-[#173A2E]">
                 {cardData.card.stamps} / {cardData.card.targetVisits}
@@ -289,18 +313,22 @@ export function ScanExperience({ merchantId, demo = false }: { merchantId: strin
               <p className="mt-1 text-sm text-[#2A3F35]">{cardData.card.midpoint.copy}</p>
               <p className="mt-2 text-xs uppercase tracking-[0.12em] text-[#5D675F]">Revenez. Cette semaine compte.</p>
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <Button onClick={() => void openWalletFlow(cardData.appleWalletUrl, "apple")} variant="secondary">
-                  {profile.scan.appleWalletLabel}
-                </Button>
-                <Button onClick={() => void openWalletFlow(cardData.googleWalletUrl, "google")} variant="secondary">
-                  {profile.scan.googleWalletLabel}
-                </Button>
-              </div>
+              <p className="mt-4 text-sm text-[#556159]">
+                Ensuite, vous pourrez afficher <span className="text-[#173A2E]">Mon QR</span>, voir le détail et ajouter la carte à Wallet.
+              </p>
 
-              <Link className="mt-4 inline-block text-sm underline" href={`${cardData.cardUrl}${demo ? "?demo=1" : ""}`}>
-                {profile.scan.openCardLabel}
-              </Link>
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                <Link className="inline-block text-sm underline" href={cardOpenUrl ?? `${cardData.cardUrl}${demo ? "?demo=1" : ""}`}>
+                  {profile.scan.openCardLabel}
+                </Link>
+                <button
+                  className="text-left text-sm underline text-[#556159] transition hover:text-[#173A2E]"
+                  onClick={() => void openWalletFlow(cardData.appleWalletUrl, "apple")}
+                  type="button"
+                >
+                  {profile.scan.appleWalletLabel}
+                </button>
+              </div>
             </Card>
           </div>
         )}

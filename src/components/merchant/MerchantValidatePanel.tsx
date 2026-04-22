@@ -6,6 +6,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { getMerchantProfile, type MerchantProfileId } from "@/lib/merchant-profile"
 import { Button, Card } from "@/ui"
 
+type ScannerState = "idle" | "starting" | "scanning" | "manual" | "confirming" | "confirmed"
+type DetectionResult = { rawValue?: string }
+type BarcodeDetectorLike = { detect: (source: ImageBitmapSource) => Promise<DetectionResult[]> }
+
+declare global {
+  interface Window {
+    BarcodeDetector?: new (options: { formats: string[] }) => BarcodeDetectorLike
+  }
+}
+
 type SummitRewardPending = {
   optionId: string
   title: string
@@ -95,6 +105,19 @@ type ValidateResponse = {
   mission?: MissionPending | null
 }
 
+type ScanCardResponse = {
+  ok?: boolean
+  error?: string
+  reused?: boolean
+  card?: {
+    id: string
+    code: string
+    customerName: string
+    stamps: number
+    targetVisits: number
+  }
+}
+
 type MissionValidationState = {
   groupSize: string
   sameTicketConfirmed: boolean
@@ -132,10 +155,19 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
   const [consumeMessage, setConsumeMessage] = useState("")
   const [missionMessage, setMissionMessage] = useState("")
   const [missionValidation, setMissionValidation] = useState<MissionValidationState>(DEFAULT_MISSION_VALIDATION)
+  const [scannerState, setScannerState] = useState<ScannerState>("idle")
+  const [scanNote, setScanNote] = useState("")
+  const [manualCode, setManualCode] = useState("")
+  const [lastScan, setLastScan] = useState("")
 
   const validateIdemRef = useRef<string | null>(null)
   const consumeIdemRef = useRef<string | null>(null)
   const missionIdemRef = useRef<string | null>(null)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const detectorRef = useRef<BarcodeDetectorLike | null>(null)
+  const frameRef = useRef<number | null>(null)
+  const scanningRef = useRef(false)
   const profile = useMemo(() => getMerchantProfile(profileId), [profileId])
 
   const loadPending = useCallback(async () => {
@@ -150,6 +182,67 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
       setLoading(false)
     }
   }, [])
+
+  const stopScanner = useCallback(() => {
+    scanningRef.current = false
+    if (frameRef.current !== null) cancelAnimationFrame(frameRef.current)
+    frameRef.current = null
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop())
+    }
+    streamRef.current = null
+    if (videoRef.current) {
+      videoRef.current.pause()
+      videoRef.current.srcObject = null
+    }
+  }, [])
+
+  const handleScannedCard = useCallback(
+    async (rawValue: string) => {
+      stopScanner()
+      setScannerState("confirming")
+      setScanNote("")
+
+      try {
+        const res = await fetch("/api/merchant/scan-card", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cardCode: rawValue }),
+        })
+        const data = (await res.json()) as ScanCardResponse
+        if (!res.ok || !data.ok || !data.card) {
+          setScannerState("manual")
+          setScanNote(
+            data.error === "card_not_found"
+              ? "Carte introuvable. Vérifiez le code ou rescanner le QR client."
+              : "Le code client n'a pas pu être préparé pour validation.",
+          )
+          return
+        }
+
+        setLastScan(data.card.customerName || data.card.code)
+        setScannerState("confirmed")
+        setScanNote(
+          data.reused
+            ? "Passage déjà ouvert. Vous pouvez valider tout de suite."
+            : "QR lu. Le passage est prêt à être validé au comptoir.",
+        )
+        setManualCode("")
+        setPostValidate(null)
+        setActionState("idle")
+        setConsumeState("idle")
+        setMissionState("idle")
+        setMessage("")
+        setConsumeMessage("")
+        setMissionMessage("")
+        await loadPending()
+      } catch {
+        setScannerState("manual")
+        setScanNote("La lecture a échoué. Utilisez la saisie manuelle pour continuer.")
+      }
+    },
+    [loadPending, stopScanner],
+  )
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -194,6 +287,46 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
     return () => clearInterval(t)
   }, [loadPending])
 
+  useEffect(() => () => stopScanner(), [stopScanner])
+
+  useEffect(() => {
+    if (scannerState !== "scanning") return
+    scanningRef.current = true
+
+    const loop = async () => {
+      const video = videoRef.current
+      const detector = detectorRef.current
+      if (!scanningRef.current || !video || !detector) return
+      if (video.readyState >= 2) {
+        try {
+          const codes = await detector.detect(video)
+          const value = codes[0]?.rawValue?.trim()
+          if (value) {
+            await handleScannedCard(value)
+            return
+          }
+        } catch {
+          stopScanner()
+          setScannerState("manual")
+          setScanNote("Lecture QR indisponible sur cet appareil. Passez en saisie manuelle.")
+          return
+        }
+      }
+      frameRef.current = requestAnimationFrame(() => {
+        void loop()
+      })
+    }
+
+    frameRef.current = requestAnimationFrame(() => {
+      void loop()
+    })
+
+    return () => {
+      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current)
+      frameRef.current = null
+    }
+  }, [handleScannedCard, scannerState, stopScanner])
+
   const mapValidateError = (error?: string) => {
     if (!error) return profile.staff.validateErrors.fallback
     return profile.staff.validateErrors[error as keyof typeof profile.staff.validateErrors] ?? profile.staff.validateErrors.fallback
@@ -207,6 +340,43 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
     }
     if (error === "no_active_mission") return "Aucune mission active pour ce client."
     return profile.staff.consumeErrors[error as keyof typeof profile.staff.consumeErrors] ?? profile.staff.consumeErrors.fallback
+  }
+
+  const startScanner = async () => {
+    setScanNote("")
+    if (typeof window === "undefined" || !navigator.mediaDevices?.getUserMedia || !window.BarcodeDetector) {
+      setScannerState("manual")
+      setScanNote("Caméra QR indisponible ici. Utilisez la saisie manuelle.")
+      return
+    }
+
+    try {
+      setScannerState("starting")
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } },
+        audio: false,
+      })
+      streamRef.current = stream
+      detectorRef.current = new window.BarcodeDetector({ formats: ["qr_code"] })
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        await videoRef.current.play()
+      }
+      setScannerState("scanning")
+      setScanNote("Placez le QR client dans le cadre.")
+    } catch {
+      stopScanner()
+      setScannerState("manual")
+      setScanNote("Accès caméra refusé ou bloqué. Utilisez la saisie manuelle.")
+    }
+  }
+
+  const resetScanner = () => {
+    stopScanner()
+    setScannerState("idle")
+    setScanNote("")
+    setManualCode("")
+    setLastScan("")
   }
 
   const onValidate = async () => {
@@ -373,6 +543,86 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
         <p className="mt-2 text-sm leading-7 text-[#556159]">{profile.staff.subtitle}</p>
       </div>
 
+      <Card className="p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.14em] text-[#5E6961]">Validation rapide</p>
+            <p className="mt-2 text-sm leading-6 text-[#173A2E]">Scannez le QR du client ou saisissez son code pour ouvrir immédiatement le passage.</p>
+          </div>
+          <div className="rounded-full border border-[#D8D4CA] bg-[#FBFAF6] px-3 py-2 text-[10px] uppercase tracking-[0.14em] text-[#7A847C]">
+            Demo staff
+          </div>
+        </div>
+
+        <div className="mt-5 space-y-3">
+          {scannerState === "scanning" || scannerState === "starting" ? (
+            <div className="relative overflow-hidden rounded-[1.5rem] border border-[#DCD5C8] bg-[#111714]">
+              <video className="h-[260px] w-full object-cover" muted playsInline ref={videoRef} />
+              <div className="pointer-events-none absolute inset-[16%_14%] rounded-[1.4rem] border border-white/80 shadow-[0_0_0_999px_rgba(0,0,0,0.18)]" />
+              <div className="pointer-events-none absolute left-[14%] right-[14%] top-1/2 h-[2px] bg-[#4ADE80] shadow-[0_0_14px_rgba(74,222,128,0.7)]" />
+            </div>
+          ) : scannerState === "manual" ? (
+            <div className="rounded-[1.5rem] border border-[#DCD5C8] bg-[#FBFAF6] p-4">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-[#5E6961]">Code client</p>
+              <p className="mt-2 text-sm leading-6 text-[#556159]">Utilisez le code visible sur la carte client si la caméra n'est pas disponible.</p>
+              <input
+                className="mt-4 h-12 w-full rounded-[1rem] border border-[#D5DBD1] bg-white px-4 text-sm tracking-[0.08em] text-[#173A2E] uppercase"
+                onChange={(event) => setManualCode(event.target.value)}
+                placeholder="CD-XXXX"
+                value={manualCode}
+              />
+              <Button className="mt-3 w-full" disabled={manualCode.trim().length < 4} onClick={() => void handleScannedCard(manualCode.trim())} type="button">
+                Préparer la validation
+              </Button>
+            </div>
+          ) : (
+            <button
+              className="flex min-h-[220px] w-full flex-col justify-between rounded-[1.5rem] border border-[#173A2E] bg-[#173A2E] p-5 text-left text-[#FBFAF6] transition hover:bg-[#214939]"
+              onClick={() => void startScanner()}
+              type="button"
+            >
+              <div className="flex items-center gap-4">
+                <div className="grid h-14 w-14 place-items-center rounded-[1rem] border border-white/15 bg-white/5 text-[11px] uppercase tracking-[0.16em]">
+                  Scan
+                </div>
+                <div>
+                  <p className="text-base">Scanner le QR du client</p>
+                  <p className="mt-1 text-xs leading-5 text-[#D9E3DE]">Lecture rapide, ouverture du passage, validation ensuite en un geste.</p>
+                </div>
+              </div>
+              <p className="text-xs leading-5 text-[#D9E3DE]">Sur iPhone ou Android, un fallback manuel reste disponible au comptoir.</p>
+            </button>
+          )}
+
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              className="w-full"
+              disabled={scannerState === "starting" || scannerState === "scanning" || scannerState === "confirming"}
+              onClick={() => {
+                stopScanner()
+                setScannerState("manual")
+                setScanNote("Saisissez le code visible sur la carte client.")
+              }}
+              type="button"
+              variant="secondary"
+            >
+              Code manuel
+            </Button>
+            <Button className="w-full" onClick={resetScanner} type="button" variant="subtle">
+              Réinitialiser
+            </Button>
+          </div>
+
+          <div className="rounded-[1rem] border border-[#E4DED2] bg-[#FBFAF6] px-4 py-3">
+            <p className="text-[10px] uppercase tracking-[0.14em] text-[#7B837D]">Dernière lecture</p>
+            <p className="mt-2 text-sm font-medium text-[#173A2E]">{lastScan || "Aucune lecture encore"}</p>
+            <p className="mt-2 text-sm leading-6 text-[#556159]">
+              {scanNote || "Le QR client prépare le passage. Ensuite, la validation métier Cardin continue exactement comme aujourd'hui."}
+            </p>
+          </div>
+        </div>
+      </Card>
+
       {protocol ? (
         <Card className="p-5">
           <p className="text-[10px] uppercase tracking-[0.14em] text-[#5E6961]">Cadre de saison</p>
@@ -514,4 +764,3 @@ export function MerchantValidatePanel({ merchantId }: { merchantId: string }) {
     </div>
   )
 }
-

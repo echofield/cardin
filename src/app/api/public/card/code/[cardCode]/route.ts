@@ -11,6 +11,7 @@ export async function GET(request: Request, { params }: { params: { cardCode: st
   try {
     const supabase = createSupabaseServiceClient()
     const code = normalizeCardCode(params.cardCode)
+    const origin = new URL(request.url).origin
 
     const { data: row, error: lookupError } = await supabase.from("cards").select("id").eq("card_code", code).maybeSingle()
 
@@ -32,7 +33,15 @@ export async function GET(request: Request, { params }: { params: { cardCode: st
       return NextResponse.json({ ok: false, error: "card_not_found" }, { status: 404 })
     }
 
-    return NextResponse.json(payload)
+    return NextResponse.json({
+      ...payload,
+      wallet: {
+        appleUrl: `${origin}/api/wallet/apple/${payload.card.id}`,
+        googleUrl: `${origin}/api/wallet/google/${payload.card.id}`,
+        appleReady: Boolean(process.env.APPLE_WALLET_PASS_URL_TEMPLATE),
+        googleReady: Boolean(process.env.GOOGLE_WALLET_PASS_URL_TEMPLATE),
+      },
+    })
   } catch (error) {
     return NextResponse.json({ ok: false, error: (error as Error).message }, { status: 500 })
   }
