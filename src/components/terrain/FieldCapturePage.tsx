@@ -14,6 +14,7 @@ type SubmitState =
       persisted: boolean
       emailSent: boolean
       whatsappHref?: string | null
+      directPayUrl: string
     }
   | { status: "error"; message: string; fallbackMailto?: string }
 
@@ -82,6 +83,7 @@ export function FieldCapturePage() {
         persisted: Boolean(payload.persisted),
         emailSent: Boolean(payload.emailSent),
         whatsappHref: payload.whatsappHref,
+        directPayUrl: "/regler",
       })
     } catch {
       setState({
@@ -184,6 +186,24 @@ export function FieldCapturePage() {
                     Ouvrir WhatsApp
                   </a>
                 ) : null}
+                <Link
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-[#d6dcd3] bg-[#f5f2eb] px-5 text-sm font-medium text-[#173a2e] transition hover:border-[#b8c3b5] hover:bg-[#f1eee5]"
+                  href={`${state.directPayUrl}?offer=starter`}
+                >
+                  Régler 180 €
+                </Link>
+                <Link
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-[#d6dcd3] bg-[#f5f2eb] px-5 text-sm font-medium text-[#173a2e] transition hover:border-[#b8c3b5] hover:bg-[#f1eee5]"
+                  href={`${state.directPayUrl}?offer=season`}
+                >
+                  Régler 490 €
+                </Link>
+                <Link
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-[#d6dcd3] px-5 text-sm font-medium text-[#173a2e] transition hover:border-[#b8c3b5] hover:bg-[#f8f5ee]"
+                  href={state.directPayUrl}
+                >
+                  Choisir sur la page de close
+                </Link>
               </div>
             </div>
           ) : null}
