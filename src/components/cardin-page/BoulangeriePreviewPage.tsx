@@ -70,7 +70,7 @@ export function BoulangeriePreviewPage({
         <div className="text-left">
           <p className="mb-4 inline-flex items-center gap-3 text-[10px] uppercase tracking-[0.32em] text-[#8c6a44]">
             <span className="h-px w-[14px] bg-[#b8956a]/70" />
-            Preview boulangerie
+            Version comptoir
           </p>
           <h1 className="font-serif text-[clamp(46px,14vw,88px)] leading-[0.96] tracking-[-0.03em] text-[#1a2a22]">
             Ce qui se voit
@@ -83,8 +83,8 @@ export function BoulangeriePreviewPage({
             en version comptoir.
           </p>
           <p className="mt-5 max-w-[540px] font-serif text-[15px] italic leading-[1.6] text-[#3d4d43] sm:text-[16px]">
-            Cette page montre le rendu le plus concret pour demain: ce que le lieu affiche a l'entree, ce que le client
-            comprend, et comment le Diamond choisi change le haut du systeme sans le rendre froid.
+            Cette page montre ce que le lieu affiche a l'entree, ce que le client comprend en quelques secondes, et
+            comment le Diamond choisi change le haut du systeme sans le rendre froid.
           </p>
 
           <div className="mt-8">
@@ -229,7 +229,11 @@ export function BoulangeriePreviewPage({
 
       <section className="relative z-[2] mx-auto max-w-[1080px] px-6 pb-20 md:px-8 lg:px-12">
         <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-          <article className="rounded-[6px] border border-[#c9b28d] bg-[linear-gradient(180deg,#fff8ef_0%,#f6efe3_100%)] px-7 py-8 shadow-[0_12px_30px_rgba(15,61,46,0.04)]">
+          <InteractiveSurface
+            description={scanHref ? "Ouvrir l'experience client" : "Ouvrir la page du lieu"}
+            href={scanHref ?? activationHref}
+            tone="warm"
+          >
             <span className="inline-flex rounded-full border border-[#d4b892] bg-[rgba(184,149,106,0.12)] px-3 py-1 text-[9px] uppercase tracking-[0.2em] text-[#8c6a44]">
               Affiche comptoir
             </span>
@@ -254,9 +258,13 @@ export function BoulangeriePreviewPage({
                 detail={diamond.detail}
               />
             </div>
-          </article>
+          </InteractiveSurface>
 
-          <article className="rounded-[6px] border border-[#d4cdbd] bg-[#f2ede4] px-7 py-8 shadow-[0_12px_30px_rgba(15,61,46,0.04)]">
+          <InteractiveSurface
+            description={merchantDashboardHref ? "Ouvrir le cote marchand" : "Ouvrir la page Cardin du lieu"}
+            href={merchantDashboardHref ?? activationHref}
+            tone="base"
+          >
             <span className="inline-flex rounded-full border border-[#d4b892] bg-[rgba(184,149,106,0.12)] px-3 py-1 text-[9px] uppercase tracking-[0.2em] text-[#8c6a44]">
               Suite reelle
             </span>
@@ -282,21 +290,7 @@ export function BoulangeriePreviewPage({
               />
             </div>
 
-            {scanHref || merchantDashboardHref ? (
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                {scanHref ? (
-                  <Link className={cn(buttonVariants({ variant: "primary", size: "md" }), "justify-center")} href={scanHref}>
-                    Tester le scan reel
-                  </Link>
-                ) : null}
-                {merchantDashboardHref ? (
-                  <Link className={cn(buttonVariants({ variant: "secondary", size: "md" }), "justify-center")} href={merchantDashboardHref}>
-                    Voir le cote marchand
-                  </Link>
-                ) : null}
-              </div>
-            ) : null}
-          </article>
+          </InteractiveSurface>
         </div>
 
         <div className="mt-10 grid border-y border-[#d4cdbd] md:grid-cols-3">
@@ -333,6 +327,37 @@ function FactPanel({
       <p className="mt-2 font-serif text-[18px] leading-[1.2] text-[#1a2a22]">{value}</p>
       <p className="mt-2 font-serif text-[13px] italic leading-[1.5] text-[#3d4d43]">{detail}</p>
     </div>
+  )
+}
+
+function InteractiveSurface({
+  href,
+  description,
+  tone,
+  children,
+}: {
+  href: string
+  description: string
+  tone: "warm" | "base"
+  children: React.ReactNode
+}) {
+  return (
+    <Link
+      className={cn(
+        "group block rounded-[6px] border px-7 py-8 shadow-[0_12px_30px_rgba(15,61,46,0.04)] transition duration-200 hover:-translate-y-[2px] hover:shadow-[0_20px_45px_rgba(15,61,46,0.08)]",
+        tone === "warm"
+          ? "border-[#c9b28d] bg-[linear-gradient(180deg,#fff8ef_0%,#f6efe3_100%)] hover:border-[#b8956a]"
+          : "border-[#d4cdbd] bg-[#f2ede4] hover:border-[#b8956a]",
+      )}
+      href={href}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">{children}</div>
+        <div className="shrink-0 rounded-full border border-[#d4b892] bg-[rgba(255,252,246,0.72)] px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-[#8c6a44] transition group-hover:border-[#0f3d2e] group-hover:text-[#0f3d2e]">
+          {description}
+        </div>
+      </div>
+    </Link>
   )
 }
 
