@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { cn } from "@/lib/utils"
@@ -62,6 +63,7 @@ function resolveProgress(visits: number) {
 }
 
 export function PompetteDemoPage({ merchantId }: { merchantId?: string | null }) {
+  const router = useRouter()
   const [screen, setScreen] = useState<Screen>("entry")
   const [digits, setDigits] = useState<string[]>(Array.from({ length: CODE_LENGTH }, () => ""))
   const [name, setName] = useState("")
@@ -131,7 +133,12 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
   }
 
   function handlePresentAtCounter() {
-    showToast("Montrez votre carte à la caisse")
+    if (staffValidateHref) {
+      router.push(staffValidateHref)
+      return
+    }
+
+    showToast("Ajoutez un merchantId pour ouvrir l'écran caisse")
   }
 
   function handleInvite() {
