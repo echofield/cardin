@@ -131,7 +131,7 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
   }
 
   function handlePresentAtCounter() {
-    showToast("Présentez votre carte à la caisse")
+    showToast("Montrez votre carte à la caisse")
   }
 
   function handleInvite() {
@@ -388,9 +388,9 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
               <div className={styles.actionMark}>◆</div>
               <div className={styles.actionBody}>
                 <div className={styles.actionTitle}>
-                  Présenter à la <em>caisse</em>
+                  Je suis à la <em>caisse</em>
                 </div>
-                <div className={styles.actionDesc}>Montrez cette carte au comptoir. L&apos;équipe valide le passage.</div>
+                <div className={styles.actionDesc}>Montrez cette carte au comptoir. L&apos;équipe valide votre visite.</div>
               </div>
               <div className={styles.actionArrow}>→</div>
             </button>
@@ -411,7 +411,7 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
                   <Link className={styles.realFlowLink} href={staffValidateHref ?? "#"}>
                     <div>
                       <div className={styles.realFlowTitle}>Ouvrir l’écran caisse</div>
-                      <div className={styles.realFlowDesc}>Le staff valide le passage ou consomme le cadeau.</div>
+                      <div className={styles.realFlowDesc}>Le staff valide la visite ou consomme l&apos;avantage.</div>
                     </div>
                     <div className={styles.actionArrow}>→</div>
                   </Link>
