@@ -78,7 +78,8 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
   const cardHello = name.trim() ? `Coucou ${name.trim()}, vous êtes ici` : "Coucou, vous êtes ici"
 
   const realScanHref = merchantId ? `/scan/${merchantId}?demo=1` : null
-  const realMerchantHref = merchantId ? `/merchant/${merchantId}?demo=1` : null
+  const staffValidateHref = merchantId ? `/merchant/${merchantId}/valider?demo=1` : null
+  const journalHref = "/boulangerie/pompette/journal"
 
   useEffect(() => {
     if (screen !== "entry") return
@@ -129,9 +130,8 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
     setScreen("card")
   }
 
-  function handlePassageScan() {
-    setVisits((current) => current + 1)
-    showToast("Passage enregistré")
+  function handlePresentAtCounter() {
+    showToast("Présentez votre carte à la caisse")
   }
 
   function handleInvite() {
@@ -384,39 +384,48 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
               <div className={styles.actionArrow}>→</div>
             </button>
 
-            <button className={styles.actionTile} onClick={handlePassageScan} type="button">
+            <button className={styles.actionTile} onClick={handlePresentAtCounter} type="button">
               <div className={styles.actionMark}>◆</div>
               <div className={styles.actionBody}>
                 <div className={styles.actionTitle}>
-                  Faire valider mon <em>passage</em>
+                  Présenter à la <em>caisse</em>
                 </div>
-                <div className={styles.actionDesc}>Votre dernier scan · mardi 14h22, viennoiserie du jour.</div>
+                <div className={styles.actionDesc}>Montrez cette carte au comptoir. L&apos;équipe valide le passage.</div>
               </div>
               <div className={styles.actionArrow}>→</div>
             </button>
           </div>
 
-          {merchantId ? (
-            <div className={styles.realFlowBlock}>
-              <div className={styles.realFlowLabel}>Passer en vrai</div>
-              <div className={styles.realFlowLinks}>
-                <Link className={styles.realFlowLink} href={realScanHref ?? "#"}>
-                  <div>
-                    <div className={styles.realFlowTitle}>Ouvrir l’entrée client</div>
-                    <div className={styles.realFlowDesc}>Le vrai flow scan Cardin, en mode démo.</div>
-                  </div>
-                  <div className={styles.actionArrow}>→</div>
-                </Link>
-                <Link className={styles.realFlowLink} href={realMerchantHref ?? "#"}>
-                  <div>
-                    <div className={styles.realFlowTitle}>Voir le tableau du lieu</div>
-                    <div className={styles.realFlowDesc}>Le côté marchand réel, pour raconter la saison au commerce.</div>
-                  </div>
-                  <div className={styles.actionArrow}>→</div>
-                </Link>
-              </div>
+          <div className={styles.realFlowBlock}>
+            <div className={styles.realFlowLabel}>La boucle complète</div>
+            <div className={styles.realFlowLinks}>
+              {merchantId ? (
+                <>
+                  <Link className={styles.realFlowLink} href={realScanHref ?? "#"}>
+                    <div>
+                      <div className={styles.realFlowTitle}>Ouvrir l’entrée client</div>
+                      <div className={styles.realFlowDesc}>Le vrai flow scan Cardin, en mode démo.</div>
+                    </div>
+                    <div className={styles.actionArrow}>→</div>
+                  </Link>
+                  <Link className={styles.realFlowLink} href={staffValidateHref ?? "#"}>
+                    <div>
+                      <div className={styles.realFlowTitle}>Ouvrir l’écran caisse</div>
+                      <div className={styles.realFlowDesc}>Le staff valide le passage ou consomme le cadeau.</div>
+                    </div>
+                    <div className={styles.actionArrow}>→</div>
+                  </Link>
+                </>
+              ) : null}
+              <Link className={styles.realFlowLink} href={journalHref}>
+                <div>
+                  <div className={styles.realFlowTitle}>Voir le journal du jour</div>
+                  <div className={styles.realFlowDesc}>La gérante voit les passages, retours, copains et cadeaux du jour.</div>
+                </div>
+                <div className={styles.actionArrow}>→</div>
+              </Link>
             </div>
-          ) : null}
+          </div>
 
           <div className={styles.shopBlock}>
             <div className={styles.shopLabel}>Votre lieu Pompette</div>
