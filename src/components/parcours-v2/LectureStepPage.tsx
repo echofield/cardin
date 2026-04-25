@@ -151,17 +151,20 @@ export function LectureStepPage() {
           </p>
         </div>
 
-        <div className="relative min-h-[760px] pb-8 pt-9 sm:min-h-[640px] sm:pt-8 md:min-h-[520px]">
+        <div className="mb-4 flex min-h-7 items-center">
           {showBack ? (
             <button
-              className="absolute left-0 top-0 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-[#8a8578] transition hover:text-[#0f3d2e]"
+              className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-[#8a8578] transition hover:text-[#0f3d2e]"
               onClick={goBack}
               type="button"
             >
               <span aria-hidden="true">←</span>
-              <span>Retour</span>
+              <span className="hidden sm:inline">Retour</span>
             </button>
           ) : null}
+        </div>
+
+        <div className="relative min-h-[760px] pb-8 sm:min-h-[640px] md:min-h-[520px]">
 
           <Panel active={panelKey === "business"}>
             <PanelKicker label="Votre cadre" />
