@@ -13,7 +13,7 @@ const ROUND_STEPS = [
     name: "First Round",
     state: "filled",
     action: "Entrer avec un code Round.",
-    detail: "La carte est creee, le client voit le sommet et garde son historique.",
+    detail: "La carte est creee, le client voit le sommet et garde son historique apres la saison.",
   },
   {
     name: "Second Round",
@@ -24,8 +24,8 @@ const ROUND_STEPS = [
   {
     name: "Duo Round",
     state: "current",
-    action: "Venir avec quelqu'un.",
-    detail: "Un habitue fait entrer une nouvelle personne dans la saison.",
+    action: "Inviter quelqu'un a entrer dans la saison.",
+    detail: "Ton lien d'invitation fait entrer une nouvelle personne et te rapproche de la liste Diamond.",
   },
   {
     name: "Heavy Round",
@@ -36,8 +36,8 @@ const ROUND_STEPS = [
   {
     name: "Diamond",
     state: "empty",
-    action: "Arriver au sommet.",
-    detail: "Un seul gagnant obtient 1 menu Round par mois pendant 1 an.",
+    action: "Entrer dans la liste finale.",
+    detail: "Quand la quete est remplie, tu entres dans la liste Diamond. Le gagnant est tire pendant un event Round.",
   },
 ] as const
 
@@ -55,6 +55,8 @@ function formatClock(now: Date) {
 export function RoundDemoPage() {
   const [screen, setScreen] = useState<"entry" | "card">("entry")
   const [digits, setDigits] = useState<string[]>(Array.from({ length: CODE_LENGTH }, () => ""))
+  const [firstName, setFirstName] = useState("")
+  const [birthDate, setBirthDate] = useState("")
   const [now, setNow] = useState(() => new Date())
   const [selectedStepIndex, setSelectedStepIndex] = useState(2)
   const [pending, setPending] = useState(false)
@@ -70,6 +72,7 @@ export function RoundDemoPage() {
   }, [digits])
   const clock = formatClock(now)
   const selectedStep = ROUND_STEPS[selectedStepIndex]
+  const displayName = firstName.trim() || "toi"
 
   useEffect(() => {
     if (screen !== "entry") return
@@ -113,6 +116,8 @@ export function RoundDemoPage() {
 
   function openDemoCard() {
     setDigits(["0", "4", "1", "8"])
+    setFirstName("Nora")
+    setBirthDate("1998-04-18")
     openCard()
   }
 
@@ -177,6 +182,26 @@ export function RoundDemoPage() {
             <div className={styles.codeHelper}>4 chiffres au comptoir</div>
           </div>
 
+          <div className={styles.profileFields}>
+            <label className={styles.profileField}>
+              <span>Prenom optionnel</span>
+              <input
+                autoComplete="given-name"
+                onChange={(event) => setFirstName(event.target.value)}
+                placeholder="Nora"
+                value={firstName}
+              />
+            </label>
+            <label className={styles.profileField}>
+              <span>Date de naissance optionnelle</span>
+              <input
+                onChange={(event) => setBirthDate(event.target.value)}
+                type="date"
+                value={birthDate}
+              />
+            </label>
+          </div>
+
           <button className={styles.btnPrimary} disabled={!allDigitsFilled} onClick={openCard} type="button">
             <span>Ouvrir ma carte</span>
             <span className={styles.arrow}>-&gt;</span>
@@ -192,7 +217,7 @@ export function RoundDemoPage() {
         <section className={cn(styles.screen, screen === "card" && styles.screenActive)}>
           <div className={styles.cardHeader}>
             <div className={styles.cardHello}>
-              Tu es dans <em>Round Club</em>
+              {displayName}, tu es dans <em>Round Club</em>
             </div>
             <div className={styles.cardId}>
               ROUND CLUB · CARTE <strong>N {cardNumber}</strong>
@@ -222,6 +247,18 @@ export function RoundDemoPage() {
                 <em>pendant 1 an</em>
               </div>
               <div className={styles.cardPrizeDetail}>Attribue a une seule personne a la fin</div>
+            </div>
+
+            <div className={styles.dailyPush}>
+              <div className={styles.dailyPushTop}>
+                <span>Animation du jour</span>
+                <strong>Recu du journal</strong>
+              </div>
+              <div className={styles.dailyPushTitle}>Mercredi compte double</div>
+              <p>Chaque passage aujourd&apos;hui vaut 2 dans ta saison. Montre ta carte au comptoir.</p>
+              <button onClick={() => showToast("Animation ajoutee a ta carte")} type="button">
+                Activer sur ma carte
+              </button>
             </div>
 
             <div className={styles.cardProgress}>
@@ -266,6 +303,17 @@ export function RoundDemoPage() {
                 Viens <em>avec quelqu&apos;un</em> qui n&apos;a pas encore sa carte Round
               </div>
               <div className={styles.nextActionWhy}>3 passages cette semaine et tu debloques Heavy Round.</div>
+            </div>
+
+            <div className={styles.inviteBlock}>
+              <div>
+                <span>Lien Duo Round</span>
+                <strong>round.club/{cardNumber}</strong>
+                <p>Si quelqu&apos;un entre par ton lien, Duo Round compte pour la liste Diamond.</p>
+              </div>
+              <button onClick={() => showToast("Lien invitation copie")} type="button">
+                Inviter
+              </button>
             </div>
 
             <div className={styles.visitsStrip}>
