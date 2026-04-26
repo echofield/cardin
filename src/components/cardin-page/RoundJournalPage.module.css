@@ -8,7 +8,9 @@
   --ink: #1a1a1a;
   --ink-soft: #3a3a36;
   --ink-mute: #8a8479;
+  --ink-faint: #b8b3a4;
   --leaf: #3a5a3e;
+  --leaf-soft: #6b8a6e;
   --line: #e0dcd0;
   min-height: 100dvh;
   max-width: 800px;
@@ -705,132 +707,530 @@
   text-transform: uppercase;
 }
 
-.offerSection {
-  margin-bottom: 42px;
-  border: 1px solid var(--ink);
-  border-radius: 10px;
-  background: var(--paper);
-  padding: 28px;
+.devSection {
+  margin: 78px 0 48px;
+  padding-top: 44px;
+  border-top: 1px solid var(--line);
 }
 
-.offerEyebrow {
-  margin-bottom: 12px;
-  color: var(--ink-mute);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+.devHero {
+  padding: 10px 0 32px;
+  text-align: center;
 }
 
-.offerSection h2 {
-  margin: 0;
+.devGreet,
+.devHero h2 em,
+.sectionTitle em,
+.twinCell h3 em,
+.devPosition p em {
+  font-family: "Caveat", cursive;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.devGreet {
+  margin-bottom: 14px;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.devHero h2 {
+  max-width: 720px;
+  margin: 0 auto 18px;
   color: var(--ink);
-  font-size: clamp(28px, 4vw, 42px);
+  font-size: clamp(30px, 4vw, 42px);
   font-weight: 500;
-  letter-spacing: -0.035em;
-  line-height: 1.08;
+  letter-spacing: -0.03em;
+  line-height: 1.14;
 }
 
-.offerLead {
-  max-width: 620px;
-  margin: 16px 0 0;
+.devHero h2 em {
+  font-size: 1.18em;
+}
+
+.devHero p {
+  max-width: 560px;
+  margin: 0 auto;
   color: var(--ink-soft);
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: 15px;
+  line-height: 1.7;
 }
 
-.offerTiers {
+.twinPricing {
   display: grid;
-  grid-template-columns: 1fr 1.15fr;
-  gap: 12px;
-  margin-top: 22px;
-}
-
-.offerTier {
-  border: 1px solid var(--ink);
-  border-radius: 10px;
+  grid-template-columns: 1fr 1fr;
+  margin: 0 0 54px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
   background: var(--paper);
-  padding: 18px;
 }
 
-.offerTierPrimary {
+.twinCell {
+  padding: 28px;
+  border-right: 1px solid var(--line);
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.twinCell:hover {
+  transform: translateY(-2px);
+  background: var(--bg-alt);
+}
+
+.twinCell:last-child {
+  border-right: 0;
+}
+
+.twinCellDark {
   background: var(--ink);
   color: var(--bg);
 }
 
-.offerTier span {
-  display: block;
+.twinCellDark:hover {
+  background: #000;
+}
+
+.twinTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.twinTop span {
+  color: var(--ink-mute);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+
+.twinCellDark .twinTop span {
+  color: var(--ink-faint);
+}
+
+.twinTop strong {
+  flex: 0 0 auto;
+  color: var(--ink);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+
+.twinCellDark .twinTop strong {
+  color: var(--bg);
+}
+
+.twinCell h3 {
+  margin: 0 0 10px;
+  color: var(--ink);
+  font-size: 21px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.twinCellDark h3 {
+  color: var(--bg);
+}
+
+.twinCell h3 em {
+  font-size: 1.16em;
+}
+
+.twinCell p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.twinCellDark p {
+  color: var(--bg-alt);
+}
+
+.twinFoot {
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px dashed var(--line);
+  color: var(--ink-mute);
+  font-family: "Caveat", cursive;
+  font-size: 17px;
+  line-height: 1.3;
+}
+
+.twinCellDark .twinFoot {
+  border-top-color: var(--ink-mute);
+  color: var(--bg-alt);
+}
+
+.devSubSection {
+  margin-bottom: 50px;
+}
+
+.constatGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.constatCell {
+  padding: 28px 16px;
+  border-right: 1px solid var(--line);
+  text-align: center;
+}
+
+.constatCell:last-child {
+  border-right: 0;
+}
+
+.constatBig {
+  margin-bottom: 10px;
+  color: var(--ink);
+  font-size: clamp(28px, 3.5vw, 38px);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.constatBigLeaf {
+  color: var(--leaf);
+}
+
+.constatLabel {
+  color: var(--ink-mute);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.devTimeline {
+  position: relative;
+}
+
+.devTimeline::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 18px;
+  z-index: 0;
+  width: 1px;
+  background: linear-gradient(180deg, var(--line), var(--leaf), var(--line));
+}
+
+.devStep {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 12px;
+  padding-left: 50px;
+}
+
+.devStepMarker {
+  position: absolute;
+  top: 22px;
+  left: 12px;
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid var(--ink-mute);
+  border-radius: 50%;
+  background: var(--bg);
+  transition: all 0.25s ease;
+}
+
+.devStepActive .devStepMarker {
+  border-color: var(--leaf);
+  background: var(--leaf);
+  transform: scale(1.12);
+}
+
+.devStepCard {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  padding: 20px 24px;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.25s ease;
+}
+
+.devStepCard:hover,
+.devStepActive .devStepCard {
+  border-color: var(--leaf);
+}
+
+.devStepRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.devStepNum {
   margin-bottom: 8px;
   color: var(--ink-mute);
   font-size: 9px;
   font-weight: 500;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.26em;
   text-transform: uppercase;
 }
 
-.offerTierPrimary span,
-.offerTierPrimary p {
-  color: rgba(250, 250, 247, 0.72);
+.devStepTitle {
+  margin-bottom: 6px;
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
 }
 
-.offerTier strong {
-  display: block;
-  font-size: 30px;
-  font-weight: 600;
-  letter-spacing: -0.04em;
-}
-
-.offerTier p {
-  margin: 9px 0 0;
+.devStepSummary {
   color: var(--ink-soft);
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.55;
 }
 
-.offerGrid {
+.devStepMeta {
+  flex: 0 0 auto;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-top: 18px;
+  justify-items: end;
+  gap: 7px;
 }
 
-.offerGrid div {
+.devStepMeta span {
+  color: var(--leaf);
+  font-family: "Caveat", cursive;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.devStepMeta strong {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--bg-alt);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.devStepDetail {
+  display: none;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--line);
+}
+
+.devStepActive .devStepDetail {
+  display: block;
+}
+
+.devStepDetail p,
+.devStepDetail li {
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.devStepDetail p {
+  margin: 0 0 14px;
+}
+
+.devStepDetail ul {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.devStepDetail li {
+  position: relative;
+  padding-left: 18px;
+}
+
+.devStepDetail li::before {
+  content: ".";
+  position: absolute;
+  top: -6px;
+  left: 4px;
+  color: var(--leaf);
+  font-size: 26px;
+}
+
+.impactGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.impactCard {
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--bg);
-  padding: 14px;
+  background: var(--paper);
+  padding: 24px 22px 20px;
 }
 
-.offerGrid span {
-  display: block;
-  margin-bottom: 7px;
+.impactCardDark {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.impactMark {
+  margin-bottom: 12px;
   color: var(--ink-mute);
   font-size: 9px;
-  letter-spacing: 0.16em;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
 }
 
-.offerGrid strong {
-  display: block;
+.impactCardDark .impactMark {
+  color: var(--ink-faint);
+}
+
+.impactCard h3 {
+  margin: 0 0 10px;
   color: var(--ink);
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 23px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
 }
 
-.offerGrid p {
-  margin: 6px 0 0;
+.impactCardDark h3 {
+  color: var(--bg);
+}
+
+.impactCard p {
+  margin: 0 0 14px;
   color: var(--ink-soft);
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: 13px;
+  line-height: 1.55;
 }
 
-.offerNote {
-  margin: 18px 0 0;
+.impactCardDark p {
+  color: var(--bg-alt);
+}
+
+.impactStat {
   border-top: 1px dashed var(--line);
-  padding-top: 14px;
-  color: var(--ink-mute);
+  padding-top: 12px;
+  color: var(--leaf);
   font-family: "Caveat", cursive;
-  font-size: 21px;
-  line-height: 1.2;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.impactCardDark .impactStat {
+  border-top-color: var(--ink-mute);
+  color: var(--leaf-soft);
+}
+
+.devFlux {
+  display: grid;
+  gap: 6px;
+}
+
+.devFluxRow {
+  display: grid;
+  grid-template-columns: 70px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  padding: 14px 18px;
+}
+
+.devFluxWhen {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.devFluxEvent {
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.devFluxPill {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg);
+  padding: 4px 11px;
+  color: var(--ink);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.devFluxPillLive {
+  border-color: var(--leaf);
+  background: var(--leaf);
+  color: var(--bg);
+}
+
+.devFluxPillYou {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.devPosition {
+  border: 1px solid var(--ink);
+  border-radius: 8px;
+  background: var(--paper);
+  padding: 32px;
+}
+
+.devPosition > span {
+  display: inline-block;
+  margin-bottom: 16px;
+  color: var(--leaf);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.devPosition p {
+  margin: 0 0 22px;
+  color: var(--ink);
+  font-size: 16px;
+  letter-spacing: -0.005em;
+  line-height: 1.65;
+}
+
+.devPosition p em {
+  font-size: 1.18em;
+}
+
+.devPositionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.devPositionGrid div {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  padding: 12px 16px;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .footer {
@@ -889,10 +1289,61 @@
   }
 
   .flowGrid,
-  .offerGrid,
-  .offerTiers,
+  .impactGrid,
+  .twinPricing,
+  .devPositionGrid,
   .positionMeta {
     grid-template-columns: 1fr;
+  }
+
+  .twinCell {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .twinCell:last-child {
+    border-bottom: 0;
+  }
+
+  .constatGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .constatCell:nth-child(1),
+  .constatCell:nth-child(2) {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .constatCell:nth-child(2),
+  .constatCell:nth-child(4) {
+    border-right: 0;
+  }
+
+  .devStep {
+    padding-left: 42px;
+  }
+
+  .devTimeline::before {
+    left: 14px;
+  }
+
+  .devStepMarker {
+    left: 8px;
+  }
+
+  .devStepRow,
+  .twinTop {
+    flex-direction: column;
+  }
+
+  .devStepMeta {
+    justify-items: start;
+  }
+
+  .devFluxRow {
+    grid-template-columns: 58px 1fr auto;
+    gap: 10px;
+    padding: 12px 14px;
   }
 
   .pushTabs {

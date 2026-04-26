@@ -123,6 +123,107 @@ const STREAM_ROWS = [
   { time: "18:55", num: "N 0440", event: "Ilyes passe mercredi - compte double", pill: "Jour cle", tone: "default" },
 ] as const
 
+const DEVELOPMENT_STATS = [
+  { value: "2", label: "boutiques actives Quai de Seine et Chatelet", leaf: false },
+  { value: "90j", label: "premiere saison Round structuree", leaf: false },
+  { value: "5", label: "niveaux visibles jusqu'au Diamond", leaf: true },
+  { value: "1", label: "sommet : un menu par mois pendant un an", leaf: false },
+] as const
+
+const DEVELOPMENT_STEPS = [
+  {
+    num: "01 - Carte Round",
+    title: "Une carte mobile pour vos clients",
+    marker: "jour 1 - 7",
+    summary: "Entree par code, progression visible, preuve comptoir et historique garde apres saison.",
+    detail:
+      "Vos clients scannent un QR ou tapent un code 4 chiffres. Ils ouvrent leur carte Round, sans app, sans compte. Une URL propre qu'ils ajoutent a leur ecran d'accueil.",
+    points: [
+      "Code QR Round pour comptoir, tables et flyers",
+      "Carte mobile avec progression visible, First Round a Diamond",
+      "Preuve comptoir : horloge tournante, validation temps reel",
+      "Historique garde saison apres saison, attache au numero de carte",
+    ],
+  },
+  {
+    num: "02 - Saison structuree",
+    title: "Choisir ce qu'on pilote",
+    marker: "jour 7 - 14",
+    summary: "Retour, duo, jour plein. La saison s'adapte a la priorite du moment.",
+    detail:
+      "Round choisit l'angle de la saison : ramener les habitues, transformer les habitues en acquisition, ou remplir le jour qui dort.",
+    points: [
+      "3 saisons possibles : Retour Round, Duo Round, Jour plein",
+      "Etapes calibrees sur la velocite reelle de passage",
+      "Diamond final : 1 menu Round par mois pendant 1 an",
+      "Ajustements progressifs si la saison tourne plus vite que prevu",
+    ],
+  },
+  {
+    num: "03 - Journal vivant",
+    title: "Lire votre journee en 10 secondes",
+    marker: "jour 14 - 30",
+    summary: "Passages, retours, invites, cout cadeaux, flux comptoir. Vous pilotez avec ce que vous voyez.",
+    detail:
+      "Chaque jour, Round voit les passages, les clients qui reviennent, les nouveaux entrants, les creneaux qui repondent et le cout exact des cadeaux.",
+    points: [
+      "Chiffres cles : passages, retours, invites, cout cadeaux du jour",
+      "Timeline du trafic par creneau, jour fort et jour a remplir",
+      "Flux comptoir : qui est passe, a quelle heure, avec quelle action",
+      "Vue 7 jours pour reperer les tendances semaine sur semaine",
+    ],
+  },
+  {
+    num: "04 - Challenges organises",
+    title: "Animer la communaute chaque jour",
+    marker: "jour 30 - 90",
+    summary: "Roulette, sondage, quiz, jour cle, premiere commande. 30 secondes par push.",
+    detail:
+      "Le lieu ne part pas d'une page blanche. La console propose des formats deja prets pour creer des evenements courts, visibles et mesurables.",
+    points: [
+      "Roulette timing : le Xeme client gagne, animation tirage en direct",
+      "Sondage du jour : sauce, burger special, choix horaire",
+      "Quiz maison : playlist, recette, histoire Round",
+      "Jour cle : mercredi compte double, gouter 16h-18h, dimanche brunch",
+      "Premiere commande : transformer un curieux en habitue sans casser les prix",
+    ],
+  },
+] as const
+
+const DEVELOPMENT_IMPACTS = [
+  {
+    mark: "Retour",
+    title: "Faire revenir",
+    desc: "Les habitues ont une raison de revenir avant la fin de la semaine. Ils suivent leur progression et voient le sommet approcher.",
+    stat: "+15 a +25 % de frequence sur les habitues actifs",
+    dark: false,
+  },
+  {
+    mark: "Acquisition",
+    title: "Faire venir",
+    desc: "Les habitues deviennent un canal d'acquisition. Le Duo Round recompense quand un client amene quelqu'un de nouveau dans la saison.",
+    stat: "1 nouveau client sur 4 peut venir par un habitue",
+    dark: false,
+  },
+  {
+    mark: "Challenges",
+    title: "Creer l'evenement",
+    desc: "Chaque semaine peut porter une action claire : roulette, vote, quiz, jour plein, premiere commande. Ce n'est pas une promo permanente.",
+    stat: "1 decision par jour, 30 secondes pour lancer",
+    dark: true,
+  },
+] as const
+
+const DEVELOPMENT_FLUX = [
+  { when: "8:30", event: "Ouverture journal Round - lecture en 10 secondes", pill: "Vous", tone: "you" },
+  { when: "9:00", event: "Choix mecanique du jour - roulette 40-60", pill: "Vous", tone: "you" },
+  { when: "9:01", event: "Push parti vers 126 cartes actives", pill: "Auto", tone: "live" },
+  { when: "12:08", event: "Samir entre Quai de Seine - premiere carte Round", pill: "Comptoir", tone: "default" },
+  { when: "12:37", event: "Lea amene Hugo - Duo valide", pill: "Comptoir", tone: "default" },
+  { when: "15:47", event: "Elise tire le bon numero - gagne un side", pill: "Roulette", tone: "live" },
+  { when: "22:00", event: "Bilan auto - 41 passages, 12 retours, 6 invites", pill: "Auto", tone: "live" },
+] as const
+
 function parsePool(pool: string) {
   const [min, max] = pool.split("-").map(Number)
   return { min, max }
@@ -137,6 +238,7 @@ export function RoundJournalPage() {
   const [selectedStatic, setSelectedStatic] = useState<Record<string, number>>({})
   const [sent, setSent] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [activeDevelopmentStep, setActiveDevelopmentStep] = useState(0)
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const dateLabel = useMemo(() => {
@@ -455,60 +557,171 @@ export function RoundJournalPage() {
               <strong>Effort operationnel</strong> · 30 secondes par push
             </div>
           </div>
-          <a className={styles.positionCta} href="#round-offer">
-            Voir l&apos;offre
+          <a className={styles.positionCta} href="#round-development">
+            Voir le developpement
           </a>
         </div>
       </section>
 
-      <section className={styles.offerSection} id="round-offer">
-        <div className={styles.offerEyebrow}>Offre Round x Cardin</div>
-        <h2>
-          Installer la premiere forme,
-          <br />
-          puis garder un systeme qui bouge.
-        </h2>
-        <p className={styles.offerLead}>
-          L&apos;offre vient apres la carte et le moteur : Round voit d&apos;abord l&apos;experience client,
-          puis la console qui anime le quotidien.
-        </p>
-        <div className={styles.offerTiers}>
-          <article className={styles.offerTier}>
-            <span>Installation</span>
-            <strong>1200 EUR</strong>
-            <p>Carte Round, QR comptoir, premiere saison configuree et autonomie pour lancer.</p>
+      <section className={styles.devSection} id="round-development">
+        <div className={styles.devHero}>
+          <div className={styles.devGreet}>Pour Round, apres le journal</div>
+          <h2>
+            Installer une <em>carte vivante,</em>
+            <br />
+            puis construire les moments qui <em>l&apos;animent.</em>
+          </h2>
+          <p>
+            Une premiere saison Round avec direction artistique, structure de progression, mecanique Diamond,
+            journal marchand et console d&apos;animation.
+          </p>
+        </div>
+
+        <div className={styles.twinPricing}>
+          <article className={styles.twinCell}>
+            <div className={styles.twinTop}>
+              <span>Cardin - 2 boutiques</span>
+              <strong>1200 EUR</strong>
+            </div>
+            <h3>
+              La carte et la <em>saison structuree</em>
+            </h3>
+            <p>Carte Round mobile centralisee Quai de Seine et Chatelet, QR comptoir, premiere saison 90 jours, niveaux Diamond, journal marchand de base.</p>
+            <div className={styles.twinFoot}>L&apos;essentiel pour demarrer sur vos deux boutiques.</div>
           </article>
-          <article className={cn(styles.offerTier, styles.offerTierPrimary)}>
-            <span>Systeme complet</span>
-            <strong>2500 EUR</strong>
-            <p>Direction artistique, journal vivant, templates d&apos;evenements et lancement structure.</p>
+          <article className={cn(styles.twinCell, styles.twinCellDark)}>
+            <div className={styles.twinTop}>
+              <span>Console & journal vivant</span>
+              <strong>2500 EUR</strong>
+            </div>
+            <h3>
+              La <em>console d&apos;animation</em> complete
+            </h3>
+            <p>Tout le precedent, plus journal vivant detaille, console push 5 mecaniques, templates roulette / sondage / quiz / jour cle / premiere commande.</p>
+            <div className={styles.twinFoot}>Vous animez vraiment chaque jour, a 30 secondes pres.</div>
           </article>
         </div>
-        <div className={styles.offerGrid}>
-          <div>
-            <span>01</span>
-            <strong>Carte client</strong>
-            <p>Progression, prochaine action, Diamond et preuve comptoir.</p>
+
+        <div className={styles.devSubSection}>
+          <div className={styles.sectionHead}>
+            <div className={styles.sectionTitle}>
+              Le <em>constat</em> Round
+            </div>
+            <div className={styles.sectionHint}>ce qu&apos;on a observe</div>
           </div>
-          <div>
-            <span>02</span>
-            <strong>Moteur marchand</strong>
-            <p>Passages, retours, invites, cout cadeaux et lecture du jour.</p>
-          </div>
-          <div>
-            <span>03</span>
-            <strong>Animations</strong>
-            <p>Roulette, sondage, quiz, jour cle et premiere commande.</p>
-          </div>
-          <div>
-            <span>04</span>
-            <strong>Saisons suivantes</strong>
-            <p>La carte reste, le commerce change le rythme et accumule l&apos;historique.</p>
+          <div className={styles.constatGrid}>
+            {DEVELOPMENT_STATS.map((stat) => (
+              <div className={styles.constatCell} key={stat.label}>
+                <div className={cn(styles.constatBig, stat.leaf && styles.constatBigLeaf)}>{stat.value}</div>
+                <div className={styles.constatLabel}>{stat.label}</div>
+              </div>
+            ))}
           </div>
         </div>
-        <p className={styles.offerNote}>
-          Pas un PDF. Une forme precise pour Round, puis une console pour bouger au quotidien.
-        </p>
+
+        <div className={styles.devSubSection}>
+          <div className={styles.sectionHead}>
+            <div className={styles.sectionTitle}>
+              Le <em>deroulement</em>
+            </div>
+            <div className={styles.sectionHint}>etape par etape</div>
+          </div>
+          <div className={styles.devTimeline}>
+            {DEVELOPMENT_STEPS.map((step, index) => {
+              const active = activeDevelopmentStep === index
+              return (
+                <div className={cn(styles.devStep, active && styles.devStepActive)} key={step.num}>
+                  <span className={styles.devStepMarker} />
+                  <button
+                    className={styles.devStepCard}
+                    onClick={() => setActiveDevelopmentStep(active ? -1 : index)}
+                    type="button"
+                  >
+                    <div className={styles.devStepRow}>
+                      <div>
+                        <div className={styles.devStepNum}>{step.num}</div>
+                        <div className={styles.devStepTitle}>{step.title}</div>
+                        <div className={styles.devStepSummary}>{step.summary}</div>
+                      </div>
+                      <div className={styles.devStepMeta}>
+                        <span>{step.marker}</span>
+                        <strong>{active ? "-" : "+"}</strong>
+                      </div>
+                    </div>
+                    <div className={styles.devStepDetail}>
+                      <p>{step.detail}</p>
+                      <ul>
+                        {step.points.map((point) => (
+                          <li key={point}>{point}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className={styles.devSubSection}>
+          <div className={styles.sectionHead}>
+            <div className={styles.sectionTitle}>
+              Ce que <em>ca apporte</em>
+            </div>
+            <div className={styles.sectionHint}>impact mesurable</div>
+          </div>
+          <div className={styles.impactGrid}>
+            {DEVELOPMENT_IMPACTS.map((impact) => (
+              <article className={cn(styles.impactCard, impact.dark && styles.impactCardDark)} key={impact.mark}>
+                <div className={styles.impactMark}>{impact.mark}</div>
+                <h3>{impact.title}</h3>
+                <p>{impact.desc}</p>
+                <div className={styles.impactStat}>{impact.stat}</div>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.devSubSection}>
+          <div className={styles.sectionHead}>
+            <div className={styles.sectionTitle}>
+              Le <em>flux</em> au quotidien
+            </div>
+            <div className={styles.sectionHint}>une journee Round avec Cardin</div>
+          </div>
+          <div className={styles.devFlux}>
+            {DEVELOPMENT_FLUX.map((row) => (
+              <div className={styles.devFluxRow} key={`${row.when}-${row.event}`}>
+                <div className={styles.devFluxWhen}>{row.when}</div>
+                <div className={styles.devFluxEvent}>{row.event}</div>
+                <div
+                  className={cn(
+                    styles.devFluxPill,
+                    row.tone === "you" && styles.devFluxPillYou,
+                    row.tone === "live" && styles.devFluxPillLive,
+                  )}
+                >
+                  {row.pill}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.devPosition}>
+          <span>Ce qu&apos;on installe ensemble</span>
+          <p>
+            Une <strong>premiere saison Round de 90 jours</strong>. Vos clients entrent avec une carte mobile
+            centralisee entre vos deux boutiques. A chaque passage, le comptoir valide. Et chaque jour vous pouvez
+            <em> organiser un challenge</em> avec une roulette, un sondage, un quiz ou une impulsion jour plein.
+          </p>
+          <div className={styles.devPositionGrid}>
+            <div><strong>Installation</strong> - 1 semaine apres accord</div>
+            <div><strong>Formation comptoir</strong> - 20 minutes par boutique</div>
+            <div><strong>Suivi direct</strong> - 30 premiers jours</div>
+            <div><strong>Effort operationnel</strong> - 30 secondes par push</div>
+          </div>
+        </div>
       </section>
 
       <footer className={styles.footer}>
