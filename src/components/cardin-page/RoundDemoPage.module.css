@@ -82,6 +82,32 @@
   padding: 5px 12px;
 }
 
+.topRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topLink,
+.topLinkStrong {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  padding: 7px 12px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.topLinkStrong {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--bg);
+}
+
 .topStatusDot,
 .cardLiveDot,
 .proofTickDot,
@@ -414,6 +440,18 @@
   justify-content: center;
   padding: 7px 4px;
   text-align: center;
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease;
+}
+
+.rd:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.rdSelected {
+  border-color: var(--ink);
+  transform: translateY(-2px);
 }
 
 .rdGlyph {
@@ -450,6 +488,41 @@
 .rdCurrent .rdGlyph,
 .rdCurrent .rdName {
   color: var(--ink);
+}
+
+.stepExplorer {
+  margin: -2px 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  padding: 14px 15px;
+}
+
+.stepExplorerLabel {
+  margin-bottom: 6px;
+  color: var(--ink-mute);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.stepExplorerTitle {
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.stepExplorerAction {
+  margin-top: 4px;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.stepExplorerDetail {
+  margin-top: 5px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .nextAction,
@@ -678,6 +751,132 @@
   line-height: 1.5;
 }
 
+.offerSection {
+  margin-top: 28px;
+  border: 1px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper);
+  padding: 24px 22px;
+}
+
+.offerEyebrow {
+  margin-bottom: 12px;
+  color: var(--ink-mute);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.offerSection h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.028em;
+  line-height: 1.12;
+}
+
+.offerLead {
+  margin: 14px 0 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.offerTiers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.offerTier {
+  border: 1px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper);
+  padding: 15px;
+}
+
+.offerTierPrimary {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.offerTier span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--ink-mute);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.offerTierPrimary span,
+.offerTierPrimary p {
+  color: rgba(250, 250, 247, 0.72);
+}
+
+.offerTier strong {
+  display: block;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.offerTier p {
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.offerGrid {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.offerGrid div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  padding: 14px;
+}
+
+.offerGrid span {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--ink-mute);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+}
+
+.offerGrid strong {
+  display: block;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.offerGrid p {
+  margin: 6px 0 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.offerNote {
+  margin: 16px 0 0;
+  border-top: 1px dashed var(--line);
+  padding-top: 14px;
+  color: var(--ink-mute);
+  font-family: "Caveat", cursive;
+  font-size: 19px;
+  line-height: 1.2;
+}
+
 .toast {
   position: fixed;
   top: 70px;
@@ -717,5 +916,9 @@
 
   .rd {
     min-height: 66px;
+  }
+
+  .offerTiers {
+    grid-template-columns: 1fr;
   }
 }

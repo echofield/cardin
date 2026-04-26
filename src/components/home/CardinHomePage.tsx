@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { calculateRecovery } from "@/lib/calculator"
-import { LANDING_PRICING, STRIPE_PAYMENT_LINK } from "@/lib/landing-content"
+import { STRIPE_PAYMENT_LINK } from "@/lib/landing-content"
 import { CARDIN_CONTACT_EMAIL } from "@/lib/site-contact"
 
 type RewardKey = "cafe" | "menu" | "experience"
@@ -117,7 +117,7 @@ const OFFER_FRAMES = [
     title: "Saison Cardin",
     lead: "Le système complet. Une saison de 90 jours installée dans le lieu.",
     detail: "Lecture du lieu, premier moment, rythme hebdomadaire, retours, invitations et Diamond au sommet.",
-    meta: `${LANDING_PRICING.compactLabel} · activation sous 48 h`,
+    meta: "Saison configuree · activation sous 48 h",
     cta: "Construire ma saison",
     href: "/parcours",
     tone: "default" as const,
@@ -806,10 +806,6 @@ export function CardinHomePage() {
           Conçu à Paris pour les commerçants
           <br />
           qui comptent leurs clients.
-        </p>
-
-        <p className="hidden">
-          {LANDING_PRICING.compactLabel} · activation sous 48 h
         </p>
 
         <p className="mx-auto mb-8 max-w-[620px] text-[11px] uppercase tracking-[0.18em] text-[#8a8578]">

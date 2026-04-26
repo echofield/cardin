@@ -8,11 +8,36 @@ import styles from "./RoundDemoPage.module.css"
 
 const CODE_LENGTH = 4
 const ROUND_STEPS = [
-  { name: "First Round", state: "filled" },
-  { name: "Second Round", state: "filled" },
-  { name: "Duo Round", state: "current" },
-  { name: "Heavy Round", state: "empty" },
-  { name: "Diamond", state: "empty" },
+  {
+    name: "First Round",
+    state: "filled",
+    action: "Entrer avec un code Round.",
+    detail: "La carte est creee, le client voit le sommet et garde son historique.",
+  },
+  {
+    name: "Second Round",
+    state: "filled",
+    action: "Revenir une premiere fois.",
+    detail: "Le comptoir valide le passage. Le client comprend que chaque retour compte.",
+  },
+  {
+    name: "Duo Round",
+    state: "current",
+    action: "Venir avec quelqu'un.",
+    detail: "Un habitue fait entrer une nouvelle personne dans la saison.",
+  },
+  {
+    name: "Heavy Round",
+    state: "empty",
+    action: "Atteindre le rythme fort.",
+    detail: "3 passages dans la semaine ou un jour cle valide debloquent le statut.",
+  },
+  {
+    name: "Diamond",
+    state: "empty",
+    action: "Arriver au sommet.",
+    detail: "Un seul gagnant obtient 1 menu Round par mois pendant 1 an.",
+  },
 ] as const
 
 const DAY_NAMES = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"] as const
@@ -30,6 +55,7 @@ export function RoundDemoPage() {
   const [screen, setScreen] = useState<"entry" | "card">("entry")
   const [digits, setDigits] = useState<string[]>(Array.from({ length: CODE_LENGTH }, () => ""))
   const [now, setNow] = useState(() => new Date())
+  const [selectedStepIndex, setSelectedStepIndex] = useState(2)
   const [pending, setPending] = useState(false)
   const [pendingTime, setPendingTime] = useState("14:32")
   const [toast, setToast] = useState<string | null>(null)
@@ -42,6 +68,7 @@ export function RoundDemoPage() {
     return joined ? joined.padStart(4, "0") : "0418"
   }, [digits])
   const clock = formatClock(now)
+  const selectedStep = ROUND_STEPS[selectedStepIndex]
 
   useEffect(() => {
     if (screen !== "entry") return
@@ -88,6 +115,13 @@ export function RoundDemoPage() {
     openCard()
   }
 
+  function openOffer() {
+    setScreen("card")
+    window.setTimeout(() => {
+      document.getElementById("round-offer")?.scrollIntoView({ behavior: "smooth", block: "start" })
+    }, 80)
+  }
+
   function detectPassage() {
     if (pending) return
     const detectedAt = new Date()
@@ -102,12 +136,16 @@ export function RoundDemoPage() {
         <header className={styles.topBar}>
           <div className={styles.topBrand}>
             <span className={styles.roundmark}>Round</span>
-            <span className={styles.topX}>·</span>
+            <span className={styles.topX}>x</span>
             <span className={styles.topCardin}>Cardin</span>
           </div>
-          <div className={styles.topStatus}>
-            <span className={styles.topStatusDot} />
-            <span>Round Club</span>
+          <div className={styles.topRight}>
+            <button className={styles.topLink} onClick={openCard} type="button">
+              Carte
+            </button>
+            <button className={styles.topLinkStrong} onClick={openOffer} type="button">
+              Offre
+            </button>
           </div>
         </header>
 
@@ -204,14 +242,28 @@ export function RoundDemoPage() {
                       styles.rd,
                       step.state === "filled" && styles.rdFilled,
                       step.state === "current" && styles.rdCurrent,
+                      selectedStepIndex === ROUND_STEPS.indexOf(step) && styles.rdSelected,
                     )}
                     key={step.name}
+                    onClick={() => setSelectedStepIndex(ROUND_STEPS.indexOf(step))}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") setSelectedStepIndex(ROUND_STEPS.indexOf(step))
+                    }}
                   >
-                    <div className={styles.rdGlyph}>{step.state === "empty" ? "○" : "●"}</div>
+                    <div className={styles.rdGlyph}>{step.state === "empty" ? "o" : "*"}</div>
                     <div className={styles.rdName}>{step.name}</div>
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div className={styles.stepExplorer}>
+              <div className={styles.stepExplorerLabel}>Etape visible</div>
+              <div className={styles.stepExplorerTitle}>{selectedStep.name}</div>
+              <div className={styles.stepExplorerAction}>{selectedStep.action}</div>
+              <div className={styles.stepExplorerDetail}>{selectedStep.detail}</div>
             </div>
 
             <div className={styles.nextAction}>
@@ -314,6 +366,56 @@ export function RoundDemoPage() {
             <br />
             pour retrouver ta carte en un geste.
           </div>
+
+          <section className={styles.offerSection} id="round-offer">
+            <div className={styles.offerEyebrow}>Offre Round x Cardin</div>
+            <h2>
+              Installer une carte vivante,
+              <br />
+              puis construire les moments qui l&apos;animent.
+            </h2>
+            <p className={styles.offerLead}>
+              Une premiere saison Round avec direction artistique de la carte, structure de progression,
+              mecanique Diamond, journal marchand et templates d&apos;evenements pre-cables.
+            </p>
+            <div className={styles.offerTiers}>
+              <div className={styles.offerTier}>
+                <span>Installation</span>
+                <strong>1200 EUR</strong>
+                <p>Carte Round, QR, premiere saison configuree et autonomie comptoir.</p>
+              </div>
+              <div className={cn(styles.offerTier, styles.offerTierPrimary)}>
+                <span>Systeme complet</span>
+                <strong>2500 EUR</strong>
+                <p>Direction artistique, journal vivant, templates d'evenements et lancement structure.</p>
+              </div>
+            </div>
+            <div className={styles.offerGrid}>
+              <div>
+                <span>01</span>
+                <strong>Carte Round</strong>
+                <p>Entree code, carte mobile, progression, preuve comptoir et historique garde apres saison.</p>
+              </div>
+              <div>
+                <span>02</span>
+                <strong>Saison structuree</strong>
+                <p>Retour, duo, jour plein, Diamond unique et actions visibles pour le client.</p>
+              </div>
+              <div>
+                <span>03</span>
+                <strong>Journal vivant</strong>
+                <p>Passages, retours, invites, cout cadeaux, flux comptoir et lecture de la journee.</p>
+              </div>
+              <div>
+                <span>04</span>
+                <strong>Templates animation</strong>
+                <p>Roulette, sondage, quiz, jour cle et premiere commande a pousser aux cartes actives.</p>
+              </div>
+            </div>
+            <p className={styles.offerNote}>
+              Pas un PDF. Une premiere forme precise pour Round, puis un systeme capable de bouger au quotidien.
+            </p>
+          </section>
         </section>
       </main>
 

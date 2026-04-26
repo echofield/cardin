@@ -1843,13 +1843,11 @@ function StepActivation({
   const seasonFrame = SEASON_FRAME_BY_LANDING[worldId]
   const summitLabel = getVerticalExplainerConfig(worldId).summitModes[summit.id].badge
   const seasonLayers = projectionFull.layers
-  const offerPrice = isLite ? LANDING_PRICING.liteActivationFee : LANDING_PRICING.activationFee
-  const offerLabel = isLite ? LANDING_PRICING.liteCompactLabel : LANDING_PRICING.compactLabel
 
   const launchItems = [
-    `${world.label} · ${seasonMonths} mois`,
-    isLite ? "Parcours lite cadré pour décision rapide" : `Mode récompense : ${summitLabel}`,
-    `${offerLabel}`,
+    `${world.label} · saison ${seasonMonths} mois`,
+    isLite ? "Parcours lite cadre pour decision rapide" : `Mode recompense : ${summitLabel}`,
+    "Offre calibree en rendez-vous",
     "QR de validation + carte digitale + tableau marchand",
   ]
 
@@ -1975,7 +1973,7 @@ function StepActivation({
 
       <ActivationChecklistRail
         cards={[
-          { title: "Ce que vous achetez", icon: `${offerPrice}€`, tone: "promise", items: launchItems, pill: `${offerPrice} € · une saison` },
+          { title: "Ce que vous achetez", icon: "Saison", tone: "promise", items: launchItems, pill: "Premiere saison configuree" },
           { title: "Ce qui s'active sous 48 h", icon: "48h", tone: "immediate", items: activation48hItems },
           { title: "Ce qui doit être vrai sous 30 j", icon: "J30", tone: "thirty", items: success30dItems },
           { title: "Ce que le staff fait en 10 s", icon: "10s", tone: "staff", items: staffFlowItems, pill: "10 secondes · pas plus" },
@@ -2057,7 +2055,7 @@ function StepActivation({
             { label: "Porteurs actifs", value: `${seasonLayers.activeCardholders}` },
             { label: "Fourchette marché (saison)", value: world.claim },
             { label: "Revenu net saison (modèle)", value: `${projectionFull.netCardinSeason.toLocaleString("fr-FR")} EUR` },
-            { label: "Activation", value: `${offerPrice} € · saison ${LANDING_PRICING.seasonLengthMonths} mois` },
+            { label: "Activation", value: `Saison ${LANDING_PRICING.seasonLengthMonths} mois · tarif masque` },
           ].map((line) => (
             <div className="flex items-center justify-between" key={line.label}>
               <span style={{ fontSize: "0.75rem", color: "var(--cardin-label)" }}>{line.label}</span>
@@ -2092,7 +2090,7 @@ function StepActivation({
           target="_blank"
           transition={{ duration: 0.35, ease: "easeOut" }}
         >
-          {`Payer ${formatEuro(offerPrice)} et lancer la saison`}
+          Lancer la saison
         </motion.a>
         <p className="mt-3" style={{ fontSize: "0.72rem", color: "var(--cardin-label-light)", lineHeight: 1.5 }}>
           Paiement sécurisé par Stripe. Votre nom, e-mail et téléphone sont collectés à l&apos;étape suivante.

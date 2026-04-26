@@ -6,7 +6,7 @@ import { useMemo, useState } from "react"
 import { DemoMerchantBoard } from "@/components/demo/DemoMerchantBoard"
 import { DemoWalletCard } from "@/components/demo/DemoWalletCard"
 import { getDemoWorldContent } from "@/lib/demo-content"
-import { LANDING_PRICING, LANDING_WORLD_ORDER, LANDING_WORLDS, type LandingWorldId } from "@/lib/landing-content"
+import { LANDING_WORLD_ORDER, LANDING_WORLDS, type LandingWorldId } from "@/lib/landing-content"
 import { formatEuro } from "@/lib/number-format"
 
 const SCREENS = [
@@ -45,9 +45,9 @@ export function DemoNarrative() {
             </Panel>
             <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
               <Panel
-                eyebrow="Pricing"
-                title={`${LANDING_PRICING.activationFee} EUR pour la saison (${LANDING_PRICING.seasonLengthMonths} mois).`}
-                body={`${LANDING_PRICING.recurringLabel}. La démo reste alignée sur la vraie formule Cardin.`}
+                eyebrow="Offre"
+                title="Une premiere saison installee, puis lisible dans le lieu."
+                body="La demo reste concentree sur la mecanique, l'activation et la preuve, sans afficher le tarif public general."
               />
               <Panel
                 eyebrow="Projection"
