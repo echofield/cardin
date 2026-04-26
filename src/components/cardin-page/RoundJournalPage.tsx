@@ -455,7 +455,60 @@ export function RoundJournalPage() {
               <strong>Effort operationnel</strong> · 30 secondes par push
             </div>
           </div>
+          <a className={styles.positionCta} href="#round-offer">
+            Voir l&apos;offre
+          </a>
         </div>
+      </section>
+
+      <section className={styles.offerSection} id="round-offer">
+        <div className={styles.offerEyebrow}>Offre Round x Cardin</div>
+        <h2>
+          Installer la premiere forme,
+          <br />
+          puis garder un systeme qui bouge.
+        </h2>
+        <p className={styles.offerLead}>
+          L&apos;offre vient apres la carte et le moteur : Round voit d&apos;abord l&apos;experience client,
+          puis la console qui anime le quotidien.
+        </p>
+        <div className={styles.offerTiers}>
+          <article className={styles.offerTier}>
+            <span>Installation</span>
+            <strong>1200 EUR</strong>
+            <p>Carte Round, QR comptoir, premiere saison configuree et autonomie pour lancer.</p>
+          </article>
+          <article className={cn(styles.offerTier, styles.offerTierPrimary)}>
+            <span>Systeme complet</span>
+            <strong>2500 EUR</strong>
+            <p>Direction artistique, journal vivant, templates d&apos;evenements et lancement structure.</p>
+          </article>
+        </div>
+        <div className={styles.offerGrid}>
+          <div>
+            <span>01</span>
+            <strong>Carte client</strong>
+            <p>Progression, prochaine action, Diamond et preuve comptoir.</p>
+          </div>
+          <div>
+            <span>02</span>
+            <strong>Moteur marchand</strong>
+            <p>Passages, retours, invites, cout cadeaux et lecture du jour.</p>
+          </div>
+          <div>
+            <span>03</span>
+            <strong>Animations</strong>
+            <p>Roulette, sondage, quiz, jour cle et premiere commande.</p>
+          </div>
+          <div>
+            <span>04</span>
+            <strong>Saisons suivantes</strong>
+            <p>La carte reste, le commerce change le rythme et accumule l&apos;historique.</p>
+          </div>
+        </div>
+        <p className={styles.offerNote}>
+          Pas un PDF. Une forme precise pour Round, puis une console pour bouger au quotidien.
+        </p>
       </section>
 
       <footer className={styles.footer}>

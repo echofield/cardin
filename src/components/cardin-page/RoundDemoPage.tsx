@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { cn } from "@/lib/utils"
@@ -115,13 +116,6 @@ export function RoundDemoPage() {
     openCard()
   }
 
-  function openOffer() {
-    setScreen("card")
-    window.setTimeout(() => {
-      document.getElementById("round-offer")?.scrollIntoView({ behavior: "smooth", block: "start" })
-    }, 80)
-  }
-
   function detectPassage() {
     if (pending) return
     const detectedAt = new Date()
@@ -143,9 +137,9 @@ export function RoundDemoPage() {
             <button className={styles.topLink} onClick={openCard} type="button">
               Carte
             </button>
-            <button className={styles.topLinkStrong} onClick={openOffer} type="button">
-              Offre
-            </button>
+            <Link className={styles.topLinkStrong} href="/round/journal">
+              Moteur
+            </Link>
           </div>
         </header>
 
@@ -340,6 +334,17 @@ export function RoundDemoPage() {
               </div>
               <div className={styles.actionArr}>-&gt;</div>
             </button>
+
+            <Link className={cn(styles.actionTile, styles.actionTileStrong)} href="/round/journal">
+              <div className={styles.actionMark}>J</div>
+              <div className={styles.actionBody}>
+                <div className={styles.actionTitle}>
+                  Voir le <em>moteur</em>
+                </div>
+                <div className={styles.actionDesc}>Passer au journal marchand, aux pushs et a la lecture business.</div>
+              </div>
+              <div className={styles.actionArr}>-&gt;</div>
+            </Link>
           </div>
 
           <div className={cn(styles.pendingBlock, pending && styles.pendingBlockShow)}>
@@ -367,56 +372,8 @@ export function RoundDemoPage() {
             pour retrouver ta carte en un geste.
           </div>
 
-          <section className={styles.offerSection} id="round-offer">
-            <div className={styles.offerEyebrow}>Offre Round x Cardin</div>
-            <h2>
-              Installer une carte vivante,
-              <br />
-              puis construire les moments qui l&apos;animent.
-            </h2>
-            <p className={styles.offerLead}>
-              Une premiere saison Round avec direction artistique de la carte, structure de progression,
-              mecanique Diamond, journal marchand et templates d&apos;evenements pre-cables.
-            </p>
-            <div className={styles.offerTiers}>
-              <div className={styles.offerTier}>
-                <span>Installation</span>
-                <strong>1200 EUR</strong>
-                <p>Carte Round, QR, premiere saison configuree et autonomie comptoir.</p>
-              </div>
-              <div className={cn(styles.offerTier, styles.offerTierPrimary)}>
-                <span>Systeme complet</span>
-                <strong>2500 EUR</strong>
-                <p>Direction artistique, journal vivant, templates d'evenements et lancement structure.</p>
-              </div>
-            </div>
-            <div className={styles.offerGrid}>
-              <div>
-                <span>01</span>
-                <strong>Carte Round</strong>
-                <p>Entree code, carte mobile, progression, preuve comptoir et historique garde apres saison.</p>
-              </div>
-              <div>
-                <span>02</span>
-                <strong>Saison structuree</strong>
-                <p>Retour, duo, jour plein, Diamond unique et actions visibles pour le client.</p>
-              </div>
-              <div>
-                <span>03</span>
-                <strong>Journal vivant</strong>
-                <p>Passages, retours, invites, cout cadeaux, flux comptoir et lecture de la journee.</p>
-              </div>
-              <div>
-                <span>04</span>
-                <strong>Templates animation</strong>
-                <p>Roulette, sondage, quiz, jour cle et premiere commande a pousser aux cartes actives.</p>
-              </div>
-            </div>
-            <p className={styles.offerNote}>
-              Pas un PDF. Une premiere forme precise pour Round, puis un systeme capable de bouger au quotidien.
-            </p>
-          </section>
         </section>
+
       </main>
 
       <div className={cn(styles.toast, toast && styles.toastShow)}>{toast ?? "Passage detecte"}</div>

@@ -5,7 +5,6 @@ import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { calculateRecovery } from "@/lib/calculator"
-import { STRIPE_PAYMENT_LINK } from "@/lib/landing-content"
 import { CARDIN_CONTACT_EMAIL } from "@/lib/site-contact"
 
 type RewardKey = "cafe" | "menu" | "experience"
@@ -784,16 +783,6 @@ export function CardinHomePage() {
                   >
                     {frame.cta}
                   </Link>
-                  {frame.title === "Saison Cardin" ? (
-                    <a
-                      className="inline-flex text-[11px] uppercase tracking-[0.18em] text-[#3d4d43] underline decoration-[#d4cdbd] underline-offset-4 transition hover:text-[#0f3d2e] hover:decoration-[#0f3d2e]"
-                      href={STRIPE_PAYMENT_LINK}
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      Réserver directement
-                    </a>
-                  ) : null}
                 </div>
               </article>
             ))}
@@ -826,7 +815,7 @@ export function CardinHomePage() {
             <span className="absolute inset-0 flex items-center justify-center text-[#1a2a22] transition group-hover:text-[#0f3d2e]">
               Voir l'impact
             </span>
-            Réserver ma saison
+            Voir l'impact
           </Link>
         </div>
       </motion.section>

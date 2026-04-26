@@ -100,6 +100,7 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .topLinkStrong {
@@ -652,11 +653,28 @@
   color: inherit;
   text-align: left;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .actionTile:disabled {
   opacity: 0.85;
   cursor: default;
+}
+
+.actionTileStrong {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.actionTileStrong .actionMark {
+  border-color: rgba(250, 250, 247, 0.28);
+  background: rgba(250, 250, 247, 0.08);
+  color: var(--bg);
+}
+
+.actionTileStrong .actionDesc {
+  color: rgba(250, 250, 247, 0.72);
 }
 
 .actionMark {
