@@ -756,6 +756,235 @@
   line-height: 1.7;
 }
 
+.mechanicsCard,
+.diamondBlock,
+.revenueBlock,
+.multiShopBlock,
+.timingNote {
+  margin-bottom: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}
+
+.mechanicsCard,
+.revenueBlock,
+.multiShopBlock,
+.timingNote {
+  padding: 26px;
+}
+
+.mechanicsHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.mechanicsHead span,
+.multiShopBlock span,
+.timingNote span {
+  color: var(--ink-mute);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.mechanicsHead strong {
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.mechanicsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.mechanicsItem {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  padding: 13px 14px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.diamondBlock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--bg);
+  padding: 28px;
+}
+
+.diamondBlock span {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--ink-faint);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.diamondBlock h3 {
+  max-width: 420px;
+  margin: 0;
+  color: var(--bg);
+  font-size: 32px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+}
+
+.diamondBlock ul,
+.offerList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.diamondBlock li {
+  color: var(--bg-alt);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.diamondBlock li::before,
+.offerList li::before {
+  content: "→";
+  margin-right: 8px;
+  color: var(--leaf-soft);
+}
+
+.revenueBlock {
+  border-color: var(--ink);
+}
+
+.revenueGrid,
+.revenueMath {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.revenueGrid {
+  margin-bottom: 12px;
+}
+
+.revenueGrid div,
+.revenueMath div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  padding: 16px;
+}
+
+.revenueGrid span,
+.revenueMath span {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--ink-mute);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.revenueGrid strong {
+  display: block;
+  color: var(--ink);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.revenueGrid p {
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.revenueMath {
+  margin-bottom: 16px;
+}
+
+.revenueMath div {
+  border-color: var(--ink);
+}
+
+.revenueMath strong {
+  display: block;
+  color: var(--ink);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.revenueConclusion {
+  margin: 0;
+  border-top: 1px dashed var(--line);
+  padding-top: 16px;
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.offerList {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+}
+
+.offerList li {
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.twinCellDark .offerList li {
+  color: var(--bg-alt);
+}
+
+.multiShopBlock {
+  display: grid;
+  gap: 8px;
+  margin-top: -20px;
+}
+
+.multiShopBlock strong {
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.multiShopBlock p,
+.timingNote p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.timingNote {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-style: dashed;
+}
+
 .twinPricing {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1290,10 +1519,24 @@
 
   .flowGrid,
   .impactGrid,
+  .mechanicsGrid,
+  .revenueGrid,
+  .revenueMath,
   .twinPricing,
   .devPositionGrid,
   .positionMeta {
     grid-template-columns: 1fr;
+  }
+
+  .diamondBlock,
+  .mechanicsHead,
+  .timingNote {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .diamondBlock h3 {
+    font-size: 26px;
   }
 
   .twinCell {

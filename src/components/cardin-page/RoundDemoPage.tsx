@@ -13,31 +13,31 @@ const ROUND_STEPS = [
     name: "First Round",
     state: "filled",
     action: "Entrer avec un code Round.",
-    detail: "La carte est creee, le client voit le sommet et garde son historique apres la saison.",
+    detail: "La carte est créée, le client voit le sommet et garde son historique après la saison.",
   },
   {
     name: "Second Round",
     state: "filled",
-    action: "Revenir une premiere fois.",
+    action: "Revenir une première fois.",
     detail: "Le comptoir valide le passage. Le client comprend que chaque retour compte.",
   },
   {
     name: "Duo Round",
     state: "current",
-    action: "Inviter quelqu'un a entrer dans la saison.",
+    action: "Inviter quelqu'un à entrer dans la saison.",
     detail: "Ton lien d'invitation fait entrer une nouvelle personne et te rapproche de la liste Diamond.",
   },
   {
     name: "Heavy Round",
     state: "empty",
     action: "Atteindre le rythme fort.",
-    detail: "3 passages dans la semaine ou un jour cle valide debloquent le statut.",
+    detail: "3 passages dans la semaine ou un jour clé validé débloquent le statut.",
   },
   {
     name: "Diamond",
     state: "empty",
     action: "Entrer dans la liste finale.",
-    detail: "Quand la quete est remplie, tu entres dans la liste Diamond. Le gagnant est tire pendant un event Round.",
+    detail: "Quand la quête est remplie, tu entres dans la liste Diamond. Le gagnant est tiré pendant un événement Round.",
   },
 ] as const
 
@@ -126,7 +126,7 @@ export function RoundDemoPage() {
     const detectedAt = new Date()
     setPending(true)
     setPendingTime(`${String(detectedAt.getHours()).padStart(2, "0")}:${String(detectedAt.getMinutes()).padStart(2, "0")}`)
-    showToast("Passage detecte")
+    showToast("Passage détecté")
   }
 
   return (
@@ -155,7 +155,7 @@ export function RoundDemoPage() {
               Entre au <em>Round Club</em>
             </h1>
             <p className={styles.entrySub}>
-              Tape ton code pour ouvrir ta carte. Tu vois ce que tu peux gagner et ou tu en es. Pas de compte,
+              Tape ton code pour ouvrir ta carte. Tu vois ce que tu peux gagner et où tu en es. Pas de compte,
               pas d&apos;app.
             </p>
           </div>
@@ -184,7 +184,7 @@ export function RoundDemoPage() {
 
           <div className={styles.profileFields}>
             <label className={styles.profileField}>
-              <span>Prenom optionnel</span>
+              <span>Prénom optionnel</span>
               <input
                 autoComplete="given-name"
                 onChange={(event) => setFirstName(event.target.value)}
@@ -211,7 +211,7 @@ export function RoundDemoPage() {
             Voir une carte exemple
           </button>
 
-          <div className={styles.entryFooter}>Ta carte reste apres la saison, avec son historique Round.</div>
+          <div className={styles.entryFooter}>Ta carte reste après la saison, avec son historique Round.</div>
         </section>
 
         <section className={cn(styles.screen, screen === "card" && styles.screenActive)}>
@@ -235,7 +235,7 @@ export function RoundDemoPage() {
                 Round <span>Club</span>
               </span>
               <div className={styles.cardClubTag}>
-                Saison <strong>90 jours</strong> · Round Paris
+                Saison <strong>jusqu&apos;au Diamond</strong> · Round Paris
               </div>
             </div>
 
@@ -246,17 +246,17 @@ export function RoundDemoPage() {
                 <br />
                 <em>pendant 1 an</em>
               </div>
-              <div className={styles.cardPrizeDetail}>Attribue a une seule personne a la fin</div>
+              <div className={styles.cardPrizeDetail}>Attribué à une seule personne à la fin</div>
             </div>
 
             <div className={styles.dailyPush}>
               <div className={styles.dailyPushTop}>
                 <span>Animation du jour</span>
-                <strong>Recu du journal</strong>
+                <strong>Reçu du journal</strong>
               </div>
               <div className={styles.dailyPushTitle}>Mercredi compte double</div>
               <p>Chaque passage aujourd&apos;hui vaut 2 dans ta saison. Montre ta carte au comptoir.</p>
-              <button onClick={() => showToast("Animation ajoutee a ta carte")} type="button">
+              <button onClick={() => showToast("Animation ajoutée à ta carte")} type="button">
                 Activer sur ma carte
               </button>
             </div>
@@ -291,7 +291,7 @@ export function RoundDemoPage() {
             </div>
 
             <div className={styles.stepExplorer}>
-              <div className={styles.stepExplorerLabel}>Etape visible</div>
+              <div className={styles.stepExplorerLabel}>Étape visible</div>
               <div className={styles.stepExplorerTitle}>{selectedStep.name}</div>
               <div className={styles.stepExplorerAction}>{selectedStep.action}</div>
               <div className={styles.stepExplorerDetail}>{selectedStep.detail}</div>
@@ -302,7 +302,7 @@ export function RoundDemoPage() {
               <div className={styles.nextActionText}>
                 Viens <em>avec quelqu&apos;un</em> qui n&apos;a pas encore sa carte Round
               </div>
-              <div className={styles.nextActionWhy}>3 passages cette semaine et tu debloques Heavy Round.</div>
+              <div className={styles.nextActionWhy}>3 passages cette semaine et tu débloques Heavy Round.</div>
             </div>
 
             <div className={styles.inviteBlock}>
@@ -311,7 +311,7 @@ export function RoundDemoPage() {
                 <strong>round.club/{cardNumber}</strong>
                 <p>Si quelqu&apos;un entre par ton lien, Duo Round compte pour la liste Diamond.</p>
               </div>
-              <button onClick={() => showToast("Lien invitation copie")} type="button">
+              <button onClick={() => showToast("Lien invitation copié")} type="button">
                 Inviter
               </button>
             </div>
@@ -329,7 +329,7 @@ export function RoundDemoPage() {
 
             <div className={styles.cardFooterStripe}>
               <span>Historique</span>
-              <em>garde saison a saison</em>
+              <em>garde saison à saison</em>
             </div>
           </article>
 
@@ -342,7 +342,7 @@ export function RoundDemoPage() {
             </div>
             <div className={styles.proofDate}>{clock.day}</div>
             <div className={styles.proofInstruction}>
-              Montre cet ecran <em>au comptoir</em>
+              Montre cet écran <em>au comptoir</em>
             </div>
             <div className={styles.proofTick}>
               <span className={styles.proofTickDot} />
@@ -366,19 +366,19 @@ export function RoundDemoPage() {
                   )}
                 </div>
                 <div className={styles.actionDesc}>
-                  {pending ? "Round t'a vu. Montre l'ecran au comptoir." : "Round valide ton passage. Tu avances dans la saison."}
+                  {pending ? "Round t'a vu. Montre l'écran au comptoir." : "Round valide ton passage. Tu avances dans la saison."}
                 </div>
               </div>
               <div className={styles.actionArr}>-&gt;</div>
             </button>
 
-            <button className={styles.actionTile} onClick={() => showToast("Lien copain copie")} type="button">
+            <button className={styles.actionTile} onClick={() => showToast("Lien copain copié")} type="button">
               <div className={styles.actionMark}>+1</div>
               <div className={styles.actionBody}>
                 <div className={styles.actionTitle}>
-                  Venir <em>a deux</em>
+                  Venir <em>à deux</em>
                 </div>
-                <div className={styles.actionDesc}>Un habitue fait entrer quelqu&apos;un dans la saison.</div>
+                <div className={styles.actionDesc}>Un habitué fait entrer quelqu&apos;un dans la saison.</div>
               </div>
               <div className={styles.actionArr}>-&gt;</div>
             </button>
@@ -389,7 +389,7 @@ export function RoundDemoPage() {
                 <div className={styles.actionTitle}>
                   Voir le <em>moteur</em>
                 </div>
-                <div className={styles.actionDesc}>Passer au journal marchand, aux pushs et a la lecture business.</div>
+                <div className={styles.actionDesc}>Passer au journal marchand, aux pushs et à la lecture business.</div>
               </div>
               <div className={styles.actionArr}>-&gt;</div>
             </Link>
@@ -399,7 +399,7 @@ export function RoundDemoPage() {
             <div className={styles.pendingLeft}>
               <span className={styles.pendingDot} />
               <div className={styles.pendingBody}>
-                <span className={styles.pendingLabel}>Passage detecte</span>
+                <span className={styles.pendingLabel}>Passage détecté</span>
                 <span className={styles.pendingValue}>{pendingTime}</span>
               </div>
             </div>
@@ -415,7 +415,7 @@ export function RoundDemoPage() {
           </div>
 
           <div className={styles.installHint}>
-            Ajoute Round <em>a ton ecran d&apos;accueil</em>
+            Ajoute Round <em>à ton écran d&apos;accueil</em>
             <br />
             pour retrouver ta carte en un geste.
           </div>
@@ -424,7 +424,7 @@ export function RoundDemoPage() {
 
       </main>
 
-      <div className={cn(styles.toast, toast && styles.toastShow)}>{toast ?? "Passage detecte"}</div>
+      <div className={cn(styles.toast, toast && styles.toastShow)}>{toast ?? "Passage détecté"}</div>
     </div>
   )
 }
