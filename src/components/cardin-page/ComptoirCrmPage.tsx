@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { useMemo, useState } from "react"
 
 import { cn } from "@/lib/utils"
@@ -10,402 +10,687 @@ import styles from "./ComptoirCrmPage.module.css"
 type VerticalId = "caviste" | "bar"
 
 type Client = {
+  id: string
   name: string
-  tag: string
-  value: string
-  last: string
-  next: string
+  initials: string
+  segment: string
+  reason: string
+  spend: number
+  lastSignal: string
+  nextMove: string
+  score: number
   note: string
-  tastes: string[]
+  tags: string[]
+  timeline: string[]
 }
 
 type Activation = {
+  id: string
   title: string
-  detail: string
-  reach: string
-  cost: string
+  family: string
+  intent: string
+  audience: string
+  cost: number
+  cardTitle: string
+  cardCopy: string
+  playLabel: string
+  results: string[]
+}
+
+type Bottle = {
+  id: string
+  name: string
+  region: string
+  price: number
+  stock: number
+  tags: string[]
 }
 
 type VerticalConfig = {
   label: string
   place: string
-  headline: string
-  subline: string
-  crmName: string
-  rhythm: string
-  revenue: string
-  memory: string
+  operatorTitle: string
+  operatorSub: string
   queueTitle: string
-  pushTitle: string
-  pushBody: string
-  cardTitle: string
-  cardAction: string
+  cardLabel: string
+  metrics: Array<{ label: string; value: string; tone?: "dark" }>
   clients: Client[]
   activations: Activation[]
-  journal: string[]
+  bottles?: Bottle[]
+  baseEvents: string[]
 }
 
 const VERTICALS: Record<VerticalId, VerticalConfig> = {
   caviste: {
     label: "Caviste",
     place: "Maison Vigne",
-    headline: "Le carnet client qui sait quand rappeler, quoi proposer, et pourquoi maintenant.",
-    subline:
-      "Cardin transforme les achats, goûts et événements en queue de relance claire. Pas un CRM froid : une mémoire de comptoir qui fait revenir.",
-    crmName: "Cave Book",
-    rhythm: "42 relances utiles cette semaine",
-    revenue: "8 740 € en cave suivie",
-    memory: "goûts, budgets, occasions, bouteilles achetées",
-    queueTitle: "À rappeler avant le week-end",
-    pushTitle: "Arrivage Jura · 18 bouteilles",
-    pushBody:
-      "Proposer aux profils nature blanc et dîner maison. Réservation en un tap, retrait vendredi.",
-    cardTitle: "Votre sélection cave",
-    cardAction: "3 bouteilles du Jura sont arrivées. Réservez avant samedi.",
+    operatorTitle: "Cave Book",
+    operatorSub:
+      "Une queue de relance, des goûts mémorisés, des sélections prêtes, et une carte client qui reçoit le bon message.",
+    queueTitle: "Clients à traiter",
+    cardLabel: "Carte cave",
+    metrics: [
+      { label: "Relances utiles", value: "42" },
+      { label: "Cave suivie", value: "8 740 €", tone: "dark" },
+      { label: "Réservations", value: "12" },
+      { label: "Événements", value: "3" },
+    ],
     clients: [
       {
+        id: "camille",
         name: "Camille Moreau",
-        tag: "nature blanc · 35-55 €",
-        value: "420 €",
-        last: "Achat il y a 31 jours",
-        next: "Relance aujourd'hui",
-        note: "Dîner samedi. A aimé Savagnin, évite les rouges puissants.",
-        tastes: ["Jura", "blanc sec", "dîner", "bio"],
+        initials: "CM",
+        segment: "Nature blanc · 35-55 €",
+        reason: "Dîner samedi",
+        spend: 420,
+        lastSignal: "Achat il y a 31 jours",
+        nextMove: "Proposer 3 bouteilles Jura",
+        score: 91,
+        note: "A aimé Savagnin, évite les rouges puissants. Répond bien aux sélections courtes avec retrait rapide.",
+        tags: ["Jura", "blanc sec", "bio", "dîner"],
+        timeline: ["Savagnin acheté en mars", "A demandé un blanc salin", "Dîner prévu samedi"],
       },
       {
+        id: "nicolas",
         name: "Nicolas Perrin",
-        tag: "champagne · cadeaux",
-        value: "1 180 €",
-        last: "Dernier contact il y a 9 jours",
-        next: "Anniversaire J-6",
-        note: "Achète par caisse quand l'histoire est claire. Préférer brut nature.",
-        tastes: ["bulles", "cadeau", "premium", "réserve"],
+        initials: "NP",
+        segment: "Champagne · cadeaux",
+        reason: "Anniversaire J-6",
+        spend: 1180,
+        lastSignal: "Dernier contact il y a 9 jours",
+        nextMove: "Réserver brut nature premium",
+        score: 86,
+        note: "Achète par caisse quand l'histoire est claire. Préférer brut nature, coffret propre, livraison possible.",
+        tags: ["bulles", "cadeau", "premium", "réserve"],
+        timeline: ["Coffret acheté en décembre", "Budget habituel 80-120 €", "Anniversaire dans 6 jours"],
       },
       {
+        id: "sarah",
         name: "Sarah Cohen",
-        tag: "rouge léger · 20-30 €",
-        value: "285 €",
-        last: "Achat il y a 44 jours",
-        next: "Dormante",
-        note: "Revient sur recommandation repas. Bonne cible dégustation jeudi.",
-        tastes: ["Loire", "rouge léger", "soirée", "dégustation"],
+        initials: "SC",
+        segment: "Rouge léger · 20-30 €",
+        reason: "Dormante 44 jours",
+        spend: 285,
+        lastSignal: "Achat il y a 44 jours",
+        nextMove: "Inviter dégustation jeudi",
+        score: 74,
+        note: "Revient sur recommandation repas. Bonne cible dégustation jeudi, surtout si le message reste simple.",
+        tags: ["Loire", "rouge léger", "soirée", "dégustation"],
+        timeline: ["A pris Gamay Loire", "A cliqué dégustation en février", "Pas revenue depuis 44 jours"],
+      },
+      {
+        id: "antoine",
+        name: "Antoine Ravel",
+        initials: "AR",
+        segment: "Caisse mensuelle · 150 €",
+        reason: "Cycle terminé",
+        spend: 1640,
+        lastSignal: "Caisse livrée il y a 37 jours",
+        nextMove: "Composer caisse avril",
+        score: 93,
+        note: "Client régulier. Il veut gagner du temps, pas choisir. Trois lignes suffisent : apéro, dîner, garde.",
+        tags: ["caisse", "abonnement", "rouge", "garde"],
+        timeline: ["Caisse mars terminée", "Budget stable", "Répond le matin"],
       },
     ],
     activations: [
       {
+        id: "jura",
+        title: "Arrivage Jura",
+        family: "Sélection",
+        intent: "Transformer un arrivage court en réservations rapides.",
+        audience: "38 profils blancs / nature",
+        cost: 0,
+        cardTitle: "3 bouteilles du Jura sont arrivées",
+        cardCopy: "Une sélection courte vous attend. Réservez avant samedi, retrait en cave.",
+        playLabel: "Réserver la sélection",
+        results: [
+          "Camille réserve 2 bouteilles Jura.",
+          "3 cartes ouvrent la sélection dans les 4 minutes.",
+          "Une bouteille rare passe en stock réservé.",
+        ],
+      },
+      {
+        id: "degustation",
         title: "Dégustation jeudi",
-        detail: "12 clients à inviter selon goûts et historique.",
-        reach: "126 cartes",
-        cost: "42 €",
+        family: "Événement",
+        intent: "Remplir 12 places avec les bons profils, pas avec une promo publique.",
+        audience: "24 profils dégustation",
+        cost: 42,
+        cardTitle: "Dégustation jeudi soir",
+        cardCopy: "Vous êtes invité sur une dégustation courte : 4 vins, 12 places, jeudi 19h.",
+        playLabel: "Inviter ce client",
+        results: [
+          "Sarah rejoint la liste dégustation.",
+          "2 nouvelles places prises sur jeudi.",
+          "Le journal marque un retour événement.",
+        ],
       },
       {
-        title: "Caisse saison",
-        detail: "Relancer les profils dîner maison avant le week-end.",
-        reach: "84 cartes",
-        cost: "0 €",
-      },
-      {
-        title: "Allocation rare",
-        detail: "Prévenir les clients premium avant affichage public.",
-        reach: "19 cartes",
-        cost: "0 €",
+        id: "caisse",
+        title: "Caisse week-end",
+        family: "Relance",
+        intent: "Transformer les clients dîner maison en panier préparé.",
+        audience: "61 cartes dîner",
+        cost: 0,
+        cardTitle: "Votre caisse week-end est prête",
+        cardCopy: "Trois bouteilles : apéritif, dîner, bouteille à garder. Réponse en un tap.",
+        playLabel: "Composer la caisse",
+        results: [
+          "Une caisse week-end est proposée.",
+          "Antoine reçoit une caisse en 3 lignes.",
+          "Panier prévu ajouté au journal : 126 €.",
+        ],
       },
     ],
-    journal: [
-      "10:12 · Camille ouvre l'arrivage Jura",
-      "10:47 · 3 réservations sur la sélection dîner",
-      "11:20 · Nicolas entre dans la liste champagne",
-      "12:04 · Dégustation jeudi atteint 9 inscrits",
+    bottles: [
+      { id: "savagnin", name: "Savagnin ouillé", region: "Jura", price: 38, stock: 9, tags: ["salin", "dîner"] },
+      { id: "gamay", name: "Gamay vieilles vignes", region: "Loire", price: 24, stock: 18, tags: ["léger", "soirée"] },
+      { id: "champagne", name: "Brut nature", region: "Champagne", price: 72, stock: 6, tags: ["cadeau", "premium"] },
+      { id: "chenin", name: "Chenin sec", region: "Anjou", price: 31, stock: 14, tags: ["blanc", "apéritif"] },
+    ],
+    baseEvents: [
+      "10:12 - Camille ouvre l'arrivage Jura",
+      "10:47 - 3 réservations sur la sélection dîner",
+      "11:20 - Nicolas entre dans la liste champagne",
+      "12:04 - Dégustation jeudi atteint 9 inscrits",
     ],
   },
   bar: {
     label: "Bar",
     place: "Le Bar des Amis",
-    headline: "Le CRM de nuit qui reconnaît les groupes, relance les habitués et pousse le bon moment.",
-    subline:
-      "Cardin garde la mémoire des tables, anniversaires, soirs préférés et jeux joués. Le bar choisit une activation, la carte client reçoit l'invitation.",
-    crmName: "Night Book",
-    rhythm: "31 groupes à réveiller",
-    revenue: "64 cartes actives ce soir",
-    memory: "habitués, tables, anniversaires, soirs faibles",
-    queueTitle: "Groupes à faire revenir",
-    pushTitle: "Mercredi compte double",
-    pushBody:
-      "Pousser les groupes venus le mois dernier. Roulette ouverte 20h-22h, lot au comptoir.",
-    cardTitle: "Votre table est invitée",
-    cardAction: "Mercredi compte double. Venez à 3 avant 21h30 pour entrer dans le tirage.",
+    operatorTitle: "Night Book",
+    operatorSub:
+      "Une mémoire des groupes, des soirs faibles, des jeux joués, puis une carte qui reçoit l'invitation du soir.",
+    queueTitle: "Tables à réveiller",
+    cardLabel: "Carte bar",
+    metrics: [
+      { label: "Cartes actives", value: "64", tone: "dark" },
+      { label: "Groupes à relancer", value: "31" },
+      { label: "Tables prévues", value: "7" },
+      { label: "Coût lots", value: "36 €" },
+    ],
     clients: [
       {
+        id: "lea",
         name: "Table Léa",
-        tag: "groupe de 4 · cocktails",
-        value: "312 €",
-        last: "Venue il y a 18 jours",
-        next: "Mercredi faible",
-        note: "Réagit aux blind tests. Prévenir avant 18h, pas après.",
-        tastes: ["cocktails", "blind test", "mercredi", "groupe"],
+        initials: "TL",
+        segment: "Groupe de 4 · cocktails",
+        reason: "Mercredi faible",
+        spend: 312,
+        lastSignal: "Venue il y a 18 jours",
+        nextMove: "Inviter roulette 20h-22h",
+        score: 89,
+        note: "Réagit aux blind tests et aux petits jeux. Prévenir avant 18h, pas après.",
+        tags: ["cocktails", "blind test", "mercredi", "groupe"],
+        timeline: ["4 cocktails signature", "Blind test joué", "A ramené 2 amis"],
       },
       {
+        id: "samir",
         name: "Samir & Hugo",
-        tag: "match · bière",
-        value: "226 €",
-        last: "Dernier match France",
-        next: "Score exact",
-        note: "Table sportive. Bonne cible pronostic et classement.",
-        tastes: ["match", "bière", "score", "duo"],
+        initials: "SH",
+        segment: "Match · bière",
+        reason: "Score exact",
+        spend: 226,
+        lastSignal: "Dernier match France",
+        nextMove: "Pousser pronostic",
+        score: 81,
+        note: "Table sportive. Bonne cible pronostic, classement, et tirage au coup d'envoi.",
+        tags: ["match", "bière", "score", "duo"],
+        timeline: ["France-Brésil joué", "Score posé 2-1", "Table revenue deux fois"],
       },
       {
+        id: "maya",
         name: "Maya birthday",
-        tag: "anniversaire · 8 pers.",
-        value: "640 €",
-        last: "Réservé en mars",
-        next: "J-12",
-        note: "A demandé une table calme. Peut revenir avec groupe complet.",
-        tastes: ["anniversaire", "groupe", "bouteille", "vendredi"],
+        initials: "MB",
+        segment: "Anniversaire · 8 pers.",
+        reason: "J-12",
+        spend: 640,
+        lastSignal: "Réservé en mars",
+        nextMove: "Préparer table anniversaire",
+        score: 94,
+        note: "A demandé une table calme. Peut revenir avec groupe complet si on propose tôt.",
+        tags: ["anniversaire", "groupe", "bouteille", "vendredi"],
+        timeline: ["8 personnes en mars", "Bouteille maison offerte", "Préférence table arrière"],
+      },
+      {
+        id: "noa",
+        name: "Noa comptoir",
+        initials: "NC",
+        segment: "Solo · jeudi",
+        reason: "Habitué discret",
+        spend: 148,
+        lastSignal: "Passage il y a 12 jours",
+        nextMove: "Prévenir cocktail invité",
+        score: 68,
+        note: "Vient tôt, au comptoir. Préfère une invitation calme plutôt qu'un gros jeu de salle.",
+        tags: ["comptoir", "cocktail", "jeudi", "solo"],
+        timeline: ["3 jeudis consécutifs", "A testé cocktail invité", "Part avant 22h"],
       },
     ],
     activations: [
       {
+        id: "roulette",
         title: "Roulette comptoir",
-        detail: "Un tour par carte, lots petits, salle vivante.",
-        reach: "64 cartes",
-        cost: "36 €",
+        family: "Jeu",
+        intent: "Créer un vrai moment avec un coût faible et visible.",
+        audience: "64 cartes ce soir",
+        cost: 36,
+        cardTitle: "Roulette du comptoir",
+        cardCopy: "Un tour par carte. Shot, double chance, table inscrite, ou rien ce soir.",
+        playLabel: "Tourner la roulette",
+        results: ["Shot maison gagné.", "Double chance pour la table.", "Table inscrite au tirage.", "Rien ce tour, mais la carte reste active."],
       },
       {
+        id: "score",
         title: "Score exact",
-        detail: "Chaque table pose un score avant le match.",
-        reach: "41 cartes",
-        cost: "54 €",
+        family: "Match",
+        intent: "Faire rester les tables jusqu'au coup d'envoi.",
+        audience: "41 cartes sport",
+        cost: 54,
+        cardTitle: "Pose le score exact",
+        cardCopy: "France - Brésil. Donnez votre score avant le coup d'envoi. La table juste prend le lot.",
+        playLabel: "Valider le score",
+        results: ["Score 2-1 posé pour Samir & Hugo.", "7 scores exacts déjà posés.", "Le match devient un moment de salle."],
       },
       {
+        id: "groupe",
         title: "Retour groupe",
-        detail: "Invitation ciblée aux tables venues il y a 15-45 jours.",
-        reach: "27 cartes",
-        cost: "18 €",
+        family: "Relance",
+        intent: "Faire revenir les tables venues il y a 15 à 45 jours.",
+        audience: "27 tables dormantes",
+        cost: 18,
+        cardTitle: "Votre table est invitée",
+        cardCopy: "Venez à 3 avant 21h30. Votre table entre dans le tirage du soir.",
+        playLabel: "Confirmer une table",
+        results: ["Table Léa confirme 4 personnes.", "Une table entre dans le tirage de 22h.", "Le mercredi passe de faible à jouable."],
       },
     ],
-    journal: [
-      "18:06 · Push mercredi envoyé à 64 cartes",
-      "18:22 · Table Léa confirme 4 personnes",
-      "19:11 · 7 scores exacts déjà posés",
-      "20:03 · Roulette ouverte au comptoir",
+    baseEvents: [
+      "18:06 - Push mercredi envoyé à 64 cartes",
+      "18:22 - Table Léa confirme 4 personnes",
+      "19:11 - 7 scores exacts déjà posés",
+      "20:03 - Roulette ouverte au comptoir",
     ],
   },
 }
 
-const METRICS = [
-  { label: "Mémoire", key: "memory" },
-  { label: "Rythme", key: "rhythm" },
-  { label: "Valeur", key: "revenue" },
-] as const
+const INITIAL_EVENTS: Record<VerticalId, string[]> = {
+  caviste: VERTICALS.caviste.baseEvents,
+  bar: VERTICALS.bar.baseEvents,
+}
+
+const INITIAL_CLIENT: Record<VerticalId, string> = {
+  caviste: VERTICALS.caviste.clients[0].id,
+  bar: VERTICALS.bar.clients[0].id,
+}
+
+const INITIAL_ACTIVATION: Record<VerticalId, string> = {
+  caviste: VERTICALS.caviste.activations[0].id,
+  bar: VERTICALS.bar.activations[0].id,
+}
+
+const EMPTY_BOTTLES: Bottle[] = []
+
+function formatMoney(value: number) {
+  return new Intl.NumberFormat("fr-FR", {
+    currency: "EUR",
+    maximumFractionDigits: 0,
+    style: "currency",
+  }).format(value)
+}
+
+function timeStamp() {
+  const now = new Date()
+  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
+}
 
 export function ComptoirCrmPage() {
   const [verticalId, setVerticalId] = useState<VerticalId>("caviste")
-  const [selectedClient, setSelectedClient] = useState(0)
-  const [selectedActivation, setSelectedActivation] = useState(0)
+  const [selectedClients, setSelectedClients] = useState(INITIAL_CLIENT)
+  const [selectedActivations, setSelectedActivations] = useState(INITIAL_ACTIVATION)
+  const [events, setEvents] = useState(INITIAL_EVENTS)
+  const [selectedBottles, setSelectedBottles] = useState(["savagnin", "chenin"])
+  const [pushCount, setPushCount] = useState({ caviste: 38, bar: 64 })
+  const [reservationCount, setReservationCount] = useState({ caviste: 12, bar: 7 })
+  const [lastResult, setLastResult] = useState<Record<VerticalId, string>>({
+    caviste: "Sélection prête à envoyer.",
+    bar: "Roulette prête au comptoir.",
+  })
 
   const vertical = VERTICALS[verticalId]
-  const client = vertical.clients[selectedClient] ?? vertical.clients[0]
-  const activation = vertical.activations[selectedActivation] ?? vertical.activations[0]
-
-  const customerInitials = useMemo(
-    () =>
-      client.name
-        .split(" ")
-        .map((part) => part[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase(),
-    [client.name],
+  const selectedClientId = selectedClients[verticalId]
+  const selectedActivationId = selectedActivations[verticalId]
+  const client = vertical.clients.find((item) => item.id === selectedClientId) ?? vertical.clients[0]
+  const activation = vertical.activations.find((item) => item.id === selectedActivationId) ?? vertical.activations[0]
+  const bottleShelf = vertical.bottles ?? EMPTY_BOTTLES
+  const selectedBottleItems = useMemo(
+    () => bottleShelf.filter((bottle) => selectedBottles.includes(bottle.id)),
+    [bottleShelf, selectedBottles],
   )
+  const basketTotal = selectedBottleItems.reduce((total, bottle) => total + bottle.price, 0)
 
-  function chooseVertical(id: VerticalId) {
-    setVerticalId(id)
-    setSelectedClient(0)
-    setSelectedActivation(0)
+  function addEvent(text: string) {
+    setEvents((current) => ({
+      ...current,
+      [verticalId]: [`${timeStamp()} - ${text}`, ...current[verticalId]].slice(0, 8),
+    }))
+  }
+
+  function chooseVertical(next: VerticalId) {
+    setVerticalId(next)
+  }
+
+  function chooseClient(clientId: string) {
+    setSelectedClients((current) => ({ ...current, [verticalId]: clientId }))
+    const nextClient = vertical.clients.find((item) => item.id === clientId)
+    if (nextClient) addEvent(`${nextClient.name} ouvert dans le carnet.`)
+  }
+
+  function chooseActivation(activationId: string) {
+    setSelectedActivations((current) => ({ ...current, [verticalId]: activationId }))
+    const nextActivation = vertical.activations.find((item) => item.id === activationId)
+    if (nextActivation) addEvent(`${nextActivation.title} préparé côté carte.`)
+  }
+
+  function toggleBottle(bottleId: string) {
+    setSelectedBottles((current) => {
+      if (current.includes(bottleId)) {
+        return current.length === 1 ? current : current.filter((id) => id !== bottleId)
+      }
+      return [...current, bottleId].slice(-3)
+    })
+  }
+
+  function sendPush() {
+    setPushCount((current) => ({ ...current, [verticalId]: current[verticalId] + 1 }))
+    setLastResult((current) => ({ ...current, [verticalId]: `${activation.title} envoyé à ${client.name}.` }))
+    addEvent(`${activation.title} envoyé à ${client.name}.`)
+  }
+
+  function markDone() {
+    setReservationCount((current) => ({ ...current, [verticalId]: current[verticalId] + 1 }))
+    setLastResult((current) => ({ ...current, [verticalId]: activation.results[0] }))
+    addEvent(`${client.name} traité : ${client.nextMove.toLowerCase()}.`)
+  }
+
+  function playActivation() {
+    const result = activation.results[Math.floor(Math.random() * activation.results.length)]
+    setReservationCount((current) => ({ ...current, [verticalId]: current[verticalId] + 1 }))
+    setLastResult((current) => ({ ...current, [verticalId]: result }))
+    addEvent(result)
   }
 
   return (
     <main className={styles.shell}>
-      <section className={styles.hero}>
-        <motion.div
-          animate={{ opacity: 1, y: 0 }}
-          className={styles.heroCopy}
-          initial={{ opacity: 0, y: 18 }}
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <div className={styles.brandLine}>
-            <span>Cardin</span>
-            <em>CRM Comptoir</em>
-          </div>
+      <header className={styles.appHeader}>
+        <div className={styles.brand}>
+          <span>Cardin</span>
+          <em>Comptoir CRM</em>
+        </div>
 
-          <div className={styles.verticalSwitch} aria-label="Choisir la verticale">
-            {(Object.keys(VERTICALS) as VerticalId[]).map((id) => (
-              <button
-                className={cn(styles.switchButton, verticalId === id && styles.switchButtonActive)}
-                key={id}
-                onClick={() => chooseVertical(id)}
-                type="button"
-              >
-                {VERTICALS[id].label}
-              </button>
-            ))}
-          </div>
+        <nav className={styles.verticalSwitch} aria-label="Choisir une verticale">
+          {(Object.keys(VERTICALS) as VerticalId[]).map((id) => (
+            <button
+              className={cn(styles.switchButton, verticalId === id && styles.switchButtonActive)}
+              key={id}
+              onClick={() => chooseVertical(id)}
+              type="button"
+            >
+              {VERTICALS[id].label}
+            </button>
+          ))}
+        </nav>
 
-          <p className={styles.kicker}>Verticale démo · {vertical.place}</p>
-          <h1>{vertical.headline}</h1>
-          <p className={styles.subline}>{vertical.subline}</p>
-        </motion.div>
+        <div className={styles.liveBadge}>
+          <span />
+          {vertical.place}
+        </div>
+      </header>
 
-        <motion.aside
-          animate={{ opacity: 1, y: 0 }}
-          className={styles.phone}
-          initial={{ opacity: 0, y: 22 }}
-          transition={{ duration: 0.6, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <div className={styles.phoneTop}>
-            <span>{vertical.place}</span>
-            <em>Carte active</em>
-          </div>
-          <div className={styles.cardFace}>
-            <div className={styles.liveDot}>Live</div>
-            <p>{vertical.cardTitle}</p>
-            <strong>{vertical.cardAction}</strong>
-            <div className={styles.cardMeta}>
-              <span>{activation.reach}</span>
-              <span>coût prévu {activation.cost}</span>
-            </div>
-          </div>
-          <div className={styles.trace}>
-            <span>Trace gardée</span>
-            <p>{client.name} garde l'historique après le moment.</p>
-          </div>
-        </motion.aside>
+      <section className={styles.commandIntro}>
+        <div>
+          <p>{vertical.label} · moteur opérateur</p>
+          <h1>{vertical.operatorTitle}</h1>
+        </div>
+        <span>{vertical.operatorSub}</span>
       </section>
 
       <section className={styles.metricsGrid}>
-        {METRICS.map((metric) => (
-          <article className={styles.metricCard} key={metric.label}>
+        {vertical.metrics.map((metric) => (
+          <article className={cn(styles.metricCard, metric.tone === "dark" && styles.metricCardDark)} key={metric.label}>
             <span>{metric.label}</span>
-            <strong>{vertical[metric.key]}</strong>
+            <strong>
+              {metric.label === "Réservations" || metric.label === "Tables prévues"
+                ? reservationCount[verticalId]
+                : metric.value}
+            </strong>
           </article>
         ))}
       </section>
 
-      <section className={styles.operatorGrid}>
-        <article className={styles.panel}>
+      <section className={styles.workbench}>
+        <aside className={styles.queuePanel}>
           <div className={styles.panelHead}>
-            <span>{vertical.crmName}</span>
-            <strong>{vertical.queueTitle}</strong>
+            <span>{vertical.queueTitle}</span>
+            <strong>{vertical.clients.length} profils</strong>
           </div>
 
-          <div className={styles.clientQueue}>
-            {vertical.clients.map((item, index) => (
+          <div className={styles.queueList}>
+            {vertical.clients.map((item) => (
               <button
-                className={cn(styles.clientRow, selectedClient === index && styles.clientRowActive)}
-                key={item.name}
-                onClick={() => setSelectedClient(index)}
+                className={cn(styles.queueRow, item.id === client.id && styles.queueRowActive)}
+                key={item.id}
+                onClick={() => chooseClient(item.id)}
                 type="button"
               >
-                <div>
+                <div className={styles.queueTop}>
                   <strong>{item.name}</strong>
-                  <span>{item.tag}</span>
+                  <em>{item.score}</em>
                 </div>
-                <em>{item.next}</em>
+                <span>{item.segment}</span>
+                <p>{item.reason}</p>
+                <i style={{ width: `${item.score}%` }} />
               </button>
             ))}
           </div>
-        </article>
+        </aside>
 
-        <article className={cn(styles.panel, styles.profilePanel)}>
-          <div className={styles.avatar}>{customerInitials}</div>
-          <div className={styles.profileMain}>
-            <span>Fiche client</span>
-            <h2>{client.name}</h2>
-            <p>{client.note}</p>
+        <section className={styles.clientPanel}>
+          <div className={styles.clientTop}>
+            <div className={styles.avatar}>{client.initials}</div>
+            <div>
+              <span>Fiche active</span>
+              <h2>{client.name}</h2>
+              <p>{client.segment}</p>
+            </div>
           </div>
 
-          <div className={styles.profileStats}>
+          <div className={styles.clientNote}>{client.note}</div>
+
+          <div className={styles.clientStats}>
             <div>
-              <span>Valeur</span>
-              <strong>{client.value}</strong>
+              <span>Dépense suivie</span>
+              <strong>{formatMoney(client.spend)}</strong>
             </div>
             <div>
               <span>Dernier signal</span>
-              <strong>{client.last}</strong>
+              <strong>{client.lastSignal}</strong>
+            </div>
+            <div>
+              <span>Prochaine action</span>
+              <strong>{client.nextMove}</strong>
             </div>
           </div>
 
-          <div className={styles.tasteCloud}>
-            {client.tastes.map((taste) => (
-              <span key={taste}>{taste}</span>
+          <div className={styles.tagCloud}>
+            {client.tags.map((tag) => (
+              <span key={tag}>{tag}</span>
             ))}
           </div>
-        </article>
 
-        <article className={styles.panel}>
+          <div className={styles.timeline}>
+            {client.timeline.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
+          </div>
+        </section>
+
+        <aside className={styles.phonePanel}>
+          <div className={styles.phone}>
+            <div className={styles.phoneTop}>
+              <span>{vertical.place}</span>
+              <em>{vertical.cardLabel}</em>
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.article
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                className={styles.cardPreview}
+                exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
+                initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
+                key={`${verticalId}-${client.id}-${activation.id}-${lastResult[verticalId]}`}
+                transition={{ duration: 0.25 }}
+              >
+                <div className={styles.cardLive}>Push prêt</div>
+                <p>{activation.cardTitle}</p>
+                <strong>{activation.cardCopy}</strong>
+
+                {verticalId === "caviste" ? (
+                  <div className={styles.mobileSelection}>
+                    {selectedBottleItems.map((bottle) => (
+                      <div key={bottle.id}>
+                        <span>{bottle.region}</span>
+                        <strong>{bottle.name}</strong>
+                        <em>{formatMoney(bottle.price)}</em>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={styles.mobileGame}>
+                    <span>{activation.family}</span>
+                    <strong>{lastResult.bar}</strong>
+                  </div>
+                )}
+
+                <button onClick={playActivation} type="button">
+                  {activation.playLabel}
+                </button>
+              </motion.article>
+            </AnimatePresence>
+
+            <div className={styles.phoneTrace}>
+              <span>Trace</span>
+              <p>{client.name} garde l'historique après le moment.</p>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section className={styles.engineGrid}>
+        <article className={styles.activationPanel}>
           <div className={styles.panelHead}>
             <span>Moteur d'activation</span>
-            <strong>{vertical.pushTitle}</strong>
+            <strong>{pushCount[verticalId]} cartes ciblées</strong>
           </div>
-          <p className={styles.pushCopy}>{vertical.pushBody}</p>
 
-          <div className={styles.activationList}>
-            {vertical.activations.map((item, index) => (
+          <div className={styles.activationGrid}>
+            {vertical.activations.map((item) => (
               <button
-                className={cn(styles.activationButton, selectedActivation === index && styles.activationButtonActive)}
-                key={item.title}
-                onClick={() => setSelectedActivation(index)}
+                className={cn(styles.activationCard, item.id === activation.id && styles.activationCardActive)}
+                key={item.id}
+                onClick={() => chooseActivation(item.id)}
                 type="button"
               >
-                <div>
-                  <strong>{item.title}</strong>
-                  <span>{item.detail}</span>
-                </div>
-                <em>{item.reach}</em>
+                <span>{item.family}</span>
+                <strong>{item.title}</strong>
+                <p>{item.intent}</p>
+                <em>
+                  {item.audience} · coût {formatMoney(item.cost)}
+                </em>
               </button>
             ))}
           </div>
 
-          <div className={styles.sendBar}>
+          <div className={styles.actionBar}>
             <div>
-              <span>Sélection</span>
+              <span>Action prête</span>
+              <strong>{activation.title}</strong>
+              <p>{activation.cardCopy}</p>
+            </div>
+            <div className={styles.actionButtons}>
+              <button onClick={sendPush} type="button">Envoyer push</button>
+              <button onClick={markDone} type="button">Marquer traité</button>
+            </div>
+          </div>
+        </article>
+
+        {verticalId === "caviste" ? (
+          <article className={styles.playPanel}>
+            <div className={styles.panelHead}>
+              <span>Composer une caisse</span>
+              <strong>{formatMoney(basketTotal)}</strong>
+            </div>
+
+            <div className={styles.bottleGrid}>
+              {bottleShelf.map((bottle) => (
+                <button
+                  className={cn(styles.bottleCard, selectedBottles.includes(bottle.id) && styles.bottleCardActive)}
+                  key={bottle.id}
+                  onClick={() => toggleBottle(bottle.id)}
+                  type="button"
+                >
+                  <span>{bottle.region}</span>
+                  <strong>{bottle.name}</strong>
+                  <p>{bottle.tags.join(" · ")}</p>
+                  <em>
+                    {formatMoney(bottle.price)} · {bottle.stock} en stock
+                  </em>
+                </button>
+              ))}
+            </div>
+
+            <button className={styles.playButton} onClick={playActivation} type="button">
+              Réserver pour {client.name}
+            </button>
+          </article>
+        ) : (
+          <article className={styles.playPanel}>
+            <div className={styles.panelHead}>
+              <span>Jeu live</span>
               <strong>{activation.title}</strong>
             </div>
-            <button type="button">Envoyer le push</button>
-          </div>
-        </article>
 
-        <article className={cn(styles.panel, styles.journalPanel)}>
+            <div className={styles.rouletteTable}>
+              {activation.results.map((result, index) => (
+                <span key={result} style={{ transform: `rotate(${index * (360 / activation.results.length)}deg)` }}>
+                  {result.split(" ")[0]}
+                </span>
+              ))}
+              <button onClick={playActivation} type="button">
+                Jouer
+              </button>
+            </div>
+
+            <div className={styles.gameResult}>
+              <span>Résultat carte</span>
+              <strong>{lastResult.bar}</strong>
+            </div>
+          </article>
+        )}
+
+        <article className={styles.journalPanel}>
           <div className={styles.panelHead}>
             <span>Journal vivant</span>
-            <strong>Ce qui bouge aujourd'hui</strong>
+            <strong>Derniers signaux</strong>
           </div>
+
           <div className={styles.journalList}>
-            {vertical.journal.map((line) => (
-              <p key={line}>{line}</p>
+            {events[verticalId].map((event, index) => (
+              <p key={`${event}-${index}`}>{event}</p>
             ))}
           </div>
-          <div className={styles.journalSummary}>
-            <span>Lecture business</span>
-            <strong>
-              {verticalId === "caviste"
-                ? "La cave sait qui relancer avant que le besoin disparaisse."
-                : "Le bar voit quel groupe revient et quel moment remplit la salle."}
-            </strong>
-          </div>
         </article>
-      </section>
-
-      <section className={styles.position}>
-        <p>
-          Ce n'est pas un CRM générique. C'est une couche Cardin pour les commerces où la mémoire humaine vaut de
-          l'argent : qui aime quoi, qui revient quand, qui peut être invité aujourd'hui, et quel geste peut déclencher
-          le prochain passage.
-        </p>
-        <div>
-          <span>Base vendable</span>
-          <strong>carnet client + relance + carte + journal + push</strong>
-        </div>
       </section>
     </main>
   )
