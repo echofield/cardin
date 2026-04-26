@@ -1,0 +1,881 @@
+.page {
+  --bg: #f5f3ed;
+  --bg-soft: #efece4;
+  --paper: #fafaf6;
+  --paper-pure: #ffffff;
+  --ink: #1a1a1a;
+  --ink-soft: #3a3a36;
+  --ink-mute: #8a8479;
+  --ink-faint: #b8b3a4;
+  --leaf: #1f4232;
+  --leaf-soft: #2d5942;
+  --copper: #a0522d;
+  --line: #d8d2c2;
+  --line-soft: #e8e3d3;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.topnav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line-soft);
+  padding: 22px 36px;
+  background: var(--paper);
+}
+
+.navBrand {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.brandCardin {
+  color: var(--ink);
+  font-family: var(--font-heading), Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+
+.brandBy {
+  color: var(--ink-mute);
+  font-size: 11px;
+}
+
+.navPillGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: 999px;
+  padding: 4px;
+  background: var(--bg-soft);
+}
+
+.navPill {
+  border-radius: 999px;
+  padding: 8px 22px;
+  color: var(--ink-mute);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+.navPill:hover {
+  color: var(--ink);
+}
+
+.navPill.active,
+.active {
+  background: var(--paper-pure);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.navLink {
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 13px;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.navLink:hover {
+  color: var(--leaf);
+}
+
+.navShop {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 14px;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.navShopDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--leaf);
+}
+
+.container {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 28px 36px 60px;
+}
+
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.stat {
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  padding: 28px 30px;
+  background: var(--paper);
+}
+
+.stat.dark,
+.dark {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.statLabel,
+.panelTitle,
+.fichePretitle,
+.ficheCellLabel,
+.pushEventLabel,
+.pushGameLabel,
+.pushTraceLabel,
+.moteurCardLabel,
+.moteurActionLabel,
+.caisseRegion,
+.jeuResultLabel {
+  color: var(--ink-mute);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.stat.dark .statLabel,
+.dark .statLabel,
+.dark .moteurCardLabel,
+.dark .caisseRegion {
+  color: var(--ink-faint);
+}
+
+.statValue {
+  margin-top: 16px;
+  color: var(--ink);
+  font-family: var(--font-heading), Georgia, serif;
+  font-size: 56px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.stat.dark .statValue,
+.dark .statValue {
+  color: var(--paper);
+}
+
+.mainGrid,
+.bottomGrid {
+  display: grid;
+  grid-template-columns: 1.05fr 1.4fr 1fr;
+  gap: 14px;
+}
+
+.mainGrid {
+  margin-bottom: 14px;
+}
+
+.panel,
+.pushPanelWrap,
+.jeuPanel {
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: var(--paper);
+  padding: 26px 28px;
+}
+
+.panelHead,
+.pushPanelHead,
+.jeuHead,
+.clientRowTop,
+.pushStockRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.panelHead {
+  margin-bottom: 22px;
+}
+
+.panelMeta {
+  color: var(--ink-mute);
+  font-size: 12px;
+}
+
+.clientRow {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: 18px;
+  background: var(--paper-pure);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.clientRow:hover {
+  border-color: var(--ink);
+}
+
+.clientRow.active {
+  border-color: var(--leaf);
+  background: var(--leaf);
+  color: var(--paper);
+}
+
+.clientName,
+.clientScore,
+.clientTags,
+.clientAction,
+.clientBar {
+  display: block;
+}
+
+.clientName {
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+.clientScore {
+  color: var(--ink);
+  font-family: var(--font-heading), Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.clientRow.active .clientName,
+.clientRow.active .clientScore,
+.clientRow.active .clientAction {
+  color: var(--paper);
+}
+
+.clientTags {
+  margin: 4px 0 12px;
+  color: var(--ink-mute);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.clientRow.active .clientTags {
+  color: var(--ink-faint);
+}
+
+.clientAction {
+  margin-bottom: 12px;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.clientBar {
+  overflow: hidden;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--line-soft);
+}
+
+.clientRow.active .clientBar {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.clientBarFill {
+  display: block;
+  height: 100%;
+  border-radius: 1px;
+  background: var(--leaf);
+}
+
+.clientRow.active .clientBarFill {
+  background: var(--paper);
+}
+
+.ficheHead {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 20px;
+}
+
+.ficheAvatar {
+  display: flex;
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--leaf);
+  color: var(--paper);
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.ficheTitles {
+  flex: 1;
+}
+
+.ficheName {
+  margin: 6px 0 4px;
+  color: var(--ink);
+  font-family: var(--font-heading), Georgia, serif;
+  font-size: 38px;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  line-height: 1;
+}
+
+.ficheSub {
+  color: var(--ink-mute);
+  font-size: 13px;
+}
+
+.ficheQuote {
+  margin: 0 0 26px;
+  color: var(--ink);
+  font-family: var(--font-heading), Georgia, serif;
+  font-size: 22px;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  line-height: 1.45;
+}
+
+.ficheGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.ficheCell,
+.traceCell {
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  background: var(--paper-pure);
+}
+
+.ficheCell {
+  padding: 16px;
+}
+
+.ficheCellValue {
+  margin-top: 8px;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  line-height: 1.35;
+}
+
+.ficheCellValue.big {
+  font-family: var(--font-heading), Georgia, serif;
+  font-size: 26px;
+  letter-spacing: -0.018em;
+}
+
+.ficheTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.ficheTag {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 12px;
+  background: var(--paper-pure);
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+
+.ficheTrace {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.traceCell {
+  padding: 12px 14px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.pushPanelWrap {
+  height: fit-content;
+  background: linear-gradient(180deg, var(--paper) 0%, #ede9d9 100%);
+}
+
+.pushPanelHead {
+  margin-bottom: 18px;
+}
+
+.pushShopName {
+  color: var(--ink);
+  font-family: var(--font-heading), Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.008em;
+}
+
+.pushCardBtn {
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  padding: 5px 14px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.pushPill {
+  display: inline-block;
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 12px;
+  background: var(--paper-pure);
+  color: var(--ink-mute);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.pushEventTitle {
+  margin: 10px 0 22px;
+  color: var(--ink);
+  font-family: var(--font-heading), Georgia, serif;
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  line-height: 1.15;
+}
+
+.pushStockRow {
+  border-top: 1px solid var(--line-soft);
+  padding: 14px 0;
+}
+
+.pushStockRegion {
+  margin-bottom: 3px;
+  color: var(--ink-mute);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.pushStockName {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.pushStockInfo {
+  color: var(--ink-mute);
+  font-size: 12px;
+  text-align: right;
+}
+
+.pushGameCard,
+.pushTrace {
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--paper-pure);
+}
+
+.pushGameCard {
+  margin-top: 16px;
+  padding: 18px 20px;
+}
+
+.btnSpinMini {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btnSpinMini:hover {
+  background: var(--leaf);
+}
+
+.pushTrace {
+  margin-top: 22px;
+  padding: 16px 18px;
+}
+
+.pushTraceText {
+  margin-top: 8px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.moteurCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.moteurCard,
+.caisseCard {
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--paper-pure);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: all 0.3s;
+}
+
+.moteurCard:hover,
+.caisseCard:hover {
+  border-color: var(--ink);
+}
+
+.moteurCard.dark,
+.caisseCard.dark,
+.moteurCard.dark .moteurCardName,
+.caisseCard.dark .caisseName {
+  color: var(--paper);
+}
+
+.moteurCardName,
+.caisseName,
+.moteurActionTitle {
+  color: var(--ink);
+  font-family: var(--font-heading), Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  line-height: 1.1;
+}
+
+.moteurCardName {
+  margin: 12px 0;
+}
+
+.moteurCardThesis {
+  margin-bottom: 14px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.dark .moteurCardThesis,
+.dark .moteurCardMeta,
+.dark .caisseStyle,
+.dark .caisseInfo {
+  color: var(--ink-faint);
+}
+
+.moteurCardMeta {
+  color: var(--ink-mute);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.moteurAction {
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: 18px 22px;
+  background: var(--bg-soft);
+}
+
+.moteurActionTitle {
+  margin: 6px 0;
+}
+
+.moteurActionDetail {
+  margin-bottom: 14px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.moteurActionRow {
+  display: flex;
+  gap: 8px;
+}
+
+.btnPrimary,
+.btnSecondary,
+.caisseCta {
+  border-radius: 999px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  transition: all 0.2s;
+}
+
+.btnPrimary,
+.caisseCta {
+  border: 0;
+  background: var(--leaf);
+  color: var(--paper);
+}
+
+.btnPrimary:hover,
+.caisseCta:hover {
+  background: var(--leaf-soft);
+}
+
+.btnSecondary {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+}
+
+.btnSecondary:hover {
+  border-color: var(--ink);
+}
+
+.caisseGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.caisseName {
+  margin: 8px 0 6px;
+}
+
+.caisseStyle {
+  margin-bottom: 12px;
+  color: var(--ink-mute);
+  font-size: 12px;
+}
+
+.caisseInfo {
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+
+.caisseCta {
+  width: 100%;
+  border-radius: 8px;
+  padding: 13px 22px;
+  font-size: 13px;
+}
+
+.jeuPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.jeuHead {
+  width: 100%;
+  margin-bottom: 22px;
+}
+
+.rouletteStage {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  margin: 12px 0 18px;
+}
+
+.rouletteDisc {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    #2d5942 0deg 90deg,
+    #c8a878 90deg 180deg,
+    #8a3a2c 180deg 270deg,
+    #b8b3a4 270deg 360deg
+  );
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.rouletteCenter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  width: 90px;
+  height: 90px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--paper-pure);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition: transform 0.2s;
+}
+
+.rouletteCenter:hover {
+  transform: translate(-50%, -50%) scale(1.05);
+}
+
+.rouletteCenterLabel {
+  color: var(--ink);
+  font-family: var(--font-heading), Georgia, serif;
+  font-size: 22px;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.008em;
+}
+
+.rouletteSegmentLabel {
+  position: absolute;
+  color: var(--paper);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  text-transform: uppercase;
+}
+
+.jeuResult {
+  width: 100%;
+  margin-top: 16px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: 14px 18px;
+  background: var(--paper-pure);
+}
+
+.jeuResultText {
+  margin-top: 6px;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+.journalRow {
+  border-bottom: 1px solid var(--line-soft);
+  padding: 14px 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.journalRow:last-child {
+  border-bottom: 0;
+}
+
+.journalRow.now {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.journalTime {
+  margin-right: 10px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 1100px) {
+  .mainGrid,
+  .bottomGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .statsRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .moteurCards,
+  .caisseGrid,
+  .ficheGrid,
+  .ficheTrace {
+    grid-template-columns: 1fr;
+  }
+
+  .topnav {
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 16px 20px;
+  }
+
+  .navLinks {
+    gap: 18px;
+  }
+
+  .container {
+    padding: 18px 20px 40px;
+  }
+}
+
+@media (max-width: 720px) {
+  .statsRow {
+    grid-template-columns: 1fr;
+  }
+
+  .navLinks {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

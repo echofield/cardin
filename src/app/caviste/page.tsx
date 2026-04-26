@@ -3,16 +3,16 @@ import type { Metadata, Viewport } from "next"
 import { CommerceCrmDemoPage } from "@/components/cardin-page/CommerceCrmDemoPage"
 
 export const metadata: Metadata = {
-  title: "Cardin CRM Comptoir",
+  title: "Cardin · Caviste",
   description:
-    "Démo Cardin pour caviste et bar : carnet client vivant, queue de relance, journal et moteur d'activation.",
+    "Démo Cardin pour caviste : CRM de comptoir, clients à traiter, caisse préparée et journal vivant.",
 }
 
 export const viewport: Viewport = {
-  themeColor: "#281713",
+  themeColor: "#f5f3ed",
   colorScheme: "light",
 }
 
-export default function CrmComptoirRoute() {
+export default function CavisteRoute() {
   return <CommerceCrmDemoPage variant="caviste" />
 }
