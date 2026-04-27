@@ -513,50 +513,57 @@ export function RoundJournalPage() {
           </p>
         </div>
 
-        <div className={styles.twinPricing}>
-          <article className={styles.twinCell}>
-            <div className={styles.twinTop}>
-              <span>Offre 1 — Base</span>
-              <strong>1 200 € / boutique</strong>
-            </div>
-            <h3>
-              Carte <em>Round</em>
-            </h3>
-            <ul className={styles.offerList}>
-              <li>Saison Round complète</li>
-              <li>Carte mobile (QR comptoir)</li>
-              <li>Progression + Diamond</li>
-              <li>Structure simple</li>
-            </ul>
-            <div className={styles.twinFoot}>L&apos;essentiel pour installer une machine à retours clients.</div>
-          </article>
-          <article className={cn(styles.twinCell, styles.twinCellDark)}>
-            <div className={styles.twinTop}>
-              <span>Offre 2 — Premium</span>
-              <strong>+1 000 €</strong>
-            </div>
-            <h3>
-              Round <em>piloté</em>
-            </h3>
-            <ul className={styles.offerList}>
-              <li>Console d&apos;animation</li>
-              <li>Journal vivant détaillé</li>
-              <li>Push quotidien : roulette, quiz, sondage, jour clé</li>
-              <li>Ajustements en continu</li>
-            </ul>
-            <div className={styles.twinFoot}>Vous animez la saison et maximisez les retours.</div>
-          </article>
-        </div>
+        <div className={styles.roundPricingBlock}>
+          <div className={styles.roundPricingHead}>
+            <h3>Lancer une saison Round</h3>
+            <p>
+              Une saison complète pour faire revenir les clients, générer des invitations et créer du trafic sur
+              plusieurs semaines.
+            </p>
+          </div>
 
-        <div className={styles.multiShopBlock}>
-          <span>Multi-boutiques</span>
-          <strong>1 200 € × nombre de boutiques + console globale à 1 000 €</strong>
-          <p>Exemple : <b>2 boutiques = 2 400 € + 1 000 € = 3 400 €</b>.</p>
-        </div>
+          <div className={styles.roundPricingCards}>
+            <article className={cn(styles.roundPricingCard, styles.roundPricingCardRecommended)}>
+              <div className={styles.roundPricingTop}>
+                <span>Option recommandée</span>
+                <strong>2 500 €</strong>
+              </div>
+              <h4>2 boutiques</h4>
+              <p>Saison complète + pilotage + animation</p>
+              <ul className={styles.offerList}>
+                <li>Mise en place complète</li>
+                <li>Carte mobile + QR comptoir</li>
+                <li>Progression + Diamond</li>
+                <li>Console d&apos;animation</li>
+                <li>Pushs et mécaniques du jour</li>
+                <li>Suivi et ajustements</li>
+              </ul>
+              <div className={styles.roundPricingObjective}>
+                Objectif de travail : viser 10x ce montant sur la saison.
+              </div>
+            </article>
 
-        <div className={styles.timingNote}>
-          <span>Timing</span>
-          <p>Une saison dure jusqu&apos;à complétion, elle n&apos;est pas limitée strictement dans le temps.</p>
+            <article className={styles.roundPricingCard}>
+              <div className={styles.roundPricingTop}>
+                <span>Tester avant de déployer</span>
+                <strong>1 500 €</strong>
+              </div>
+              <h4>1 boutique</h4>
+              <p>Même système, sur une seule adresse.</p>
+              <ul className={styles.offerList}>
+                <li>Saison Round complète</li>
+                <li>Carte mobile + QR comptoir</li>
+                <li>Progression + Diamond</li>
+                <li>Animation simple</li>
+                <li>Idéal pour valider l&apos;impact</li>
+              </ul>
+            </article>
+          </div>
+
+          <div className={styles.roundPricingTiming}>
+            <span>Timing</span>
+            <p>Une saison dure jusqu&apos;à complétion, en moyenne 2 à 4 mois.</p>
+          </div>
         </div>
       </section>
 
