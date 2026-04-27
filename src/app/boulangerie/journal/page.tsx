@@ -4,7 +4,7 @@ import { PompetteJournalPage } from "@/components/cardin-page/PompetteJournalPag
 
 export const metadata: Metadata = {
   title: "Boulangerie - Journal Cardin",
-  description: "Vue manager Cardin pour boulangerie : passages, retours, duos, cadeaux et rythme de la journée.",
+  description: "Journal marchand Cardin pour boulangerie : passages, retours, duos, cadeaux, moments forts et console push.",
 }
 
 export const viewport: Viewport = {
@@ -12,6 +12,6 @@ export const viewport: Viewport = {
   colorScheme: "light",
 }
 
-export default function PompetteJournalRoute() {
+export default function BoulangerieJournalRoute() {
   return <PompetteJournalPage />
 }

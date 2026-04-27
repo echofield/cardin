@@ -1,15 +1,17 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 
 import { cn } from "@/lib/utils"
 
 import styles from "./PompetteJournalPage.module.css"
 
+type PushTab = "moment" | "duo" | "sondage" | "roulette"
+
 const KEY_ITEMS = [
   { value: "23", label: "passages validés", tone: "default" },
   { value: "4", label: "nouveaux clients", tone: "default" },
-  { value: "3", label: "copains déclenchés", tone: "default" },
+  { value: "3", label: "duos déclenchés", tone: "default" },
   { value: "5", label: "cadeaux consommés", tone: "green" },
 ] as const
 
@@ -17,8 +19,8 @@ const FLOW_ITEMS = [
   {
     mark: "Entrées",
     value: "4 nouveaux",
-    label: "Premiers passages aujourd'hui · Diamond Coucou débloqué",
-    sub: "Dont 2 venus avec un habitué (mécanique copain).",
+    label: "Premiers passages aujourd'hui · carte ouverte",
+    sub: "Dont 2 venus avec un habitué (mécanique duo).",
   },
   {
     mark: "Retours",
@@ -41,19 +43,48 @@ const STREAM_ROWS = [
   { time: "07:42", num: "N° 0042", event: "Léa · 3ème passage · débloque Régulier", tone: "return" },
   { time: "08:15", num: "N° 0117", event: "Théo · premier passage · entre dans la saison", tone: "new" },
   { time: "09:03", num: "N° 0089", event: "Sarah · viennoiserie offerte · Diamond Régulier validé", tone: "reward" },
-  { time: "11:27", num: "N° 0056", event: "Marie amène Paul · déclenche Copain", tone: "copain" },
+  { time: "11:27", num: "N° 0056", event: "Marie amène Paul · déclenche Duo", tone: "duo" },
   { time: "16:14", num: "N° 0033", event: "Mehdi · 8ème passage · café offert", tone: "reward" },
   { time: "17:22", num: "N° 0125", event: "Julie · premier passage · amenée par Mehdi", tone: "new" },
-  { time: "18:05", num: "N° 0042", event: "Léa amène Anaïs · déclenche Copain", tone: "copain" },
+  { time: "18:05", num: "N° 0042", event: "Léa amène Anaïs · déclenche Duo", tone: "duo" },
 ] as const
+
+const PUSH_TABS: Record<PushTab, { label: string; sub: string; selected: string; toast: string }> = {
+  moment: { label: "Moment", sub: "16h-18h", selected: "Goûter 16h-18h", toast: "Moment envoyé" },
+  duo: { label: "Duo", sub: "invitation", selected: "Invitation duo", toast: "Duo poussé" },
+  sondage: { label: "Sondage", sub: "du jour", selected: "Sondage du jour", toast: "Sondage ouvert" },
+  roulette: { label: "Roulette", sub: "timing", selected: "Roulette timing", toast: "Roulette lancée" },
+}
+
+const PUSH_CARDS: Record<PushTab, Array<{ title: string; desc: string; cards: string }>> = {
+  moment: [
+    { title: "Goûter 16h-18h compte double", desc: "Chaque passage sur le creux de l'après-midi vaut deux dans la progression.", cards: "126 cartes" },
+    { title: "Café offert après 15h", desc: "Un geste simple pour déplacer du trafic sans remise permanente.", cards: "88 cartes récentes" },
+  ],
+  duo: [
+    { title: "Venez avec quelqu'un cette semaine", desc: "L'habitué débloque Duo et l'invité entre dans la saison.", cards: "73 habitués" },
+    { title: "Petit-déjeuner à deux", desc: "Mécanique sociale pour faire venir une nouvelle personne au comptoir.", cards: "52 cartes actives" },
+  ],
+  sondage: [
+    { title: "Choisir la viennoiserie du vendredi", desc: "Croissant amande, roulé cannelle, brioche chocolat : la carte vote.", cards: "126 cartes" },
+    { title: "Pain spécial du week-end", desc: "Le gagnant devient le pain mis en avant samedi matin.", cards: "126 cartes" },
+  ],
+  roulette: [
+    { title: "Le 40ème client gagne", desc: "Le client scanne. Si son rang tombe juste, l'écran s'illumine.", cards: "126 cartes" },
+    { title: "Tirage 16h-18h", desc: "Une roulette limitée au créneau faible pour créer un vrai rendez-vous.", cards: "88 cartes" },
+  ],
+}
 
 function formatStreamEvent(event: string) {
   return event
     .replace(/Léa|Théo|Sarah|Marie|Paul|Mehdi|Julie|Anaïs/g, (name) => `<strong>${name}</strong>`)
-    .replace(/Coucou|Régulier|Copain|café offert|viennoiserie offerte|Diamond/g, (token) => `<em>${token}</em>`)
+    .replace(/Régulier|Duo|café offert|viennoiserie offerte|Diamond/g, (token) => `<em>${token}</em>`)
 }
 
 export function PompetteJournalPage() {
+  const [pushTab, setPushTab] = useState<PushTab>("moment")
+  const [selectedPushIndex, setSelectedPushIndex] = useState(0)
+  const [pushSent, setPushSent] = useState(false)
   const dateLabel = useMemo(() => {
     return new Intl.DateTimeFormat("fr-FR", {
       weekday: "long",
@@ -66,7 +97,7 @@ export function PompetteJournalPage() {
     <div className={styles.page}>
       <header className={styles.header}>
         <div className={styles.brandMark}>
-          <span className={styles.brandPompette}>POMPETTE!</span>
+          <span className={styles.brandPompette}>BOULANGERIE</span>
           <span className={styles.brandSep}>·</span>
           <span className={styles.brandJournal}>JOURNAL DU JOUR</span>
         </div>
@@ -76,9 +107,9 @@ export function PompetteJournalPage() {
       </header>
 
       <section className={styles.hero}>
-        <div className={styles.heroKicker}>Aujourd&apos;hui chez Pompette</div>
+        <div className={styles.heroKicker}>Aujourd&apos;hui à la boulangerie</div>
         <p className={styles.heroSentence}>
-          <em>23 passages</em>, <em>7 retours</em>, <em>3 copains</em> invités
+          <em>23 passages</em>, <em>7 retours</em>, <em>3 duos</em> déclenchés
           <br />
           et <em>5 cadeaux</em> consommés.
         </p>
@@ -176,7 +207,7 @@ export function PompetteJournalPage() {
                   styles.pill,
                   row.tone === "new" && styles.pillNew,
                   row.tone === "return" && styles.pillReturn,
-                  row.tone === "copain" && styles.pillCopain,
+                  row.tone === "duo" && styles.pillCopain,
                   row.tone === "reward" && styles.pillReward,
                 )}
               >
@@ -184,12 +215,86 @@ export function PompetteJournalPage() {
                   ? "Nouveau"
                   : row.tone === "return"
                     ? "Retour"
-                    : row.tone === "copain"
-                      ? "Copain"
+                    : row.tone === "duo"
+                      ? "Duo"
                       : "Cadeau"}
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionHead}>
+          <div className={styles.sectionTitle}>
+            Console <em>d&apos;animation</em>
+          </div>
+          <div className={styles.sectionHint}>choisir un moment, pousser sur les cartes</div>
+        </div>
+
+        <div className={styles.pushBlock}>
+          <div className={styles.pushHead}>
+            <span>Push comptoir</span>
+            <h3>
+              Animer la <em>journée</em> en 30 secondes.
+            </h3>
+            <p>
+              La carte client reçoit le moment choisi : créneau goûter, invitation duo, sondage produit ou roulette timing.
+            </p>
+          </div>
+
+          <div className={styles.pushTabs}>
+            {(Object.keys(PUSH_TABS) as PushTab[]).map((tab) => (
+              <button
+                className={cn(styles.pushTab, pushTab === tab && styles.pushTabActive)}
+                key={tab}
+                onClick={() => {
+                  setPushTab(tab)
+                  setSelectedPushIndex(0)
+                  setPushSent(false)
+                }}
+                type="button"
+              >
+                <strong>{PUSH_TABS[tab].label}</strong>
+                <span>{PUSH_TABS[tab].sub}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className={styles.pushChoices}>
+            {PUSH_CARDS[pushTab].map((card, index) => (
+              <button
+                className={cn(styles.pushChoice, selectedPushIndex === index && styles.pushChoiceActive)}
+                key={card.title}
+                onClick={() => {
+                  setSelectedPushIndex(index)
+                  setPushSent(false)
+                }}
+                type="button"
+              >
+                <span>{card.cards}</span>
+                <strong>{card.title}</strong>
+                <p>{card.desc}</p>
+              </button>
+            ))}
+          </div>
+
+          <div className={styles.pushAction}>
+            <div>
+              <span>Sélection</span>
+              <strong>{PUSH_TABS[pushTab].selected}</strong>
+            </div>
+            <button
+              className={cn(pushSent && styles.pushSent)}
+              onClick={() => {
+                setPushSent(true)
+                window.setTimeout(() => setPushSent(false), 1800)
+              }}
+              type="button"
+            >
+              {pushSent ? PUSH_TABS[pushTab].toast : "Envoyer le push"}
+            </button>
+          </div>
         </div>
       </section>
 
@@ -204,11 +309,11 @@ export function PompetteJournalPage() {
           <div className={cn(styles.highlightCard, styles.highlightStrong)}>
             <div className={cn(styles.highlightCorner, styles.highlightCornerTl)} />
             <div className={cn(styles.highlightCorner, styles.highlightCornerBr)} />
-            <div className={styles.highlightLabel}>Mécanique copain</div>
+            <div className={styles.highlightLabel}>Mécanique duo</div>
             <div className={styles.highlightQuote}>
-              <em>3 copains amenés aujourd&apos;hui.</em> C&apos;est la mécanique qui tire le plus cette semaine.
+              <em>3 duos déclenchés aujourd&apos;hui.</em> C&apos;est la mécanique qui tire le plus cette semaine.
             </div>
-            <div className={styles.highlightSub}>À encourager en vitrine cet été · se propage seul.</div>
+            <div className={styles.highlightSub}>À encourager en vitrine cette semaine · se propage seul.</div>
           </div>
 
           <div className={styles.highlightCard}>

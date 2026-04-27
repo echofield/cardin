@@ -730,6 +730,68 @@
   }
 }
 
+.dailyPush {
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(184, 149, 106, 0.12), rgba(201, 74, 46, 0.04));
+  border: 1px solid var(--warm-soft);
+  border-radius: 6px;
+  margin-bottom: 14px;
+}
+
+.dailyPushActive {
+  border-color: var(--accent);
+  background: rgba(201, 74, 46, 0.06);
+}
+
+.dailyPushLabel {
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.28em;
+  color: var(--warm-deep);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.dailyPushTitle {
+  font-family: var(--font-heading), Georgia, serif;
+  font-size: 16px;
+  color: var(--ink);
+  line-height: 1.35;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.dailyPushDesc {
+  font-family: var(--font-heading), Georgia, serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.dailyPushButton {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--warm);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--warm-deep);
+  cursor: pointer;
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.dailyPushButton:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(201, 74, 46, 0.04);
+}
+
 .nextAction {
   padding: 14px 16px;
   background: rgba(201, 74, 46, 0.05);

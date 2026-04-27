@@ -344,6 +344,213 @@
   text-transform: uppercase;
 }
 
+.pushBlock {
+  background: var(--bg-alt);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.pushHead {
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.pushHead span {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.3em;
+  color: var(--warm-deep);
+  text-transform: uppercase;
+}
+
+.pushHead h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-heading), Georgia, serif;
+  font-size: 22px;
+  line-height: 1.18;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.pushHead h3 em {
+  color: var(--accent);
+  font-style: italic;
+}
+
+.pushHead p {
+  margin: 0;
+  font-family: var(--font-heading), Georgia, serif;
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.pushTabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid var(--line);
+  background: rgba(184, 149, 106, 0.08);
+}
+
+.pushTab {
+  padding: 13px 8px;
+  border: none;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink-mute);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pushTab:last-child {
+  border-right: none;
+}
+
+.pushTab:hover {
+  background: rgba(201, 74, 46, 0.04);
+}
+
+.pushTab strong {
+  display: block;
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: inherit;
+}
+
+.pushTab span {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-heading), Georgia, serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--ink-mute);
+}
+
+.pushTabActive {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.pushTabActive span {
+  color: rgba(245, 239, 227, 0.78);
+}
+
+.pushChoices {
+  display: grid;
+  gap: 10px;
+  padding: 20px 22px;
+}
+
+.pushChoice {
+  padding: 16px 18px;
+  text-align: left;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pushChoice:hover,
+.pushChoiceActive {
+  border-color: var(--accent);
+  background: rgba(201, 74, 46, 0.04);
+}
+
+.pushChoice span {
+  display: inline-flex;
+  margin-bottom: 8px;
+  padding: 4px 10px;
+  border: 1px solid var(--warm-soft);
+  border-radius: 999px;
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  color: var(--warm-deep);
+  text-transform: uppercase;
+}
+
+.pushChoice strong {
+  display: block;
+  margin-bottom: 5px;
+  font-family: var(--font-heading), Georgia, serif;
+  font-size: 16px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.pushChoice p {
+  margin: 0;
+  font-family: var(--font-heading), Georgia, serif;
+  font-style: italic;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.pushAction {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 22px;
+  background: rgba(184, 149, 106, 0.1);
+  border-top: 1px solid var(--line);
+}
+
+.pushAction div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pushAction span {
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.26em;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+}
+
+.pushAction strong {
+  font-family: var(--font-heading), Georgia, serif;
+  font-size: 14px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.pushAction button {
+  flex-shrink: 0;
+  padding: 11px 18px;
+  background: var(--accent);
+  color: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.pushAction button:hover {
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
+}
+
+.pushAction button.pushSent {
+  background: var(--go);
+  border-color: var(--go);
+}
+
 .stream {
   display: flex;
   flex-direction: column;
@@ -543,6 +750,19 @@
   .flowGrid,
   .highlights {
     grid-template-columns: 1fr;
+  }
+
+  .pushTabs {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .pushAction {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pushAction button {
+    width: 100%;
   }
 
   .streamRow {

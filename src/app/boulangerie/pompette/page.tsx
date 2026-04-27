@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from "next"
 import { PompetteDemoPage } from "@/components/cardin-page/PompetteDemoPage"
 
 export const metadata: Metadata = {
-  title: "Pompette · Votre carte",
-  description: "Démo vivante d'une carte Cardin pour Pompette: entrée code, profil léger, carte vivante et actions de saison.",
+  title: "Boulangerie - Carte Cardin",
+  description: "Démo vivante d'une carte Cardin pour boulangerie : entrée code, profil léger, carte vivante et actions de saison.",
 }
 
 export const viewport: Viewport = {

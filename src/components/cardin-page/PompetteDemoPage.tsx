@@ -26,7 +26,7 @@ const STYLE_CHIPS = [
   { key: "saison", label: "De saison" },
 ] as const
 
-const DIAMOND_STEPS = ["Coucou", "Régulier", "Copain", "Diamond"] as const
+const DIAMOND_STEPS = ["Entré", "Régulier", "Duo", "Diamond"] as const
 
 function toggleSelection(current: string[], key: string) {
   return current.includes(key) ? current.filter((item) => item !== key) : [...current, key]
@@ -48,8 +48,8 @@ function resolveProgress(visits: number) {
       completed: 2,
       current: 2,
       countLabel: "2 sur 4",
-      action: "Venez avec quelqu'un pour débloquer Copain.",
-      reward: "Vous ouvrirez un petit-déjeuner partagé ou un saut de progression.",
+      action: "Venez avec quelqu'un pour débloquer Duo.",
+      reward: "Vous ouvrez un petit-déjeuner partagé ou un saut de progression.",
     }
   }
 
@@ -69,19 +69,20 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
   const [name, setName] = useState("")
   const [preferences, setPreferences] = useState<string[]>([])
   const [stylesSelected, setStylesSelected] = useState<string[]>([])
-  const [cardIdLabel, setCardIdLabel] = useState("POMPETTE · CARTE N° 0042")
+  const [cardIdLabel, setCardIdLabel] = useState("BOULANGERIE · CARTE N° 0042")
   const [visits, setVisits] = useState(3)
+  const [dailyPushActive, setDailyPushActive] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const inputRefs = useRef<Array<HTMLInputElement | null>>([])
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const allDigitsFilled = digits.every((digit) => /^\d$/.test(digit))
   const progress = useMemo(() => resolveProgress(visits), [visits])
-  const cardHello = name.trim() ? `Coucou ${name.trim()}, vous êtes ici` : "Coucou, vous êtes ici"
+  const cardHello = name.trim() ? `Bonjour ${name.trim()}, vous êtes ici` : "Bonjour, vous êtes ici"
 
   const realScanHref = merchantId ? `/scan/${merchantId}?demo=1` : null
   const staffValidateHref = merchantId ? `/merchant/${merchantId}/valider?demo=1` : null
-  const journalHref = "/boulangerie/pompette/journal"
+  const journalHref = "/boulangerie/journal"
 
   useEffect(() => {
     if (screen !== "entry") return
@@ -119,12 +120,12 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
 
   function openProfileScreen() {
     const code = digits.join("")
-    setCardIdLabel(`POMPETTE · CARTE N° ${code.padStart(4, "0")}`)
+    setCardIdLabel(`BOULANGERIE · CARTE N° ${code.padStart(4, "0")}`)
     setScreen("profile")
   }
 
   function openDemoCard() {
-    setCardIdLabel("POMPETTE · DÉMO")
+    setCardIdLabel("BOULANGERIE · DÉMO")
     setScreen("card")
   }
 
@@ -142,7 +143,18 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
   }
 
   function handleInvite() {
-    showToast("Lien copain copié")
+    showToast("Lien duo copié")
+  }
+
+  function handleDailyPush() {
+    if (dailyPushActive) {
+      showToast("Moment déjà activé")
+      return
+    }
+
+    setDailyPushActive(true)
+    setVisits((current) => current + 1)
+    showToast("Goûter 16h activé")
   }
 
   return (
@@ -150,20 +162,20 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
       <div className={styles.app}>
         <header className={styles.topBar}>
           <div className={styles.brandMark}>
-            <span className={styles.brandPlace}>POMPETTE!</span>
+            <span className={styles.brandPlace}>BOULANGERIE</span>
             <span className={styles.brandSep}>·</span>
             <span className={styles.brandCardin}>CARDIN</span>
           </div>
           <div className={styles.topStatus}>
             <span className={styles.topStatusDot} />
-            <span>Saison été</span>
+            <span>Saison fournil</span>
           </div>
         </header>
 
         <section className={cn(styles.screen, screen === "entry" && styles.screenActive)}>
           <div className={styles.entryHeader}>
-            <div className={styles.entryCoucou}>Coucou !</div>
-            <div className={styles.entryKicker}>Votre carte Pompette</div>
+            <div className={styles.entryCoucou}>Bonjour !</div>
+            <div className={styles.entryKicker}>Votre carte boulangerie</div>
             <h1 className={styles.entryTitle}>
               Entrez dans la <em>saison</em>.
             </h1>
@@ -178,7 +190,7 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
             <div className={cn(styles.corner, styles.cornerBl)} />
             <div className={cn(styles.corner, styles.cornerBr)} />
 
-            <div className={styles.codeLabel}>Votre code Pompette</div>
+            <div className={styles.codeLabel}>Votre code boulangerie</div>
             <div className={styles.codeInputRow}>
               {digits.map((digit, index) => (
                 <input
@@ -209,7 +221,7 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
           </button>
 
           <div className={styles.entryFooter}>
-            Pompette fait partie de la saison <em>Cardin</em>. Pas de compte, pas d&apos;app à télécharger. Juste votre code.
+            Cette boulangerie fait partie d&apos;une saison <em>Cardin</em>. Pas de compte, pas d&apos;app à télécharger. Juste votre code.
           </div>
         </section>
 
@@ -220,7 +232,7 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
               On vous <em>reconnaît</em> mieux.
             </h2>
             <p className={styles.profileSub}>
-              Trois mini-informations, pour que Pompette vous glisse la bonne chose au bon moment. Rien n&apos;est obligatoire.
+              Trois mini-informations pour vous proposer la bonne chose au bon moment. Rien n&apos;est obligatoire.
             </p>
           </div>
 
@@ -229,7 +241,7 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
             <input
               className={styles.profileInput}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Juste pour vous dire Coucou par votre prénom"
+              placeholder="Juste pour vous dire bonjour par votre prénom"
               value={name}
             />
           </div>
@@ -283,10 +295,10 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
             <div className={styles.cardHello}>
               {cardHello.split(name.trim()).length > 1 && name.trim() ? (
                 <>
-                  Coucou <em>{name.trim()}</em>, vous êtes ici
+                  Bonjour <em>{name.trim()}</em>, vous êtes ici
                 </>
               ) : (
-                <>Coucou, <em>vous êtes ici</em></>
+                <>Bonjour, <em>vous êtes ici</em></>
               )}
             </div>
             <div className={styles.cardId}>{cardIdLabel}</div>
@@ -305,7 +317,7 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
 
             <div className={styles.cardWordmarkRow}>
               <div className={styles.cardWordmark}>CARDIN</div>
-              <div className={styles.cardWordmarkSub}>Saison · Pompette Paris</div>
+              <div className={styles.cardWordmarkSub}>Saison · boulangerie de quartier</div>
             </div>
 
             <div className={styles.cardPrize}>
@@ -342,6 +354,17 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
               </div>
             </div>
 
+            <div className={cn(styles.dailyPush, dailyPushActive && styles.dailyPushActive)}>
+              <div className={styles.dailyPushLabel}>Animation du jour · reçue</div>
+              <div className={styles.dailyPushTitle}>Goûter 16h-18h : compte double</div>
+              <div className={styles.dailyPushDesc}>
+                Passez cet après-midi : votre passage avance deux fois dans la saison.
+              </div>
+              <button className={styles.dailyPushButton} onClick={handleDailyPush} type="button">
+                {dailyPushActive ? "Activé sur ma carte" : "Activer sur ma carte"}
+              </button>
+            </div>
+
             <div className={styles.nextAction}>
               <div className={styles.nextActionLabel}>Votre prochaine étape</div>
               <div className={styles.nextActionText}>
@@ -349,9 +372,9 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
                   <>
                     Passez <em>deux fois cette semaine</em> pour débloquer <em>Régulier</em>.
                   </>
-                ) : progress.action.includes("Copain") ? (
+                ) : progress.action.includes("Duo") ? (
                   <>
-                    Venez avec <em>quelqu&apos;un</em> pour débloquer <em>Copain</em>.
+                    Venez avec <em>quelqu&apos;un</em> pour débloquer <em>Duo</em>.
                   </>
                 ) : (
                   <>
@@ -384,9 +407,9 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
               <div className={styles.actionMark}>+</div>
               <div className={styles.actionBody}>
                 <div className={styles.actionTitle}>
-                  Amener un <em>copain</em>
+                  Venir <em>à deux</em>
                 </div>
-                <div className={styles.actionDesc}>Vous débloquez “Copain”, ils rentrent dans la saison aussi.</div>
+                <div className={styles.actionDesc}>Vous débloquez “Duo”, ils rentrent dans la saison aussi.</div>
               </div>
               <div className={styles.actionArrow}>→</div>
             </button>
@@ -427,7 +450,7 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
               <Link className={styles.realFlowLink} href={journalHref}>
                 <div>
                   <div className={styles.realFlowTitle}>Voir le journal du jour</div>
-                  <div className={styles.realFlowDesc}>La gérante voit les passages, retours, copains et cadeaux du jour.</div>
+                  <div className={styles.realFlowDesc}>La gérante voit les passages, retours, duos et cadeaux du jour.</div>
                 </div>
                 <div className={styles.actionArrow}>→</div>
               </Link>
@@ -435,15 +458,15 @@ export function PompetteDemoPage({ merchantId }: { merchantId?: string | null })
           </div>
 
           <div className={styles.shopBlock}>
-            <div className={styles.shopLabel}>Votre lieu Pompette</div>
+            <div className={styles.shopLabel}>Votre boulangerie</div>
             <div className={styles.shopName}>
-              <em>Pompette</em> · 44bis rue de Meaux
+              <em>Boulangerie</em> · quartier
             </div>
-            <div className={styles.shopAddress}>Paris 19e · ouvert tous les jours · “La Meilleure Boulangerie de France” S12</div>
+            <div className={styles.shopAddress}>Pain chaud · viennoiseries · goûter · saison de retour en cours</div>
           </div>
 
           <div className={styles.installHint}>
-            Ajoutez Pompette <em>à votre écran d’accueil</em>
+            Ajoutez la carte <em>à votre écran d’accueil</em>
             <br />
             pour retrouver votre carte en un geste.
           </div>
