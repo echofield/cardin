@@ -31,6 +31,8 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
     pathname === "/" ||
     pathname === "/commencer" ||
     pathname.startsWith("/commencer/") ||
+    pathname === "/begin" ||
+    pathname.startsWith("/begin/") ||
     pathname === "/boulangerie" ||
     pathname === "/boulangerie/journal" ||
     pathname === "/boulangerie/pompette" ||

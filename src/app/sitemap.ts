@@ -4,7 +4,7 @@ const SITE_URL = process.env.CARDIN_SITE_URL ?? "https://getcardin.com"
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()
-  const routes = ["/", "/boulangerie", "/boulangerie/journal", "/boulangerie/preview", "/commencer", "/parcours", "/legal", "/privacy", "/terms"]
+  const routes = ["/", "/boulangerie", "/boulangerie/journal", "/boulangerie/preview", "/commencer", "/begin", "/parcours", "/legal", "/privacy", "/terms"]
 
   return routes.map((path) => ({
     url: `${SITE_URL}${path}`,
