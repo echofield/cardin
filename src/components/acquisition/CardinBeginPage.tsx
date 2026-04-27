@@ -31,6 +31,25 @@ const DIFFERENCES = [
   },
 ] as const
 
+const OPERATOR_SIGNALS = [
+  {
+    title: "Controlled weekly traffic moments",
+    detail: "Turn slow days into recognizable peaks without running permanent discounts.",
+  },
+  {
+    title: "Retention you can see",
+    detail: "Not only scans or visits: visible repeat behavior, week after week.",
+  },
+  {
+    title: "Less paid acquisition pressure",
+    detail: "A growth loop built inside the location, not rented from a platform.",
+  },
+  {
+    title: "Fast deployment",
+    detail: "Start with one location, read the signal, then scale the rhythm.",
+  },
+] as const
+
 const FLOW_STEPS = [
   {
     label: "Read",
@@ -59,6 +78,21 @@ const FLOW_STEPS = [
   },
 ] as const
 
+const SCALE_STEPS = [
+  {
+    title: "Pilot",
+    detail: "One location, one visible moment, one 30-day return signal.",
+  },
+  {
+    title: "Validate",
+    detail: "Measure visit frequency, invitation behavior, and the strength of the key day.",
+  },
+  {
+    title: "Deploy",
+    detail: "Roll the same rhythm across multiple units, regions, or a full network.",
+  },
+] as const
+
 const IMPACT = [
   { value: "+25%", label: "value on your most active customers" },
   { value: "weak day", label: "becomes a key moment people recognize" },
@@ -71,8 +105,8 @@ const ENTRY_POINTS = [
     tag: "Start simple",
     title: "Cardin Entry",
     signal: "30 days",
-    detail: "A lightweight launch to test one visible moment with the same engine, without heavy setup.",
-    meta: ["1 moment", "same engine", "direct contact"],
+    detail: "A lightweight launch in one location to test one visible moment with the same engine.",
+    meta: ["1 location", "1 moment", "direct contact"],
     cta: "Talk to Cardin",
     href: CONTACT_HREF,
     featured: true,
@@ -81,8 +115,8 @@ const ENTRY_POINTS = [
     tag: "Go deeper",
     title: "Full Season",
     signal: "90 days",
-    detail: "The full rhythm: weekly moment, Diamond tension, deeper calibration, and a clearer return loop.",
-    meta: ["full rhythm", "Diamond tension", "deeper calibration"],
+    detail: "The full rhythm: weekly moment, Diamond tension, deeper calibration, and rollout logic.",
+    meta: ["full rhythm", "Diamond tension", "multi-location ready"],
     cta: "Prepare your season",
     href: SEASON_HREF,
     featured: false,
@@ -130,11 +164,11 @@ export function CardinBeginPage() {
           </h1>
           <p className="mt-4 max-w-[620px] font-serif text-[clamp(24px,6.6vw,40px)] leading-[1.12] tracking-[-0.018em] text-[#1a2a22]">
             The system that
-            <em className="mx-2 font-medium italic text-[#0f3d2e]">brings your customers back.</em>
+            <em className="mx-2 font-medium italic text-[#0f3d2e]">makes customers come back, on your terms.</em>
           </p>
           <p className="mt-6 max-w-[560px] text-[15px] leading-[1.75] text-[#3d4d43] sm:text-[17px]">
-            A simple first month to launch Cardin in your space: create a visible moment, get customers to scan,
-            and turn visits into repeat behavior.
+            A simple first month to launch Cardin in one location or across your network: create a visible moment,
+            get customers to scan, and turn visits into repeat behavior.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -257,6 +291,45 @@ export function CardinBeginPage() {
         </div>
       </section>
 
+      <section className="relative z-[2] mx-auto max-w-[1120px] px-6 md:px-8 lg:px-12">
+        <div className="overflow-hidden rounded-[6px] border border-[#d4b892] bg-[linear-gradient(180deg,rgba(255,248,239,0.78),rgba(242,237,228,0.9))] shadow-[0_18px_60px_rgba(15,61,46,0.06)]">
+          <div className="grid lg:grid-cols-[0.92fr_1.08fr]">
+            <div className="border-b border-[#d4cdbd] px-6 py-8 lg:border-b-0 lg:border-r lg:px-8 lg:py-10">
+              <p className="mb-4 inline-flex items-center gap-3 text-[10px] uppercase tracking-[0.32em] text-[#8c6a44]">
+                <span className="h-px w-[18px] bg-[#b8956a]/70" />
+                For operators
+              </p>
+              <h2 className="font-serif text-[clamp(28px,3.6vw,42px)] leading-[1.08] tracking-[-0.018em] text-[#1a2a22]">
+                Built for operators,
+                <em className="ml-2 font-medium italic text-[#0f3d2e]">not just places.</em>
+              </h2>
+              <p className="mt-5 text-[15px] leading-[1.75] text-[#3d4d43]">
+                Cardin is designed for multi-location groups, franchises, and high-frequency environments without adding operational complexity.
+              </p>
+              <div className="mt-6 rounded-[4px] border border-[#d4cdbd] bg-[#ebe5d8]/70 px-5 py-4">
+                <p className="text-[9px] uppercase tracking-[0.24em] text-[#8a8578]">Fully controlled by the operator</p>
+                <p className="mt-2 font-serif text-[17px] italic leading-[1.45] text-[#1a2a22]">
+                  You choose the moment. You choose the reward. You control the rhythm.
+                </p>
+                <p className="mt-2 text-[13px] leading-[1.6] text-[#3d4d43]">
+                  Cardin does not override the business. It structures the return loop around it.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2">
+              {OPERATOR_SIGNALS.map((item) => (
+                <article className="border-b border-[#d4cdbd] px-6 py-7 last:border-b-0 sm:border-r sm:even:border-r-0 sm:[&:nth-last-child(-n+2)]:border-b-0" key={item.title}>
+                  <p className="font-serif text-[15px] italic text-[#b8956a]">◇</p>
+                  <h3 className="mt-3 font-serif text-[19px] leading-[1.25] text-[#1a2a22]">{item.title}</h3>
+                  <p className="mt-2 text-[13px] leading-[1.6] text-[#3d4d43]">{item.detail}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="relative z-[2] mx-auto max-w-[1080px] px-6 md:px-8 lg:px-12">
         <div className="grid border-y border-[#d4cdbd] md:grid-cols-3">
           {DIFFERENCES.map((item) => (
@@ -298,6 +371,34 @@ export function CardinBeginPage() {
       </section>
 
       <section className="relative z-[2] mx-auto mt-20 max-w-[1040px] px-6 md:px-8 lg:px-12">
+        <div className="grid gap-8 border-y border-[#d4cdbd] py-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+          <div>
+            <p className="mb-3 inline-flex items-center gap-3 text-[10px] uppercase tracking-[0.32em] text-[#8c6a44]">
+              <span className="h-px w-[18px] bg-[#b8956a]/70" />
+              Pilot to scale
+            </p>
+            <h2 className="font-serif text-[clamp(28px,3.4vw,38px)] leading-[1.16] tracking-[-0.015em] text-[#1a2a22]">
+              Start with one location.
+              <em className="ml-2 font-medium italic text-[#0f3d2e]">Expand if it works.</em>
+            </h2>
+            <p className="mt-4 text-[15px] leading-[1.7] text-[#3d4d43]">
+              Most Cardin deployments begin as a controlled test, then scale only after the return signal is visible.
+            </p>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            {SCALE_STEPS.map((step, index) => (
+              <article className="rounded-[4px] border border-[#d4cdbd] bg-[#f2ede4]/75 px-5 py-5" key={step.title}>
+                <p className="text-[9px] uppercase tracking-[0.24em] text-[#8a8578]">0{index + 1}</p>
+                <h3 className="mt-3 font-serif text-[20px] leading-[1.25] text-[#1a2a22]">{step.title}</h3>
+                <p className="mt-2 text-[13px] leading-[1.6] text-[#3d4d43]">{step.detail}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="relative z-[2] mx-auto mt-20 max-w-[1040px] px-6 md:px-8 lg:px-12">
         <div className="text-center">
           <p className="mb-3 inline-flex items-center gap-3 text-[10px] uppercase tracking-[0.32em] text-[#8c6a44]">
             <span className="h-px w-[18px] bg-[#b8956a]/70" />
@@ -308,6 +409,21 @@ export function CardinBeginPage() {
             Cardin does not add a tool.
             <em className="ml-2 font-medium italic text-[#0f3d2e]">It changes customer behavior.</em>
           </h2>
+        </div>
+
+        <div className="mt-8 grid gap-4 md:grid-cols-2">
+          <article className="rounded-[6px] border border-[#d4b892] bg-[linear-gradient(180deg,#fff8ef_0%,#f6efe3_100%)] px-6 py-6">
+            <p className="text-[9px] uppercase tracking-[0.28em] text-[#8c6a44]">Designed to impact unit economics</p>
+            <p className="mt-4 font-serif text-[24px] leading-[1.2] text-[#1a2a22]">
+              More lifetime value, more visit frequency, more referral-driven acquisition.
+            </p>
+          </article>
+          <article className="rounded-[6px] border border-[#d4cdbd] bg-[#f2ede4]/80 px-6 py-6">
+            <p className="text-[9px] uppercase tracking-[0.28em] text-[#8a8578]">Less dependency</p>
+            <p className="mt-4 font-serif text-[24px] leading-[1.2] text-[#1a2a22]">
+              Less pressure on paid ads, broad discounts, and third-party platforms.
+            </p>
+          </article>
         </div>
 
         <div className="mt-10 grid border-y border-[#d4cdbd] sm:grid-cols-2 lg:grid-cols-4">
