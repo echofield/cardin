@@ -1,24 +1,26 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { gsap } from "gsap"
 
-import { LANDING_PRICING } from "@/lib/landing-content"
-import { buildCheckoutMetadata, buildOfferProjectionRange, buildOfferRecapItems, computeImpactBreakdown, serializeLectureQuery } from "@/lib/parcours-v2"
+import { buildOfferProjectionRange, buildOfferRecapItems, computeImpactBreakdown, serializeLectureQuery } from "@/lib/parcours-v2"
 import { useParcoursFlow } from "@/components/parcours-v2/ParcoursFlowProvider"
 import { ParcoursParticles } from "@/components/parcours-v2/ParcoursParticles"
 import { ParcoursShell } from "@/components/parcours-v2/ParcoursShell"
+import { CARDIN_CONTACT_EMAIL, buildContactMailto } from "@/lib/site-contact"
 
 export function OfferStepPage() {
   const { state } = useParcoursFlow()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const rangeRef = useRef<HTMLSpanElement | null>(null)
   const lectureQuery = serializeLectureQuery(state)
   const recapItems = buildOfferRecapItems(state)
   const impact = useMemo(() => computeImpactBreakdown(state), [state])
   const offerRange = useMemo(() => buildOfferProjectionRange(impact.total), [impact.total])
+  const contactHref = buildContactMailto(
+    "Cardin · échanger sur la saison",
+    "Bonjour Cardin,\r\n\r\nJe veux échanger sur cette saison Cardin et voir la bonne mise en place pour mon lieu.\r\n",
+  )
 
   useEffect(() => {
     if (!rangeRef.current) return
@@ -38,34 +40,6 @@ export function OfferStepPage() {
       tween.kill()
     }
   }, [offerRange.max, offerRange.min])
-
-  const activate = async () => {
-    if (loading) return
-    setLoading(true)
-    setError(null)
-
-    try {
-      const response = await fetch("/api/parcours/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...state,
-          metadata: buildCheckoutMetadata(state),
-        }),
-      })
-
-      const payload = (await response.json()) as { ok?: boolean; url?: string; error?: string }
-
-      if (!response.ok || !payload.ok || !payload.url) {
-        throw new Error(payload.error ?? "checkout_failed")
-      }
-
-      window.location.assign(payload.url)
-    } catch (checkoutError) {
-      setError(checkoutError instanceof Error ? checkoutError.message : "checkout_failed")
-      setLoading(false)
-    }
-  }
 
   return (
     <ParcoursShell backHref={`/parcours/impact${lectureQuery ? `?${lectureQuery}` : ""}`} stepIndex={3}>
@@ -110,28 +84,26 @@ export function OfferStepPage() {
         <div className="mt-12 flex flex-wrap items-center justify-center gap-3 text-[12px] uppercase tracking-[0.18em] text-[#8a8578]">
           <span>Saison <strong className="font-medium text-[#1a2a22]">90 jours</strong></span>
           <span className="h-[3px] w-[3px] rounded-full bg-[#8a8578]/60" />
-          <span><strong className="font-medium text-[#1a2a22]">{LANDING_PRICING.activationFee} €</strong> TTC</span>
-          <span className="h-[3px] w-[3px] rounded-full bg-[#8a8578]/60" />
           <span>Premier moment inclus</span>
           <span className="h-[3px] w-[3px] rounded-full bg-[#8a8578]/60" />
           <span>Diamond visible</span>
+          <span className="h-[3px] w-[3px] rounded-full bg-[#8a8578]/60" />
+          <span>Contact direct</span>
         </div>
 
         <div className="mt-12 flex flex-col items-center gap-4">
-          <button
-            className="inline-flex items-center gap-4 rounded-sm border border-[#0f3d2e] bg-[#0f3d2e] px-12 py-5 text-[12px] uppercase tracking-[0.22em] text-[#f2ede4] transition hover:border-[#1a2a22] hover:bg-[#1a2a22] disabled:opacity-60"
-            onClick={activate}
-            type="button"
+          <a
+            className="inline-flex items-center gap-4 rounded-sm border border-[#0f3d2e] bg-[#0f3d2e] px-12 py-5 text-[12px] uppercase tracking-[0.22em] text-[#f2ede4] transition hover:border-[#1a2a22] hover:bg-[#1a2a22]"
+            href={contactHref}
           >
-            <span>{loading ? "Ouverture du paiement..." : "Activer Cardin pour 90 jours"}</span>
+            <span>Contacter Cardin</span>
             <span aria-hidden="true">→</span>
-          </button>
-          <p className="text-[10px] italic tracking-[0.08em] text-[#8a8578]">Paiement sécurisé par Stripe</p>
+          </a>
+          <p className="text-[10px] italic tracking-[0.08em] text-[#8a8578]">Contact direct · {CARDIN_CONTACT_EMAIL}</p>
           <Link className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-[#8a8578] transition hover:text-[#0f3d2e]" href={`/parcours/impact${lectureQuery ? `?${lectureQuery}` : ""}`}>
             <span aria-hidden="true">←</span>
             <span>Revoir l'impact</span>
           </Link>
-          {error ? <p className="max-w-md text-sm text-[#8c6a44]">{error}</p> : null}
         </div>
       </section>
     </ParcoursShell>

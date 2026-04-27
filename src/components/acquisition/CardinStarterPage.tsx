@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { gsap } from "gsap"
 
 import { ParcoursParticles } from "@/components/parcours-v2/ParcoursParticles"
-import { CHALLENGE_PRICING, LANDING_PRICING, STRIPE_CHALLENGE_LINK, STRIPE_PAYMENT_LINK } from "@/lib/landing-content"
 import { CARDIN_CONTACT_EMAIL, buildContactMailto } from "@/lib/site-contact"
 
 const DIFFERENCES = [
@@ -70,30 +69,40 @@ const STATS = [
   },
 ] as const
 
+const FIRST_MONTH_CONTACT_HREF = buildContactMailto(
+  "Cardin · premier mois",
+  "Bonjour Cardin,\r\n\r\nJe veux échanger sur le Premier mois Cardin et voir si c'est adapté à mon lieu.\r\n",
+)
+
+const SEASON_CONTACT_HREF = buildContactMailto(
+  "Cardin · saison complète",
+  "Bonjour Cardin,\r\n\r\nJe veux échanger sur une saison Cardin complète pour mon lieu.\r\n",
+)
+
 const ENTRY_CARDS = [
   {
     tag: "Entrée Cardin",
     title: "Premier mois Cardin",
-    price: `${CHALLENGE_PRICING.activationFee}€`,
+    signal: "contact direct",
     detail:
       "Un premier mois simple pour lancer le lieu, poser un moment visible et tester le retour sans complexité lourde.",
     meta: ["30 jours", "1 moment cadré", "même moteur Cardin"],
-    cta: "Commencer pour 180€ TTC",
-    href: STRIPE_CHALLENGE_LINK || buildContactMailto("Cardin · premier mois", "Bonjour Cardin,\r\n\r\nJe veux commencer avec le Premier mois Cardin.\r\n"),
-    external: Boolean(STRIPE_CHALLENGE_LINK),
+    cta: "Échanger avec Cardin",
+    href: FIRST_MONTH_CONTACT_HREF,
+    external: true,
     featured: true,
-    tax: `${CHALLENGE_PRICING.activationFee} € TTC`,
+    tax: null,
   },
   {
     tag: "Saison complète",
     title: "Saison Cardin",
-    price: `${LANDING_PRICING.activationFee}€`,
+    signal: "sur échange",
     detail:
       "Le moteur complet sur 90 jours, avec rythme de saison, montée vers le Diamond et calibrage plus profond du lieu.",
     meta: ["90 jours", "Diamond visible", "calibrage complet"],
-    cta: "Voir la saison",
-    href: "/parcours/lecture",
-    external: false,
+    cta: "Préparer la saison",
+    href: SEASON_CONTACT_HREF,
+    external: true,
     featured: false,
     tax: null,
   },
@@ -182,6 +191,7 @@ export function CardinStarterPage() {
   const currentMoment = STARTER_MOMENTS[momentIndex % STARTER_MOMENTS.length]
   const activity = currentMoment.activity
   const challengeCta = ENTRY_CARDS[0]
+  const challengeCtaTarget = challengeCta.href.startsWith("mailto:") ? undefined : "_blank"
 
   const metaLine = useMemo(() => "Restaurants · cafés · bars · boutiques · beauté", [])
 
@@ -302,7 +312,7 @@ export function CardinStarterPage() {
               className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-[2px] border border-[#0f3d2e] bg-[#0f3d2e] px-6 py-3 text-[10px] uppercase tracking-[0.22em] text-[#f2ede4] transition hover:border-[#1a2a22] hover:bg-[#1a2a22] sm:w-auto sm:px-7 sm:text-[11px]"
               href={challengeCta.href}
               rel={challengeCta.external ? "noreferrer" : undefined}
-              target={challengeCta.external ? "_blank" : undefined}
+              target={challengeCta.external ? challengeCtaTarget : undefined}
             >
               {challengeCta.cta}
               <span className="text-[14px]">→</span>
@@ -316,7 +326,7 @@ export function CardinStarterPage() {
           </div>
 
           <p className="mt-5 text-[10px] uppercase leading-5 tracking-[0.18em] text-[#8a8578]" ref={heroMetaRef}>
-            Premier mois {CHALLENGE_PRICING.activationFee}€ TTC <span className="mx-2 text-[#b8956a]">·</span> Saison {LANDING_PRICING.activationFee}€{" "}
+            Contact direct <span className="mx-2 text-[#b8956a]">·</span> Premier échange sans paiement en ligne{" "}
             <span className="mx-2 text-[#b8956a]">·</span> {metaLine}
           </p>
         </div>
@@ -592,7 +602,7 @@ export function CardinStarterPage() {
                 {card.tag}
               </span>
               <h3 className="mt-4 font-serif text-[32px] leading-[1.08] tracking-[-0.02em] text-[#1a2a22]">
-                {card.title} <em className="italic text-[#0f3d2e]">· {card.price}</em>
+                {card.title} <em className="italic text-[#0f3d2e]">· {card.signal}</em>
               </h3>
               <p className="mt-4 font-serif text-[17px] italic leading-[1.58] text-[#3d4d43]">{card.detail}</p>
               <p className="mt-4 text-[10px] uppercase tracking-[0.18em] text-[#8a8578]">{formatMeta(card.meta)}</p>
@@ -604,7 +614,7 @@ export function CardinStarterPage() {
                     className="inline-flex items-center gap-3 rounded-[2px] border border-[#0f3d2e] bg-[#0f3d2e] px-6 py-3 text-[11px] uppercase tracking-[0.22em] text-[#f2ede4] transition hover:border-[#1a2a22] hover:bg-[#1a2a22]"
                     href={card.href}
                     rel="noreferrer"
-                    target="_blank"
+                    target={card.href.startsWith("mailto:") ? undefined : "_blank"}
                   >
                     {card.cta}
                     <span className="text-[14px]">→</span>
@@ -635,18 +645,17 @@ export function CardinStarterPage() {
             className="inline-flex min-h-12 items-center justify-center gap-3 rounded-[2px] border border-[#0f3d2e] bg-[#0f3d2e] px-7 py-3 text-[11px] uppercase tracking-[0.22em] text-[#f2ede4] transition hover:border-[#1a2a22] hover:bg-[#1a2a22]"
             href={challengeCta.href}
             rel={challengeCta.external ? "noreferrer" : undefined}
-            target={challengeCta.external ? "_blank" : undefined}
+            target={challengeCta.external ? challengeCtaTarget : undefined}
           >
-            Commencer pour 180€ TTC
+            Échanger avec Cardin
             <span className="text-[14px]">→</span>
           </a>
           <a
             className="inline-flex min-h-12 items-center justify-center rounded-[2px] border border-[#d4cdbd] px-7 py-3 text-[11px] uppercase tracking-[0.22em] text-[#1a2a22] transition hover:border-[#0f3d2c] hover:bg-[rgba(15,61,46,0.03)] hover:text-[#0f3d2e]"
-            href={STRIPE_PAYMENT_LINK}
+            href={SEASON_CONTACT_HREF}
             rel="noreferrer"
-            target="_blank"
           >
-            Réserver la saison
+            Préparer la saison
           </a>
         </div>
         <p className="mt-4 text-[11px] italic tracking-[0.08em] text-[#8a8578]">
