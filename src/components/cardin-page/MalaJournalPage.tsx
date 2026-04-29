@@ -142,6 +142,7 @@ export function MalaJournalPage() {
           </Link>
           <div className={styles.jHeaderRight}>
             <Link className={styles.jNavButton} href="/mala">Carte</Link>
+            <Link className={styles.jNavButton} href="/mala/brain">Brain</Link>
             <div className={styles.dateBadge}>
               <span className={styles.liveDot} />
               <span>{today}</span>
